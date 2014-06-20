@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,24 +15,25 @@
 #
 # @author: Stéphane Albert
 #
+import datetime
 import json
-from datetime import datetime
-from zipfile import ZipFile
+import zipfile
 
 import cloudkitty.utils as utils
 
 
 class OSRTFBackend(object):
-    """
-    Native backend for transient report storage.
+    """Native backend for transient report storage.
+
     Used to store data from the output of the billing pipeline.
     """
+
     def __init__(self, backend):
         self._backend = backend
         self._osrtf = None
 
     def open(self, filename):
-        self._osrtf = ZipFile(self._backend(filename, 'ab+'), 'a')
+        self._osrtf = zipfile.ZipFile(self._backend(filename, 'ab+'), 'a')
 
     def _gen_filename(self, timeframe):
         filename = '{}-{:02d}-{:02d}-{}-{}.json'.format(timeframe.year,
@@ -48,9 +50,7 @@ class OSRTFBackend(object):
         return False
 
     def add(self, timeframe, data):
-        """
-        Add the data to the OpenStack Report Transient Format.
-        """
+        """Add the data to the OpenStack Report Transient Format."""
         filename = self._gen_filename(timeframe)
         # We can only check for the existence of a file not rewrite or delete
         # it
@@ -62,13 +62,13 @@ class OSRTFBackend(object):
             filename = self._gen_filename(timeframe)
             data = json.loads(self._osrtf.read(filename))
             return data
-        except:
+        except Exception:
             pass
 
 
 class WriteOrchestrator(object):
-    """
-    Write Orchestrator:
+    """Write Orchestrator:
+
         Handle incoming data from the global orchestrator, and store them in an
         intermediary data format before final transformation.
     """
@@ -102,7 +102,7 @@ class WriteOrchestrator(object):
         self._write_pipeline.append(writer)
 
     def _gen_osrtf_filename(self, timeframe):
-        if not isinstance(timeframe, datetime):
+        if not isinstance(timeframe, datetime.datetime):
             raise TypeError('timeframe should be of type datetime.')
         date = '{}-{:02d}'.format(timeframe.year, timeframe.month)
         filename = '{}-osrtf-{}.zip'.format(self._uid, date)
@@ -115,15 +115,16 @@ class WriteOrchestrator(object):
 
     def _get_state_manager_timeframe(self):
         timeframe = self._sm.get_state()
-        self.usage_start = datetime.fromtimestamp(timeframe)
-        self.usage_end = datetime.fromtimestamp(timeframe + self._period)
+        self.usage_start = datetime.datetime.fromtimestamp(timeframe)
+        end_frame = timeframe + self._period
+        self.usage_end = datetime.datetime.fromtimestamp(end_frame)
         metadata = self._sm.get_metadata()
         self.total = metadata.get('total', 0)
 
     def _filter_period(self, json_data):
-        """
-        Detect the best usage period to extract. Removes the usage from the
-        json data and returns it.
+        """Detect the best usage period to extract.
+
+        Removes the usage from the json data and returns it.
         """
         candidate_ts = None
         candidate_idx = 0
@@ -190,8 +191,12 @@ class WriteOrchestrator(object):
             if self.usage_start is None:
                 self.usage_start = usage_start
                 self.usage_end = usage_start + self._period
-                self.usage_start_dt = datetime.fromtimestamp(self.usage_start)
-                self.usage_end_dt = datetime.fromtimestamp(self.usage_end)
+                self.usage_start_dt = (
+                    datetime.datetime.fromtimestamp(self.usage_start)
+                )
+                self.usage_end_dt = (
+                    datetime.datetime.fromtimestamp(self.usage_end)
+                )
 
             self._dispatch(data)
 

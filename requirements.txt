@@ -3,3 +3,4 @@ python-keystoneclient
 iso8601
 oslo.config>=1.2.0
 pbr>=0.6,<1.0
+six>=1.7.0

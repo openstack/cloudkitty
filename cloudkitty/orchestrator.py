@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# !/usr/bin/env python
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,17 +16,18 @@
 #
 # @author: Stéphane Albert
 #
-from datetime import datetime
+from __future__ import print_function
+import datetime
 import sys
 import time
 
 from keystoneclient.v2_0 import client as kclient
 from oslo.config import cfg
 
-import cloudkitty.utils as utils
 import cloudkitty.config  # NOQA
-from cloudkitty.state import StateManager
-from cloudkitty.write_orchestrator import WriteOrchestrator
+from cloudkitty import state
+import cloudkitty.utils as utils
+from cloudkitty import write_orchestrator as w_orch
 
 
 CONF = cfg.CONF
@@ -48,10 +50,10 @@ class Orchestrator(object):
                                        region_name=CONF.auth.region,
                                        auth_url=CONF.auth.url)
 
-        self.sm = StateManager(utils.import_class(CONF.state.backend),
-                               CONF.state.basepath,
-                               self.keystone.user_id,
-                               'osrtf')
+        self.sm = state.StateManager(utils.import_class(CONF.state.backend),
+                                     CONF.state.basepath,
+                                     self.keystone.user_id,
+                                     'osrtf')
 
         collector = utils.import_class(CONF.collect.collector)
         self.collector = collector(user=CONF.auth.username,
@@ -61,18 +63,20 @@ class Orchestrator(object):
                                    keystone_url=CONF.auth.url,
                                    period=CONF.collect.period)
 
-        self.wo = WriteOrchestrator(utils.import_class(CONF.output.backend),
-                                    utils.import_class(CONF.state.backend),
-                                    self.keystone.user_id,
-                                    self.sm)
+        w_backend = utils.import_class(CONF.output.backend)
+        s_backend = utils.import_class(CONF.state.backend)
+        self.wo = w_orch.WriteOrchestrator(w_backend,
+                                           s_backend,
+                                           self.keystone.user_id,
+                                           self.sm)
 
         for writer in self.output_pipeline:
             self.wo.add_writer(writer)
 
     def _check_state(self):
         def _get_this_month_timestamp():
-            now = datetime.now()
-            month_start = datetime(now.year, now.month, 1)
+            now = datetime.datetime.now()
+            month_start = datetime.datetime(now.year, now.month, 1)
             timestamp = int(time.mktime(month_start.timetuple()))
             return timestamp
 
@@ -100,7 +104,7 @@ class Orchestrator(object):
         while True:
             timestamp = self._check_state()
             if not timestamp:
-                print "Nothing left to do."
+                print("Nothing left to do.")
                 break
 
             for service in CONF.collect.services:

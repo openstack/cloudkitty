@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,22 +15,23 @@
 #
 # @author: Stéphane Albert
 #
-from datetime import datetime
-from cloudkitty.state import StateManager
+import datetime
+
+from cloudkitty import state
 
 
 class BaseReportWriter(object):
-    """
-    Base report writer.
-    """
+    """Base report writer."""
     report_type = None
 
     def __init__(self, write_orchestrator, user_id, backend, state_backend):
         self._write_orchestrator = write_orchestrator
         self._write_backend = backend
         self._uid = user_id
-        self._sm = StateManager(state_backend, None, self._uid,
-                                self.report_type)
+        self._sm = state.StateManager(state_backend,
+                                      None,
+                                      self._uid,
+                                      self.report_type)
         self._report = None
         self.period = 3600
 
@@ -68,8 +70,9 @@ class BaseReportWriter(object):
     def _get_state_manager_timeframe(self):
         timeframe = self._sm.get_state()
         self.usage_start = timeframe
-        self.usage_start_dt = datetime.fromtimestamp(timeframe)
-        self.usage_end = datetime.fromtimestamp(timeframe + self.period)
+        self.usage_start_dt = datetime.datetime.fromtimestamp(timeframe)
+        end_frame = timeframe + self._period
+        self.usage_end = datetime.datetime.fromtimestamp(end_frame)
         metadata = self._sm.get_metadata()
         self.total = metadata.get('total', 0)
 

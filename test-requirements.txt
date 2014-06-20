@@ -1,7 +1,8 @@
+hacking>=0.9.1,<0.10
 discover
 testtools
 testrepository
-flake8
 mock>=1.0
 sphinx>=1.1.2,<1.2
 oslosphinx
+oslotest

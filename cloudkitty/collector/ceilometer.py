@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,23 +15,21 @@
 #
 # @author: Stéphane Albert
 #
-from datetime import datetime
+import datetime
 
 from ceilometerclient import client as cclient
 
-from cloudkitty.collector.base import BaseCollector
+from cloudkitty.collector import base
 
 
-class CeilometerCollector(BaseCollector):
+class CeilometerCollector(base.BaseCollector):
     def __init__(self, **kwargs):
         super(CeilometerCollector, self).__init__(**kwargs)
 
         self._resource_cache = {}
 
     def _connect(self):
-        """
-        Initialize connection to the Ceilometer endpoint.
-        """
+        """Initialize connection to the Ceilometer endpoint."""
         self._conn = cclient.get_client('2', os_username=self.user,
                                         os_password=self.password,
                                         os_auth_url=self.keystone_url,
@@ -38,27 +37,21 @@ class CeilometerCollector(BaseCollector):
                                         os_region_name=self.region)
 
     def gen_filter(self, op='eq', **kwargs):
-        """
-        Generate ceilometer filter from kwargs.
-        """
+        """Generate ceilometer filter from kwargs."""
         q_filter = []
         for kwarg in kwargs:
             q_filter.append({'field': kwarg, 'op': op, 'value': kwargs[kwarg]})
         return q_filter
 
     def prepend_filter(self, prepend, **kwargs):
-        """
-        Prepend the dict key with the prepend value, useful to compose filters.
-        """
+        """Filter composer."""
         q_filter = {}
         for kwarg in kwargs:
             q_filter[prepend + kwarg] = kwargs[kwarg]
         return q_filter
 
     def user_metadata_filter(self, op='eq', **kwargs):
-        """
-        Create user_metadata filter from kwargs.
-        """
+        """Create user_metadata filter from kwargs."""
         user_filter = {}
         for kwarg in kwargs:
             field = kwarg
@@ -70,18 +63,13 @@ class CeilometerCollector(BaseCollector):
         return self.metadata_filter(op, **user_filter)
 
     def metadata_filter(self, op='eq', **kwargs):
-        """
-        Create metadata filter from kwargs.
-        """
+        """Create metadata filter from kwargs."""
         meta_filter = self.prepend_filter('metadata.', **kwargs)
         return self.gen_filter(op, **meta_filter)
 
     def get_active_instances(self, start, end=None, project_id=None,
                              q_filter=None):
-        """
-        Return the number of instance that were active during the
-        timespan.
-        """
+        """Instance that were active during the timespan."""
         start_iso = datetime.fromtimestamp(start).isoformat()
         req_filter = self.gen_filter(op='ge', timestamp=start_iso)
         if project_id:
@@ -121,8 +109,9 @@ class CeilometerCollector(BaseCollector):
         res_data['vcpus'] = data.metadata.get('vcpus')
         res_data['memory'] = data.metadata.get('memory_mb')
         res_data['image_id'] = data.metadata.get('image.id')
-        res_data['availability_zone'] = \
+        res_data['availability_zone'] = (
             data.metadata.get('OS-EXT-AZ.availability_zone')
+        )
 
         res_data['project_id'] = data.project_id
         res_data['user_id'] = data.user_id

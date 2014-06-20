@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,12 +16,13 @@
 # @author: Stéphane Albert
 #
 import json
-from cloudkitty.writer.base import BaseReportWriter
+
+from cloudkitty.writer import base
 
 
-class OSRFBackend(BaseReportWriter):
-    """
-    OpenStack Report Format Writer:
+class OSRFBackend(base.BaseReportWriter):
+    """OpenStack Report Format Writer:
+
         Generates report in native format (json)
     """
     report_type = 'osrf'

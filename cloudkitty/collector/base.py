@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,7 +15,7 @@
 #
 # @author: Stéphane Albert
 #
-from datetime import datetime, timedelta
+import datetime
 
 import cloudkitty.utils as utils
 
@@ -39,8 +40,9 @@ class BaseCollector(object):
 
     @staticmethod
     def last_month():
-        now = datetime.now()
-        month_end = datetime(now.year, now.month, 1) - timedelta(days=1)
+        now = datetime.datetime.now()
+        month_end = (datetime.datetime(now.year, now.month, 1) -
+                     datetime.timedelta(days=1))
         month_start = month_end.replace(day=1)
         start_ts = utils.dt2ts(month_start)
         end_ts = utils.dt2ts(month_end)

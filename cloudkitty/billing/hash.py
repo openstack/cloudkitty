@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,10 +17,10 @@
 #
 import json
 
-from cloudkitty.billing.base import BaseBillingProcessor
+from cloudkitty.billing import base
 
 
-class BasicHashMap(BaseBillingProcessor):
+class BasicHashMap(base.BaseBillingProcessor):
     def __init__(self):
         self._billing_info = {}
         self._load_billing_rates()

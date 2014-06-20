@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -57,35 +58,27 @@ class StateManager(object):
         state_file.close()
 
     def set_state(self, timestamp):
-        """
-        Set the current state's timestamp
-        """
+        """Set the current state's timestamp."""
         if self._distributed:
             self._load()
         self._ts = timestamp
         self._update()
 
     def get_state(self):
-        """
-        Get the state timestamp
-        """
+        """Get the state timestamp."""
         if self._distributed:
             self._load()
         return self._ts
 
     def set_metadata(self, metadata):
-        """
-        Set metadata attached to the state
-        """
+        """Set metadata attached to the state."""
         if self._distributed:
             self._load()
         self._metadata = metadata
         self._update()
 
     def get_metadata(self):
-        """
-        Get metadata attached to the state
-        """
+        """Get metadata attached to the state."""
         if self._distributed:
             self._load()
         return self._metadata
