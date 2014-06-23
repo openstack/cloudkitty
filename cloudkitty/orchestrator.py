@@ -25,8 +25,8 @@ from keystoneclient.v2_0 import client as kclient
 from oslo.config import cfg
 
 import cloudkitty.config  # NOQA
+import cloudkitty.openstack.common.importutils as i_utils
 from cloudkitty import state
-import cloudkitty.utils as utils
 from cloudkitty import write_orchestrator as w_orch
 
 
@@ -38,11 +38,12 @@ class Orchestrator(object):
         # Billing settings
         self.billing_pipeline = []
         for billing_processor in CONF.billing.pipeline:
-            self.billing_pipeline.append(utils.import_class(billing_processor))
+            processor = i_utils.import_class(billing_processor)
+            self.billing_pipeline.append(processor)
         # Output settings
         self.output_pipeline = []
         for writer in CONF.output.pipeline:
-            self.output_pipeline.append(utils.import_class(writer))
+            self.output_pipeline.append(i_utils.import_class(writer))
 
         self.keystone = kclient.Client(username=CONF.auth.username,
                                        password=CONF.auth.password,
@@ -50,12 +51,12 @@ class Orchestrator(object):
                                        region_name=CONF.auth.region,
                                        auth_url=CONF.auth.url)
 
-        self.sm = state.StateManager(utils.import_class(CONF.state.backend),
+        self.sm = state.StateManager(i_utils.import_class(CONF.state.backend),
                                      CONF.state.basepath,
                                      self.keystone.user_id,
                                      'osrtf')
 
-        collector = utils.import_class(CONF.collect.collector)
+        collector = i_utils.import_class(CONF.collect.collector)
         self.collector = collector(user=CONF.auth.username,
                                    password=CONF.auth.password,
                                    tenant=CONF.auth.tenant,
@@ -63,8 +64,8 @@ class Orchestrator(object):
                                    keystone_url=CONF.auth.url,
                                    period=CONF.collect.period)
 
-        w_backend = utils.import_class(CONF.output.backend)
-        s_backend = utils.import_class(CONF.state.backend)
+        w_backend = i_utils.import_class(CONF.output.backend)
+        s_backend = i_utils.import_class(CONF.state.backend)
         self.wo = w_orch.WriteOrchestrator(w_backend,
                                            s_backend,
                                            self.keystone.user_id,

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,17 +10,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-#
-# @author: Stéphane Albert
-#
-import time
 
-import iso8601
+import six
 
 
-def dt2ts(orig_dt):
-    return int(time.mktime(orig_dt.timetuple()))
-
-
-def iso2dt(iso_date):
-    return iso8601.parse_date(iso_date)
+six.add_move(six.MovedModule('mox', 'mox', 'mox3.mox'))
