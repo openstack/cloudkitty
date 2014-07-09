@@ -15,7 +15,7 @@ Status
 ------
 
 This project is **highly** work in progress. Most of the work that we've done was
-targeted to quickly create of POC. We are now aiming towards the creation of an
+targeted to quickly create a POC. We are now aiming towards the creation of an
 OpenStack module. Changes needed to attain our goal are huge, that's why the
 time between commits can be long.
 
