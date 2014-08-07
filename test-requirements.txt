@@ -6,3 +6,8 @@ mock>=1.0
 sphinx>=1.1.2,<1.2
 oslosphinx
 oslotest
+
+sphinxcontrib-docbookrestapi
+sphinxcontrib-httpdomain
+sphinxcontrib-pecanwsme>=0.8
+docutils==0.9.1
