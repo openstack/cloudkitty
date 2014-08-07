@@ -20,6 +20,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+cloudkitty.egg-info
 
 # Installer logs
 pip-log.txt
@@ -33,7 +34,6 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
-cloudkitty.egg-info
 
 # Translations
 *.mo
@@ -44,3 +44,6 @@ cloudkitty.egg-info
 
 # Sphinx documentation
 docs/_build/
+
+# Rope
+.ropeproject/
