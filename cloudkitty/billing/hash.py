@@ -20,7 +20,23 @@ import json
 from cloudkitty import billing
 
 
+class BasicHashMapController(billing.BillingController):
+
+    def get_module_info(self):
+        module = BasicHashMap()
+        infos = {
+            'name': 'hashmap',
+            'description': 'Basic hashmap billing module.',
+            'enabled': module.enabled,
+            'hot_config': True,
+        }
+        return infos
+
+
 class BasicHashMap(billing.BillingProcessorBase):
+
+    controller = BasicHashMapController
+
     def __init__(self):
         self._billing_info = {}
         self._load_billing_rates()

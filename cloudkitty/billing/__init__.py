@@ -17,11 +17,91 @@
 #
 import abc
 
+import pecan
+from pecan import rest
 import six
+from wsme import types as wtypes
+import wsmeext.pecan as wsme_pecan
+
+from cloudkitty.db import api as db_api
+
+
+class BillingModuleNotConfigurable(Exception):
+    def __init__(self, module):
+        self.module = module
+        super(BillingModuleNotConfigurable, self).__init__(
+            'Module %s not configurable.' % module)
+
+
+class ExtensionSummary(wtypes.Base):
+    """A billing extension summary
+
+    """
+
+    name = wtypes.wsattr(wtypes.text, mandatory=True)
+
+    description = wtypes.text
+
+    enabled = wtypes.wsattr(bool, default=False)
+
+    hot_config = wtypes.wsattr(bool, default=False, name='hot-config')
+
+
+@six.add_metaclass(abc.ABCMeta)
+class BillingEnableController(rest.RestController):
+
+    @wsme_pecan.wsexpose(bool)
+    def get(self):
+        api = db_api.get_instance()
+        module = pecan.request.path.rsplit('/', 2)[-2]
+        module_db = api.get_module_enable_state()
+        return module_db.get_state(module) or False
+
+    @wsme_pecan.wsexpose(bool, body=bool)
+    def put(self, state):
+        api = db_api.get_instance()
+        module = pecan.request.path.rsplit('/', 2)[-2]
+        module_db = api.get_module_enable_state()
+        return module_db.set_state(module, state)
+
+
+@six.add_metaclass(abc.ABCMeta)
+class BillingConfigController(rest.RestController):
+
+    @wsme_pecan.wsexpose()
+    def get(self):
+        try:
+            module = pecan.request.path.rsplit('/', 1)[-1]
+            raise BillingModuleNotConfigurable(module)
+        except BillingModuleNotConfigurable as e:
+            pecan.abort(400, str(e))
+
+
+@six.add_metaclass(abc.ABCMeta)
+class BillingController(rest.RestController):
+
+    config = BillingConfigController()
+    enabled = BillingEnableController()
+
+    @wsme_pecan.wsexpose(ExtensionSummary)
+    def get_all(self):
+        """Get extension summary.
+
+        """
+        extension_summary = ExtensionSummary(**self.get_module_info())
+        return extension_summary
+
+    @abc.abstractmethod
+    def get_module_info(self):
+        """Get module informations
+
+        """
 
 
 @six.add_metaclass(abc.ABCMeta)
 class BillingProcessorBase(object):
+
+    controller = BillingController
 
     def __init__(self):
         pass
@@ -31,6 +111,12 @@ class BillingProcessorBase(object):
         """Check if the module is enabled
 
         :returns: bool if module is enabled
+        """
+
+    @abc.abstractmethod
+    def reload_config(self):
+        """Trigger configuration reload
+
         """
 
     @abc.abstractmethod

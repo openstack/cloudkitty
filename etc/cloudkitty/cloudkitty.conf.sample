@@ -195,6 +195,15 @@
 
 
 #
+# Options defined in cloudkitty.api.app
+#
+
+# Configuration file for WSGI definition of API. (string
+# value)
+#api_paste_config=api_paste.ini
+
+
+#
 # Options defined in cloudkitty.openstack.common.log
 #
 
@@ -286,6 +295,19 @@
 
 # Syslog facility to receive log lines. (string value)
 #syslog_log_facility=LOG_USER
+
+
+[api]
+
+#
+# Options defined in cloudkitty.api.app
+#
+
+# Host serving the API. (string value)
+#host_ip=0.0.0.0
+
+# Host port serving the API. (integer value)
+#port=8888
 
 
 [auth]
