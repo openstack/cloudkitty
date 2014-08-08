@@ -22,6 +22,7 @@ import sqlalchemy
 from cloudkitty import config  # NOQA
 from cloudkitty import db
 from cloudkitty.db import api
+from cloudkitty.db.sqlalchemy import migration
 from cloudkitty.db.sqlalchemy import models
 from cloudkitty.openstack.common import log as logging
 
@@ -91,8 +92,48 @@ class State(api.State):
             session.flush()
 
 
+class ModuleEnableState(api.ModuleEnableState):
+
+    def get_state(self, name):
+        session = db.get_session()
+        try:
+            return bool(utils.model_query(
+                models.ModuleStateInfo,
+                session
+            ).filter_by(
+                name=name,
+            ).value('state'))
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
+    def set_state(self, name, state):
+        session = db.get_session()
+        with session.begin():
+            try:
+                q = utils.model_query(
+                    models.ModuleStateInfo,
+                    session
+                ).filter_by(
+                    name=name,
+                ).with_lockmode('update')
+                db_state = q.one()
+                db_state.state = state
+            except sqlalchemy.orm.exc.NoResultFound:
+                db_state = models.ModuleStateInfo(name=name, state=state)
+                session.add(db_state)
+        return bool(db_state.state)
+
+
 class DBAPIManager(object):
 
     @staticmethod
     def get_state():
         return State()
+
+    @staticmethod
+    def get_module_enable_state():
+        return ModuleEnableState()
+
+    @staticmethod
+    def get_migration():
+        return migration

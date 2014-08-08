@@ -45,3 +45,24 @@ class StateInfo(Base, models.ModelBase):
                     name=self.name,
                     state=self.state,
                     metadata=self.s_metadata)
+
+
+class ModuleStateInfo(Base, models.ModelBase):
+    """Module state info.
+
+    """
+
+    __tablename__ = 'modules_state'
+
+    name = sqlalchemy.Column(sqlalchemy.String(255),
+                             primary_key=True)
+    state = sqlalchemy.Column(
+        sqlalchemy.Boolean(),
+        nullable=False,
+        default=False)
+
+    def __repr__(self):
+        return ('<ModuleStateInfo[{name}]: '
+                'enabled={state}>').format(
+                    name=self.name,
+                    state=self.state)

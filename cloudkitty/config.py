@@ -77,3 +77,8 @@ cfg.CONF.register_opts(auth_opts, 'auth')
 cfg.CONF.register_opts(collect_opts, 'collect')
 cfg.CONF.register_opts(state_opts, 'state')
 cfg.CONF.register_opts(output_opts, 'output')
+
+# oslo.db defaults
+db_options.set_defaults(
+    cfg.CONF,
+    connection='sqlite:////var/lib/cloudkitty/cloudkitty.sqlite')
