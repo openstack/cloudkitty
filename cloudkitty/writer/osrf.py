@@ -36,7 +36,11 @@ class OSRFBackend(writer.BaseReportWriter):
     def _open(self):
         filename = self._gen_filename(self.usage_start_dt)
         self._report = self._write_backend(filename, 'rb+')
-        self._recover_state()
+        self._report.seek(0, 2)
+        if self._report.tell():
+            self._recover_state()
+        else:
+            self._report.seek(0)
 
     def _write_header(self):
         self._report.write('[')
@@ -51,13 +55,14 @@ class OSRFBackend(writer.BaseReportWriter):
         max_idx = self._report.tell()
         if max_idx > 2000:
             max_idx = 2000
+        hay = ''
         for idx in range(10, max_idx, 10):
             self._report.seek(-idx, 2)
             hay = self._report.read()
             if hay.count(','):
                 break
         last_comma = hay.rfind(',')
-        if last_comma > 0:
+        if last_comma > -1:
             last_comma -= len(hay)
         else:
             raise RuntimeError('Unable to recover file state.')
