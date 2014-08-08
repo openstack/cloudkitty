@@ -23,11 +23,18 @@ import time
 
 from keystoneclient.v2_0 import client as kclient
 from oslo.config import cfg
+from stevedore import driver
+from stevedore import named
 
-import cloudkitty.config  # NOQA
-import cloudkitty.openstack.common.importutils as i_utils
+from cloudkitty import config  # NOQA
+from cloudkitty import extension_manager
+from cloudkitty.openstack.common import importutils as i_utils
+from cloudkitty.openstack.common import log as logging
 from cloudkitty import state
 from cloudkitty import write_orchestrator as w_orch
+
+
+LOG = logging.getLogger(__name__)
 
 
 CONF = cfg.CONF
@@ -35,44 +42,46 @@ CONF = cfg.CONF
 
 class Orchestrator(object):
     def __init__(self):
-        # Billing settings
-        self.billing_pipeline = []
-        for billing_processor in CONF.billing.pipeline:
-            processor = i_utils.import_class(billing_processor)
-            self.billing_pipeline.append(processor)
-        # Output settings
-        self.output_pipeline = []
-        for writer in CONF.output.pipeline:
-            self.output_pipeline.append(i_utils.import_class(writer))
-
         self.keystone = kclient.Client(username=CONF.auth.username,
                                        password=CONF.auth.password,
                                        tenant_name=CONF.auth.tenant,
                                        region_name=CONF.auth.region,
                                        auth_url=CONF.auth.url)
 
-        self.sm = state.StateManager(i_utils.import_class(CONF.state.backend),
+        s_backend = i_utils.import_class(CONF.state.backend)
+        self.sm = state.StateManager(s_backend,
                                      CONF.state.basepath,
                                      self.keystone.user_id,
                                      'osrtf')
 
-        collector = i_utils.import_class(CONF.collect.collector)
-        self.collector = collector(user=CONF.auth.username,
-                                   password=CONF.auth.password,
-                                   tenant=CONF.auth.tenant,
-                                   region=CONF.auth.region,
-                                   keystone_url=CONF.auth.url,
-                                   period=CONF.collect.period)
+        collector_args = {'user': CONF.auth.username,
+                          'password': CONF.auth.password,
+                          'tenant': CONF.auth.tenant,
+                          'region': CONF.auth.region,
+                          'keystone_url': CONF.auth.url,
+                          'period': CONF.collect.period}
+        self.collector = driver.DriverManager(
+            'cloudkitty.collector.backends',
+            CONF.collect.collector,
+            invoke_on_load=True,
+            invoke_kwds=collector_args).driver
 
         w_backend = i_utils.import_class(CONF.output.backend)
-        s_backend = i_utils.import_class(CONF.state.backend)
         self.wo = w_orch.WriteOrchestrator(w_backend,
                                            s_backend,
                                            self.keystone.user_id,
                                            self.sm)
 
-        for writer in self.output_pipeline:
-            self.wo.add_writer(writer)
+        # Billing processors
+        self.b_processors = {}
+        self._load_billing_processors()
+
+        # Output settings
+        output_pipeline = named.NamedExtensionManager(
+            'cloudkitty.output.writers',
+            CONF.output.pipeline)
+        for writer in output_pipeline:
+            self.wo.add_writer(writer.plugin)
 
     def _check_state(self):
         def _get_this_month_timestamp():
@@ -101,6 +110,17 @@ class Orchestrator(object):
                       'usage': raw_data}]
         return timed_data
 
+    def _load_billing_processors(self):
+        self.b_processors = {}
+        processors = extension_manager.EnabledExtensionManager(
+            'cloudkitty.billing.processors',
+        )
+
+        for processor in processors:
+            b_name = processor.name
+            b_obj = processor.obj
+            self.b_processors[b_name] = b_obj
+
     def process(self):
         while True:
             timestamp = self._check_state()
@@ -112,9 +132,8 @@ class Orchestrator(object):
                 data = self._collect(service, timestamp)
 
                 # Billing
-                for b_proc in self.billing_pipeline:
-                    b_obj = b_proc()
-                    data = b_obj.process(data)
+                for processor in self.b_processors.values():
+                    processor.process(data)
 
                 # Writing
                 self.wo.append(data)
@@ -127,6 +146,7 @@ class Orchestrator(object):
 
 def main():
     CONF(sys.argv[1:], project='cloudkitty')
+    logging.setup('cloudkitty')
     orchestrator = Orchestrator()
     orchestrator.process()
 

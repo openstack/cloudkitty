@@ -16,6 +16,10 @@
 # @author: Stéphane Albert
 #
 from oslo.config import cfg
+from oslo.db import options as db_options  # noqa
+from oslo.messaging import opts  # noqa
+
+from cloudkitty.openstack.common import log  # noqa
 
 
 auth_opts = [
@@ -37,7 +41,7 @@ auth_opts = [
 
 collect_opts = [
     cfg.StrOpt('collector',
-               default='cloudkitty.collector.ceilometer.CeilometerCollector',
+               default='ceilometer',
                help='Data collector.'),
     cfg.IntOpt('window',
                default=1800,
@@ -57,12 +61,6 @@ state_opts = [
                default='/var/lib/cloudkitty/states/',
                help='Storage directory for the file state backend.'), ]
 
-billing_opts = [
-    cfg.ListOpt('pipeline',
-                default=['cloudkitty.billing.hash.BasicHashMap',
-                         'cloudkitty.billing.noop.Noop'],
-                help='Billing pipeline modules.'), ]
-
 output_opts = [
     cfg.StrOpt('backend',
                default='cloudkitty.backend.file.FileBackend',
@@ -71,12 +69,11 @@ output_opts = [
                default='/var/lib/cloudkitty/states/',
                help='Storage directory for the file output backend.'),
     cfg.ListOpt('pipeline',
-                default=['cloudkitty.writer.osrf.OSRFBackend'],
+                default=['osrf'],
                 help='Output pipeline'), ]
 
 
 cfg.CONF.register_opts(auth_opts, 'auth')
 cfg.CONF.register_opts(collect_opts, 'collect')
 cfg.CONF.register_opts(state_opts, 'state')
-cfg.CONF.register_opts(billing_opts, 'billing')
 cfg.CONF.register_opts(output_opts, 'output')

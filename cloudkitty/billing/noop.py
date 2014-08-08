@@ -22,6 +22,10 @@ class Noop(billing.BillingProcessorBase):
     def __init__(self):
         pass
 
+    @property
+    def enabled(self):
+        return True
+
     def process(self, data):
         for cur_data in data:
             cur_usage = cur_data['usage']

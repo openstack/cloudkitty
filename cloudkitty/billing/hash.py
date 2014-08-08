@@ -25,6 +25,11 @@ class BasicHashMap(billing.BillingProcessorBase):
         self._billing_info = {}
         self._load_billing_rates()
 
+    @property
+    def enabled(self):
+        # TODO(sheeprine): Implement real feature
+        return True
+
     def _load_billing_rates(self):
         # FIXME We should use another path
         self._billing_info = json.loads(open('billing_info.json').read())

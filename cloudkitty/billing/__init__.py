@@ -26,6 +26,13 @@ class BillingProcessorBase(object):
     def __init__(self):
         pass
 
+    @abc.abstractproperty
+    def enabled(self):
+        """Check if the module is enabled
+
+        :returns: bool if module is enabled
+        """
+
     @abc.abstractmethod
     def process(self, data):
         """Add billing informations to data
