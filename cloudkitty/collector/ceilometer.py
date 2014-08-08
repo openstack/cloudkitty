@@ -19,10 +19,10 @@ import datetime
 
 from ceilometerclient import client as cclient
 
-from cloudkitty.collector import base
+from cloudkitty import collector
 
 
-class CeilometerCollector(base.BaseCollector):
+class CeilometerCollector(collector.BaseCollector):
     def __init__(self, **kwargs):
         super(CeilometerCollector, self).__init__(**kwargs)
 
