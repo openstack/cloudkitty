@@ -70,12 +70,12 @@ class CeilometerCollector(collector.BaseCollector):
     def get_active_instances(self, start, end=None, project_id=None,
                              q_filter=None):
         """Instance that were active during the timespan."""
-        start_iso = datetime.fromtimestamp(start).isoformat()
+        start_iso = datetime.datetime.fromtimestamp(start).isoformat()
         req_filter = self.gen_filter(op='ge', timestamp=start_iso)
         if project_id:
             req_filter.extend(self.gen_filter(project=project_id))
         if end:
-            end_iso = datetime.fromtimestamp(end).isoformat()
+            end_iso = datetime.datetime.fromtimestamp(end).isoformat()
             req_filter.extend(self.gen_filter(op='le', timestamp=end_iso))
         if isinstance(q_filter, list):
             req_filter.extend(q_filter)
