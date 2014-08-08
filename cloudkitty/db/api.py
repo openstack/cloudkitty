@@ -68,3 +68,24 @@ class State(object):
         :param name: Name of the state
         :param metadata: Metadata value
         """
+
+
+@six.add_metaclass(abc.ABCMeta)
+class ModuleEnableState(object):
+    """Base class for module state management."""
+
+    @abc.abstractmethod
+    def get_state(self, name):
+        """Retrieve the module state.
+
+        :param name: Name of the module
+        :return bool: State of the module
+        """
+
+    @abc.abstractmethod
+    def set_state(self, name, state):
+        """Retrieve the module state.
+
+        :param name: Name of the module
+        :param value: State of the module
+        """
