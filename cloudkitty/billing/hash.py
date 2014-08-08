@@ -17,10 +17,10 @@
 #
 import json
 
-from cloudkitty.billing import base
+from cloudkitty import billing
 
 
-class BasicHashMap(base.BaseBillingProcessor):
+class BasicHashMap(billing.BillingProcessorBase):
     def __init__(self):
         self._billing_info = {}
         self._load_billing_rates()

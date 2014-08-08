@@ -15,10 +15,10 @@
 #
 # @author: Stéphane Albert
 #
-from cloudkitty.billing import base
+from cloudkitty import billing
 
 
-class Noop(base.BaseBillingProcessor):
+class Noop(billing.BillingProcessorBase):
     def __init__(self):
         pass
 
