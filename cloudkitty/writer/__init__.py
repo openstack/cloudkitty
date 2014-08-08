@@ -32,10 +32,8 @@ class BaseReportWriter(object):
         self._write_orchestrator = write_orchestrator
         self._write_backend = backend
         self._uid = user_id
-        self._sm = state.StateManager(state_backend,
-                                      None,
-                                      self._uid,
-                                      self.report_type)
+        self._sm = state.DBStateManager(self._uid,
+                                        self.report_type)
         self._report = None
         self._period = 3600
 

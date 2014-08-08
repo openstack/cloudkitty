@@ -49,10 +49,8 @@ class Orchestrator(object):
                                        auth_url=CONF.auth.url)
 
         s_backend = i_utils.import_class(CONF.state.backend)
-        self.sm = state.StateManager(s_backend,
-                                     CONF.state.basepath,
-                                     self.keystone.user_id,
-                                     'osrtf')
+        self.sm = state.DBStateManager(self.keystone.user_id,
+                                       'osrtf')
 
         collector_args = {'user': CONF.auth.username,
                           'password': CONF.auth.password,

@@ -17,6 +17,8 @@
 #
 import json
 
+from cloudkitty.db import api
+
 
 class StateManager(object):
     def __init__(self, state_backend, state_basepath, user_id, report_type,
@@ -31,8 +33,13 @@ class StateManager(object):
         self._ts = None
         self._metadata = {}
 
+        # Load states
+        self._load()
+
     def _gen_filename(self):
-        filename = '{}_{}.state'.format(self._type, self._uid)
+        # FIXME(sheeprine): Basepath can't be enforced at the moment
+        filename = '{}_{}.state'.format(self._type,
+                                        self._uid)
         return filename
 
     def _open(self, mode='rb'):
@@ -43,9 +50,11 @@ class StateManager(object):
     def _load(self):
         try:
             state_file = self._open()
-            state_data = json.loads(state_file.read())
-            self._ts = state_data['timestamp']
-            self._metadata = state_data['metadata']
+            raw_data = state_file.read()
+            if raw_data:
+                state_data = json.loads(raw_data)
+                self._ts = state_data['timestamp']
+                self._metadata = state_data['metadata']
             state_file.close()
         except IOError:
             pass
@@ -82,3 +91,35 @@ class StateManager(object):
         if self._distributed:
             self._load()
         return self._metadata
+
+
+class DBStateManager(object):
+    def __init__(self, user_id, report_type, distributed=False):
+        self._state_name = self._gen_name(report_type, user_id)
+        self._distributed = distributed
+        self._db = api.get_instance().get_state()
+
+    def _gen_name(self, state_type, uid):
+        name = '{}_{}'.format(state_type, uid)
+        return name
+
+    def get_state(self):
+        """Get the state timestamp."""
+
+        return self._db.get_state(self._state_name)
+
+    def set_state(self, timestamp):
+        """Set the current state's timestamp."""
+
+        self._db.set_state(self._state_name, timestamp)
+
+    def get_metadata(self):
+        """Get metadata attached to the state."""
+
+        return json.loads(self._db.get_metadata(self._state_name))
+
+    def set_metadata(self, metadata):
+        """Set metadata attached to the state."""
+
+        self._db.set_metadata(self._state_name,
+                              json.dumps(metadata))
