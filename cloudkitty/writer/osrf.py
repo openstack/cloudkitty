@@ -17,10 +17,10 @@
 #
 import json
 
-from cloudkitty.writer import base
+from cloudkitty import writer
 
 
-class OSRFBackend(base.BaseReportWriter):
+class OSRFBackend(writer.BaseReportWriter):
     """OpenStack Report Format Writer:
 
         Generates report in native format (json)
