@@ -34,8 +34,15 @@ MAP_TYPE = wtypes.Enum(wtypes.text, 'flat', 'rate')
 class Mapping(wtypes.Base):
 
     map_type = wtypes.wsattr(MAP_TYPE, default='rate', name='type')
+    """Type of the mapping."""
 
     value = wtypes.wsattr(float, mandatory=True)
+    """Value of the mapping."""
+
+    @classmethod
+    def sample(cls):
+        sample = cls(value=4.2)
+        return sample
 
 
 class BasicHashMapConfigController(billing.BillingConfigController):
@@ -56,7 +63,7 @@ class BasicHashMapConfigController(billing.BillingConfigController):
 
     @wsme_pecan.wsexpose(Mapping, wtypes.text, wtypes.text, wtypes.text)
     def get_mapping(self, service, field, key):
-        """Return the list of every mappings.
+        """Get a mapping from full path.
 
         """
         hashmap = api.get_instance()
@@ -67,6 +74,10 @@ class BasicHashMapConfigController(billing.BillingConfigController):
 
     @wsme_pecan.wsexpose([wtypes.text])
     def get(self):
+        """Get the service list
+
+        :return: List of every services' name.
+        """
         hashmap = api.get_instance()
         return [service.name for service in hashmap.list_services()]
 
@@ -74,6 +85,8 @@ class BasicHashMapConfigController(billing.BillingConfigController):
     def get_one(self, service=None, field=None):
         """Return the list of every sub keys.
 
+        :param service: (Optional) Filter on this service.
+        :param field: (Optional) Filter on this field.
         """
         hashmap = api.get_instance()
         if field:
@@ -95,6 +108,13 @@ class BasicHashMapConfigController(billing.BillingConfigController):
     @wsme_pecan.wsexpose(None, wtypes.text, wtypes.text, wtypes.text,
                          body=Mapping)
     def post(self, service, field=None, key=None, mapping=None):
+        """Create hashmap fields.
+
+        :param service: Name of the service to create.
+        :param field: (Optional) Name of the field to create.
+        :param key: (Optional) Name of the key to create.
+        :param mapping: (Optional) Mapping object to create.
+        """
         hashmap = api.get_instance()
         if field:
             if key:
@@ -131,6 +151,13 @@ class BasicHashMapConfigController(billing.BillingConfigController):
     @wsme_pecan.wsexpose(None, wtypes.text, wtypes.text, wtypes.text,
                          body=Mapping)
     def put(self, service, field, key, mapping):
+        """Modify hashmap fields
+
+        :param service: Filter on this service.
+        :param field: Filter on this field.
+        :param key: Modify the content of this key.
+        :param mapping: Mapping object to update.
+        """
         hashmap = api.get_instance()
         try:
             hashmap.update_mapping(
@@ -149,6 +176,9 @@ class BasicHashMapConfigController(billing.BillingConfigController):
     def delete(self, service, field=None, key=None):
         """Delete the parent and all the sub keys recursively.
 
+        :param service: Name of the service to delete.
+        :param field: (Optional) Name of the field to delete.
+        :param key: (Optional) Name of the key to delete.
         """
         hashmap = api.get_instance()
         try:

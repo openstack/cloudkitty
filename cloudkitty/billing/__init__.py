@@ -39,19 +39,37 @@ class ExtensionSummary(wtypes.Base):
     """
 
     name = wtypes.wsattr(wtypes.text, mandatory=True)
+    """Name of the extension."""
 
     description = wtypes.text
+    """Short description of the extension."""
 
     enabled = wtypes.wsattr(bool, default=False)
+    """Extension status."""
 
     hot_config = wtypes.wsattr(bool, default=False, name='hot-config')
+    """On-the-fly configuration support."""
+
+    @classmethod
+    def sample(cls):
+        sample = cls(name='example',
+                     description='Sample extension.',
+                     enabled=True,
+                     hot_config=False)
+        return sample
 
 
 @six.add_metaclass(abc.ABCMeta)
 class BillingEnableController(rest.RestController):
+    """REST Controller to enable or disable a billing module.
+
+    """
 
     @wsme_pecan.wsexpose(bool)
     def get(self):
+        """Get module status
+
+        """
         api = db_api.get_instance()
         module = pecan.request.path.rsplit('/', 2)[-2]
         module_db = api.get_module_enable_state()
@@ -59,6 +77,11 @@ class BillingEnableController(rest.RestController):
 
     @wsme_pecan.wsexpose(bool, body=bool)
     def put(self, state):
+        """Set module status
+
+        :param state: State to set.
+        :return: New state set for the module.
+        """
         api = db_api.get_instance()
         module = pecan.request.path.rsplit('/', 2)[-2]
         module_db = api.get_module_enable_state()
@@ -67,18 +90,37 @@ class BillingEnableController(rest.RestController):
 
 @six.add_metaclass(abc.ABCMeta)
 class BillingConfigController(rest.RestController):
+    """REST Controller managing internal configuration of billing modules.
 
-    @wsme_pecan.wsexpose()
-    def get(self):
+    """
+
+    def _not_configurable(self):
         try:
             module = pecan.request.path.rsplit('/', 1)[-1]
             raise BillingModuleNotConfigurable(module)
         except BillingModuleNotConfigurable as e:
             pecan.abort(400, str(e))
 
+    @wsme_pecan.wsexpose()
+    def get(self):
+        """Get current module configuration
+
+        """
+        self._not_configurable()
+
+    @wsme_pecan.wsexpose()
+    def put(self):
+        """Set current module configuration
+
+        """
+        self._not_configurable()
+
 
 @six.add_metaclass(abc.ABCMeta)
 class BillingController(rest.RestController):
+    """REST Controller used to manage billing system.
+
+    """
 
     config = BillingConfigController()
     enabled = BillingEnableController()
