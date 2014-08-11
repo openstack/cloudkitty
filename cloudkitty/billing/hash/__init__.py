@@ -166,6 +166,10 @@ class BasicHashMapConfigController(billing.BillingConfigController):
 
 class BasicHashMapController(billing.BillingController):
 
+    _custom_actions = {
+        'types': ['GET']
+    }
+
     config = BasicHashMapConfigController()
 
     def get_module_info(self):
@@ -177,6 +181,13 @@ class BasicHashMapController(billing.BillingController):
             'hot_config': True,
         }
         return infos
+
+    @wsme_pecan.wsexpose([wtypes.text])
+    def get_types(self):
+        """Return the list of every mapping type available.
+
+        """
+        return MAP_TYPE.values
 
 
 class BasicHashMap(billing.BillingProcessorBase):
