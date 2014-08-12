@@ -85,6 +85,7 @@ class ModulesController(rest.RestController):
 
         """
         for ext in self.extensions:
+            # FIXME(sheeprine): we should notify two modules with same name
             if not hasattr(self, ext.name):
                 setattr(self, ext.name, ext.obj.controller())
 

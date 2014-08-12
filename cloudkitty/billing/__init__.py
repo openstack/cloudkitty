@@ -71,9 +71,8 @@ class BillingEnableController(rest.RestController):
 
         """
         api = db_api.get_instance()
-        module = pecan.request.path.rsplit('/', 2)[-2]
         module_db = api.get_module_enable_state()
-        return module_db.get_state(module) or False
+        return module_db.get_state(self.module_name) or False
 
     @wsme_pecan.wsexpose(bool, body=bool)
     def put(self, state):
@@ -83,9 +82,8 @@ class BillingEnableController(rest.RestController):
         :return: New state set for the module.
         """
         api = db_api.get_instance()
-        module = pecan.request.path.rsplit('/', 2)[-2]
         module_db = api.get_module_enable_state()
-        return module_db.set_state(module, state)
+        return module_db.set_state(self.module_name, state)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -96,8 +94,7 @@ class BillingConfigController(rest.RestController):
 
     def _not_configurable(self):
         try:
-            module = pecan.request.path.rsplit('/', 1)[-1]
-            raise BillingModuleNotConfigurable(module)
+            raise BillingModuleNotConfigurable(self.module_name)
         except BillingModuleNotConfigurable as e:
             pecan.abort(400, str(e))
 
@@ -124,6 +121,11 @@ class BillingController(rest.RestController):
 
     config = BillingConfigController()
     enabled = BillingEnableController()
+
+    def __init__(self):
+        if hasattr(self, 'module_name'):
+            self.config.module_name = self.module_name
+            self.enabled.module_name = self.module_name
 
     @wsme_pecan.wsexpose(ExtensionSummary)
     def get_all(self):

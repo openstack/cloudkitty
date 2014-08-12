@@ -196,6 +196,8 @@ class BasicHashMapConfigController(billing.BillingConfigController):
 
 class BasicHashMapController(billing.BillingController):
 
+    module_name = 'hashmap'
+
     _custom_actions = {
         'types': ['GET']
     }
@@ -205,7 +207,7 @@ class BasicHashMapController(billing.BillingController):
     def get_module_info(self):
         module = BasicHashMap()
         infos = {
-            'name': 'hashmap',
+            'name': self.module_name,
             'description': 'Basic hashmap billing module.',
             'enabled': module.enabled,
             'hot_config': True,

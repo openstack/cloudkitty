@@ -20,10 +20,12 @@ from cloudkitty import billing
 
 class NoopController(billing.BillingController):
 
+    module_name = 'noop'
+
     def get_module_info(self):
         module = Noop()
         infos = {
-            'name': 'noop',
+            'name': self.module_name,
             'description': 'Dummy test module.',
             'enabled': module.enabled,
             'hot_config': False,
