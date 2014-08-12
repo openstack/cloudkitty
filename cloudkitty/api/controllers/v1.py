@@ -33,14 +33,20 @@ CLOUDKITTY_SERVICES = wtypes.Enum(wtypes.text,
 
 
 class ResourceDescriptor(wtypes.Base):
+    """Type describing a resource in CloudKitty.
+
+    """
 
     service = CLOUDKITTY_SERVICES
+    """Name of the service."""
 
     # FIXME(sheeprine): values should be dynamic
     # Testing with ironic dynamic type
     desc = {wtypes.text: cktypes.MultiType(wtypes.text, int, float, dict)}
+    """Description of the resources parameters."""
 
     volume = int
+    """Number of resources."""
 
     def to_json(self):
         res_dict = {}
@@ -50,8 +56,20 @@ class ResourceDescriptor(wtypes.Base):
                                    }]
         return res_dict
 
+    @classmethod
+    def sample(cls):
+        sample = cls(service='compute',
+                     desc={
+                         'image_id': 'a41fba37-2429-4f15-aa00-b5bc4bf557bf'
+                     },
+                     volume=1)
+        return sample
+
 
 class ModulesController(rest.RestController):
+    """REST Controller managing billing modules.
+
+    """
 
     def __init__(self):
         self.extensions = extension.ExtensionManager(
@@ -72,6 +90,10 @@ class ModulesController(rest.RestController):
 
     @wsme_pecan.wsexpose([wtypes.text])
     def get(self):
+        """Return the list of loaded modules.
+
+        :return: Name of every loaded modules.
+        """
         return [ext for ext in self.extensions.names()]
 
 
@@ -85,6 +107,12 @@ class BillingController(rest.RestController):
 
     @wsme_pecan.wsexpose(float, body=[ResourceDescriptor])
     def quote(self, res_data):
+        """Get an instant quote based on multiple resource descriptions.
+
+        :param res_data: List of resource descriptions.
+        :return: Total price for these descriptions.
+        """
+
         # TODO(sheeprine): Send RPC request for quote
         from cloudkitty import extension_manager
         b_processors = {}
@@ -115,6 +143,9 @@ class BillingController(rest.RestController):
 
 
 class ReportController(rest.RestController):
+    """REST Controller managing the reporting.
+
+    """
 
     _custom_actions = {
         'total': ['GET']
@@ -122,11 +153,17 @@ class ReportController(rest.RestController):
 
     @wsme_pecan.wsexpose(float)
     def total(self):
+        """Return the amount to pay for the current month.
+
+        """
         # TODO(sheeprine): Get current total from DB
         return 10.0
 
 
 class V1Controller(rest.RestController):
+    """API version 1 controller.
+
+    """
 
     billing = BillingController()
     report = ReportController()

@@ -1,0 +1,31 @@
+========================
+CloudKitty REST API (v1)
+========================
+
+Billing
+=======
+
+.. rest-controller:: cloudkitty.billing:BillingEnableController
+   :webprefix: /v1/billing/modules/(module)/enabled
+
+.. rest-controller:: cloudkitty.billing:BillingConfigController
+   :webprefix: /v1/billing/modules/(module)/config
+
+.. rest-controller:: cloudkitty.api.controllers.v1:ModulesController
+   :webprefix: /v1/billing/modules
+
+.. rest-controller:: cloudkitty.api.controllers.v1:BillingController
+   :webprefix: /v1/billing
+
+.. autotype:: cloudkitty.billing.ExtensionSummary
+   :members:
+
+.. autotype:: cloudkitty.api.controllers.v1.ResourceDescriptor
+   :members:
+
+
+Report
+======
+
+.. rest-controller:: cloudkitty.api.controllers.v1:ReportController
+   :webprefix: /v1/report

@@ -28,50 +28,111 @@ LOG = logging.getLogger(__name__)
 
 
 class APILink(wtypes.Base):
+    """API link description.
+
+    """
 
     type = wtypes.text
+    """Type of link."""
 
     rel = wtypes.text
+    """Relationship with this link."""
 
     href = wtypes.text
+    """URL of the link."""
+
+    @classmethod
+    def sample(cls):
+        version = 'v1'
+        sample = cls(
+            rel='self',
+            type='text/html',
+            href='http://127.0.0.1:8888/{id}'.format(
+                id=version))
+        return sample
 
 
 class APIMediaType(wtypes.Base):
+    """Media type description.
+
+    """
 
     base = wtypes.text
+    """Base type of this media type."""
 
     type = wtypes.text
+    """Type of this media type."""
+
+    @classmethod
+    def sample(cls):
+        sample = cls(
+            base='application/json',
+            type='application/vnd.openstack.cloudkitty-v1+json')
+        return sample
+
+
+VERSION_STATUS = wtypes.Enum(wtypes.text, 'EXPERIMENTAL', 'STABLE')
 
 
 class APIVersion(wtypes.Base):
+    """API Version description.
+
+    """
 
     id = wtypes.text
+    """ID of the version."""
 
-    status = wtypes.text
+    status = VERSION_STATUS
+    """Status of the version."""
+
+    updated = wtypes.text
+    "Last update in iso8601 format."
 
     links = [APILink]
+    """List of links to API resources."""
 
     media_types = [APIMediaType]
+    """Types accepted by this API."""
+
+    @classmethod
+    def sample(cls):
+        version = 'v1'
+        updated = '2014-08-11T16:00:00Z'
+        links = [APILink.sample()]
+        media_types = [APIMediaType.sample()]
+        sample = cls(id=version,
+                     status='STABLE',
+                     updated=updated,
+                     links=links,
+                     media_types=media_types)
+        return sample
 
 
 class RootController(rest.RestController):
+    """Root REST Controller exposing versions of the API.
+
+    """
 
     v1 = v1.V1Controller()
 
     @wsme_pecan.wsexpose([APIVersion])
     def get(self):
+        """Return the version list
+
+        """
         # TODO(sheeprine): Maybe we should store all the API version
         # informations in every API modules
         ver1 = APIVersion(
             id='v1',
             status='EXPERIMENTAL',
-            updated='2014-06-02T00:00:00Z',
+            updated='2014-08-11T16:00:00Z',
             links=[
                 APILink(
                     rel='self',
-                    href='{scheme}://{host}/v1'.format(
+                    href='{scheme}://{host}:{port}/v1'.format(
                         scheme=pecan.request.scheme,
-                        host=pecan.request.host
+                        host=pecan.request.host,
+                        port=pecan.request.port
                     )
                 )
             ],
