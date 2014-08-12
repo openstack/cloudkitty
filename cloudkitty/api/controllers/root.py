@@ -129,10 +129,9 @@ class RootController(rest.RestController):
             links=[
                 APILink(
                     rel='self',
-                    href='{scheme}://{host}:{port}/v1'.format(
+                    href='{scheme}://{host}/v1'.format(
                         scheme=pecan.request.scheme,
                         host=pecan.request.host,
-                        port=pecan.request.port
                     )
                 )
             ],
