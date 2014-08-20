@@ -40,12 +40,12 @@ class State(api.State):
     def get_state(self, name):
         session = db.get_session()
         try:
-            return bool(utils.model_query(
+            return utils.model_query(
                 models.StateInfo,
                 session
             ).filter_by(
                 name=name,
-            ).value('state'))
+            ).value('state')
         except sqlalchemy.orm.exc.NoResultFound:
             return None
 
@@ -64,7 +64,7 @@ class State(api.State):
             except sqlalchemy.orm.exc.NoResultFound:
                 db_state = models.StateInfo(name=name, state=state)
                 session.add(db_state)
-        return bool(db_state.state)
+        return db_state.state
 
     def get_metadata(self, name):
         session = db.get_session()
