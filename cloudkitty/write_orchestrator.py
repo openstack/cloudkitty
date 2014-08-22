@@ -17,6 +17,7 @@
 #
 import datetime
 import json
+import os.path
 import zipfile
 
 import cloudkitty.utils as utils
@@ -73,12 +74,13 @@ class WriteOrchestrator(object):
         intermediary data format before final transformation.
     """
     def __init__(self, backend, state_backend, user_id, state_manager,
-                 period=3600):
+                 basepath=None, period=3600):
         self._backend = backend
         self._state_backend = state_backend
         self._uid = user_id
         self._period = period
         self._sm = state_manager
+        self._basepath = basepath
         self._osrtf = None
         self._write_pipeline = []
 
@@ -149,6 +151,8 @@ class WriteOrchestrator(object):
         if self._osrtf is None:
             self._osrtf = OSRTFBackend(self._backend)
             filename = self._gen_osrtf_filename(self.usage_start_dt)
+            if self._basepath:
+                filename = os.path.join(self._basepath, filename)
             self._osrtf.open(filename)
 
     def _commit(self):

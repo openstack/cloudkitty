@@ -68,7 +68,8 @@ class Orchestrator(object):
         self.wo = w_orch.WriteOrchestrator(w_backend,
                                            s_backend,
                                            self.keystone.user_id,
-                                           self.sm)
+                                           self.sm,
+                                           basepath=CONF.output.basepath)
 
         # Billing processors
         self.b_processors = {}
