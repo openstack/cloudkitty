@@ -23,7 +23,6 @@ import wsmeext.pecan as wsme_pecan
 from cloudkitty.api.controllers import v1
 from cloudkitty.openstack.common import log as logging
 
-
 LOG = logging.getLogger(__name__)
 
 

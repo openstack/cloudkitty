@@ -19,15 +19,18 @@ import os
 from wsgiref import simple_server
 
 from oslo.config import cfg
+from oslo import messaging
 from paste import deploy
 import pecan
 
 from cloudkitty.api import config as api_config
+from cloudkitty.api import hooks
+from cloudkitty.common import rpc
 from cloudkitty import config  # noqa
-from cloudkitty.openstack.common import log
+from cloudkitty.openstack.common import log as logging
 
 
-LOG = log.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 auth_opts = [
     cfg.StrOpt('api_paste_config',
@@ -62,12 +65,22 @@ def setup_app(pecan_config=None, extra_hooks=None):
 
     app_conf = get_pecan_config()
 
+    target = messaging.Target(topic='cloudkitty',
+                              version='1.0')
+
+    client = rpc.get_client(target)
+
+    app_hooks = [
+        hooks.RPCHook(client)
+    ]
+
     return pecan.make_app(
         app_conf.app.root,
         static_root=app_conf.app.static_root,
         template_path=app_conf.app.template_path,
         debug=CONF.debug,
         force_canonical=getattr(app_conf.app, 'force_canonical', True),
+        hooks=app_hooks,
         guess_content_type_from_ext=False
     )
 

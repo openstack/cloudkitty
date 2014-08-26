@@ -15,14 +15,12 @@
 #
 # @author: Stéphane Albert
 #
-import sys
-
 from oslo.config import cfg
 from stevedore import extension
 
 from cloudkitty import config  # noqa
 from cloudkitty.db import api as db_api
-from cloudkitty.openstack.common import log as logging
+from cloudkitty import service
 
 CONF = cfg.CONF
 
@@ -147,6 +145,5 @@ CONF.register_cli_opt(command_opt)
 
 
 def main():
-    cfg.CONF(sys.argv[1:], project='cloudkitty')
-    logging.setup('cloudkitty')
+    service.prepare_service()
     CONF.command.func()

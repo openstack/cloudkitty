@@ -15,17 +15,24 @@
 #
 # @author: Stéphane Albert
 #
-from cloudkitty.api import app
+from oslo.config import cfg
+
 from cloudkitty.common import rpc
+from cloudkitty.openstack.common import log as logging
+from cloudkitty import orchestrator
 from cloudkitty import service
+
+LOG = logging.getLogger(__name__)
+
+CONF = cfg.CONF
 
 
 def main():
     service.prepare_service()
     rpc.init()
-    server = app.build_server()
+    processor = orchestrator.Orchestrator()
     try:
-        server.serve_forever()
+        processor.process()
     except KeyboardInterrupt:
         pass
 

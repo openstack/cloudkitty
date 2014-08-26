@@ -26,7 +26,6 @@ from cloudkitty.billing.hash.db.sqlalchemy import models
 from cloudkitty import db
 from cloudkitty.openstack.common import log as logging
 
-
 LOG = logging.getLogger(__name__)
 
 
