@@ -8,4 +8,3 @@ oslosphinx
 oslotest
 sphinxcontrib-httpdomain
 sphinxcontrib-pecanwsme>=0.8
-docutils==0.9.1
