@@ -33,7 +33,7 @@ class StateInfo(Base, models.ModelBase):
     name = sqlalchemy.Column(sqlalchemy.String(255),
                              primary_key=True)
     state = sqlalchemy.Column(
-        sqlalchemy.Float(),
+        sqlalchemy.BigInteger(),
         nullable=False)
     s_metadata = sqlalchemy.Column(sqlalchemy.Text(),
                                    nullable=True,
