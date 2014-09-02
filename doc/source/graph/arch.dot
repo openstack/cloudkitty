@@ -1,0 +1,59 @@
+digraph "CloudKitty's Architecture" {
+
+    // Graph parameters
+    label="CloudKitty's Internal Architecture";
+    node [shape=box];
+    compound=true;
+
+    // API
+    api [label="API"];
+
+    // Orchestrator
+    subgraph cluster_3 {
+        label="Orchestrator";
+        node[shape=none, width=1.3, height=0, label=""];
+        {rank=same; o1 -> o2 -> o3 [style=invis];}
+    }
+
+    // Collector
+    ceilometer [label="Ceilometer"];
+    vendor [label="Vendor specific", style=dotted];
+    subgraph cluster_0 {
+        label="Collector";
+        style=dashed;
+        ceilometer -> vendor [style=invis];
+    }
+
+    // Rating
+    hashmap [label="HashMap module"];
+    r_others [label="Other modules...", style=dotted];
+    subgraph cluster_1 {
+        label="Rating engines";
+        style=dashed;
+        hashmap -> r_others [style=invis];
+    }
+
+    // Write Orchestrator
+    w_orchestrator [label="Write Orchestrator"];
+    tdb [label="Transient DB"];
+
+    //Writers
+    osrf [label="OpenStack\nReference Format\n(json)"];
+    w_others [label="Other modules...", style=dotted];
+    subgraph cluster_2 {
+        label="Writers";
+        style=dashed;
+        osrf -> w_others [style=invis];
+    }
+
+    // Relations
+    api -> hashmap;
+    api -> r_others;
+    o1 -> ceilometer [dir=both, ltail=cluster_3, lhead=cluster_0];
+    o2 -> hashmap [dir=both, ltail=cluster_3, lhead=cluster_1];
+    o3 -> w_orchestrator [ltail=cluster_3];
+    w_orchestrator -> osrf [constraint=false];
+    w_orchestrator -> w_others [style=dotted, constraint=false];
+    w_orchestrator -> tdb;
+}
+
