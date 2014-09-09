@@ -15,20 +15,12 @@
 #
 # @author: Stéphane Albert
 #
-from cloudkitty.api import app
-from cloudkitty.common import rpc
-from cloudkitty import service
+from pecan import hooks
 
 
-def main():
-    service.prepare_service()
-    rpc.init()
-    server = app.build_server()
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
+class RPCHook(hooks.PecanHook):
+    def __init__(self, rcp_client):
+        self._rpc_client = rcp_client
 
-
-if __name__ == '__main__':
-    main()
+    def before(self, state):
+        state.request.rpc_client = self._rpc_client

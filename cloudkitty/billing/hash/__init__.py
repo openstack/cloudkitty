@@ -25,7 +25,6 @@ from cloudkitty.billing.hash.db import api
 from cloudkitty.db import api as db_api
 from cloudkitty.openstack.common import log as logging
 
-
 LOG = logging.getLogger(__name__)
 
 MAP_TYPE = wtypes.Enum(wtypes.text, 'flat', 'rate')
@@ -146,6 +145,7 @@ class BasicHashMapConfigController(billing.BillingConfigController):
                 pecan.response.headers['Location'] = pecan.request.path
             except api.ServiceAlreadyExists as e:
                 pecan.abort(409, str(e))
+        self.notify_reload()
         pecan.response.status = 201
 
     @wsme_pecan.wsexpose(None, wtypes.text, wtypes.text, wtypes.text,

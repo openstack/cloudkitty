@@ -83,6 +83,13 @@ class BillingEnableController(rest.RestController):
         """
         api = db_api.get_instance()
         module_db = api.get_module_enable_state()
+        client = pecan.request.rpc_client.prepare(namespace='billing',
+                                                  fanout=True)
+        if state:
+            operation = 'enable_module'
+        else:
+            operation = 'disable_module'
+        client.cast({}, operation, name=self.module_name)
         return module_db.set_state(self.module_name, state)
 
 
@@ -91,6 +98,11 @@ class BillingConfigController(rest.RestController):
     """REST Controller managing internal configuration of billing modules.
 
     """
+
+    def notify_reload(self):
+        client = pecan.request.rpc_client.prepare(namespace='billing',
+                                                  fanout=True)
+        client.cast({}, 'reload_module', name=self.module_name)
 
     def _not_configurable(self):
         try:

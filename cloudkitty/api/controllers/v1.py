@@ -16,6 +16,7 @@
 # @author: Stéphane Albert
 #
 from oslo.config import cfg
+import pecan
 from pecan import rest
 from stevedore import extension
 from wsme import types as wtypes
@@ -113,19 +114,7 @@ class BillingController(rest.RestController):
         :param res_data: List of resource descriptions.
         :return: Total price for these descriptions.
         """
-
-        # TODO(sheeprine): Send RPC request for quote
-        from cloudkitty import extension_manager
-        b_processors = {}
-        processors = extension_manager.EnabledExtensionManager(
-            'cloudkitty.billing.processors',
-        )
-
-        for processor in processors:
-            b_name = processor.name
-            b_obj = processor.obj
-            b_processors[b_name] = b_obj
-
+        client = pecan.request.rpc_client.prepare(namespace='billing')
         res_dict = {}
         for res in res_data:
             if res.service not in res_dict:
@@ -133,14 +122,8 @@ class BillingController(rest.RestController):
             json_data = res.to_json()
             res_dict[res.service].extend(json_data[res.service])
 
-        for processor in b_processors.values():
-            processor.process([{'usage': res_dict}])
-
-        price = 0.0
-        for res in res_dict.values():
-            for data in res:
-                price += data.get('billing', {}).get('price', 0.0)
-        return price
+        res = client.call({}, 'quote', res_data=[{'usage': res_dict}])
+        return res
 
 
 class ReportController(rest.RestController):

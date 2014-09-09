@@ -16,28 +16,83 @@
 #
 # @author: Stéphane Albert
 #
-from __future__ import print_function
 import datetime
-import sys
 import time
 
+import eventlet
 from keystoneclient.v2_0 import client as kclient
 from oslo.config import cfg
+from oslo import messaging
 from stevedore import driver
 from stevedore import named
 
+from cloudkitty.common import rpc
 from cloudkitty import config  # NOQA
 from cloudkitty import extension_manager
 from cloudkitty.openstack.common import importutils as i_utils
+from cloudkitty.openstack.common import lockutils
 from cloudkitty.openstack.common import log as logging
 from cloudkitty import state
 from cloudkitty import write_orchestrator as w_orch
 
+eventlet.monkey_patch()
 
 LOG = logging.getLogger(__name__)
 
-
 CONF = cfg.CONF
+
+PROCESSORS_NAMESPACE = 'cloudkitty.billing.processors'
+WRITERS_NAMESPACE = 'cloudkitty.output.writers'
+COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
+
+
+class BillingEndpoint(object):
+    target = messaging.Target(namespace='billing',
+                              version='1.0')
+
+    def __init__(self, orchestrator):
+        self._pending_reload = []
+        self._module_state = {}
+        self._orchestrator = orchestrator
+
+    def get_reload_list(self):
+        lock = lockutils.lock('module-reload')
+        with lock:
+            reload_list = self._pending_reload
+            self._pending_reload = []
+            return reload_list
+
+    def get_module_state(self):
+        lock = lockutils.lock('module-state')
+        with lock:
+            module_list = self._module_state
+            self._module_state = {}
+            return module_list
+
+    def quote(self, ctxt, res_data):
+        LOG.debug('Received quote from RPC.')
+        return self._orchestrator.process_quote(res_data)
+
+    def reload_module(self, ctxt, name):
+        LOG.info('Received reload command for module {}.'.format(name))
+        lock = lockutils.lock('module-reload')
+        with lock:
+            if name not in self._pending_reload:
+                self._pending_reload.append(name)
+
+    def enable_module(self, ctxt, name):
+        LOG.info('Received enable command for module {}.'.format(name))
+        lock = lockutils.lock('module-state')
+        with lock:
+            self._module_state[name] = True
+
+    def disable_module(self, ctxt, name):
+        LOG.info('Received disable command for module {}.'.format(name))
+        lock = lockutils.lock('module-state')
+        with lock:
+            self._module_state[name] = False
+            if name in self._pending_reload:
+                self._pending_reload.remove(name)
 
 
 class Orchestrator(object):
@@ -59,7 +114,7 @@ class Orchestrator(object):
                           'keystone_url': CONF.auth.url,
                           'period': CONF.collect.period}
         self.collector = driver.DriverManager(
-            'cloudkitty.collector.backends',
+            COLLECTORS_NAMESPACE,
             CONF.collect.collector,
             invoke_on_load=True,
             invoke_kwds=collector_args).driver
@@ -77,10 +132,25 @@ class Orchestrator(object):
 
         # Output settings
         output_pipeline = named.NamedExtensionManager(
-            'cloudkitty.output.writers',
+            WRITERS_NAMESPACE,
             CONF.output.pipeline)
         for writer in output_pipeline:
             self.wo.add_writer(writer.plugin)
+
+        # RPC
+        self.server = None
+        self._billing_endpoint = BillingEndpoint(self)
+        self._init_messaging()
+
+    def _init_messaging(self):
+        target = messaging.Target(topic='cloudkitty',
+                                  server=CONF.host,
+                                  version='1.0')
+        endpoints = [
+            self._billing_endpoint,
+        ]
+        self.server = rpc.get_server(target, endpoints)
+        self.server.start()
 
     def _check_state(self):
         def _get_this_month_timestamp():
@@ -112,7 +182,7 @@ class Orchestrator(object):
     def _load_billing_processors(self):
         self.b_processors = {}
         processors = extension_manager.EnabledExtensionManager(
-            'cloudkitty.billing.processors',
+            PROCESSORS_NAMESPACE,
         )
 
         for processor in processors:
@@ -120,12 +190,48 @@ class Orchestrator(object):
             b_obj = processor.obj
             self.b_processors[b_name] = b_obj
 
+    def process_quote(self, res_data):
+        for processor in self.b_processors.values():
+            processor.process(res_data)
+
+        price = 0.0
+        for res in res_data:
+            for res_usage in res['usage'].values():
+                for data in res_usage:
+                    price += data.get('billing', {}).get('price', 0.0)
+        return price
+
+    def process_messages(self):
+        pending_reload = self._billing_endpoint.get_reload_list()
+        pending_states = self._billing_endpoint.get_module_state()
+        for name in pending_reload:
+            if name in self.b_processors:
+                if name in self.b_processors.keys():
+                    LOG.info('Reloading configuration of {} module.'.format(
+                        name))
+                    self.b_processors[name].reload_config()
+                else:
+                    LOG.info('Tried to reload a disabled module: {}.'.format(
+                        name))
+        for name, status in pending_states.items():
+            if name in self.b_processors and not status:
+                LOG.info('Disabling {} module.'.format(name))
+                self.b_processors.pop(name)
+            else:
+                LOG.info('Enabling {} module.'.format(name))
+                processors = extension_manager.EnabledExtensionManager(
+                    PROCESSORS_NAMESPACE)
+                for processor in processors:
+                    if processor.name == name:
+                        self.b_processors.append(processor)
+
     def process(self):
         while True:
+            self.process_messages()
             timestamp = self._check_state()
             if not timestamp:
-                print("Nothing left to do.")
-                break
+                eventlet.sleep(CONF.collect.period)
+                continue
 
             for service in CONF.collect.services:
                 data = self._collect(service, timestamp)
@@ -141,14 +247,3 @@ class Orchestrator(object):
             self.wo.commit()
 
         self.wo.close()
-
-
-def main():
-    CONF(sys.argv[1:], project='cloudkitty')
-    logging.setup('cloudkitty')
-    orchestrator = Orchestrator()
-    orchestrator.process()
-
-
-if __name__ == "__main__":
-    main()

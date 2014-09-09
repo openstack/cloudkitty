@@ -15,20 +15,27 @@
 #
 # @author: Stéphane Albert
 #
-from cloudkitty.api import app
-from cloudkitty.common import rpc
-from cloudkitty import service
+from oslo.config import cfg
+from oslo import messaging
+
+TRANSPORT = None
 
 
-def main():
-    service.prepare_service()
-    rpc.init()
-    server = app.build_server()
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
+def init():
+    global TRANSPORT
+    TRANSPORT = messaging.get_transport(cfg.CONF)
 
 
-if __name__ == '__main__':
-    main()
+def get_client(target, version_cap=None):
+    assert TRANSPORT is not None
+    return messaging.RPCClient(TRANSPORT,
+                               target,
+                               version_cap=version_cap)
+
+
+def get_server(target, endpoints):
+    assert TRANSPORT is not None
+    return messaging.get_rpc_server(TRANSPORT,
+                                    target,
+                                    endpoints,
+                                    executor='eventlet')
