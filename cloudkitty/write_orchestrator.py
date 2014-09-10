@@ -29,12 +29,13 @@ class OSRTFBackend(object):
     Used to store data from the output of the billing pipeline.
     """
 
-    def __init__(self, backend):
-        self._backend = backend
+    def __init__(self):
         self._osrtf = None
 
     def open(self, filename):
-        self._osrtf = zipfile.ZipFile(self._backend(filename, 'ab+'), 'a')
+        # FIXME(sheeprine): ZipFile is working well with filename
+        # but not backend
+        self._osrtf = zipfile.ZipFile(filename, 'a+')
 
     def _gen_filename(self, timeframe):
         filename = '{}-{:02d}-{:02d}-{}-{}.json'.format(timeframe.year,
@@ -73,10 +74,13 @@ class WriteOrchestrator(object):
         Handle incoming data from the global orchestrator, and store them in an
         intermediary data format before final transformation.
     """
-    def __init__(self, backend, state_backend, user_id, state_manager,
-                 basepath=None, period=3600):
+    def __init__(self,
+                 backend,
+                 user_id,
+                 state_manager,
+                 basepath=None,
+                 period=3600):
         self._backend = backend
-        self._state_backend = state_backend
         self._uid = user_id
         self._period = period
         self._sm = state_manager
@@ -99,8 +103,7 @@ class WriteOrchestrator(object):
     def add_writer(self, writer_class):
         writer = writer_class(self,
                               self._uid,
-                              self._backend,
-                              self._state_backend)
+                              self._backend)
         self._write_pipeline.append(writer)
 
     def _gen_osrtf_filename(self, timeframe):
@@ -149,7 +152,7 @@ class WriteOrchestrator(object):
 
     def _pre_commit(self):
         if self._osrtf is None:
-            self._osrtf = OSRTFBackend(self._backend)
+            self._osrtf = OSRTFBackend()
             filename = self._gen_osrtf_filename(self.usage_start_dt)
             if self._basepath:
                 filename = os.path.join(self._basepath, filename)
@@ -180,7 +183,7 @@ class WriteOrchestrator(object):
 
     def get_timeframe(self, timeframe):
         if self._osrtf is None:
-            self._osrtf = OSRTFBackend(self._backend)
+            self._osrtf = OSRTFBackend()
             self._osrtf.open(self._gen_osrtf_filename(timeframe))
         data = self._osrtf.get(timeframe)
         return self._format_data(timeframe, data)

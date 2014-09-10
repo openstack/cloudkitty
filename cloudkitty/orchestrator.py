@@ -103,7 +103,6 @@ class Orchestrator(object):
                                        region_name=CONF.auth.region,
                                        auth_url=CONF.auth.url)
 
-        s_backend = i_utils.import_class(CONF.state.backend)
         self.sm = state.DBStateManager(self.keystone.user_id,
                                        'osrtf')
 
@@ -121,7 +120,6 @@ class Orchestrator(object):
 
         w_backend = i_utils.import_class(CONF.output.backend)
         self.wo = w_orch.WriteOrchestrator(w_backend,
-                                           s_backend,
                                            self.keystone.user_id,
                                            self.sm,
                                            basepath=CONF.output.basepath)
