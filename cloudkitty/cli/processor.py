@@ -34,7 +34,7 @@ def main():
     try:
         processor.process()
     except KeyboardInterrupt:
-        pass
+        processor.terminate()
 
 
 if __name__ == '__main__':

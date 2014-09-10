@@ -30,7 +30,7 @@ class BaseReportWriter(object):
 
     def __init__(self, write_orchestrator, user_id, backend, basepath=None):
         self._write_orchestrator = write_orchestrator
-        self._write_backend = backend
+        self._backend = backend
         self._uid = user_id
         self._sm = state.DBStateManager(self._uid,
                                         self.report_type)
@@ -60,7 +60,7 @@ class BaseReportWriter(object):
 
     def _open(self):
         filename = self._gen_filename()
-        self._report = self._write_backend(filename, 'wb+')
+        self._report = self._backend(filename, 'wb+')
         self._report.seek(0, 2)
 
     def _get_report_size(self):
@@ -96,6 +96,12 @@ class BaseReportWriter(object):
         """
 
     @abc.abstractmethod
+    def _write_total(self):
+        """Write current total
+
+        """
+
+    @abc.abstractmethod
     def _write(self):
         """Write report content
 
@@ -110,6 +116,8 @@ class BaseReportWriter(object):
                 else:
                     self._recover_state()
                 self.checked_first_line = True
+        else:
+            self._recover_state()
 
     def _commit(self):
         self._pre_commit()
@@ -121,6 +129,7 @@ class BaseReportWriter(object):
 
     def _post_commit(self):
         self._usage_data = {}
+        self._write_total()
 
     def _update(self, data):
         for service in data:

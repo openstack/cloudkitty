@@ -244,4 +244,5 @@ class Orchestrator(object):
             # We're getting a full period so we directly commit
             self.wo.commit()
 
+    def terminate(self):
         self.wo.close()

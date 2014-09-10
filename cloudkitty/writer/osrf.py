@@ -47,10 +47,13 @@ class OSRFBackend(writer.BaseReportWriter):
 
     def _write_header(self):
         self._report.write('[')
+        self._report.flush()
 
     def _write_total(self):
         total = {'total': self.total}
         self._report.write(json.dumps(total))
+        self._report.write(']')
+        self._report.flush()
 
     def _recover_state(self):
         # Search for last comma
@@ -77,7 +80,6 @@ class OSRFBackend(writer.BaseReportWriter):
         if self._report is not None:
             self._recover_state()
             self._write_total()
-            self._report.write(']')
             self._report.close()
 
     def _write(self):
@@ -88,3 +90,4 @@ class OSRFBackend(writer.BaseReportWriter):
 
         self._report.write(json.dumps(data))
         self._report.write(', ')
+        self._report.flush()

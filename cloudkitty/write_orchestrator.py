@@ -67,6 +67,9 @@ class OSRTFBackend(object):
         except Exception:
             pass
 
+    def close(self):
+        self._osrtf.close()
+
 
 class WriteOrchestrator(object):
     """Write Orchestrator:
@@ -151,13 +154,16 @@ class WriteOrchestrator(object):
         final_data['usage'] = data
         return [final_data]
 
-    def _pre_commit(self):
+    def _open_osrtf(self):
         if self._osrtf is None:
             self._osrtf = OSRTFBackend()
             filename = self._gen_osrtf_filename(self.usage_start_dt)
             if self._basepath:
-                filename = os.path.join(self._basepath, filename)
-            self._osrtf.open(filename)
+                self._osrtf_filename = os.path.join(self._basepath, filename)
+        self._osrtf.open(self._osrtf_filename)
+
+    def _pre_commit(self):
+        self._open_osrtf()
 
     def _commit(self):
         self._pre_commit()
@@ -172,6 +178,11 @@ class WriteOrchestrator(object):
 
         self._usage_data = {}
 
+        self._post_commit()
+
+    def _post_commit(self):
+        self._osrtf.close()
+
     def _dispatch(self, data):
         for service in data:
             if service in self._usage_data:
@@ -183,10 +194,9 @@ class WriteOrchestrator(object):
                 self.total += entry['billing']['price']
 
     def get_timeframe(self, timeframe):
-        if self._osrtf is None:
-            self._osrtf = OSRTFBackend()
-            self._osrtf.open(self._gen_osrtf_filename(timeframe))
+        self._open_osrtf()
         data = self._osrtf.get(timeframe)
+        self._osrtf.close()
         return self._format_data(timeframe, data)
 
     def append(self, raw_data):
@@ -200,11 +210,9 @@ class WriteOrchestrator(object):
                 self.usage_start = usage_start
                 self.usage_end = usage_start + self._period
                 self.usage_start_dt = (
-                    datetime.datetime.fromtimestamp(self.usage_start)
-                )
+                    datetime.datetime.fromtimestamp(self.usage_start))
                 self.usage_end_dt = (
-                    datetime.datetime.fromtimestamp(self.usage_end)
-                )
+                    datetime.datetime.fromtimestamp(self.usage_end))
 
             self._dispatch(data)
 
@@ -214,3 +222,5 @@ class WriteOrchestrator(object):
     def close(self):
         for writer in self._write_pipeline:
             writer.close()
+        if self._osrtf is not None:
+            self._osrtf.close()
