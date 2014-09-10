@@ -28,7 +28,7 @@ class BaseReportWriter(object):
     """Base report writer."""
     report_type = None
 
-    def __init__(self, write_orchestrator, user_id, backend):
+    def __init__(self, write_orchestrator, user_id, backend, basepath=None):
         self._write_orchestrator = write_orchestrator
         self._write_backend = backend
         self._uid = user_id
@@ -36,6 +36,8 @@ class BaseReportWriter(object):
                                         self.report_type)
         self._report = None
         self._period = 3600
+
+        self._basepath = basepath
 
         # State vars
         self.checked_first_line = False

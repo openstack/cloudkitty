@@ -103,7 +103,8 @@ class WriteOrchestrator(object):
     def add_writer(self, writer_class):
         writer = writer_class(self,
                               self._uid,
-                              self._backend)
+                              self._backend,
+                              self._basepath)
         self._write_pipeline.append(writer)
 
     def _gen_osrtf_filename(self, timeframe):

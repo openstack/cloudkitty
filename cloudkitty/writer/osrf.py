@@ -16,6 +16,7 @@
 # @author: Stéphane Albert
 #
 import json
+import os
 
 from cloudkitty import writer
 
@@ -31,6 +32,8 @@ class OSRFBackend(writer.BaseReportWriter):
         filename = '{}-osrf-{}-{:02d}.json'.format(self._uid,
                                                    timeframe.year,
                                                    timeframe.month)
+        if self._basepath:
+            filename = os.path.join(self._basepath, filename)
         return filename
 
     def _open(self):
