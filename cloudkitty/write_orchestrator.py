@@ -35,7 +35,7 @@ class OSRTFBackend(object):
     def open(self, filename):
         # FIXME(sheeprine): ZipFile is working well with filename
         # but not backend
-        self._osrtf = zipfile.ZipFile(filename, 'a+')
+        self._osrtf = zipfile.ZipFile(filename, 'a')
 
     def _gen_filename(self, timeframe):
         filename = '{}-{:02d}-{:02d}-{}-{}.json'.format(timeframe.year,

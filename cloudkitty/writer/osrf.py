@@ -38,7 +38,7 @@ class OSRFBackend(writer.BaseReportWriter):
 
     def _open(self):
         filename = self._gen_filename(self.usage_start_dt)
-        self._report = self._write_backend(filename, 'rb+')
+        self._report = self._backend(filename, 'rb+')
         self._report.seek(0, 2)
         if self._report.tell():
             self._recover_state()
