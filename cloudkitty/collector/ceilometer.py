@@ -22,11 +22,52 @@ from ceilometerclient import client as cclient
 from cloudkitty import collector
 
 
-class CeilometerCollector(collector.BaseCollector):
-    def __init__(self, **kwargs):
-        super(CeilometerCollector, self).__init__(**kwargs)
+class ResourceNotFound(Exception):
+    """Raised when the resource doesn't exist."""
 
+    def __init__(self, resource_type, resource_id):
+        super(ResourceNotFound, self).__init__(
+            "No such resource: %s, type: %s" % (resource_id, resource_type))
+        self.resource_id = resource_id
+        self.resource_type = resource_type
+
+
+class CeilometerResourceCacher(object):
+    def __init__(self):
         self._resource_cache = {}
+
+    def add_resource_detail(self, resource_type, resource_id, resource_data):
+        if resource_type not in self._resource_cache:
+            self._resource_cache[resource_type] = {}
+        self._resource_cache[resource_type][resource_id] = resource_data
+        return self._resource_cache[resource_type][resource_id]
+
+    def has_resource_detail(self, resource_type, resource_id):
+        if resource_type in self._resource_cache:
+            if resource_id in self._resource_cache[resource_type]:
+                return True
+        return False
+
+    def get_resource_detail(self, resource_type, resource_id):
+        try:
+            resource = self._resource_cache[resource_type][resource_id]
+            return resource
+        except KeyError:
+            raise ResourceNotFound(resource_type, resource_id)
+
+
+class CeilometerCollector(collector.BaseCollector):
+    collector_name = 'ceilometer'
+    dependencies = ('CeilometerTransformer',
+                    'CloudKittyFormatTransformer')
+
+    def __init__(self, transformers, **kwargs):
+        super(CeilometerCollector, self).__init__(transformers, **kwargs)
+
+        self.t_ceilometer = self.transformers['CeilometerTransformer']
+        self.t_cloudkitty = self.transformers['CloudKittyFormatTransformer']
+
+        self._cacher = CeilometerResourceCacher()
 
     def _connect(self):
         """Initialize connection to the Ceilometer endpoint."""
@@ -87,49 +128,20 @@ class CeilometerCollector(collector.BaseCollector):
         return [instance.groupby['resource_id'] for instance in instance_stats]
 
     def get_compute(self, start, end=None, project_id=None, q_filter=None):
-        active_instances = self.get_active_instances(start, end, project_id,
-                                                     q_filter)
+        active_instance_ids = self.get_active_instances(start, end, project_id,
+                                                        q_filter)
         compute_data = []
-        volume_data = {'unit': 'instance', 'qty': 1}
-        for instance in active_instances:
-            instance_data = {}
-            instance_data['desc'] = self.get_resource_detail(instance)
-            instance_data['desc']['instance_id'] = instance
-            instance_data['vol'] = volume_data
-            compute_data.append(instance_data)
-
-        data = {}
-        data['compute'] = compute_data
-        return data
-
-    def _strip_compute(self, data):
-        res_data = {}
-        res_data['name'] = data.metadata.get('display_name')
-        res_data['flavor'] = data.metadata.get('flavor.name')
-        res_data['vcpus'] = data.metadata.get('vcpus')
-        res_data['memory'] = data.metadata.get('memory_mb')
-        res_data['image_id'] = data.metadata.get('image.id')
-        res_data['availability_zone'] = (
-            data.metadata.get('OS-EXT-AZ.availability_zone')
-        )
-
-        res_data['project_id'] = data.project_id
-        res_data['user_id'] = data.user_id
-
-        res_data['metadata'] = {}
-        for field in data.metadata:
-            if field.startswith('user_metadata'):
-                res_data['metadata'][field[14:]] = data.metadata[field]
-
-        return res_data
-
-    def strip_resource_data(self, res_data, res_type='compute'):
-        if res_type == 'compute':
-            return self._strip_compute(res_data)
-
-    def get_resource_detail(self, resource_id):
-        if resource_id not in self._resource_cache:
-            resource = self._conn.resources.get(resource_id)
-            resource = self.strip_resource_data(resource)
-            self._resource_cache[resource_id] = resource
-        return self._resource_cache[resource_id]
+        for instance_id in active_instance_ids:
+            if not self._cacher.has_resource_detail('compute', instance_id):
+                raw_resource = self._conn.resources.get(instance_id)
+                instance = self.t_ceilometer.strip_resource_data('compute',
+                                                                 raw_resource)
+                self._cacher.add_resource_detail('compute',
+                                                 instance_id,
+                                                 instance)
+            instance = self._cacher.get_resource_detail('compute',
+                                                        instance_id)
+            compute_data.append(self.t_cloudkitty.format_item(instance,
+                                                              'instance',
+                                                              1))
+        return self.t_cloudkitty.format_service('compute', compute_data)

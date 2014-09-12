@@ -23,10 +23,24 @@ import six
 import cloudkitty.utils as utils
 
 
+class TransformerDependencyError(Exception):
+    """Raised when a collector can't find a mandatory transformer."""
+
+    def __init__(self, collector, transformer):
+        super(TransformerDependencyError, self).__init__(
+            "Transformer '%s' not found, but required by %s" % (transformer,
+                                                                collector))
+        self.collector = collector
+        self.transformer = transformer
+
+
 @six.add_metaclass(abc.ABCMeta)
 class BaseCollector(object):
-    def __init__(self, **kwargs):
+    dependencies = []
+
+    def __init__(self, transformers, **kwargs):
         try:
+            self.transformers = transformers
             self.user = kwargs['user']
             self.password = kwargs['password']
             self.tenant = kwargs['tenant']
@@ -36,8 +50,19 @@ class BaseCollector(object):
         except IndexError as e:
             raise ValueError("Missing argument (%s)" % e)
 
+        self._check_transformers()
+
         self._conn = None
         self._connect()
+
+    def _check_transformers(self):
+        """Check for transformer prerequisites
+
+        """
+        for dependency in self.dependencies:
+            if dependency not in self.transformers:
+                raise TransformerDependencyError(self.collector_name,
+                                                 dependency)
 
     @abc.abstractmethod
     def _connect(self):

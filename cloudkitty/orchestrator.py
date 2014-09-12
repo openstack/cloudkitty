@@ -24,6 +24,7 @@ from keystoneclient.v2_0 import client as kclient
 from oslo.config import cfg
 from oslo import messaging
 from stevedore import driver
+from stevedore import extension
 from stevedore import named
 
 from cloudkitty.common import rpc
@@ -41,9 +42,10 @@ LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 
+COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
+TRANSFORMERS_NAMESPACE = 'cloudkitty.transformers'
 PROCESSORS_NAMESPACE = 'cloudkitty.billing.processors'
 WRITERS_NAMESPACE = 'cloudkitty.output.writers'
-COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 
 
 class BillingEndpoint(object):
@@ -106,7 +108,12 @@ class Orchestrator(object):
         self.sm = state.DBStateManager(self.keystone.user_id,
                                        'osrtf')
 
-        collector_args = {'user': CONF.auth.username,
+        # Transformers
+        self.transformers = {}
+        self._load_transformers()
+
+        collector_args = {'transformers': self.transformers,
+                          'user': CONF.auth.username,
                           'password': CONF.auth.password,
                           'tenant': CONF.auth.tenant,
                           'region': CONF.auth.region,
@@ -176,6 +183,17 @@ class Orchestrator(object):
                                   'end': next_timestamp},
                       'usage': raw_data}]
         return timed_data
+
+    def _load_transformers(self):
+        self.transformers = {}
+        transformers = extension.ExtensionManager(
+            TRANSFORMERS_NAMESPACE,
+            invoke_on_load=True)
+
+        for transformer in transformers:
+            t_name = transformer.name
+            t_obj = transformer.obj
+            self.transformers[t_name] = t_obj
 
     def _load_billing_processors(self):
         self.b_processors = {}
