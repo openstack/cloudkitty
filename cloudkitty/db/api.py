@@ -89,3 +89,45 @@ class ModuleEnableState(object):
         :param name: Name of the module
         :param value: State of the module
         """
+
+
+class NoSuchMapping(Exception):
+    """Raised when the mapping doesn't exist."""
+
+    def __init__(self, service):
+        super(NoSuchMapping, self).__init__(
+            "No such mapping for service: %s" % service)
+        self.service = service
+
+
+@six.add_metaclass(abc.ABCMeta)
+class ServiceToCollectorMapping(object):
+    """Base class for service to collector mapping."""
+
+    @abc.abstractmethod
+    def get_mapping(self, service):
+        """Get a mapping.
+
+        :return mapping: service to collector object.
+        """
+
+    @abc.abstractmethod
+    def set_mapping(self, service, collector):
+        """Set a mapping.
+
+        :param service: Service to work on.
+        :param collector: Collector to prioritize.
+        :return mapping: Service to Collector object.
+        """
+
+    @abc.abstractmethod
+    def list_services(self):
+        """Retrieve the list of every services mapped.
+
+        :return list(str): List of services' name.
+        """
+    @abc.abstractmethod
+    def delete_mapping(self, service):
+        """Remove a mapping.
+
+        """

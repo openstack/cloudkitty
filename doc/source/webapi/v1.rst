@@ -2,6 +2,19 @@
 CloudKitty REST API (v1)
 ========================
 
+Collector
+=========
+
+.. rest-controller:: cloudkitty.api.controllers.v1:CollectorController
+   :webprefix: /v1/collector
+
+.. rest-controller:: cloudkitty.api.controllers.v1:MappingController
+   :webprefix: /v1/collector/mapping
+
+.. autotype:: cloudkitty.api.controllers.v1.MetricToCollectorMapping
+   :members:
+
+
 Billing
 =======
 
