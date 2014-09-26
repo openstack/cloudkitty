@@ -95,7 +95,7 @@ class HashMap(object):
     """Base class for hashmap configuration."""
 
     @abc.abstractmethod
-    def get_migrate(self):
+    def get_migration(self):
         """Return a migrate manager.
 
         """

@@ -60,7 +60,7 @@ class DBCommand(object):
         else:
             try:
                 module = self.billing_models[name]
-                mod_migration = module.get_migrate()
+                mod_migration = module.get_migration()
             except IndexError:
                 raise ModuleNotFound(name)
         return mod_migration
@@ -70,7 +70,7 @@ class DBCommand(object):
             migrations = []
             migrations.append(self.get_module_migration('cloudkitty'))
             for model in self.billing_models.values():
-                migrations.append(model.get_migrate())
+                migrations.append(model.get_migration())
         else:
             return [self.get_module_migration(name)]
         return migrations
