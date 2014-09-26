@@ -38,8 +38,8 @@ class StateManager(object):
 
     def _gen_filename(self):
         # FIXME(sheeprine): Basepath can't be enforced at the moment
-        filename = '{}_{}.state'.format(self._type,
-                                        self._uid)
+        filename = '{0}_{1}.state'.format(self._type,
+                                          self._uid)
         return filename
 
     def _open(self, mode='rb'):
@@ -100,7 +100,7 @@ class DBStateManager(object):
         self._db = api.get_instance().get_state()
 
     def _gen_name(self, state_type, uid):
-        name = '{}_{}'.format(state_type, uid)
+        name = '{0}_{1}'.format(state_type, uid)
         return name
 
     def get_state(self):
