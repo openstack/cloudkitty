@@ -24,6 +24,7 @@ import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.controllers import types as cktypes
 from cloudkitty import config  # noqa
+from cloudkitty.db import api as db_api
 from cloudkitty.openstack.common import log as logging
 
 CONF = cfg.CONF
@@ -65,6 +66,115 @@ class ResourceDescriptor(wtypes.Base):
                      },
                      volume=1)
         return sample
+
+
+class ServiceToCollectorMapping(wtypes.Base):
+    """Type describing a service to collector mapping.
+
+    """
+
+    service = wtypes.text
+    """Name of the service."""
+
+    collector = wtypes.text
+    """Name of the collector."""
+
+    def to_json(self):
+        res_dict = {}
+        res_dict[self.service] = self.collector
+        return res_dict
+
+    @classmethod
+    def sample(cls):
+        sample = cls(service='compute',
+                     collector='ceilometer')
+        return sample
+
+
+class MappingController(rest.RestController):
+    """REST Controller managing service to collector mapping.
+
+    """
+
+    def __init__(self):
+        self._db = db_api.get_instance().get_service_to_collector_mapping()
+
+    @wsme_pecan.wsexpose([wtypes.text])
+    def get_all(self):
+        """Return the list of every services mapped.
+
+        :return: List of every services mapped.
+        """
+        return [mapping.service for mapping in self._db.list_services()]
+
+    @wsme_pecan.wsexpose(ServiceToCollectorMapping, wtypes.text)
+    def get_one(self, service):
+        """Return a service to collector mapping.
+
+        :param service: Name of the service to filter on.
+        """
+        try:
+            return self._db.get_mapping(service)
+        except db_api.NoSuchMapping as e:
+            pecan.abort(400, str(e))
+        pecan.response.status = 200
+
+    @wsme_pecan.wsexpose(ServiceToCollectorMapping,
+                         wtypes.text,
+                         body=wtypes.text)
+    def post(self, service, collector):
+        """Create or modify a mapping.
+
+        :param service: Name of the service to map a collector to.
+        :param collector: Name of the collector.
+        """
+        return self._db.set_mapping(service, collector)
+
+    @wsme_pecan.wsexpose(None, body=wtypes.text)
+    def delete(self, service):
+        """Delete a mapping.
+
+        :param service: Name of the service to suppress the mapping from.
+        """
+        try:
+            self._db.delete_mapping(service)
+        except db_api.NoSuchMapping as e:
+            pecan.abort(400, str(e))
+        pecan.response.status = 204
+
+
+class CollectorController(rest.RestController):
+    """REST Controller managing collector modules.
+
+    """
+
+    mapping = MappingController()
+
+    _custom_actions = {
+        'state': ['GET', 'POST']
+    }
+
+    def __init__(self):
+        self._db = db_api.get_instance().get_module_enable_state()
+
+    @wsme_pecan.wsexpose(bool, wtypes.text)
+    def state(self, collector):
+        """Query the enable state of a collector.
+
+        :param collector: Name of the collector.
+        :return: State of the collector.
+        """
+        return self._db.get_state('collector_{}'.format(collector))
+
+    @wsme_pecan.wsexpose(bool, wtypes.text, body=bool)
+    def post_state(self, collector, state):
+        """Set the enable state of a collector.
+
+        :param collector: Name of the collector.
+        :param state: New state for the collector.
+        :return: State of the collector.
+        """
+        return self._db.set_state('collector_{}'.format(collector), state)
 
 
 class ModulesController(rest.RestController):
@@ -149,5 +259,6 @@ class V1Controller(rest.RestController):
 
     """
 
+    collector = CollectorController()
     billing = BillingController()
     report = ReportController()

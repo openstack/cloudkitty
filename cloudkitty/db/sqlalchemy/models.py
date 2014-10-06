@@ -66,3 +66,22 @@ class ModuleStateInfo(Base, models.ModelBase):
                 'enabled={state}>').format(
                     name=self.name,
                     state=self.state)
+
+
+class ServiceToCollectorMapping(Base, models.ModelBase):
+    """Collector module state.
+
+    """
+
+    __tablename__ = 'service_to_collector_mappings'
+
+    service = sqlalchemy.Column(sqlalchemy.String(255),
+                                primary_key=True)
+    collector = sqlalchemy.Column(sqlalchemy.String(255),
+                                  nullable=False)
+
+    def __repr__(self):
+        return ('<ServiceToCollectorMapping[{service}]: '
+                'collector={collector}>').format(
+                    service=self.service,
+                    collector=self.collector)

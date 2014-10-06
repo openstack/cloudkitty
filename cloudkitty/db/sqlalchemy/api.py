@@ -124,6 +124,63 @@ class ModuleEnableState(api.ModuleEnableState):
         return bool(db_state.state)
 
 
+class ServiceToCollectorMapping(object):
+    """Base class for service to collector mapping."""
+
+    def get_mapping(self, service):
+        session = db.get_session()
+        try:
+            res = utils.model_query(
+                models.ServiceToCollectorMapping,
+                session
+            ).filter_by(
+                service=service,
+            ).one()
+            return res
+        except sqlalchemy.orm.exc.NoResultFound:
+            raise api.NoSuchMapping(service)
+
+    def set_mapping(self, service, collector):
+        session = db.get_session()
+        with session.begin():
+            try:
+                q = utils.model_query(
+                    models.ServiceToCollectorMapping,
+                    session
+                ).filter_by(
+                    service=service,
+                ).with_lockmode('update')
+                db_mapping = q.one()
+                db_mapping.collector = collector
+            except sqlalchemy.orm.exc.NoResultFound:
+                model = models.ServiceToCollectorMapping
+                db_mapping = model(service=service, collector=collector)
+                session.add(db_mapping)
+        return db_mapping
+
+    def list_services(self):
+        session = db.get_session()
+        q = utils.model_query(
+            models.ServiceToCollectorMapping,
+            session
+        )
+        res = q.distinct().values(
+            models.ServiceToCollectorMapping.service
+        )
+        return res
+
+    def delete_mapping(self, service):
+        session = db.get_session()
+        r = utils.model_query(
+            models.ServiceToCollectorMapping,
+            session
+        ).filter_by(
+            service=service,
+        ).delete()
+        if not r:
+            raise api.NoSuchMapping(service)
+
+
 class DBAPIManager(object):
 
     @staticmethod
@@ -133,6 +190,10 @@ class DBAPIManager(object):
     @staticmethod
     def get_module_enable_state():
         return ModuleEnableState()
+
+    @staticmethod
+    def get_service_to_collector_mapping():
+        return ServiceToCollectorMapping()
 
     @staticmethod
     def get_migration():
