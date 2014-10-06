@@ -35,7 +35,7 @@ def get_backend():
 
 class HashMap(api.HashMap):
 
-    def get_migrate(self):
+    def get_migration(self):
         return migration
 
     def get_service(self, service):
