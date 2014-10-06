@@ -17,7 +17,7 @@
 #
 from wsme import types as wtypes
 
-from cloudkitty.i18n import _LE  # noqa
+from cloudkitty.i18n import _LE
 
 
 # Code taken from ironic types
