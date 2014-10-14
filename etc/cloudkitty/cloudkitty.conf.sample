@@ -361,6 +361,10 @@
 # Billing period in seconds. (integer value)
 #period=3600
 
+# Wait for N periods before collecting new data. (integer
+# value)
+#wait_periods=2
+
 # Services to monitor. (list value)
 #services=compute
 
@@ -527,5 +531,15 @@
 
 # Storage directory for the file state backend. (string value)
 #basepath=/var/lib/cloudkitty/states/
+
+
+[storage]
+
+#
+# Options defined in cloudkitty.storage
+#
+
+# Name of the storage backend driver. (string value)
+#backend=sqlalchemy
 
 

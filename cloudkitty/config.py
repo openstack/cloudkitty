@@ -49,6 +49,9 @@ collect_opts = [
     cfg.IntOpt('period',
                default=3600,
                help='Billing period in seconds.'),
+    cfg.IntOpt('wait_periods',
+               default=2,
+               help='Wait for N periods before collecting new data.'),
     cfg.ListOpt('services',
                 default=['compute'],
                 help='Services to monitor.'), ]

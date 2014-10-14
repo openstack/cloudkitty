@@ -45,6 +45,7 @@ CONF = cfg.CONF
 COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 TRANSFORMERS_NAMESPACE = 'cloudkitty.transformers'
 PROCESSORS_NAMESPACE = 'cloudkitty.billing.processors'
+STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 WRITERS_NAMESPACE = 'cloudkitty.output.writers'
 
 
@@ -131,6 +132,14 @@ class Orchestrator(object):
                                            self.sm,
                                            basepath=CONF.output.basepath)
 
+        CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
+        storage_args = {'period': CONF.collect.period}
+        self.storage = driver.DriverManager(
+            STORAGES_NAMESPACE,
+            CONF.storage.backend,
+            invoke_on_load=True,
+            invoke_kwds=storage_args).driver
+
         # Billing processors
         self.b_processors = {}
         self._load_billing_processors()
@@ -158,13 +167,15 @@ class Orchestrator(object):
         self.server.start()
 
     def _check_state(self):
-        timestamp = self.sm.get_state()
+        timestamp = self.storage.get_state()
         if not timestamp:
             return ck_utils.get_this_month_timestamp()
 
-        now = int(time.time())
-        if timestamp + CONF.collect.period < now:
-            return timestamp
+        now = int(time.time() + time.timezone)
+        next_timestamp = timestamp + CONF.collect.period
+        wait_time = CONF.collect.wait_periods * CONF.collect.period
+        if next_timestamp + wait_time < now:
+            return next_timestamp
         return 0
 
     def _collect(self, service, start_timestamp):
@@ -251,10 +262,14 @@ class Orchestrator(object):
                     processor.process(data)
 
                 # Writing
-                self.wo.append(data)
+                # Copy data to keep old behaviour with write_orchestrator
+                wo_data = list(data)
+                self.wo.append(wo_data)
+                self.storage.append(data)
 
             # We're getting a full period so we directly commit
             self.wo.commit()
+            self.storage.commit()
 
     def terminate(self):
         self.wo.close()
