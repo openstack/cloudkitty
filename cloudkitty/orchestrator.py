@@ -16,7 +16,6 @@
 #
 # @author: Stéphane Albert
 #
-import datetime
 import time
 
 import eventlet
@@ -34,6 +33,7 @@ from cloudkitty.openstack.common import importutils as i_utils
 from cloudkitty.openstack.common import lockutils
 from cloudkitty.openstack.common import log as logging
 from cloudkitty import state
+from cloudkitty import utils as ck_utils
 from cloudkitty import write_orchestrator as w_orch
 
 eventlet.monkey_patch()
@@ -158,15 +158,9 @@ class Orchestrator(object):
         self.server.start()
 
     def _check_state(self):
-        def _get_this_month_timestamp():
-            now = datetime.datetime.now()
-            month_start = datetime.datetime(now.year, now.month, 1)
-            timestamp = int(time.mktime(month_start.timetuple()))
-            return timestamp
-
         timestamp = self.sm.get_state()
         if not timestamp:
-            return _get_this_month_timestamp()
+            return ck_utils.get_this_month_timestamp()
 
         now = int(time.time())
         if timestamp + CONF.collect.period < now:
