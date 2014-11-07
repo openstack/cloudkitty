@@ -116,7 +116,9 @@ class DBStateManager(object):
     def get_metadata(self):
         """Get metadata attached to the state."""
 
-        return json.loads(self._db.get_metadata(self._state_name))
+        data = self._db.get_metadata(self._state_name)
+        if data:
+            return json.loads(data)
 
     def set_metadata(self, metadata):
         """Set metadata attached to the state."""
