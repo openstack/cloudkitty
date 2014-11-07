@@ -250,8 +250,12 @@ class ReportController(rest.RestController):
         """Return the amount to pay for the current month.
 
         """
-        # TODO(sheeprine): Get current total from DB
-        return 10.0
+        storage = pecan.request.storage_backend
+        # FIXME(sheeprine): We should filter on user id.
+        # Use keystone token information by default but make it overridable and
+        # enforce it by policy engine
+        total = storage.get_total()
+        return total
 
 
 class V1Controller(rest.RestController):

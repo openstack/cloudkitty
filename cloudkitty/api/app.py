@@ -28,6 +28,7 @@ from cloudkitty.api import hooks
 from cloudkitty.common import rpc
 from cloudkitty import config  # noqa
 from cloudkitty.openstack.common import log as logging
+from cloudkitty import storage
 
 
 LOG = logging.getLogger(__name__)
@@ -70,8 +71,11 @@ def setup_app(pecan_config=None, extra_hooks=None):
 
     client = rpc.get_client(target)
 
+    storage_backend = storage.get_storage()
+
     app_hooks = [
-        hooks.RPCHook(client)
+        hooks.RPCHook(client),
+        hooks.StorageHook(storage_backend),
     ]
 
     return pecan.make_app(

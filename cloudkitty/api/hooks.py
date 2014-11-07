@@ -24,3 +24,11 @@ class RPCHook(hooks.PecanHook):
 
     def before(self, state):
         state.request.rpc_client = self._rpc_client
+
+
+class StorageHook(hooks.PecanHook):
+    def __init__(self, storage_backend):
+        self._storage_backend = storage_backend
+
+    def before(self, state):
+        state.request.storage_backend = self._storage_backend

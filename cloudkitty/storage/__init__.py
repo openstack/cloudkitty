@@ -20,8 +20,9 @@ import datetime
 
 from oslo.config import cfg
 import six
+from stevedore import driver
 
-
+STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 storage_opts = [
     cfg.StrOpt('backend',
                default='sqlalchemy',
@@ -29,6 +30,25 @@ storage_opts = [
 ]
 
 cfg.CONF.register_opts(storage_opts, group='storage')
+
+
+def get_storage():
+    cfg.CONF.import_opt('period', 'cloudkitty.config', 'collect')
+    storage_args = {'period': cfg.CONF.collect.period}
+    backend = driver.DriverManager(
+        STORAGES_NAMESPACE,
+        cfg.CONF.storage.backend,
+        invoke_on_load=True,
+        invoke_kwds=storage_args).driver
+    return backend
+
+
+class NoTimeFrame(Exception):
+    """Raised when there is no time frame available."""
+
+    def __init__(self):
+        super(NoTimeFrame, self).__init__(
+            "No time frame available")
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -103,7 +123,9 @@ class BaseStorage(object):
 
     @abc.abstractmethod
     def get_total(self):
-        pass
+        """Return the current total.
+
+        """
 
     @abc.abstractmethod
     def get_time_frame(self, begin, end, **filters):

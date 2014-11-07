@@ -15,23 +15,17 @@
 #
 # @author: Stéphane Albert
 #
+import datetime
 import json
 
 from oslo.db.sqlalchemy import utils
+import sqlalchemy
 
 from cloudkitty import db
 from cloudkitty import storage
 from cloudkitty.storage.sqlalchemy import migration
 from cloudkitty.storage.sqlalchemy import models
 from cloudkitty import utils as ck_utils
-
-
-class NoTimeFrame(Exception):
-    """Raised when there is no time frame available."""
-
-    def __init__(self):
-        super(NoTimeFrame, self).__init__(
-            "No time frame available")
 
 
 class SQLAlchemyStorage(storage.BaseStorage):
@@ -73,7 +67,20 @@ class SQLAlchemyStorage(storage.BaseStorage):
             return ck_utils.dt2ts(r.begin)
 
     def get_total(self):
-        pass
+        model = models.RatedDataFrame
+
+        # Boundary calculation
+        month_start = ck_utils.get_this_month()
+        month_end = ck_utils.get_next_month()
+
+        session = db.get_session()
+        rate = session.query(
+            sqlalchemy.func.sum(model.rate).label('rate')
+        ).filter(
+            model.begin >= month_start,
+            model.end <= month_end
+        ).scalar()
+        return rate
 
     def get_time_frame(self, begin, end, **filters):
         """Return a list of time frames.
@@ -89,14 +96,15 @@ class SQLAlchemyStorage(storage.BaseStorage):
             model,
             session
         ).filter(
-            model.begin >= begin,
-            model.end <= end
+            model.begin >= datetime.datetime.fromtimestamp(begin),
+            model.end <= datetime.datetime.fromtimestamp(end)
         )
         for cur_filter in filters:
             q = q.filter(getattr(model, cur_filter) == filters[cur_filter])
-        if not q:
-            raise NoTimeFrame()
-        return q.to_cloudkitty()
+        r = q.all()
+        if not r:
+            raise storage.NoTimeFrame()
+        return [entry.to_cloudkitty() for entry in r]
 
     def _append_time_frame(self, res_type, frame):
         vol_dict = frame['vol']
