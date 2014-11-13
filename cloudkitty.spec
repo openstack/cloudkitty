@@ -1,0 +1,183 @@
+%global release_name juno
+%global full_release cloudkitty-%{version}
+
+Name:		cloudkitty
+Summary:	OpenStack Rating (cloudkitty)
+Version:	2014111301
+Release:	1%{?dist}
+License:	ASL 2.0
+Group:		System Environment/Base
+URL:		http://github.com/stackforge/cloudkitty
+Source0:	%{full_release}.tar.gz
+
+BuildArch: noarch
+
+BuildRequires: git
+BuildRequires: python-ceilometerclient
+BuildRequires: python-keystoneclient
+BuildRequires: python-iso8601
+BuildRequires: python-stevedore
+BuildRequires: python-oslo-messaging
+BuildRequires: python-setuptools
+BuildRequires: python-sphinx
+BuildRequires: python-oslo-config
+BuildRequires: python-oslo-sphinx
+BuildRequires: python-oslo-i18n
+BuildRequires: python-oslo-db
+BuildRequires: python-oslo-utils
+BuildRequires: python-pbr
+BuildRequires: python-pecan
+BuildRequires: python-paste-deploy
+BuildRequires: python-six
+BuildRequires: python-sqlalchemy
+BuildRequires: python-werkzeug
+BuildRequires: python-wsme
+BuildRequires: systemd-units
+
+Requires: %{name}-common = %{version}-%{release}
+Requires: %{name}-api = %{version}-%{release}
+Requires: %{name}-processor = %{version}-%{release}
+
+%prep
+%setup -q -n %{full_release}
+
+# make doc build compatible with python-oslo-sphinx RPM
+sed -i 's/oslosphinx/oslo.sphinx/' doc/source/conf.py
+
+# Remove the requirements file so that pbr hooks don't add it
+# to distutils requires_dist config
+rm -rf {test-,}requirements.txt tools/{pip,test}-requires
+
+%build
+%{__python} setup.py build
+
+%install
+%{__python} setup.py install -O1 --skip-build --root=%{buildroot}
+mkdir -p %{buildroot}/var/log/cloudkitty/
+mkdir -p %{buildroot}/var/run/cloudkitty/
+install -p -D -m 644 etc/cloudkitty.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/cloudkitty
+
+# install systemd unit files
+install -p -D -m 644 init/cloudkitty-api.service %{buildroot}%{_unitdir}/cloudkitty-api.service
+install -p -D -m 644 init/cloudkitty-processor.service %{buildroot}%{_unitdir}/cloudkitty-processor.service
+
+mkdir -p %{buildroot}/var/lib/cloudkitty/
+mkdir -p %{buildroot}/etc/cloudkitty/
+
+# we need to package sphinxcontrib-pecanwsme for this to work
+#export PYTHONPATH="$( pwd ):$PYTHONPATH"
+#pushd doc
+#sphinx-build -b html -d build/doctrees source build/html
+#popd
+
+install -p -D -m 640 etc/cloudkitty/cloudkitty.conf.sample %{buildroot}/%{_sysconfdir}/cloudkitty/cloudkitty.conf
+
+%description
+OpenStack Rating-as-a-Service
+
+
+%package common
+Summary: CloudKitty common
+Group: System Environment/Base
+
+Requires: python-ceilometerclient
+Requires: python-keystoneclient
+Requires: python-iso8601
+Requires: python-stevedore
+Requires: python-oslo-messaging
+Requires: python-setuptools
+Requires: python-oslo-config
+Requires: python-oslo-sphinx
+Requires: python-oslo-i18n
+Requires: python-oslo-db
+Requires: python-oslo-utils
+Requires: python-pbr
+Requires: python-pecan
+Requires: python-paste-deploy
+Requires: python-six
+Requires: python-sqlalchemy
+Requires: python-werkzeug
+Requires: python-wsme
+
+Requires(pre): shadow-utils
+
+%description common
+Components common to all CloudKitty services
+
+%files common
+%doc LICENSE
+%{_bindir}/cloudkitty-dbsync
+%{python_sitelib}/cloudkitty*
+%dir %attr(0755,cloudkitty,root) %{_localstatedir}/log/cloudkitty
+%dir %attr(0755,cloudkitty,root) %{_localstatedir}/run/cloudkitty
+%dir %attr(0755,cloudkitty,root) %{_sharedstatedir}/cloudkitty
+%dir %attr(0755,cloudkitty,root) %{_sysconfdir}/cloudkitty
+%config(noreplace) %{_sysconfdir}/logrotate.d/cloudkitty
+%config(noreplace) %attr(-, root, cloudkitty) %{_sysconfdir}/cloudkitty/cloudkitty.conf
+
+%pre common
+getent group cloudkitty >/dev/null || groupadd -r cloudkitty
+getent passwd cloudkitty  >/dev/null || \
+useradd -r -g cloudkitty -d %{_sharedstatedir}/cloudkitty -s /sbin/nologin \
+-c "CloudKitty Daemons" cloudkitty
+exit 0
+
+%package api
+Summary: The CloudKitty API
+Group: System Environment/Base
+
+Requires: %{name}-common = %{version}-%{release}
+
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
+
+%description api
+CloudKitty API
+
+%files api
+%doc README.rst LICENSE
+%{_bindir}/cloudkitty-api
+%{_unitdir}/cloudkitty-api.service
+
+%post api
+%systemd_post cloudkitty-api.service
+
+%preun api
+%systemd_preun cloudkitty-api.service
+
+%postun api
+%systemd_postun_with_restart cloudkitty-api.service
+
+
+%package processor
+Summary: The CloudKitty processor
+Group: System Environment/Base
+
+Requires: %{name}-common = %{version}-%{release}
+
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
+
+%description processor
+CloudKitty processor
+
+%files processor
+%doc README.rst LICENSE
+%{_bindir}/cloudkitty-processor
+%{_unitdir}/cloudkitty-processor.service
+
+%post processor
+%systemd_post cloudkitty-processor.service
+
+%preun processor
+%systemd_preun cloudkitty-processor.service
+
+%postun processor
+%systemd_postun_with_restart cloudkitty-processor.service
+
+
+%changelog
+* Thu Nov 13 2014 Gauvain Pocentek <gauvain.pocentek@objectif-libre.com> - 2014111301
+- Initial release

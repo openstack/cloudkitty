@@ -1,0 +1,11 @@
+[Unit]
+Description=CloudKitty processor Service
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=cloudkitty
+ExecStart=/usr/bin/cloudkitty-processor --logfile /var/log/cloudkitty/processor.log --config-file /etc/cloudkitty/cloudkitty.conf
+
+[Install]
+WantedBy=multi-user.target
