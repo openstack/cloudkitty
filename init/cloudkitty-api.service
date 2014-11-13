@@ -1,0 +1,11 @@
+[Unit]
+Description=CloudKitty API Service
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=cloudkitty
+ExecStart=/usr/bin/cloudkitty-api --logfile /var/log/cloudkitty/api.log --config-file /etc/cloudkitty/cloudkitty.conf
+
+[Install]
+WantedBy=multi-user.target
