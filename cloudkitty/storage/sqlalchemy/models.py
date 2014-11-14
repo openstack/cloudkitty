@@ -50,6 +50,9 @@ class RatedDataFrame(Base, models.ModelBase):
                              nullable=False)
 
     def to_cloudkitty(self):
+        period_dict = {}
+        period_dict['begin'] = self.begin.isoformat()
+        period_dict['end'] = self.end.isoformat()
         rating_dict = {}
         rating_dict['price'] = self.rate
         vol_dict = {}
@@ -59,6 +62,9 @@ class RatedDataFrame(Base, models.ModelBase):
         res_dict['billing'] = rating_dict
         res_dict['desc'] = json.loads(self.desc)
         res_dict['vol'] = vol_dict
+        usage_dict = {}
+        usage_dict[self.res_type] = [res_dict]
         ck_dict = {}
-        ck_dict[self.res_type] = [res_dict]
+        ck_dict['period'] = period_dict
+        ck_dict['usage'] = usage_dict
         return ck_dict
