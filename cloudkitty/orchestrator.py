@@ -28,7 +28,6 @@ from cloudkitty import config  # NOQA
 from cloudkitty import extension_manager
 from cloudkitty.openstack.common import lockutils
 from cloudkitty.openstack.common import log as logging
-from cloudkitty import state
 from cloudkitty import utils as ck_utils
 
 eventlet.monkey_patch()
@@ -94,25 +93,17 @@ class BillingEndpoint(object):
 
 class Orchestrator(object):
     def __init__(self):
-        self.keystone = kclient.Client(username=CONF.auth.username,
+        self.admin_ks = kclient.Client(username=CONF.auth.username,
                                        password=CONF.auth.password,
                                        tenant_name=CONF.auth.tenant,
                                        region_name=CONF.auth.region,
                                        auth_url=CONF.auth.url)
-
-        self.sm = state.DBStateManager(self.keystone.user_id,
-                                       'osrtf')
 
         # Transformers
         self.transformers = {}
         self._load_transformers()
 
         collector_args = {'transformers': self.transformers,
-                          'user': CONF.auth.username,
-                          'password': CONF.auth.password,
-                          'tenant': CONF.auth.tenant,
-                          'region': CONF.auth.region,
-                          'keystone_url': CONF.auth.url,
                           'period': CONF.collect.period}
         self.collector = driver.DriverManager(
             COLLECTORS_NAMESPACE,
