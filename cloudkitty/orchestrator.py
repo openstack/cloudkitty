@@ -24,17 +24,14 @@ from oslo.config import cfg
 from oslo import messaging
 from stevedore import driver
 from stevedore import extension
-from stevedore import named
 
 from cloudkitty.common import rpc
 from cloudkitty import config  # NOQA
 from cloudkitty import extension_manager
-from cloudkitty.openstack.common import importutils as i_utils
 from cloudkitty.openstack.common import lockutils
 from cloudkitty.openstack.common import log as logging
 from cloudkitty import state
 from cloudkitty import utils as ck_utils
-from cloudkitty import write_orchestrator as w_orch
 
 eventlet.monkey_patch()
 
@@ -46,7 +43,6 @@ COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 TRANSFORMERS_NAMESPACE = 'cloudkitty.transformers'
 PROCESSORS_NAMESPACE = 'cloudkitty.billing.processors'
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
-WRITERS_NAMESPACE = 'cloudkitty.output.writers'
 
 
 class BillingEndpoint(object):
@@ -126,12 +122,6 @@ class Orchestrator(object):
             invoke_on_load=True,
             invoke_kwds=collector_args).driver
 
-        w_backend = i_utils.import_class(CONF.output.backend)
-        self.wo = w_orch.WriteOrchestrator(w_backend,
-                                           self.keystone.user_id,
-                                           self.sm,
-                                           basepath=CONF.output.basepath)
-
         CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
         storage_args = {'period': CONF.collect.period}
         self.storage = driver.DriverManager(
@@ -143,13 +133,6 @@ class Orchestrator(object):
         # Billing processors
         self.b_processors = {}
         self._load_billing_processors()
-
-        # Output settings
-        output_pipeline = named.NamedExtensionManager(
-            WRITERS_NAMESPACE,
-            CONF.output.pipeline)
-        for writer in output_pipeline:
-            self.wo.add_writer(writer.plugin)
 
         # RPC
         self.server = None
@@ -262,14 +245,10 @@ class Orchestrator(object):
                     processor.process(data)
 
                 # Writing
-                # Copy data to keep old behaviour with write_orchestrator
-                wo_data = list(data)
-                self.wo.append(wo_data)
                 self.storage.append(data)
 
             # We're getting a full period so we directly commit
-            self.wo.commit()
             self.storage.commit()
 
     def terminate(self):
-        self.wo.close()
+        pass
