@@ -33,6 +33,7 @@ class CeilometerTransformer(transformer.BaseTransformer):
             data.metadata.get('OS-EXT-AZ.availability_zone')
         )
 
+        res_data['instance_id'] = data.resource_id
         res_data['project_id'] = data.project_id
         res_data['user_id'] = data.user_id
 
