@@ -81,8 +81,8 @@ class BaseReportWriter(object):
         timeframe = self._sm.get_state()
         self.usage_start = timeframe
         self.usage_start_dt = datetime.datetime.fromtimestamp(timeframe)
-        end_frame = timeframe + self._period
-        self.usage_end = datetime.datetime.fromtimestamp(end_frame)
+        self.usage_end = timeframe + self._period
+        self.usage_end_dt = datetime.datetime.fromtimestamp(self.usage_end)
         metadata = self._sm.get_metadata()
         self.total = metadata.get('total', 0)
 
