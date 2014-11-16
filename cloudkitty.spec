@@ -107,6 +107,8 @@ Components common to all CloudKitty services
 %files common
 %doc LICENSE
 %{_bindir}/cloudkitty-dbsync
+%{_bindir}/cloudkitty-storage-init
+%{_bindir}/cloudkitty-writer
 %{python_sitelib}/cloudkitty*
 %dir %attr(0755,cloudkitty,root) %{_localstatedir}/log/cloudkitty
 %dir %attr(0755,cloudkitty,root) %{_localstatedir}/run/cloudkitty
