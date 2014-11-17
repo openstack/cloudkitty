@@ -123,7 +123,8 @@ class WriteOrchestrator(object):
 
     def restart_month(self):
         self._load_state_manager_data()
-        self.usage_end = ck_utils.get_this_month_timestamp()
+        month_start = ck_utils.get_month_start()
+        self.usage_end = ck_utils.dt2ts(month_start)
         self._update_state_manager_data()
 
     def process(self):

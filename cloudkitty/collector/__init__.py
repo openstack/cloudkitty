@@ -16,11 +16,10 @@
 # @author: Stéphane Albert
 #
 import abc
-import datetime
 
 import six
 
-import cloudkitty.utils as utils
+import cloudkitty.utils as ck_utils
 
 
 class TransformerDependencyError(Exception):
@@ -72,19 +71,16 @@ class BaseCollector(object):
 
     @staticmethod
     def last_month():
-        now = datetime.datetime.now()
-        month_end = (datetime.datetime(now.year, now.month, 1) -
-                     datetime.timedelta(days=1))
-        month_start = month_end.replace(day=1)
-        start_ts = utils.dt2ts(month_start)
-        end_ts = utils.dt2ts(month_end)
+        month_start = ck_utils.get_month_start()
+        month_end = ck_utils.get_month_end()
+        start_ts = ck_utils.dt2ts(month_start)
+        end_ts = ck_utils.dt2ts(month_end)
         return start_ts, end_ts
 
     @staticmethod
     def current_month():
-        now = datetime.now()
-        month_start = datetime(now.year, now.month, 1)
-        return utils.dt2ts(month_start)
+        month_start = ck_utils.get_month_start()
+        return ck_utils.dt2ts(month_start)
 
     def retrieve(self, resource, start, end=None, project_id=None,
                  q_filter=None):

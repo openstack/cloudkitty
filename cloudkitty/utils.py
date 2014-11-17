@@ -15,36 +15,111 @@
 #
 # @author: Stéphane Albert
 #
+"""
+Time calculations functions
+
+We're mostly using oslo.utils for time calculations but we're encapsulating it
+to ease maintenance in case of library modifications.
+"""
 import calendar
 import datetime
-import time
 
-import iso8601
+from oslo.utils import timeutils
 
 
 def dt2ts(orig_dt):
-    return int(time.mktime(orig_dt.timetuple()))
+    """Translate a datetime into a timestamp."""
+    return calendar.timegm(orig_dt.timetuple())
 
 
 def iso2dt(iso_date):
-    return iso8601.parse_date(iso_date)
+    """iso8601 format to datetime."""
+    iso_dt = timeutils.parse_isotime(iso_date)
+    trans_dt = timeutils.normalize_time(iso_dt)
+    return trans_dt
 
 
-def get_this_month():
-    now = datetime.datetime.utcnow()
-    month_start = datetime.datetime(now.year, now.month, 1)
+def ts2dt(timestamp):
+    """timestamp to datetime format."""
+    if not isinstance(timestamp, float):
+        timestamp = float(timestamp)
+    return datetime.datetime.utcfromtimestamp(timestamp)
+
+
+def ts2iso(timestamp):
+    """timestamp to is8601 format."""
+    if not isinstance(timestamp, float):
+        timestamp = float(timestamp)
+    return timeutils.iso8601_from_timestamp(timestamp)
+
+
+def dt2iso(orig_dt):
+    """datetime to is8601 format."""
+    return timeutils.isotime(orig_dt)
+
+
+def utcnow():
+    """Returns a datetime for the current utc time."""
+    return timeutils.utcnow()
+
+
+def utcnow_ts():
+    """Returns a timestamp for the current utc time."""
+    return timeutils.utcnow_ts()
+
+
+def get_month_days(dt):
+    return calendar.monthrange(dt.year, dt.month)[1]
+
+
+def add_days(base_dt, days, stay_on_month=True):
+    if stay_on_month:
+        max_days = get_month_days(base_dt)
+        if days > max_days:
+            return get_month_end(base_dt)
+    return base_dt + datetime.timedelta(days=days)
+
+
+def add_month(dt, stay_on_month=True):
+    next_month = get_next_month(dt)
+    return add_days(next_month, dt.day, stay_on_month)
+
+
+def sub_month(dt, stay_on_month=True):
+    prev_month = get_last_month(dt)
+    return add_days(prev_month, dt.day, stay_on_month)
+
+
+def get_month_start(dt=None):
+    if not dt:
+        dt = utcnow()
+    month_start = datetime.datetime(dt.year, dt.month, 1)
     return month_start
 
 
-def get_this_month_timestamp():
-    return dt2ts(get_this_month())
+def get_month_start_timestamp(dt=None):
+    return dt2ts(get_month_start(dt))
 
 
-def get_next_month():
-    start_dt = get_this_month()
-    next_dt = start_dt + datetime.timedelta(calendar.mdays[start_dt.month])
-    return next_dt
+def get_month_end(dt=None):
+    month_start = get_month_start(dt)
+    days_of_month = get_month_days(month_start)
+    month_end = month_start.replace(day=days_of_month)
+    return month_end
 
 
-def get_next_month_timestamp():
-    return dt2ts(get_next_month())
+def get_last_month(dt=None):
+    if not dt:
+        dt = utcnow()
+    month_end = get_month_start(dt) - datetime.timedelta(days=1)
+    return get_month_start(month_end)
+
+
+def get_next_month(dt=None):
+    month_end = get_month_end(dt)
+    next_month = month_end + datetime.timedelta(days=1)
+    return next_month
+
+
+def get_next_month_timestamp(dt=None):
+    return dt2ts(get_next_month(dt))

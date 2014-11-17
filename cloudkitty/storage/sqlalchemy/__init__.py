@@ -15,7 +15,6 @@
 #
 # @author: Stéphane Albert
 #
-import datetime
 import json
 
 from oslo.db.sqlalchemy import utils
@@ -70,7 +69,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
         model = models.RatedDataFrame
 
         # Boundary calculation
-        month_start = ck_utils.get_this_month()
+        month_start = ck_utils.get_month_start()
         month_end = ck_utils.get_next_month()
 
         session = db.get_session()
@@ -96,8 +95,8 @@ class SQLAlchemyStorage(storage.BaseStorage):
             model,
             session
         ).filter(
-            model.begin >= datetime.datetime.fromtimestamp(begin),
-            model.end <= datetime.datetime.fromtimestamp(end)
+            model.begin >= ck_utils.ts2dt(begin),
+            model.end <= ck_utils.ts2dt(end)
         )
         for cur_filter in filters:
             q = q.filter(getattr(model, cur_filter) == filters[cur_filter])

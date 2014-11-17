@@ -16,8 +16,6 @@
 #
 # @author: Stéphane Albert
 #
-import time
-
 import eventlet
 from keystoneclient.v2_0 import client as kclient
 from oslo.config import cfg
@@ -152,9 +150,10 @@ class Orchestrator(object):
     def _check_state(self):
         timestamp = self.storage.get_state()
         if not timestamp:
-            return ck_utils.get_this_month_timestamp()
+            month_start = ck_utils.get_month_start()
+            return ck_utils.dt2ts(month_start)
 
-        now = int(time.time() + time.timezone)
+        now = ck_utils.utcnow_ts()
         next_timestamp = timestamp + CONF.collect.period
         wait_time = CONF.collect.wait_periods * CONF.collect.period
         if next_timestamp + wait_time < now:
