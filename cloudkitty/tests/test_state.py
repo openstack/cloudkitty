@@ -31,14 +31,14 @@ class DBStateManagerTest(tests.TestCase):
         self.assertEqual(name, 'testuser_osrtf')
 
     def test_state_access(self):
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         self.sm.set_state(now)
         result = self.sm.get_state()
         self.assertEqual(result, str(now))
 
     def test_metadata_access(self):
         metadata = {'foo': 'bar'}
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         self.sm.set_state(now)
         self.sm.set_metadata(metadata)
         result = self.sm.get_metadata()
