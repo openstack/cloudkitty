@@ -6,7 +6,7 @@ iso8601
 PasteDeploy==1.5.2
 posix_ipc
 pecan==0.5.0
-wsme
+WSME>=0.6,!=0.6.2
 oslo.config>=1.2.0
 oslo.messaging
 oslo.db
