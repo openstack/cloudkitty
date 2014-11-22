@@ -4,13 +4,13 @@
    contain the root `toctree` directive.
 
 =================================================
-Welcome to CloudKitty's developper documentation!
+Welcome to CloudKitty's developer documentation!
 =================================================
 
 Introduction
 ============
 
-CloudKitty is a PricingAsAService project aimed at translating Ceilometer
+CloudKitty is a Rating As A Service project aimed at translating Ceilometer
 metrics to prices.
 
 
