@@ -16,6 +16,8 @@
 #
 # @author: Stéphane Albert
 #
+import decimal
+
 import eventlet
 from keystoneclient.v2_0 import client as kclient
 from oslo.config import cfg
@@ -67,7 +69,8 @@ class BillingEndpoint(object):
 
     def quote(self, ctxt, res_data):
         LOG.debug('Received quote from RPC.')
-        return self._orchestrator.process_quote(res_data)
+        worker = APIWorker()
+        return worker.quote(res_data)
 
     def reload_module(self, ctxt, name):
         LOG.info('Received reload command for module {}.'.format(name))
@@ -91,13 +94,112 @@ class BillingEndpoint(object):
                 self._pending_reload.remove(name)
 
 
+class BaseWorker(object):
+    def __init__(self, tenant_id=None):
+        self._tenant_id = tenant_id
+
+        # Billing processors
+        self._processors = {}
+        self._load_billing_processors()
+
+    def _load_billing_processors(self):
+        self._processors = {}
+        processors = extension_manager.EnabledExtensionManager(
+            PROCESSORS_NAMESPACE,
+            invoke_kwds={'tenant_id': self._tenant_id}
+        )
+
+        for processor in processors:
+            b_name = processor.name
+            b_obj = processor.obj
+            self._processors[b_name] = b_obj
+
+
+class APIWorker(BaseWorker):
+    def __init__(self, tenant_id=None):
+        super(APIWorker, self).__init__(tenant_id)
+
+    def quote(self, res_data):
+        for processor in self._processors.values():
+            processor.process(res_data)
+
+        price = decimal.Decimal(0)
+        for res in res_data:
+            for res_usage in res['usage'].values():
+                for data in res_usage:
+                    price += data.get('billing', {}).get('price', 0.0)
+        return price
+
+
+class Worker(BaseWorker):
+    def __init__(self, collector, storage, tenant_id=None):
+        self._collector = collector
+        self._storage = storage
+
+        self._period = CONF.collect.period
+        self._wait_time = CONF.collect.wait_periods * CONF.collect.period
+
+        super(Worker, self).__init__(tenant_id)
+
+    def _collect(self, service, start_timestamp):
+        next_timestamp = start_timestamp + CONF.collect.period
+        raw_data = self._collector.retrieve(service,
+                                            start_timestamp,
+                                            next_timestamp,
+                                            self._tenant_id)
+
+        timed_data = [{'period': {'begin': start_timestamp,
+                                  'end': next_timestamp},
+                      'usage': raw_data}]
+        return timed_data
+
+    def check_state(self):
+        timestamp = self._storage.get_state(self._tenant_id)
+        if not timestamp:
+            month_start = ck_utils.get_month_start()
+            return ck_utils.dt2ts(month_start)
+
+        now = ck_utils.utcnow_ts()
+        next_timestamp = timestamp + self._period
+        if next_timestamp + self._wait_time < now:
+            return next_timestamp
+        return 0
+
+    def run(self):
+        while True:
+            timestamp = self.check_state()
+            if not timestamp:
+                break
+
+            for service in CONF.collect.services:
+                data = self._collect(service, timestamp)
+
+                # Billing
+                for processor in self._processors.values():
+                    processor.process(data)
+
+                # Writing
+                self._storage.append(data, self._tenant_id)
+
+            # We're getting a full period so we directly commit
+            self._storage.commit(self._tenant_id)
+
+
 class Orchestrator(object):
     def __init__(self):
-        self.admin_ks = kclient.Client(username=CONF.auth.username,
-                                       password=CONF.auth.password,
-                                       tenant_name=CONF.auth.tenant,
-                                       region_name=CONF.auth.region,
-                                       auth_url=CONF.auth.url)
+        # Load credentials informations
+        self.user = CONF.auth.username
+        self.password = CONF.auth.password
+        self.tenant = CONF.auth.tenant
+        self.region = CONF.auth.region
+        self.keystone_url = CONF.auth.url
+
+        # Initialize keystone admin session
+        self.admin_ks = kclient.Client(username=self.user,
+                                       password=self.password,
+                                       tenant_name=self.tenant,
+                                       region_name=self.region,
+                                       auth_url=self.keystone_url)
 
         # Transformers
         self.transformers = {}
@@ -119,14 +221,24 @@ class Orchestrator(object):
             invoke_on_load=True,
             invoke_kwds=storage_args).driver
 
-        # Billing processors
-        self.b_processors = {}
-        self._load_billing_processors()
-
         # RPC
         self.server = None
         self._billing_endpoint = BillingEndpoint(self)
         self._init_messaging()
+
+    def _load_tenant_list(self):
+        ks = kclient.Client(username=self.user,
+                            password=self.password,
+                            auth_url=self.keystone_url,
+                            region_name=self.region)
+        tenant_list = ks.tenants.list()
+        self._tenants = []
+        for tenant in tenant_list:
+            roles = self.admin_ks.roles.roles_for_user(self.admin_ks.user_id,
+                                                       tenant)
+            for role in roles:
+                if role.name == 'rating':
+                    self._tenants.append(tenant)
 
     def _init_messaging(self):
         target = messaging.Target(topic='cloudkitty',
@@ -138,8 +250,8 @@ class Orchestrator(object):
         self.server = rpc.get_server(target, endpoints)
         self.server.start()
 
-    def _check_state(self):
-        timestamp = self.storage.get_state()
+    def _check_state(self, tenant_id):
+        timestamp = self.storage.get_state(tenant_id)
         if not timestamp:
             month_start = ck_utils.get_month_start()
             return ck_utils.dt2ts(month_start)
@@ -173,72 +285,28 @@ class Orchestrator(object):
             t_obj = transformer.obj
             self.transformers[t_name] = t_obj
 
-    def _load_billing_processors(self):
-        self.b_processors = {}
-        processors = extension_manager.EnabledExtensionManager(
-            PROCESSORS_NAMESPACE,
-        )
-
-        for processor in processors:
-            b_name = processor.name
-            b_obj = processor.obj
-            self.b_processors[b_name] = b_obj
-
-    def process_quote(self, res_data):
-        for processor in self.b_processors.values():
-            processor.process(res_data)
-
-        price = 0.0
-        for res in res_data:
-            for res_usage in res['usage'].values():
-                for data in res_usage:
-                    price += data.get('billing', {}).get('price', 0.0)
-        return price
-
     def process_messages(self):
-        pending_reload = self._billing_endpoint.get_reload_list()
-        pending_states = self._billing_endpoint.get_module_state()
-        for name in pending_reload:
-            if name in self.b_processors:
-                if name in self.b_processors.keys():
-                    LOG.info('Reloading configuration of {} module.'.format(
-                        name))
-                    self.b_processors[name].reload_config()
-                else:
-                    LOG.info('Tried to reload a disabled module: {}.'.format(
-                        name))
-        for name, status in pending_states.items():
-            if name in self.b_processors and not status:
-                LOG.info('Disabling {} module.'.format(name))
-                self.b_processors.pop(name)
-            else:
-                LOG.info('Enabling {} module.'.format(name))
-                processors = extension_manager.EnabledExtensionManager(
-                    PROCESSORS_NAMESPACE)
-                for processor in processors:
-                    if processor.name == name:
-                        self.b_processors[name] = processor
+        # TODO(sheeprine): Code kept to handle threading and asynchronous
+        # reloading
+        # pending_reload = self._billing_endpoint.get_reload_list()
+        # pending_states = self._billing_endpoint.get_module_state()
+        pass
 
     def process(self):
         while True:
             self.process_messages()
-            timestamp = self._check_state()
-            if not timestamp:
-                eventlet.sleep(CONF.collect.period)
-                continue
-
-            for service in CONF.collect.services:
-                data = self._collect(service, timestamp)
-
-                # Billing
-                for processor in self.b_processors.values():
-                    processor.process(data)
-
-                # Writing
-                self.storage.append(data)
-
-            # We're getting a full period so we directly commit
-            self.storage.commit()
+            self._load_tenant_list()
+            while len(self._tenants):
+                for tenant in self._tenants:
+                    if not self._check_state(tenant.id):
+                        self._tenants.remove(tenant)
+                    else:
+                        worker = Worker(self.collector,
+                                        self.storage,
+                                        tenant.id)
+                        worker.run()
+            # FIXME(sheeprine): We may cause a drift here
+            eventlet.sleep(CONF.collect.period)
 
     def terminate(self):
         pass

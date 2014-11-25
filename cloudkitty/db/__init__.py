@@ -24,7 +24,7 @@ _FACADE = None
 def _create_facade_lazily():
     global _FACADE
     if _FACADE is None:
-        _FACADE = session.EngineFacade.from_config(cfg.CONF)
+        _FACADE = session.EngineFacade.from_config(cfg.CONF, sqlite_fk=True)
     return _FACADE
 
 

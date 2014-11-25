@@ -37,7 +37,7 @@ class OSRFBackend(writer.BaseReportWriter):
     report_type = 'osrf'
 
     def _gen_filename(self, timeframe):
-        filename = '{}-osrf-{}-{:02d}.json'.format(self._uid,
+        filename = '{}-osrf-{}-{:02d}.json'.format(self._tenant_id,
                                                    timeframe.year,
                                                    timeframe.month)
         if self._basepath:

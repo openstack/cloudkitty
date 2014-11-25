@@ -131,10 +131,11 @@ class BillingController(rest.RestController):
 
     """
 
-    config = BillingConfigController()
-    enabled = BillingEnableController()
-
     def __init__(self):
+        if not hasattr(self, 'config'):
+            self.config = BillingConfigController()
+        if not hasattr(self, 'enabled'):
+            self.enabled = BillingEnableController()
         if hasattr(self, 'module_name'):
             self.config.module_name = self.module_name
             self.enabled.module_name = self.module_name
@@ -159,8 +160,8 @@ class BillingProcessorBase(object):
 
     controller = BillingController
 
-    def __init__(self):
-        pass
+    def __init__(self, tenant_id=None):
+        self._tenant_id = tenant_id
 
     @abc.abstractproperty
     def enabled(self):

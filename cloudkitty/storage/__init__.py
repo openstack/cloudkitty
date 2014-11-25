@@ -62,10 +62,10 @@ class BaseStorage(object):
         self._period = period
 
         # State vars
-        self.usage_start = None
-        self.usage_start_dt = None
-        self.usage_end = None
-        self.usage_end_dt = None
+        self.usage_start = {}
+        self.usage_start_dt = {}
+        self.usage_end = {}
+        self.usage_end_dt = {}
 
     @staticmethod
     def init():
@@ -93,38 +93,45 @@ class BaseStorage(object):
         if candidate_ts:
             return candidate_ts, json_data.pop(candidate_idx)['usage']
 
-    def _pre_commit(self):
+    def _pre_commit(self, tenant_id):
         """Called before every commit.
 
         """
 
     @abc.abstractmethod
-    def _commit(self):
+    def _commit(self, tenant_id):
         """Push data to the storage backend.
 
         """
 
-    def _post_commit(self):
+    def _post_commit(self, tenant_id):
         """Called after every commit.
 
         """
 
     @abc.abstractmethod
-    def _dispatch(self, data):
+    def _dispatch(self, data, tenant_id):
         """Process rated data.
 
         :param data: The rated data frames.
         """
 
     @abc.abstractmethod
-    def get_state(self):
+    def get_state(self, tenant_id=None):
         """Return the last written frame's timestamp.
+
+        :param tenant_id: Tenant ID to filter on.
+        """
+
+    @abc.abstractmethod
+    def get_total(self, tenant_id=None):
+        """Return the current total.
 
         """
 
     @abc.abstractmethod
-    def get_total(self):
-        """Return the current total.
+    def get_tenants(self, begin=None, end=None):
+        """Return the list of rated tenants.
 
         """
 
@@ -138,31 +145,37 @@ class BaseStorage(object):
         :type end: datetime.datetime
         :param res_type: (Optional) Filter on the resource type.
         :type res_type: str
+        :param tenant_id: (Optional) Filter on the tenant_id.
+        :type res_type: str
         """
 
-    def append(self, raw_data):
+    def append(self, raw_data, tenant_id):
         """Append rated data before committing them to the backend.
 
         :param raw_data: The rated data frames.
+        :param tenant_id: Tenant the frame is belonging.
         """
         while raw_data:
             usage_start, data = self._filter_period(raw_data)
-            if self.usage_end is not None and usage_start >= self.usage_end:
-                self.commit()
-                self.usage_start = None
+            usage_end = self.usage_end.get(tenant_id)
+            if usage_end is not None and usage_start >= usage_end:
+                self.commit(tenant_id)
+                self.usage_start.pop(tenant_id)
 
-            if self.usage_start is None:
-                self.usage_start = usage_start
-                self.usage_end = usage_start + self._period
-                self.usage_start_dt = ck_utils.ts2dt(self.usage_start)
-                self.usage_end_dt = ck_utils.ts2dt(self.usage_end)
+            if self.usage_start.get(tenant_id) is None:
+                self.usage_start[tenant_id] = usage_start
+                self.usage_end[tenant_id] = usage_start + self._period
+                self.usage_start_dt[tenant_id] = ck_utils.ts2dt(
+                    self.usage_start.get(tenant_id))
+                self.usage_end_dt[tenant_id] = ck_utils.ts2dt(
+                    self.usage_end.get(tenant_id))
 
-            self._dispatch(data)
+            self._dispatch(data, tenant_id)
 
-    def commit(self):
+    def commit(self, tenant_id):
         """Commit the changes to the backend.
 
         """
-        self._pre_commit()
-        self._commit()
-        self._post_commit()
+        self._pre_commit(tenant_id)
+        self._commit(tenant_id)
+        self._post_commit(tenant_id)

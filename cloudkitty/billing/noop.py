@@ -37,8 +37,8 @@ class Noop(billing.BillingProcessorBase):
 
     controller = NoopController
 
-    def __init__(self):
-        pass
+    def __init__(self, tenant_id=None):
+        super(Noop, self).__init__(tenant_id)
 
     @property
     def enabled(self):

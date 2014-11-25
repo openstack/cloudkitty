@@ -34,16 +34,16 @@ class WriteOrchestrator(object):
     """
     def __init__(self,
                  backend,
-                 user_id,
+                 tenant_id,
                  storage,
                  basepath=None,
                  period=3600):
         self._backend = backend
-        self._uid = user_id
+        self._tenant_id = tenant_id
         self._storage = storage
         self._basepath = basepath
         self._period = period
-        self._sm = state.DBStateManager(self._uid,
+        self._sm = state.DBStateManager(self._tenant_id,
                                         'writer_status')
         self._write_pipeline = []
 
@@ -64,7 +64,7 @@ class WriteOrchestrator(object):
 
     def add_writer(self, writer_class):
         writer = writer_class(self,
-                              self._uid,
+                              self._tenant_id,
                               self._backend,
                               self._basepath)
         self._write_pipeline.append(writer)
@@ -97,7 +97,8 @@ class WriteOrchestrator(object):
             timeframe_end = timeframe + self._period
         try:
             data = self._storage.get_time_frame(timeframe,
-                                                timeframe_end)
+                                                timeframe_end,
+                                                tenant_id=self._tenant_id)
         except storage.NoTimeFrame:
             return None
         return data

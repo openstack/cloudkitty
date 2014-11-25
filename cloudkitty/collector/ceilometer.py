@@ -94,7 +94,8 @@ class CeilometerCollector(collector.BaseCollector):
 
         self._cacher = CeilometerResourceCacher()
 
-        self._conn = cclient.get_client('2', os_username=self.user,
+        self._conn = cclient.get_client('2',
+                                        os_username=self.user,
                                         os_password=self.password,
                                         os_auth_url=self.keystone_url,
                                         os_tenant_name=self.tenant,

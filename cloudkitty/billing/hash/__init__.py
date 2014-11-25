@@ -227,7 +227,8 @@ class BasicHashMap(billing.BillingProcessorBase):
     controller = BasicHashMapController
     db_api = api.get_instance()
 
-    def __init__(self):
+    def __init__(self, tenant_id=None):
+        super(BasicHashMap, self).__init__(tenant_id)
         self._billing_info = {}
         self._load_billing_rates()
 
