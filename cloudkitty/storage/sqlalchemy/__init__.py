@@ -48,6 +48,13 @@ class SQLAlchemyStorage(storage.BaseStorage):
         for service in data:
             for frame in data[service]:
                 self._append_time_frame(service, frame)
+            # HACK(adriant) Quick hack to allow billing windows to
+            # progress. This check/insert probably ought to be moved
+            # somewhere else.
+            if not data[service]:
+                empty_frame = {'vol': {'qty': 0, 'unit': 'None'},
+                               'billing': {'price': 0}, 'desc': ''}
+                self._append_time_frame(service, empty_frame)
 
     def append(self, raw_data):
         if not self._session:
