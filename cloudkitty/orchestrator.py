@@ -227,7 +227,7 @@ class Orchestrator(object):
                     PROCESSORS_NAMESPACE)
                 for processor in processors:
                     if processor.name == name:
-                        self.b_processors.append(processor)
+                        self.b_processors[name] = processor
 
     def process(self):
         while True:
