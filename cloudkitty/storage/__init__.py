@@ -16,11 +16,12 @@
 # @author: Stéphane Albert
 #
 import abc
-import datetime
 
 from oslo.config import cfg
 import six
 from stevedore import driver
+
+from cloudkitty import utils as ck_utils
 
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 storage_opts = [
@@ -153,10 +154,8 @@ class BaseStorage(object):
             if self.usage_start is None:
                 self.usage_start = usage_start
                 self.usage_end = usage_start + self._period
-                self.usage_start_dt = (
-                    datetime.datetime.fromtimestamp(self.usage_start))
-                self.usage_end_dt = (
-                    datetime.datetime.fromtimestamp(self.usage_end))
+                self.usage_start_dt = ck_utils.ts2dt(self.usage_start)
+                self.usage_end_dt = ck_utils.ts2dt(self.usage_end)
 
             self._dispatch(data)
 

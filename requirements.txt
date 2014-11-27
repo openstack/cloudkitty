@@ -11,6 +11,7 @@ oslo.config>=1.2.0
 oslo.messaging
 oslo.db
 oslo.i18n
+oslo.utils
 sqlalchemy
 six>=1.7.0
 stevedore

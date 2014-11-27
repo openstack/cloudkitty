@@ -16,11 +16,11 @@
 # @author: Stéphane Albert
 #
 import abc
-import datetime
 
 import six
 
 from cloudkitty import state
+from cloudkitty import utils as ck_utils
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -80,9 +80,9 @@ class BaseReportWriter(object):
     def _get_state_manager_timeframe(self):
         timeframe = self._sm.get_state()
         self.usage_start = timeframe
-        self.usage_start_dt = datetime.datetime.fromtimestamp(timeframe)
+        self.usage_start_dt = ck_utils.ts2dt(timeframe)
         self.usage_end = timeframe + self._period
-        self.usage_end_dt = datetime.datetime.fromtimestamp(self.usage_end)
+        self.usage_end_dt = ck_utils.ts2dt(self.usage_end)
         metadata = self._sm.get_metadata()
         self.total = metadata.get('total', 0)
 
@@ -150,10 +150,8 @@ class BaseReportWriter(object):
         if self.usage_start is None:
             self.usage_start = start
             self.usage_end = start + self._period
-            self.usage_start_dt = datetime.datetime.fromtimestamp(
-                self.usage_start)
-            self.usage_end_dt = datetime.datetime.fromtimestamp(
-                self.usage_end)
+            self.usage_start_dt = ck_utils.ts2dt(self.usage_start)
+            self.usage_end_dt = ck_utils.ts2dt(self.usage_end)
 
         self._update(data)
 
