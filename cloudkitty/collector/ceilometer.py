@@ -107,9 +107,9 @@ class CeilometerCollector(collector.BaseCollector):
         meta_filter = self.prepend_filter('metadata.', **kwargs)
         return self.gen_filter(op, **meta_filter)
 
-    def get_active_instances(self, start, end=None, project_id=None,
-                             q_filter=None):
-        """Instance that were active during the timespan."""
+    def active_resources(self, meter, start, end=None, project_id=None,
+                         q_filter=None):
+        """Resources that were active during the timespan."""
         start_iso = ck_utils.ts2iso(start)
         req_filter = self.gen_filter(op='ge', timestamp=start_iso)
         if project_id:
@@ -121,14 +121,14 @@ class CeilometerCollector(collector.BaseCollector):
             req_filter.extend(q_filter)
         elif q_filter:
             req_filter.append(q_filter)
-        instance_stats = self._conn.statistics.list(meter_name='instance',
+        resource_stats = self._conn.statistics.list(meter_name=meter,
                                                     period=0, q=req_filter,
                                                     groupby=['resource_id'])
-        return [instance.groupby['resource_id'] for instance in instance_stats]
+        return [resource.groupby['resource_id'] for resource in resource_stats]
 
     def get_compute(self, start, end=None, project_id=None, q_filter=None):
-        active_instance_ids = self.get_active_instances(start, end, project_id,
-                                                        q_filter)
+        active_instance_ids = self.active_resources('instance', start, end,
+                                                    project_id, q_filter)
         compute_data = []
         for instance_id in active_instance_ids:
             if not self._cacher.has_resource_detail('compute', instance_id):
@@ -144,3 +144,22 @@ class CeilometerCollector(collector.BaseCollector):
                                                               'instance',
                                                               1))
         return self.t_cloudkitty.format_service('compute', compute_data)
+
+    def get_image(self, start, end=None, project_id=None, q_filter=None):
+        active_image_ids = self.active_resources('image.size', start, end,
+                                                 project_id, q_filter)
+        image_data = []
+        for image_id in active_image_ids:
+            if not self._cacher.has_resource_detail('image', image_id):
+                raw_resource = self._conn.resources.get(image_id)
+                image = self.t_ceilometer.strip_resource_data('image',
+                                                              raw_resource)
+                self._cacher.add_resource_detail('image',
+                                                 image_id,
+                                                 image)
+            image = self._cacher.get_resource_detail('image',
+                                                     image_id)
+            image_data.append(self.t_cloudkitty.format_item(image,
+                                                            'image',
+                                                            1))
+        return self.t_cloudkitty.format_service('image', image_data)

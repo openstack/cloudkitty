@@ -367,7 +367,7 @@
 #wait_periods=2
 
 # Services to monitor. (list value)
-#services=compute
+#services=compute,image
 
 
 [database]

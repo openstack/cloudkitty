@@ -53,7 +53,7 @@ collect_opts = [
                default=2,
                help='Wait for N periods before collecting new data.'),
     cfg.ListOpt('services',
-                default=['compute'],
+                default=['compute', 'image'],
                 help='Services to monitor.'), ]
 
 state_opts = [

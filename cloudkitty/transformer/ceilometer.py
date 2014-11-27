@@ -47,3 +47,5 @@ class CeilometerTransformer(transformer.BaseTransformer):
     def strip_resource_data(self, res_type, res_data):
         if res_type == 'compute':
             return self._strip_compute(res_data)
+        elif res_type == 'image':
+            return res_data.metadata
