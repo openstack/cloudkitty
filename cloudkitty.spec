@@ -87,11 +87,9 @@ Requires: python-stevedore
 Requires: python-oslo-messaging
 Requires: python-setuptools
 Requires: python-oslo-config
-Requires: python-oslo-sphinx
 Requires: python-oslo-i18n
 Requires: python-oslo-db
 Requires: python-oslo-utils
-Requires: python-pbr
 Requires: python-pecan
 Requires: python-paste-deploy
 Requires: python-six
