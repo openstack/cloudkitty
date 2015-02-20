@@ -33,69 +33,97 @@ class SQLAlchemyStorage(storage.BaseStorage):
     """
     def __init__(self, period=3600):
         super(SQLAlchemyStorage, self).__init__(period)
-        self._session = None
+        self._session = {}
 
     @staticmethod
     def init():
         migration.upgrade('head')
 
-    def _commit(self):
-        self._session.commit()
-        self._session.begin()
+    def _commit(self, tenant_id):
+        self._session[tenant_id].commit()
+        self._session[tenant_id].begin()
 
-    def _dispatch(self, data):
+    def _dispatch(self, data, tenant_id):
         for service in data:
             for frame in data[service]:
-                self._append_time_frame(service, frame)
+                self._append_time_frame(service, frame, tenant_id)
             # HACK(adriant) Quick hack to allow billing windows to
             # progress. This check/insert probably ought to be moved
             # somewhere else.
             if not data[service]:
                 empty_frame = {'vol': {'qty': 0, 'unit': 'None'},
                                'billing': {'price': 0}, 'desc': ''}
-                self._append_time_frame(service, empty_frame)
+                self._append_time_frame(service, empty_frame, tenant_id)
 
-    def append(self, raw_data):
-        if not self._session:
-            self._session = db.get_session()
-            self._session.begin()
-        super(SQLAlchemyStorage, self).append(raw_data)
+    def append(self, raw_data, tenant_id):
+        session = self._session.get(tenant_id)
+        if not session:
+            self._session[tenant_id] = db.get_session()
+            self._session[tenant_id].begin()
+        super(SQLAlchemyStorage, self).append(raw_data, tenant_id)
 
-    def get_state(self):
+    def get_state(self, tenant_id=None):
         session = db.get_session()
-        r = utils.model_query(
+        q = utils.model_query(
             models.RatedDataFrame,
             session
-        ).order_by(
+        )
+        if tenant_id:
+            q = q.filter(
+                models.RatedDataFrame.tenant_id == tenant_id
+            )
+        r = q.order_by(
             models.RatedDataFrame.begin.desc()
         ).first()
         if r:
             return ck_utils.dt2ts(r.begin)
 
-    def get_total(self):
+    def get_total(self, begin=None, end=None, tenant_id=None):
         model = models.RatedDataFrame
 
         # Boundary calculation
-        month_start = ck_utils.get_month_start()
-        month_end = ck_utils.get_next_month()
+        if not begin:
+            begin = ck_utils.get_month_start()
+        if not end:
+            end = ck_utils.get_next_month()
 
         session = db.get_session()
-        rate = session.query(
+        q = session.query(
             sqlalchemy.func.sum(model.rate).label('rate')
-        ).filter(
-            model.begin >= month_start,
-            model.end <= month_end
+        )
+        if tenant_id:
+            q = q.filter(
+                models.RatedDataFrame.tenant_id == tenant_id
+            )
+        rate = q.filter(
+            model.begin >= begin,
+            model.end <= end
         ).scalar()
         return rate
 
-    def get_time_frame(self, begin, end, **filters):
-        """Return a list of time frames.
+    def get_tenants(self, begin=None, end=None):
+        model = models.RatedDataFrame
 
-        :param start: Filter from `start`.
-        :param end: Filter to `end`.
-        :param unit: Filter on an unit type.
-        :param res_type: Filter on a resource type.
-        """
+        # Boundary calculation
+        if not begin:
+            begin = ck_utils.get_month_start()
+        if not end:
+            end = ck_utils.get_next_month()
+
+        session = db.get_session()
+        q = utils.model_query(
+            model,
+            session
+        ).filter(
+            model.begin >= begin,
+            model.end <= end
+        )
+        tenants = q.distinct().values(
+            model.tenant_id
+        )
+        return [tenant.tenant_id for tenant in tenants]
+
+    def get_time_frame(self, begin, end, **filters):
         model = models.RatedDataFrame
         session = db.get_session()
         q = utils.model_query(
@@ -112,30 +140,33 @@ class SQLAlchemyStorage(storage.BaseStorage):
             raise storage.NoTimeFrame()
         return [entry.to_cloudkitty() for entry in r]
 
-    def _append_time_frame(self, res_type, frame):
+    def _append_time_frame(self, res_type, frame, tenant_id):
         vol_dict = frame['vol']
         qty = vol_dict['qty']
         unit = vol_dict['unit']
         rating_dict = frame['billing']
         rate = rating_dict['price']
         desc = json.dumps(frame['desc'])
-        self.add_time_frame(self.usage_start_dt,
-                            self.usage_end_dt,
+        self.add_time_frame(self.usage_start_dt.get(tenant_id),
+                            self.usage_end_dt.get(tenant_id),
+                            tenant_id,
                             unit,
                             qty,
                             res_type,
                             rate,
                             desc)
 
-    def add_time_frame(self, begin, end, unit, qty, res_type, rate, desc):
+    def add_time_frame(self, begin, end, tenant_id, unit, qty, res_type,
+                       rate, desc):
         """Create a new time frame.
 
         """
         frame = models.RatedDataFrame(begin=begin,
                                       end=end,
+                                      tenant_id=tenant_id,
                                       unit=unit,
                                       qty=qty,
                                       res_type=res_type,
                                       rate=rate,
                                       desc=desc)
-        self._session.add(frame)
+        self._session[tenant_id].add(frame)

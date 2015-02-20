@@ -21,6 +21,8 @@ from oslo.db.sqlalchemy import models
 import sqlalchemy
 from sqlalchemy.ext import declarative
 
+from cloudkitty import utils as ck_utils
+
 Base = declarative.declarative_base()
 
 
@@ -34,6 +36,8 @@ class RatedDataFrame(Base, models.ModelBase):
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True)
+    tenant_id = sqlalchemy.Column(sqlalchemy.String(32),
+                                  nullable=True)
     begin = sqlalchemy.Column(sqlalchemy.DateTime,
                               nullable=False)
     end = sqlalchemy.Column(sqlalchemy.DateTime,
@@ -50,20 +54,32 @@ class RatedDataFrame(Base, models.ModelBase):
                              nullable=False)
 
     def to_cloudkitty(self):
-        period_dict = {}
-        period_dict['begin'] = self.begin.isoformat()
-        period_dict['end'] = self.end.isoformat()
+        # Rating informations
         rating_dict = {}
         rating_dict['price'] = self.rate
+
+        # Volume informations
         vol_dict = {}
         vol_dict['qty'] = self.qty
         vol_dict['unit'] = self.unit
         res_dict = {}
+
+        # Encapsulate informations in a resource dict
         res_dict['billing'] = rating_dict
         res_dict['desc'] = json.loads(self.desc)
         res_dict['vol'] = vol_dict
+        res_dict['tenant_id'] = self.tenant_id
+
+        # Add resource to the usage dict
         usage_dict = {}
         usage_dict[self.res_type] = [res_dict]
+
+        # Time informations
+        period_dict = {}
+        period_dict['begin'] = ck_utils.dt2iso(self.begin)
+        period_dict['end'] = ck_utils.dt2iso(self.end)
+
+        # Add period to the resource informations
         ck_dict = {}
         ck_dict['period'] = period_dict
         ck_dict['usage'] = usage_dict

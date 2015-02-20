@@ -15,6 +15,8 @@
 #
 # @author: Stéphane Albert
 #
+import datetime
+
 from oslo.config import cfg
 import pecan
 from pecan import rest
@@ -242,19 +244,34 @@ class ReportController(rest.RestController):
     """
 
     _custom_actions = {
-        'total': ['GET']
+        'total': ['GET'],
+        'tenants': ['GET']
     }
 
-    @wsme_pecan.wsexpose(float)
-    def total(self):
-        """Return the amount to pay for the current month.
+    @wsme_pecan.wsexpose([wtypes.text],
+                         datetime.datetime,
+                         datetime.datetime)
+    def tenants(self, begin=None, end=None):
+        """Return the list of rated tenants.
+
+        """
+        storage = pecan.request.storage_backend
+        tenants = storage.get_tenants(begin, end)
+        return tenants
+
+    @wsme_pecan.wsexpose(float,
+                         datetime.datetime,
+                         datetime.datetime,
+                         wtypes.text)
+    def total(self, begin=None, end=None, tenant_id=None):
+        """Return the amount to pay for a given period.
 
         """
         storage = pecan.request.storage_backend
         # FIXME(sheeprine): We should filter on user id.
         # Use keystone token information by default but make it overridable and
         # enforce it by policy engine
-        total = storage.get_total()
+        total = storage.get_total(begin, end, tenant_id)
         return total
 
 
