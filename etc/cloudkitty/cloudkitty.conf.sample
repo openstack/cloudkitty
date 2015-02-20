@@ -347,6 +347,28 @@
 #url=
 
 
+[ceilometer_collector]
+
+#
+# Options defined in cloudkitty.collector.ceilometer
+#
+
+# OpenStack username. (string value)
+#username=cloudkitty
+
+# OpenStack password. (string value)
+#password=
+
+# OpenStack tenant. (string value)
+#tenant=service
+
+# OpenStack region. (string value)
+#region=
+
+# OpenStack auth URL. (string value)
+#url=http://127.0.0.1:5000
+
+
 [collect]
 
 #

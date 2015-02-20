@@ -40,19 +40,11 @@ class BaseCollector(object):
     def __init__(self, transformers, **kwargs):
         try:
             self.transformers = transformers
-            self.user = kwargs['user']
-            self.password = kwargs['password']
-            self.tenant = kwargs['tenant']
-            self.region = kwargs['region']
-            self.keystone_url = kwargs['keystone_url']
             self.period = kwargs['period']
         except IndexError as e:
             raise ValueError("Missing argument (%s)" % e)
 
         self._check_transformers()
-
-        self._conn = None
-        self._connect()
 
     def _check_transformers(self):
         """Check for transformer prerequisites
@@ -62,12 +54,6 @@ class BaseCollector(object):
             if dependency not in self.transformers:
                 raise TransformerDependencyError(self.collector_name,
                                                  dependency)
-
-    @abc.abstractmethod
-    def _connect(self):
-        """Connect to the backend
-
-        """
 
     @staticmethod
     def last_month():

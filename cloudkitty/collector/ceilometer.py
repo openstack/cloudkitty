@@ -16,9 +16,29 @@
 # @author: Stéphane Albert
 #
 from ceilometerclient import client as cclient
+from oslo.config import cfg
 
 from cloudkitty import collector
 from cloudkitty import utils as ck_utils
+
+ceilometer_collector_opts = [
+    cfg.StrOpt('username',
+               default='cloudkitty',
+               help='OpenStack username.'),
+    cfg.StrOpt('password',
+               default='',
+               help='OpenStack password.'),
+    cfg.StrOpt('tenant',
+               default='service',
+               help='OpenStack tenant.'),
+    cfg.StrOpt('region',
+               default='',
+               help='OpenStack region.'),
+    cfg.StrOpt('url',
+               default='http://127.0.0.1:5000',
+               help='OpenStack auth URL.'), ]
+
+cfg.CONF.register_opts(ceilometer_collector_opts, 'ceilometer_collector')
 
 
 class ResourceNotFound(Exception):
@@ -63,13 +83,17 @@ class CeilometerCollector(collector.BaseCollector):
     def __init__(self, transformers, **kwargs):
         super(CeilometerCollector, self).__init__(transformers, **kwargs)
 
+        self.user = cfg.CONF.ceilometer_collector.username
+        self.password = cfg.CONF.ceilometer_collector.password
+        self.tenant = cfg.CONF.ceilometer_collector.tenant
+        self.region = cfg.CONF.ceilometer_collector.region
+        self.keystone_url = cfg.CONF.ceilometer_collector.url
+
         self.t_ceilometer = self.transformers['CeilometerTransformer']
         self.t_cloudkitty = self.transformers['CloudKittyFormatTransformer']
 
         self._cacher = CeilometerResourceCacher()
 
-    def _connect(self):
-        """Initialize connection to the Ceilometer endpoint."""
         self._conn = cclient.get_client('2', os_username=self.user,
                                         os_password=self.password,
                                         os_auth_url=self.keystone_url,

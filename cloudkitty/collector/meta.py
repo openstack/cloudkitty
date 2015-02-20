@@ -35,9 +35,6 @@ class MetaCollector(collector.BaseCollector):
         self._mappings = {}
         self._load_mappings()
 
-    def _connect(self):
-        pass
-
     def _load_mappings(self):
         mappings = self._db.list_services()
         for mapping in mappings:
@@ -60,11 +57,6 @@ class MetaCollector(collector.BaseCollector):
             if self._check_enabled(name):
                 self._collectors[name] = collectors[name].plugin(
                     self.transformers,
-                    user=self.user,
-                    password=self.password,
-                    tenant=self.tenant,
-                    region=self.region,
-                    keystone_url=self.keystone_url,
                     period=self.period)
 
     def map_retrieve(self, trans_resource, res_collector=None):
