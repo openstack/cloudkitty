@@ -42,3 +42,16 @@ Report
 
 .. rest-controller:: cloudkitty.api.controllers.v1:ReportController
    :webprefix: /v1/report
+
+
+Storage
+=======
+
+.. rest-controller:: cloudkitty.api.controllers.v1:StorageController
+   :webprefix: /v1/storage
+
+.. autotype:: cloudkitty.api.controllers.v1.DataFrame
+   :members:
+
+.. autotype:: cloudkitty.api.controllers.v1.RatedResource
+   :members:

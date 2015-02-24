@@ -16,6 +16,7 @@
 # @author: Stéphane Albert
 #
 import datetime
+import decimal
 
 from oslo.config import cfg
 import pecan
@@ -28,6 +29,7 @@ from cloudkitty.api.controllers import types as cktypes
 from cloudkitty import config  # noqa
 from cloudkitty.db import api as db_api
 from cloudkitty.openstack.common import log as logging
+from cloudkitty import utils as ck_utils
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -49,7 +51,7 @@ class ResourceDescriptor(wtypes.Base):
     desc = {wtypes.text: cktypes.MultiType(wtypes.text, int, float, dict)}
     """Description of the resources parameters."""
 
-    volume = int
+    volume = decimal.Decimal
     """Number of resources."""
 
     def to_json(self):
@@ -66,8 +68,19 @@ class ResourceDescriptor(wtypes.Base):
                      desc={
                          'image_id': 'a41fba37-2429-4f15-aa00-b5bc4bf557bf'
                      },
-                     volume=1)
+                     volume=decimal.Decimal(1))
         return sample
+
+
+class RatedResource(ResourceDescriptor):
+    """Represents a rated CloudKitty resource."""
+
+    billing = decimal.Decimal
+
+    def to_json(self):
+        res_dict = super(RatedResource, self).to_json()
+        res_dict['billing'] = self.billing
+        return res_dict
 
 
 class ServiceToCollectorMapping(wtypes.Base):
@@ -275,6 +288,66 @@ class ReportController(rest.RestController):
         return total
 
 
+class DataFrame(wtypes.Base):
+    """Type describing a stored dataframe."""
+
+    begin = datetime.datetime
+    """Begin date for the sample."""
+
+    end = datetime.datetime
+    """End date for the sample."""
+
+    tenant_id = wtypes.text
+    """Tenant owner of the sample."""
+
+    resources = [RatedResource]
+    """A resource list."""
+
+    def to_json(self):
+        return {'begin': self.begin,
+                'end': self.end,
+                'tenant_id': self.tenant_id,
+                'resources': self.resources}
+
+
+class StorageController(rest.RestController):
+    """REST Controller to access stored data frames."""
+
+    @wsme_pecan.wsexpose([DataFrame], datetime.datetime, datetime.datetime,
+                         wtypes.text)
+    def get_all(self, begin, end, tenant_id=None):
+        """Return a list of rated resources for a time period and a tenant.
+
+        :param begin: Start of the period
+        :param end: End of the period
+        :return: List of RatedResource objects.
+        """
+
+        ret = []
+        begin_ts = ck_utils.dt2ts(begin)
+        end_ts = ck_utils.dt2ts(end)
+        backend = pecan.request.storage_backend
+        frames = backend.get_time_frame(begin_ts, end_ts, tenant_id=tenant_id)
+        for frame in frames:
+            for service, data_list in frame['usage'].items():
+                resources = []
+                for data in data_list:
+                    desc = data['desc'] if data['desc'] else {}
+                    price = decimal.Decimal(data['billing']['price'])
+                    resource = RatedResource(service=service,
+                                             desc=desc,
+                                             volume=data['vol']['qty'],
+                                             billing=price)
+                    resources.append(resource)
+                data_frame = DataFrame(
+                    begin=ck_utils.iso2dt(frame['period']['begin']),
+                    end=ck_utils.iso2dt(frame['period']['end']),
+                    tenant_id=tenant_id,  # FIXME
+                    resources=resources)
+                ret.append(data_frame)
+        return ret
+
+
 class V1Controller(rest.RestController):
     """API version 1 controller.
 
@@ -283,3 +356,4 @@ class V1Controller(rest.RestController):
     collector = CollectorController()
     billing = BillingController()
     report = ReportController()
+    storage = StorageController()
