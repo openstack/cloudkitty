@@ -13,6 +13,14 @@ Introduction
 CloudKitty is a Rating As A Service project aimed at translating Ceilometer
 metrics to prices.
 
+Installation
+============
+
+.. toctree::
+   :maxdepth: 1
+
+   installation
+
 
 Architecture
 ============
