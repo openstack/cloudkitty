@@ -19,18 +19,13 @@ import os
 from wsgiref import simple_server
 
 from oslo.config import cfg
-try:
-    import oslo_messaging as messaging
-except ImportError:
-    from oslo import messaging
 from paste import deploy
 import pecan
 
 from cloudkitty.api import config as api_config
 from cloudkitty.api import hooks
-from cloudkitty.common import rpc
-from cloudkitty import config  # noqa
 from cloudkitty.openstack.common import log as logging
+from cloudkitty import rpc
 from cloudkitty import storage
 
 
@@ -69,10 +64,7 @@ def setup_app(pecan_config=None, extra_hooks=None):
 
     app_conf = get_pecan_config()
 
-    target = messaging.Target(topic='cloudkitty',
-                              version='1.0')
-
-    client = rpc.get_client(target)
+    client = rpc.get_client()
 
     storage_backend = storage.get_storage()
 

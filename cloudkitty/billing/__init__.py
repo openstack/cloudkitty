@@ -17,148 +17,34 @@
 #
 import abc
 
-import pecan
-from pecan import rest
 import six
-from wsme import types as wtypes
-import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.db import api as db_api
-
-
-class BillingModuleNotConfigurable(Exception):
-    def __init__(self, module):
-        self.module = module
-        super(BillingModuleNotConfigurable, self).__init__(
-            'Module %s not configurable.' % module)
-
-
-class ExtensionSummary(wtypes.Base):
-    """A billing extension summary
-
-    """
-
-    name = wtypes.wsattr(wtypes.text, mandatory=True)
-    """Name of the extension."""
-
-    description = wtypes.text
-    """Short description of the extension."""
-
-    enabled = wtypes.wsattr(bool, default=False)
-    """Extension status."""
-
-    hot_config = wtypes.wsattr(bool, default=False, name='hot-config')
-    """On-the-fly configuration support."""
-
-    @classmethod
-    def sample(cls):
-        sample = cls(name='example',
-                     description='Sample extension.',
-                     enabled=True,
-                     hot_config=False)
-        return sample
-
-
-@six.add_metaclass(abc.ABCMeta)
-class BillingEnableController(rest.RestController):
-    """REST Controller to enable or disable a billing module.
-
-    """
-
-    @wsme_pecan.wsexpose(bool)
-    def get(self):
-        """Get module status
-
-        """
-        api = db_api.get_instance()
-        module_db = api.get_module_enable_state()
-        return module_db.get_state(self.module_name) or False
-
-    @wsme_pecan.wsexpose(bool, body=bool)
-    def put(self, state):
-        """Set module status
-
-        :param state: State to set.
-        :return: New state set for the module.
-        """
-        api = db_api.get_instance()
-        module_db = api.get_module_enable_state()
-        client = pecan.request.rpc_client.prepare(namespace='billing',
-                                                  fanout=True)
-        if state:
-            operation = 'enable_module'
-        else:
-            operation = 'disable_module'
-        client.cast({}, operation, name=self.module_name)
-        return module_db.set_state(self.module_name, state)
-
-
-@six.add_metaclass(abc.ABCMeta)
-class BillingConfigController(rest.RestController):
-    """REST Controller managing internal configuration of billing modules.
-
-    """
-
-    def notify_reload(self):
-        client = pecan.request.rpc_client.prepare(namespace='billing',
-                                                  fanout=True)
-        client.cast({}, 'reload_module', name=self.module_name)
-
-    def _not_configurable(self):
-        try:
-            raise BillingModuleNotConfigurable(self.module_name)
-        except BillingModuleNotConfigurable as e:
-            pecan.abort(400, str(e))
-
-    @wsme_pecan.wsexpose()
-    def get(self):
-        """Get current module configuration
-
-        """
-        self._not_configurable()
-
-    @wsme_pecan.wsexpose()
-    def put(self):
-        """Set current module configuration
-
-        """
-        self._not_configurable()
-
-
-@six.add_metaclass(abc.ABCMeta)
-class BillingController(rest.RestController):
-    """REST Controller used to manage billing system.
-
-    """
-
-    def __init__(self):
-        if not hasattr(self, 'config'):
-            self.config = BillingConfigController()
-        if not hasattr(self, 'enabled'):
-            self.enabled = BillingEnableController()
-        if hasattr(self, 'module_name'):
-            self.config.module_name = self.module_name
-            self.enabled.module_name = self.module_name
-
-    @wsme_pecan.wsexpose(ExtensionSummary)
-    def get_all(self):
-        """Get extension summary.
-
-        """
-        extension_summary = ExtensionSummary(**self.get_module_info())
-        return extension_summary
-
-    @abc.abstractmethod
-    def get_module_info(self):
-        """Get module informations
-
-        """
+from cloudkitty import rpc
 
 
 @six.add_metaclass(abc.ABCMeta)
 class BillingProcessorBase(object):
+    """Provides the Cloudkitty integration code to the billing processors.
 
-    controller = BillingController
+    Every billing processor shoud sublclass this and override at least
+    module_name, description.
+
+    config_controller can be left at None to use the default one.
+    """
+
+    module_name = None
+    description = None
+    config_controller = None
+    hot_config = False
+
+    @property
+    def module_info(self):
+        return {
+            'name': self.module_name,
+            'description': self.description,
+            'hot_config': self.hot_config,
+            'enabled': self.enabled, }
 
     def __init__(self, tenant_id=None):
         self._tenant_id = tenant_id
@@ -170,11 +56,22 @@ class BillingProcessorBase(object):
         :returns: bool if module is enabled
         """
 
-    @abc.abstractmethod
-    def reload_config(self):
-        """Trigger configuration reload
+    def set_state(self, enabled):
+        """Enable or disable a module
 
+        :param enabled: (bool) The state to put the module in.
+        :return:  bool
         """
+        api = db_api.get_instance()
+        module_db = api.get_module_enable_state()
+        client = rpc.get_client().prepare(namespace='billing',
+                                          fanout=True)
+        if enabled:
+            operation = 'enable_module'
+        else:
+            operation = 'disable_module'
+        client.cast({}, operation, name=self.module_name)
+        return module_db.set_state(self.module_name, enabled)
 
     @abc.abstractmethod
     def process(self, data):
@@ -184,3 +81,14 @@ class BillingProcessorBase(object):
                      resources.
         :type data: dict(str:?)
         """
+
+    @abc.abstractmethod
+    def reload_config(self):
+        """Trigger configuration reload
+
+        """
+
+    def notify_reload(self):
+        client = rpc.get_rpc_client().prepare(namespace='billing',
+                                              fanout=True)
+        client.cast({}, 'reload_module', name=self.module_name)

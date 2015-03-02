@@ -2,11 +2,8 @@
 HashMap Module REST API
 =======================
 
-.. rest-controller:: cloudkitty.billing.hash:BasicHashMapController
-   :webprefix: /v1/billing/modules/hashmap
-
 .. rest-controller:: cloudkitty.billing.hash:BasicHashMapConfigController
-   :webprefix: /v1/billing/modules/hashmap/config
+   :webprefix: /v1/billing/module_config/hashmap
 
 .. http:get:: /v1/billing/hashmap/modules/config/(service)/(field)/(key)
 

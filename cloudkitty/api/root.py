@@ -20,7 +20,7 @@ from pecan import rest
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
-from cloudkitty.api.controllers import v1
+from cloudkitty.api.v1 import controllers as v1_api
 from cloudkitty.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ class RootController(rest.RestController):
 
     """
 
-    v1 = v1.V1Controller()
+    v1 = v1_api.V1Controller()
 
     @wsme_pecan.wsexpose([APIVersion])
     def get(self):
@@ -124,7 +124,7 @@ class RootController(rest.RestController):
         ver1 = APIVersion(
             id='v1',
             status='EXPERIMENTAL',
-            updated='2014-08-11T16:00:00Z',
+            updated='2015-03-09T16:00:00Z',
             links=[
                 APILink(
                     rel='self',

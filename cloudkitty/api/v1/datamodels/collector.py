@@ -15,30 +15,27 @@
 #
 # @author: Stéphane Albert
 #
-from cloudkitty import billing
+from wsme import types as wtypes
 
 
-class Noop(billing.BillingProcessorBase):
+class ServiceToCollectorMapping(wtypes.Base):
+    """Type describing a service to collector mapping.
 
-    module_name = "noop"
-    description = 'Dummy test module.'
+    """
 
-    @property
-    def enabled(self):
-        """Check if the module is enabled
+    service = wtypes.text
+    """Name of the service."""
 
-        :returns: bool if module is enabled
-        """
-        return True
+    collector = wtypes.text
+    """Name of the collector."""
 
-    def reload_config(self):
-        pass
+    def to_json(self):
+        res_dict = {}
+        res_dict[self.service] = self.collector
+        return res_dict
 
-    def process(self, data):
-        for cur_data in data:
-            cur_usage = cur_data['usage']
-            for service in cur_usage:
-                for entry in cur_usage[service]:
-                    if 'billing' not in entry:
-                        entry['billing'] = {'price': 0}
-        return data
+    @classmethod
+    def sample(cls):
+        sample = cls(service='compute',
+                     collector='ceilometer')
+        return sample

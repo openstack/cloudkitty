@@ -15,30 +15,20 @@
 #
 # @author: Stéphane Albert
 #
-from cloudkitty import billing
+from pecan import rest
+
+from cloudkitty.api.v1.controllers import billing as billing_api
+from cloudkitty.api.v1.controllers import collector as collector_api
+from cloudkitty.api.v1.controllers import report as report_api
+from cloudkitty.api.v1.controllers import storage as storage_api
 
 
-class Noop(billing.BillingProcessorBase):
+class V1Controller(rest.RestController):
+    """API version 1 controller.
 
-    module_name = "noop"
-    description = 'Dummy test module.'
+    """
 
-    @property
-    def enabled(self):
-        """Check if the module is enabled
-
-        :returns: bool if module is enabled
-        """
-        return True
-
-    def reload_config(self):
-        pass
-
-    def process(self, data):
-        for cur_data in data:
-            cur_usage = cur_data['usage']
-            for service in cur_usage:
-                for entry in cur_usage[service]:
-                    if 'billing' not in entry:
-                        entry['billing'] = {'price': 0}
-        return data
+    billing = billing_api.BillingController()
+    collector = collector_api.CollectorController()
+    report = report_api.ReportController()
+    storage = storage_api.StorageController()
