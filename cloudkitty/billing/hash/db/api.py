@@ -35,59 +35,98 @@ def get_instance():
 class NoSuchService(Exception):
     """Raised when the service doesn't exist."""
 
-    def __init__(self, service):
+    def __init__(self, name=None, uuid=None):
         super(NoSuchService, self).__init__(
-            "No such service: %s" % service)
-        self.service = service
+            "No such service: %s (UUID: %s)" % (name, uuid))
+        self.name = name
+        self.uuid = uuid
 
 
 class NoSuchField(Exception):
     """Raised when the field doesn't exist for the service."""
 
-    def __init__(self, service, field):
+    def __init__(self, uuid):
         super(NoSuchField, self).__init__(
-            "No such field for %s service: %s" % (service, field,))
-        self.service = service
-        self.field = field
+            "No such field: %s" % uuid)
+        self.uuid = uuid
+
+
+class NoSuchGroup(Exception):
+    """Raised when the group doesn't exist."""
+
+    def __init__(self, name=None, uuid=None):
+        super(NoSuchGroup, self).__init__(
+            "No such group: %s (UUID: %s)" % (name, uuid))
+        self.name = name
+        self.uuid = uuid
 
 
 class NoSuchMapping(Exception):
     """Raised when the mapping doesn't exist."""
 
-    def __init__(self, service, field, key):
-        super(NoSuchMapping, self).__init__(
-            "No such key for %s service and %s field: %s"
-            % (service, field, key,))
-        self.service = service
-        self.field = field
-        self.key = key
+    def __init__(self, uuid):
+        msg = ("No such mapping: %s" % uuid)
+        super(NoSuchMapping, self).__init__(msg)
+        self.uuid = uuid
+
+
+class NoSuchType(Exception):
+    """Raised when a mapping type is not handled."""
+
+    def __init__(self, map_type):
+        msg = ("No mapping type: %s"
+               % (map_type))
+        super(NoSuchType, self).__init__(msg)
+        self.map_type = map_type
 
 
 class ServiceAlreadyExists(Exception):
     """Raised when the service already exists."""
 
-    def __init__(self, service):
+    def __init__(self, name, uuid):
         super(ServiceAlreadyExists, self).__init__(
-            "Service %s already exists" % service)
-        self.service = service
+            "Service %s already exists (UUID: %s)" % (name, uuid))
+        self.name = name
+        self.uuid = uuid
 
 
 class FieldAlreadyExists(Exception):
     """Raised when the field already exists."""
 
-    def __init__(self, field):
+    def __init__(self, field, uuid):
         super(FieldAlreadyExists, self).__init__(
-            "Field %s already exists" % field)
+            "Field %s already exists (UUID: %s)" % (field, uuid))
         self.field = field
+        self.uuid = uuid
+
+
+class GroupAlreadyExists(Exception):
+    """Raised when the group already exists."""
+
+    def __init__(self, name, uuid):
+        super(GroupAlreadyExists, self).__init__(
+            "Group %s already exists (UUID: %s)" % (name, uuid))
+        self.name = name
+        self.uuid = uuid
 
 
 class MappingAlreadyExists(Exception):
     """Raised when the mapping already exists."""
 
-    def __init__(self, mapping):
+    def __init__(self, mapping, uuid):
         super(MappingAlreadyExists, self).__init__(
-            "Mapping %s already exists" % mapping)
+            "Mapping %s already exists (UUID: %s)" % (mapping, uuid))
         self.mapping = mapping
+        self.uuid = uuid
+
+
+class MappingHasNoGroup(Exception):
+    """Raised when the mapping is not attached to a group."""
+
+    def __init__(self, uuid):
+        super(MappingHasNoGroup, self).__init__(
+            "Mapping has no group (UUID: %s)" % uuid)
+        self.uuid = uuid
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -101,119 +140,147 @@ class HashMap(object):
         """
 
     @abc.abstractmethod
-    def get_service(self, service):
+    def get_service(self, name=None, uuid=None):
         """Return a service object.
 
-        :param service: The service to filter on.
+        :param name: Filter on a service name.
+        :param uuid: The uuid of the service to get.
         """
 
     @abc.abstractmethod
-    def get_field(self, service, field):
+    def get_field(self, uuid=None, service_uuid=None, name=None):
         """Return a field object.
 
-        :param service: The service to filter on.
-        :param field: The field to filter on.
+        :param uuid: UUID of the field to get.
+        :param service_uuid: UUID of the service to filter on. (Used with name)
+        :param name: Name of the field to filter on. (Used with service_uuid)
         """
 
     @abc.abstractmethod
-    def get_mapping(self, service, field, key):
-        """Return a field object.
+    def get_group(self, uuid):
+        """Return a group object.
 
-        :param service: The service to filter on.
-        :param field: The field to filter on.
-        :param key: The field to filter on.
-        :param key: Value of the field to filter on.
+        :param uuid: UUID of the group to get.
+        """
+
+    @abc.abstractmethod
+    def get_mapping(self, uuid):
+        """Return a mapping object.
+
+        :param uuid: UUID of the mapping to get.
         """
 
     @abc.abstractmethod
     def list_services(self):
-        """Return a list of every services.
+        """Return an UUID list of every service.
 
         """
 
     @abc.abstractmethod
-    def list_fields(self, service):
-        """Return a list of every fields in a service.
+    def list_fields(self, service_uuid):
+        """Return an UUID list of every field in a service.
 
-        :param service: The service to filter on.
+        :param service_uuid: The service UUID to filter on.
         """
 
     @abc.abstractmethod
-    def list_mappings(self, service, field):
-        """Return a list of every mapping.
+    def list_groups(self):
+        """Return an UUID list of every group.
 
-        :param service: The service to filter on.
-        :param field: The key to filter on.
         """
 
     @abc.abstractmethod
-    def create_service(self, service):
+    def list_mappings(self,
+                      service_uuid=None,
+                      field_uuid=None,
+                      group_uuid=None,
+                      no_group=False):
+        """Return an UUID list of every mapping.
+
+        :param service_uuid: The service to filter on.
+        :param field_uuid: The field to filter on.
+        :param group_uuid: The group to filter on.
+        :param no_group: Filter on mappings without a group.
+
+        :return list(str): List of mappings' UUID.
+        """
+
+    @abc.abstractmethod
+    def create_service(self, name):
         """Create a new service.
 
-        :param service:
+        :param name: Name of the service to create.
         """
 
     @abc.abstractmethod
-    def create_field(self, service, field):
+    def create_field(self, service_uuid, name):
         """Create a new field.
 
-        :param service:
-        :param field:
+        :param service_uuid: UUID of the parent service.
+        :param name: Name of the field.
         """
 
     @abc.abstractmethod
-    def create_mapping(self, service, field, key, value, map_type='rate'):
+    def create_group(self, name):
+        """Create a new group.
+
+        :param name: The name of the group.
+        """
+
+    @abc.abstractmethod
+    def create_mapping(self,
+                       cost,
+                       map_type='rate',
+                       value=None,
+                       service_id=None,
+                       field_id=None,
+                       group_id=None):
         """Create a new service/field mapping.
 
-        :param service: Service the mapping is applying to.
-        :param field: Field the mapping is applying to.
-        :param key: Value of the field this mapping is applying to.
-        :param value: Pricing value to apply to this mapping.
-        :param map_type: The type of pricing rule.
+        :param cost: Rating value to apply to this mapping.
+        :param map_type: The type of rating rule.
+        :param value: Value of the field this mapping is applying to.
+        :param service_id: Service the mapping is applying to.
+        :param field_id: Field the mapping is applying to.
+        :param group_id: The group of calculations to apply.
         """
 
     @abc.abstractmethod
-    def update_mapping(self, service, field, key, **kwargs):
+    def update_mapping(self, uuid, **kwargs):
         """Update a mapping.
 
-        :param service: Service the mapping is applying to.
-        :param field: Field the mapping is applying to.
-        :param key: Value of the field this mapping is applying to.
-        :param value: Pricing value to apply to this mapping.
-        :param map_type: The type of pricing rule.
+        :param uuid UUID of the mapping to modify.
+        :param cost: Rating value to apply to this mapping.
+        :param map_type: The type of rating rule.
+        :param value: Value of the field this mapping is applying to.
+        :param group_id: The group of calculations to apply.
         """
 
     @abc.abstractmethod
-    def update_or_create_mapping(self, service, field, key, **kwargs):
-        """Update or create a mapping.
-
-        :param service: Service the mapping is applying to.
-        :param field: Field the mapping is applying to.
-        :param key: Value of the field this mapping is applying to.
-        :param value: Pricing value to apply to this mapping.
-        :param map_type: The type of pricing rule.
-        """
-
-    @abc.abstractmethod
-    def delete_service(self, service):
+    def delete_service(self, name=None, uuid=None):
         """Delete a service recursively.
 
-        :param service: Service to delete.
+        :param name: Name of the service to delete.
+        :param uuid: UUID of the service to delete.
         """
 
     @abc.abstractmethod
-    def delete_field(self, service, field):
+    def delete_field(self, uuid):
         """Delete a field recursively.
 
-        :param service: Service the field is applying to.
-        :param field: field to delete.
+        :param uuid UUID of the field to delete.
+        """
+
+    def delete_group(self, uuid, recurse=True):
+        """Delete a group and all mappings recursively.
+
+        :param uuid: UUID of the group to delete.
+        :param recurse: Delete attached mappings recursively.
         """
 
     @abc.abstractmethod
-    def delete_mapping(self, service, field, key):
-        """Delete a mapping recursively.
+    def delete_mapping(self, uuid):
+        """Delete a mapping
 
-        :param service: Service the field is applying to.
-        :param field: Field the mapping is applying to.
-        :param key: key to delete.
+        :param uuid: UUID of the mapping to delete.
         """

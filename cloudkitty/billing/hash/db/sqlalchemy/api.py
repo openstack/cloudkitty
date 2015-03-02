@@ -17,6 +17,7 @@
 #
 from oslo.db import exception
 from oslo.db.sqlalchemy import utils
+from oslo.utils import uuidutils
 import six
 import sqlalchemy
 
@@ -38,189 +39,309 @@ class HashMap(api.HashMap):
     def get_migration(self):
         return migration
 
-    def get_service(self, service):
+    def get_service(self, name=None, uuid=None):
         session = db.get_session()
         try:
             q = session.query(models.HashMapService)
-            res = q.filter_by(
-                name=service,
-            ).one()
+            if name:
+                q = q.filter(
+                    models.HashMapService.name == name)
+            elif uuid:
+                q = q.filter(
+                    models.HashMapService.service_id == uuid)
+            else:
+                raise ValueError('You must specify either name or uuid.')
+            res = q.one()
             return res
         except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchService(service)
+            raise api.NoSuchService(name=name, uuid=uuid)
 
-    def get_field(self, service, field):
+    def get_field(self, uuid=None, service_uuid=None, name=None):
         session = db.get_session()
         try:
-            service_db = self.get_service(service)
             q = session.query(models.HashMapField)
-            res = q.filter_by(
-                service_id=service_db.id,
-                name=field
-            ).one()
+            if uuid:
+                q = q.filter(
+                    models.HashMapField.field_id == uuid)
+            elif service_uuid and name:
+                q = q.join(
+                    models.HashMapField.service)
+                q = q.filter(
+                    models.HashMapService.service_id == service_uuid,
+                    models.HashMapField.name == name)
+            else:
+                raise ValueError('You must specify either an uuid'
+                                 ' or a service_uuid and a name.')
+            res = q.one()
             return res
         except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchField(service, field)
+            raise api.NoSuchField(uuid)
 
-    def get_mapping(self, service, field, key):
+    def get_group(self, uuid):
         session = db.get_session()
         try:
-            field_db = self.get_field(service, field)
-            q = session.query(models.HashMapMapping)
-            res = q.filter_by(
-                key=key,
-                field_id=field_db.id
-            ).one()
+            q = session.query(models.HashMapGroup)
+            q = q.filter(
+                models.HashMapGroup.group_id == uuid)
+            res = q.one()
             return res
         except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchMapping(service, field, key)
+            raise api.NoSuchGroup(uuid=uuid)
+
+    def get_mapping(self, uuid):
+        session = db.get_session()
+        try:
+            q = session.query(models.HashMapMapping)
+            q = q.filter(
+                models.HashMapMapping.mapping_id == uuid)
+            res = q.one()
+            return res
+        except sqlalchemy.orm.exc.NoResultFound:
+            raise api.NoSuchMapping(uuid)
+
+    def get_group_from_mapping(self, uuid):
+        session = db.get_session()
+        try:
+            q = session.query(models.HashMapGroup)
+            q = q.join(
+                models.HashMapGroup.mappings)
+            q = q.filter(
+                models.HashMapMapping.mapping_id == uuid)
+            res = q.one()
+            return res
+        except sqlalchemy.orm.exc.NoResultFound:
+            raise api.MappingHasNoGroup(uuid=uuid)
 
     def list_services(self):
         session = db.get_session()
         q = session.query(models.HashMapService)
         res = q.values(
-            models.HashMapService.name
-        )
-        return res
+            models.HashMapService.service_id)
+        return [uuid[0] for uuid in res]
 
-    def list_fields(self, service):
+    def list_fields(self, service_uuid):
         session = db.get_session()
-        service_db = self.get_service(service)
         q = session.query(models.HashMapField)
-        res = q.filter_by(
-            service_id=service_db.id
-        ).values(
-            models.HashMapField.name
-        )
-        return res
+        q = q.join(
+            models.HashMapField.service)
+        q = q.filter(
+            models.HashMapService.service_id == service_uuid)
+        res = q.values(models.HashMapField.field_id)
+        return [uuid[0] for uuid in res]
 
-    def list_mappings(self, service, field):
+    def list_groups(self):
         session = db.get_session()
-        field_db = self.get_field(service, field)
-        q = session.query(models.HashMapMapping)
-        res = q.filter_by(
-            field_id=field_db.id
-        ).values(
-            models.HashMapMapping.key
-        )
-        return res
+        q = session.query(models.HashMapGroup)
+        res = q.values(
+            models.HashMapGroup.group_id)
+        return [uuid[0] for uuid in res]
 
-    def create_service(self, service):
+    def list_mappings(self,
+                      service_uuid=None,
+                      field_uuid=None,
+                      group_uuid=None,
+                      no_group=False):
+
+        session = db.get_session()
+        q = session.query(models.HashMapMapping)
+        if service_uuid:
+            q = q.join(
+                models.HashMapMapping.service)
+            q = q.filter(
+                models.HashMapService.service_id == service_uuid)
+        elif field_uuid:
+            q = q.join(
+                models.HashMapMapping.field)
+            q = q.filter(models.HashMapField.field_id == field_uuid)
+        if group_uuid:
+            q = q.join(
+                models.HashMapMapping.group)
+            q = q.filter(models.HashMapGroup.group_id == group_uuid)
+        elif not service_uuid and not field_uuid:
+            raise ValueError('You must specify either service_uuid,'
+                             ' field_uuid or group_uuid.')
+        elif no_group:
+            q = q.filter(models.HashMapMapping.group_id == None)  # noqa
+        res = q.values(
+            models.HashMapMapping.mapping_id
+        )
+        return [uuid[0] for uuid in res]
+
+    def create_service(self, name):
         session = db.get_session()
         try:
             with session.begin():
-                service_db = models.HashMapService(name=service)
+                service_db = models.HashMapService(name=name)
+                service_db.service_id = uuidutils.generate_uuid()
                 session.add(service_db)
-                session.flush()
-                # TODO(sheeprine): return object
-                return service_db
+            return service_db
         except exception.DBDuplicateEntry:
-            raise api.ServiceAlreadyExists(service)
+            service_db = self.get_service(name=name)
+            raise api.ServiceAlreadyExists(
+                service_db.name,
+                service_db.service_id)
 
-    def create_field(self, service, field):
-        try:
-            service_db = self.get_service(service)
-        except api.NoSuchService:
-            service_db = self.create_service(service)
+    def create_field(self, service_uuid, name):
+        service_db = self.get_service(uuid=service_uuid)
         session = db.get_session()
         try:
             with session.begin():
                 field_db = models.HashMapField(
                     service_id=service_db.id,
-                    name=field)
+                    name=name,
+                    field_id=uuidutils.generate_uuid())
                 session.add(field_db)
-                session.flush()
-                # TODO(sheeprine): return object
-                return field_db
+            return field_db
         except exception.DBDuplicateEntry:
-            raise api.FieldAlreadyExists(field)
+            field_db = self.get_field(service_uuid=service_uuid,
+                                      name=name)
+            raise api.FieldAlreadyExists(field_db.name, field_db.field_id)
 
-    def create_mapping(self, service, field, key, value, map_type='rate'):
+    def create_group(self, name):
+        session = db.get_session()
         try:
-            field_db = self.get_field(service, field)
-        except (api.NoSuchField, api.NoSuchService):
-            field_db = self.create_field(service, field)
+            with session.begin():
+                group_db = models.HashMapGroup(
+                    name=name,
+                    group_id=uuidutils.generate_uuid())
+                session.add(group_db)
+            return group_db
+        except exception.DBDuplicateEntry:
+            raise api.GroupAlreadyExists(name, group_db.group_id)
+
+    def create_mapping(self,
+                       cost,
+                       map_type='rate',
+                       value=None,
+                       service_id=None,
+                       field_id=None,
+                       group_id=None):
+        if field_id and service_id:
+            raise ValueError('You can only specify one parent.')
+        field_fk = None
+        if field_id:
+            field_db = self.get_field(uuid=field_id)
+            field_fk = field_db.id
+        service_fk = None
+        if service_id:
+            service_db = self.get_service(uuid=service_id)
+            service_fk = service_db.id
+        if not value and not service_id:
+            raise ValueError('You must either specify a value'
+                             ' or a service_id')
+        elif value and service_id:
+            raise ValueError('You can\'t specify a value'
+                             ' and a service_id')
+        if group_id:
+            group_db = self.get_group(uuid=group_id)
         session = db.get_session()
         try:
             with session.begin():
                 field_map = models.HashMapMapping(
-                    field_id=field_db.id,
-                    key=key,
+                    mapping_id=uuidutils.generate_uuid(),
                     value=value,
+                    cost=cost,
+                    field_id=field_fk,
+                    service_id=service_fk,
                     map_type=map_type)
+                if group_id:
+                    field_map.group_id = group_db.id
                 session.add(field_map)
-                # TODO(sheeprine): return object
-                return field_map
+            return field_map
         except exception.DBDuplicateEntry:
-            raise api.MappingAlreadyExists(key)
+            raise api.MappingAlreadyExists(value, field_map.field_id)
+        except exception.DBError:
+            raise api.NoSuchType(map_type)
 
-    def update_mapping(self, service, field, key, **kwargs):
-        field_db = self.get_field(service, field)
+    def update_mapping(self, uuid, **kwargs):
         session = db.get_session()
         try:
             with session.begin():
                 q = session.query(models.HashMapMapping)
-                field_map = q.filter_by(
-                    key=key,
-                    field_id=field_db.id
-                ).with_lockmode('update').one()
+                q = q.filter(
+                    models.HashMapMapping.mapping_id == uuid
+                )
+                mapping_db = q.with_lockmode('update').one()
                 if kwargs:
+                    # Resolve FK
+                    if 'group_id' in kwargs:
+                        group_id = kwargs.pop('group_id')
+                        if group_id:
+                            group_db = self.get_group(group_id)
+                            mapping_db.group_id = group_db.id
+                    # Service and Field shouldn't be updated
+                    excluded_cols = ['mapping_id', 'service_id', 'field_id']
+                    for col in excluded_cols:
+                        if col in kwargs:
+                            kwargs.pop(col)
                     for attribute, value in six.iteritems(kwargs):
-                        if hasattr(field_map, attribute):
-                            setattr(field_map, attribute, value)
+                        if hasattr(mapping_db, attribute):
+                            setattr(mapping_db, attribute, value)
                         else:
                             raise ValueError('No such attribute: {}'.format(
                                 attribute))
                 else:
                     raise ValueError('No attribute to update.')
-                return field_map
+                return mapping_db
         except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchMapping(service, field, key)
+            raise api.NoSuchMapping(uuid)
 
-    def update_or_create_mapping(self, service, field, key, **kwargs):
-        try:
-            return self.create_mapping(
-                service,
-                field,
-                key,
-                **kwargs
-            )
-        except api.MappingAlreadyExists:
-            return self.update_mapping(service, field, key, **kwargs)
-
-    def delete_service(self, service):
+    def delete_service(self, name=None, uuid=None):
         session = db.get_session()
-        r = utils.model_query(
+        q = utils.model_query(
             models.HashMapService,
             session
-        ).filter_by(
-            name=service,
-        ).delete()
+        )
+        if name:
+            q = q.filter_by(name=name)
+        elif uuid:
+            q = q.filter_by(service_id=uuid)
+        else:
+            raise ValueError('You must specify either name or uuid.')
+        r = q.delete()
         if not r:
-            raise api.NoSuchService(service)
+            raise api.NoSuchService(name, uuid)
 
-    def delete_field(self, service, field):
+    def delete_field(self, uuid):
         session = db.get_session()
-        service_db = self.get_service(service)
-        r = utils.model_query(
+        q = utils.model_query(
             models.HashMapField,
             session
-        ).filter_by(
-            service_id=service_db.id,
-            name=field,
-        ).delete()
+        )
+        q = q.filter_by(
+            field_id=uuid
+        )
+        r = q.delete()
         if not r:
-            raise api.NoSuchField(service, field)
+            raise api.NoSuchField(uuid)
 
-    def delete_mapping(self, service, field, key):
+    def delete_group(self, uuid, recurse=True):
         session = db.get_session()
-        field = self.get_field(service, field)
-        r = utils.model_query(
-            models.HashMapMapping,
+        q = utils.model_query(
+            models.HashMapGroup,
             session
         ).filter_by(
-            field_id=field.id,
-            key=key,
-        ).delete()
+            group_id=uuid,
+        )
+        with session.begin():
+            try:
+                r = q.with_lockmode('update').one()
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.NoSuchGroup(uuid=uuid)
+            if recurse:
+                for mapping in r.mappings:
+                    session.delete(mapping)
+            q.delete()
+
+    def delete_mapping(self, uuid):
+        session = db.get_session()
+        q = utils.model_query(
+            models.HashMapMapping,
+            session
+        )
+        q = q.filter_by(
+            mapping_id=uuid
+        )
+        r = q.delete()
         if not r:
-            raise api.NoSuchMapping(service, field, key)
+            raise api.NoSuchMapping(uuid)

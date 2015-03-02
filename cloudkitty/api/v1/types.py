@@ -15,9 +15,23 @@
 #
 # @author: Stéphane Albert
 #
+from oslo.utils import uuidutils
+from wsme import exc
 from wsme import types as wtypes
 
 from cloudkitty.i18n import _LE
+
+
+class UuidType(wtypes.UuidType):
+    """A simple UUID type."""
+    basetype = wtypes.text
+    name = 'uuid'
+
+    @staticmethod
+    def validate(value):
+        if not uuidutils.is_uuid_like(value):
+            raise exc.InvalidType(_LE("Invalid UUID, got '%s'") % value)
+        return value
 
 
 # Code taken from ironic types

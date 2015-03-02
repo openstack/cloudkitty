@@ -16,13 +16,14 @@
 # @author: Gauvain Pocentek
 #
 from oslo.config import fixture as config_fixture
+from oslotest import base
 import testscenarios
-import testtools
 
+from cloudkitty import db
 from cloudkitty.db import api as db_api
 
 
-class TestCase(testscenarios.TestWithScenarios, testtools.TestCase):
+class TestCase(testscenarios.TestWithScenarios, base.BaseTestCase):
     scenarios = [
         ('sqlite', dict(db_url='sqlite:///'))
     ]
@@ -34,3 +35,7 @@ class TestCase(testscenarios.TestWithScenarios, testtools.TestCase):
         self.conn = db_api.get_instance()
         migration = self.conn.get_migration()
         migration.upgrade('head')
+
+    def tearDown(self):
+        db.get_engine().dispose()
+        super(TestCase, self).tearDown()

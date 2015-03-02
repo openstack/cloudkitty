@@ -15,210 +15,34 @@
 #
 # @author: Stéphane Albert
 #
-import pecan
-from pecan import rest
-from pecan import routing
-from wsme import types as wtypes
-import wsmeext.pecan as wsme_pecan
-
 from cloudkitty import billing
-from cloudkitty.billing.hash.db import api
-from cloudkitty.db import api as db_api
+from cloudkitty.billing.hash.controllers import root as root_api
+from cloudkitty.billing.hash.db import api as hash_db_api
+from cloudkitty.db import api as ck_db_api
 from cloudkitty.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 
-MAP_TYPE = wtypes.Enum(wtypes.text, 'flat', 'rate')
 
+class HashMap(billing.BillingProcessorBase):
+    """HashMap rating module.
 
-class Mapping(wtypes.Base):
-
-    map_type = wtypes.wsattr(MAP_TYPE, default='rate', name='type')
-    """Type of the mapping."""
-
-    value = wtypes.wsattr(float, mandatory=True)
-    """Value of the mapping."""
-
-    @classmethod
-    def sample(cls):
-        sample = cls(value=4.2)
-        return sample
-
-
-class BasicHashMapConfigController(rest.RestController):
-    """RestController for hashmap's configuration."""
-
-    _custom_actions = {
-        'types': ['GET']
-    }
-
-    @wsme_pecan.wsexpose([wtypes.text])
-    def get_types(self):
-        """Return the list of every mapping type available.
-
-        """
-        return MAP_TYPE.values
-
-    @pecan.expose()
-    def _route(self, args, request=None):
-        if len(args) > 2:
-            # Taken from base _route function
-            if request is None:
-                from pecan import request  # noqa
-            method = request.params.get('_method', request.method).lower()
-            if request.method == 'GET' and method in ('delete', 'put'):
-                pecan.abort(405)
-
-            if request.method == 'GET':
-                return routing.lookup_controller(self.get_mapping, args)
-        return super(BasicHashMapConfigController, self)._route(args)
-
-    @wsme_pecan.wsexpose(Mapping, wtypes.text, wtypes.text, wtypes.text)
-    def get_mapping(self, service, field, key):
-        """Get a mapping from full path.
-
-        """
-        hashmap = api.get_instance()
-        try:
-            return hashmap.get_mapping(service, field, key)
-        except (api.NoSuchService, api.NoSuchField, api.NoSuchMapping) as e:
-                pecan.abort(400, str(e))
-
-    @wsme_pecan.wsexpose([wtypes.text])
-    def get(self):
-        """Get the service list
-
-        :return: List of every services' name.
-        """
-        hashmap = api.get_instance()
-        return [service.name for service in hashmap.list_services()]
-
-    @wsme_pecan.wsexpose([wtypes.text], wtypes.text, wtypes.text)
-    def get_one(self, service=None, field=None):
-        """Return the list of every sub keys.
-
-        :param service: (Optional) Filter on this service.
-        :param field: (Optional) Filter on this field.
-        """
-        hashmap = api.get_instance()
-        if field:
-            try:
-                return [mapping.key for mapping in hashmap.list_mappings(
-                    service,
-                    field)]
-            except (api.NoSuchService, api.NoSuchField) as e:
-                pecan.abort(400, str(e))
-
-        else:
-            try:
-                return [f.name for f in hashmap.list_fields(service)]
-            except api.NoSuchService as e:
-                pecan.abort(400, str(e))
-
-    # FIXME (sheeprine): Still a problem with our routing and the different
-    # object types. For service/field it's text or a mapping.
-    @wsme_pecan.wsexpose(None, wtypes.text, wtypes.text, wtypes.text,
-                         body=Mapping)
-    def post(self, service, field=None, key=None, mapping=None):
-        """Create hashmap fields.
-
-        :param service: Name of the service to create.
-        :param field: (Optional) Name of the field to create.
-        :param key: (Optional) Name of the key to create.
-        :param mapping: (Optional) Mapping object to create.
-        """
-        hashmap = api.get_instance()
-        if field:
-            if key:
-                if mapping:
-                    try:
-                        # FIXME(sheeprine): We should return the result
-                        hashmap.create_mapping(
-                            service,
-                            field,
-                            key,
-                            value=mapping.value,
-                            map_type=mapping.map_type
-                        )
-                        pecan.response.headers['Location'] = pecan.request.path
-                    except api.MappingAlreadyExists as e:
-                        pecan.abort(409, str(e))
-                else:
-                    e = ValueError('Mapping can\'t be empty.')
-                    pecan.abort(400, str(e))
-            else:
-                try:
-                    hashmap.create_field(service, field)
-                    pecan.response.headers['Location'] = pecan.request.path
-                except api.FieldAlreadyExists as e:
-                    pecan.abort(409, str(e))
-        else:
-            try:
-                hashmap.create_service(service)
-                pecan.response.headers['Location'] = pecan.request.path
-            except api.ServiceAlreadyExists as e:
-                pecan.abort(409, str(e))
-        self.notify_reload()
-        pecan.response.status = 201
-
-    @wsme_pecan.wsexpose(None, wtypes.text, wtypes.text, wtypes.text,
-                         body=Mapping)
-    def put(self, service, field, key, mapping):
-        """Modify hashmap fields
-
-        :param service: Filter on this service.
-        :param field: Filter on this field.
-        :param key: Modify the content of this key.
-        :param mapping: Mapping object to update.
-        """
-        hashmap = api.get_instance()
-        try:
-            hashmap.update_mapping(
-                service,
-                field,
-                key,
-                value=mapping.value,
-                map_type=mapping.map_type
-            )
-            pecan.response.headers['Location'] = pecan.request.path
-            pecan.response.status = 204
-        except (api.NoSuchService, api.NoSuchField, api.NoSuchMapping) as e:
-            pecan.abort(400, str(e))
-
-    @wsme_pecan.wsexpose(None, wtypes.text, wtypes.text, wtypes.text)
-    def delete(self, service, field=None, key=None):
-        """Delete the parent and all the sub keys recursively.
-
-        :param service: Name of the service to delete.
-        :param field: (Optional) Name of the field to delete.
-        :param key: (Optional) Name of the key to delete.
-        """
-        hashmap = api.get_instance()
-        try:
-            if field:
-                if key:
-                    hashmap.delete_mapping(service, field, key)
-                else:
-                    hashmap.delete_field(service, field)
-            else:
-                hashmap.delete_service(service)
-        except (api.NoSuchService, api.NoSuchField, api.NoSuchMapping) as e:
-            pecan.abort(400, str(e))
-        pecan.response.status = 204
-
-
-class BasicHashMap(billing.BillingProcessorBase):
+    HashMap can be used to map arbitrary fields of a resource to different
+    costs.
+    """
 
     module_name = 'hashmap'
     description = 'Basic hashmap billing module.'
     hot_config = True
-    config_controller = BasicHashMapConfigController
+    config_controller = root_api.HashMapConfigController
 
-    db_api = api.get_instance()
+    db_api = hash_db_api.get_instance()
 
     def __init__(self, tenant_id=None):
-        super(BasicHashMap, self).__init__(tenant_id)
-        self._billing_info = {}
+        super(HashMap, self).__init__(tenant_id)
+        self._service_mappings = {}
+        self._field_mappings = {}
+        self._res = {}
         self._load_billing_rates()
 
     @property
@@ -227,67 +51,127 @@ class BasicHashMap(billing.BillingProcessorBase):
 
         :returns: bool if module is enabled
         """
-        # FIXME(sheeprine): Hardcoded values to check the state
-        api = db_api.get_instance()
-        module_db = api.get_module_enable_state()
+        db_api = ck_db_api.get_instance()
+        module_db = db_api.get_module_enable_state()
         return module_db.get_state('hashmap') or False
 
     def reload_config(self):
+        """Reload the module's configuration.
+
+        """
         self._load_billing_rates()
 
+    def _load_mappings(self, mappings_uuid_list):
+        hashmap = hash_db_api.get_instance()
+        mappings = {}
+        for mapping_uuid in mappings_uuid_list:
+            mapping_db = hashmap.get_mapping(uuid=mapping_uuid)
+            if mapping_db.group_id:
+                group_name = mapping_db.group.name
+            else:
+                group_name = '_DEFAULT_'
+            if group_name not in mappings:
+                mappings[group_name] = {}
+            mapping_value = mapping_db.value
+            map_dict = {}
+            map_dict['cost'] = mapping_db.cost
+            map_dict['type'] = mapping_db.map_type
+            if mapping_value:
+                mappings[group_name][mapping_value] = map_dict
+            else:
+                mappings[group_name] = map_dict
+        return mappings
+
+    def _load_service_mappings(self, service_name, service_uuid):
+        hashmap = hash_db_api.get_instance()
+        mappings_uuid_list = hashmap.list_mappings(service_uuid=service_uuid)
+        mappings = self._load_mappings(mappings_uuid_list)
+        if mappings:
+            self._service_mappings[service_name] = mappings
+
+    def _load_field_mappings(self, service_name, field_name, field_uuid):
+        hashmap = hash_db_api.get_instance()
+        mappings_uuid_list = hashmap.list_mappings(field_uuid=field_uuid)
+        mappings = self._load_mappings(mappings_uuid_list)
+        if mappings:
+            self._field_mappings[service_name] = {}
+            self._field_mappings[service_name][field_name] = mappings
+
     def _load_billing_rates(self):
-        self._billing_info = {}
-        hashmap = api.get_instance()
-        services = hashmap.list_services()
-        for service in services:
-            service = service[0]
-            self._billing_info[service] = {}
-            fields = hashmap.list_fields(service)
-            for field in fields:
-                field = field[0]
-                self._billing_info[service][field] = {}
-                mappings = hashmap.list_mappings(service, field)
-                for mapping in mappings:
-                    mapping = mapping[0]
-                    mapping_db = hashmap.get_mapping(service, field, mapping)
-                    map_dict = {}
-                    map_dict['value'] = mapping_db.value
-                    map_dict['type'] = mapping_db.map_type
-                    self._billing_info[service][field][mapping] = map_dict
+        self._service_mappings = {}
+        self._field_mappings = {}
+        hashmap = hash_db_api.get_instance()
+        services_uuid_list = hashmap.list_services()
+        for service_uuid in services_uuid_list:
+            service_db = hashmap.get_service(uuid=service_uuid)
+            service_name = service_db.name
+            self._load_service_mappings(service_name, service_uuid)
+            fields_uuid_list = hashmap.list_fields(service_uuid)
+            for field_uuid in fields_uuid_list:
+                field_db = hashmap.get_field(uuid=field_uuid)
+                field_name = field_db.name
+                self._load_field_mappings(service_name, field_name, field_uuid)
 
-    def process_service(self, name, data):
-        if name not in self._billing_info:
+    def add_billing_informations(self, data):
+        if 'billing' not in data:
+            data['billing'] = {'price': 0}
+        for entry in self._res.values():
+            res = entry['rate'] * entry['flat']
+            data['billing']['price'] += res * data['vol']['qty']
+
+    def update_result(self, group, map_type, value):
+        if group not in self._res:
+            self._res[group] = {'flat': 0,
+                                'rate': 1}
+
+        if map_type == 'rate':
+            self._res[group]['rate'] *= value
+        elif map_type == 'flat':
+            new_flat = value
+            cur_flat = self._res[group]['flat']
+            if new_flat > cur_flat:
+                self._res[group]['flat'] = new_flat
+
+    def process_service_map(self, service_name, data):
+        if service_name not in self._service_mappings:
             return
-        serv_b_info = self._billing_info[name]
-        for entry in data:
-            flat = 0
-            rate = 1
-            entry_desc = entry['desc']
-            for field in serv_b_info:
-                if field not in entry_desc:
-                    continue
-                b_info = serv_b_info[field]
-                key = entry_desc[field]
+        serv_map = self._service_mappings[service_name]
+        for group_name, mapping in serv_map.items():
+            self.update_result(group_name,
+                               mapping['type'],
+                               mapping['cost'])
 
-                value = 0
-                if key in b_info:
-                    value = b_info[key]['value']
-                elif '_DEFAULT_' in b_info:
-                    value = b_info['_DEFAULT_']
-
-                if value:
-                    if b_info[key]['type'] == 'rate':
-                        rate *= value
-                    elif b_info[key]['type'] == 'flat':
-                        new_flat = 0
-                        new_flat = value
-                        if new_flat > flat:
-                            flat = new_flat
-            entry['billing'] = {'price': flat * rate}
+    def process_field_map(self, service_name, data):
+        if service_name not in self._field_mappings:
+            return {}
+        field_map = self._field_mappings[service_name]
+        desc_data = data['desc']
+        for field_name, group_mappings in field_map.items():
+            if field_name not in desc_data:
+                continue
+            for group_name, mappings in group_mappings.items():
+                mapping_default = mappings.pop('_DEFAULT_', {})
+                matched = False
+                for mapping_value, mapping in mappings.items():
+                    if desc_data[field_name] == mapping_value:
+                        self.update_result(
+                            group_name,
+                            mapping['type'],
+                            mapping['cost'])
+                        matched = True
+                if not matched and mapping_default:
+                    self.update_result(
+                        group_name,
+                        mapping_default['type'],
+                        mapping_default['cost'])
 
     def process(self, data):
         for cur_data in data:
             cur_usage = cur_data['usage']
-            for service in cur_usage:
-                self.process_service(service, cur_usage[service])
+            for service_name, service_data in cur_usage.items():
+                for item in service_data:
+                    self._res = {}
+                    self.process_service_map(service_name, item)
+                    self.process_field_map(service_name, item)
+                    self.add_billing_informations(item)
         return data
