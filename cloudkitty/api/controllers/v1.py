@@ -29,6 +29,7 @@ from cloudkitty.api.controllers import types as cktypes
 from cloudkitty import config  # noqa
 from cloudkitty.db import api as db_api
 from cloudkitty.openstack.common import log as logging
+from cloudkitty import storage as ck_storage
 from cloudkitty import utils as ck_utils
 
 CONF = cfg.CONF
@@ -323,11 +324,17 @@ class StorageController(rest.RestController):
         :return: List of RatedResource objects.
         """
 
-        ret = []
         begin_ts = ck_utils.dt2ts(begin)
         end_ts = ck_utils.dt2ts(end)
         backend = pecan.request.storage_backend
-        frames = backend.get_time_frame(begin_ts, end_ts, tenant_id=tenant_id)
+
+        try:
+            frames = backend.get_time_frame(begin_ts, end_ts,
+                                            tenant_id=tenant_id)
+        except ck_storage.NoTimeFrame:
+            return []
+
+        ret = []
         for frame in frames:
             for service, data_list in frame['usage'].items():
                 resources = []
