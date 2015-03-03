@@ -3,7 +3,7 @@
 
 Name:		cloudkitty
 Summary:	OpenStack Rating (cloudkitty)
-Version:	2014111301
+Version:	@VERSION@
 Release:	1%{?dist}
 License:	ASL 2.0
 Group:		System Environment/Base
@@ -55,11 +55,11 @@ rm -rf {test-,}requirements.txt tools/{pip,test}-requires
 %{__python} setup.py install -O1 --skip-build --root=%{buildroot}
 mkdir -p %{buildroot}/var/log/cloudkitty/
 mkdir -p %{buildroot}/var/run/cloudkitty/
-install -p -D -m 644 etc/cloudkitty.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/cloudkitty
+install -p -D -m 644 contrib/cloudkitty.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/cloudkitty
 
 # install systemd unit files
-install -p -D -m 644 init/cloudkitty-api.service %{buildroot}%{_unitdir}/cloudkitty-api.service
-install -p -D -m 644 init/cloudkitty-processor.service %{buildroot}%{_unitdir}/cloudkitty-processor.service
+install -p -D -m 644 contrib/init/cloudkitty-api.service %{buildroot}%{_unitdir}/cloudkitty-api.service
+install -p -D -m 644 contrib/init/cloudkitty-processor.service %{buildroot}%{_unitdir}/cloudkitty-processor.service
 
 mkdir -p %{buildroot}/var/lib/cloudkitty/
 mkdir -p %{buildroot}/etc/cloudkitty/
@@ -179,5 +179,5 @@ CloudKitty processor
 
 
 %changelog
-* Thu Nov 13 2014 Gauvain Pocentek <gauvain.pocentek@objectif-libre.com> - 2014111301
+* Thu Nov 13 2014 Gauvain Pocentek <gauvain.pocentek@objectif-libre.com> - @VERSION@
 - Initial release
