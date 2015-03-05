@@ -87,23 +87,23 @@ TEMPEST_SERVICES+=,cloudkitty
 # ------------------------------------------------------------------
 # service              cloudkitty    admin        # if enabled
 function create_cloudkitty_accounts {
-    local service_tenant=$(openstack project list | awk "/ $SERVICE_TENANT_NAME / { print \$2 }")
-    local admin_role=$(openstack role list | awk "/ admin / { print \$2 }")
-
-    # CloudKitty
-    local cloudkitty_user=$(get_or_create_user "cloudkitty" \
-        "$SERVICE_PASSWORD" $service_tenant)
-    get_or_add_user_role $admin_role $cloudkitty_user $service_tenant
+    create_service_user "cloudkitty"
 
     if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
         local cloudkitty_service=$(get_or_create_service "cloudkitty" \
-            "billing" "OpenStack Billing and Usage Reporter")
+            "rating" "OpenStack Rating")
         get_or_create_endpoint $cloudkitty_service \
             "$REGION_NAME" \
             "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/" \
             "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/" \
             "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/"
     fi
+
+    # Create the rating role
+    get_or_create_role "rating"
+
+    # Make cloudkitty an admin
+    get_or_add_user_project_role admin cloudkitty service
 }
 
 # Test if any CloudKitty services are enabled
@@ -126,10 +126,10 @@ function cleanup_cloudkitty {
 function configure_cloudkitty {
     setup_develop $CLOUDKITTY_DIR
 
-    [ ! -d $CLOUDKITTY_CONF_DIR ] && sudo mkdir -m 755 -p $CLOUDKITTY_CONF_DIR
+    sudo mkdir -m 755 -p $CLOUDKITTY_CONF_DIR
     sudo chown $STACK_USER $CLOUDKITTY_CONF_DIR
 
-    [ ! -d $CLOUDKITTY_API_LOG_DIR ] &&  sudo mkdir -m 755 -p $CLOUDKITTY_API_LOG_DIR
+    sudo mkdir -m 755 -p $CLOUDKITTY_API_LOG_DIR
     sudo chown $STACK_USER $CLOUDKITTY_API_LOG_DIR
 
     cp $CLOUDKITTY_DIR$CLOUDKITTY_CONF.sample $CLOUDKITTY_CONF
@@ -139,20 +139,18 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF DEFAULT verbose True
     iniset $CLOUDKITTY_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
 
-    iniset $CLOUDKITTY_CONF keystone_authtoken auth_host $KEYSTONE_AUTH_HOST
-    iniset $CLOUDKITTY_CONF keystone_authtoken auth_port $KEYSTONE_AUTH_PORT
-    iniset $CLOUDKITTY_CONF keystone_authtoken auth_protocol $KEYSTONE_AUTH_PROTOCOL
-    iniset $CLOUDKITTY_CONF keystone_authtoken admin_user cloudkitty
-    iniset $CLOUDKITTY_CONF keystone_authtoken admin_password $SERVICE_PASSWORD
-    iniset $CLOUDKITTY_CONF keystone_authtoken admin_tenant_name $SERVICE_TENANT_NAME
-    iniset $CLOUDKITTY_CONF keystone_authtoken signing_dir $CLOUDKITTY_AUTH_CACHE_DIR
-
     # auth
-    iniset $CLOUDKITTY_CONF auth username $CLOUDKITTY_PRICING_USER
-    iniset $CLOUDKITTY_CONF auth password $CLOUDKITTY_PRICING_PASSWORD
-    iniset $CLOUDKITTY_CONF auth tenant $CLOUDKITTY_PRICING_TENANT
-    iniset $CLOUDKITTY_CONF auth url "$KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:5000/v2.0"
-    #iniset $CLOUDKITTY_CONF auth url "$KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:$KEYSTONE_AUTH_PORT/v$IDENTITY_API_VERSION"
+    iniset $CLOUDKITTY_CONF auth url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v2.0/"
+    iniset $CLOUDKITTY_CONF auth username cloudkitty
+    iniset $CLOUDKITTY_CONF auth password $SERVICE_PASSWORD
+    iniset $CLOUDKITTY_CONF auth tenant $SERVICE_TENANT_NAME
+    iniset $CLOUDKITTY_CONF auth region $REGION_NAME
+
+    iniset $CLOUDKITTY_CONF ceilometer_collector url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v2.0/"
+    iniset $CLOUDKITTY_CONF ceilometer_collector username cloudkitty
+    iniset $CLOUDKITTY_CONF ceilometer_collector password $SERVICE_PASSWORD
+    iniset $CLOUDKITTY_CONF ceilometer_collector tenant $SERVICE_TENANT_NAME
+    iniset $CLOUDKITTY_CONF ceilometer_collector region $REGION_NAME
 
     # collect
     iniset $CLOUDKITTY_CONF collect collector $CLOUDKITTY_COLLECTOR
@@ -196,6 +194,9 @@ function init_cloudkitty {
 
     # Migrate cloudkitty database
     $CLOUDKITTY_BIN_DIR/cloudkitty-dbsync upgrade
+
+    # Init the storage backend
+    $CLOUDKITTY_BIN_DIR/cloudkitty-storage-init
 
     create_cloudkitty_cache_dir
 }

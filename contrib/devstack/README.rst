@@ -17,16 +17,21 @@ Configure devstack to run CloudKitty
     1. enable Ceilometer::
 
         $ cd ${DEVSTACK_DIR}
-        $ echo "# ceilometer" >> local.conf
-        $ echo "enable_service ceilometer-acompute ceilometer-acentral ceilometer-anotification ceilometer-collector >> local.conf
-        $ echo "enable_service ceilometer-alarm-notifier ceilometer-alarm-evaluator" >> local.conf
-        $ echo "enable_service ceilometer-api" >> local.conf
+        $ cat >> local.conf << EOF
+        [[local|localrc]]
+        # ceilometer
+        enable_service ceilometer-acompute ceilometer-acentral ceilometer-anotification ceilometer-collector
+        enable_service ceilometer-alarm-notifier ceilometer-alarm-evaluator
+        enable_service ceilometer-api
+        EOF
 
     2. enable CloudKitty::
 
         $ cd ${DEVSTACK_DIR}
-        $ echo "# cloudkitty" >> local.conf
-        $ echo "enable_service ck-api ck-proc" >> local.conf
+        cat >> local.conf << EOF
+        # cloudkitty
+        enable_service ck-api ck-proc
+        EOF
 
 Run devstack as normal::
 
