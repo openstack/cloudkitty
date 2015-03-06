@@ -1,0 +1,54 @@
+# -*- coding: utf-8 -*-
+# Copyright 2014 Objectif Libre
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+#
+import copy
+import itertools
+
+import cloudkitty.api.app
+import cloudkitty.collector.ceilometer
+import cloudkitty.config
+import cloudkitty.openstack.common.lockutils
+import cloudkitty.openstack.common.log
+import cloudkitty.service
+import cloudkitty.storage
+
+__all__ = ['list_opts']
+
+_opts = [
+    ('auth', list(itertools.chain(
+        cloudkitty.config.auth_opts))),
+    ('api', list(itertools.chain(
+        cloudkitty.api.app.api_opts,))),
+    ('ceilometer_collector', list(itertools.chain(
+        cloudkitty.collector.ceilometer.ceilometer_collector_opts))),
+    ('collect', list(itertools.chain(
+        cloudkitty.config.collect_opts))),
+    ('output', list(itertools.chain(
+        cloudkitty.config.output_opts))),
+    ('state', list(itertools.chain(
+        cloudkitty.config.state_opts))),
+    ('storage', list(itertools.chain(
+        cloudkitty.storage.storage_opts))),
+    (None, list(itertools.chain(
+        cloudkitty.openstack.common.lockutils.util_opts,
+        cloudkitty.openstack.common.log.common_cli_opts,
+        cloudkitty.openstack.common.log.logging_cli_opts,
+        cloudkitty.api.app.auth_opts,
+        cloudkitty.service.service_opts)))
+]
+
+
+def list_opts():
+    return [(g, copy.deepcopy(o)) for g, o in _opts]
