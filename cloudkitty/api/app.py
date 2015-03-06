@@ -19,7 +19,10 @@ import os
 from wsgiref import simple_server
 
 from oslo.config import cfg
-from oslo import messaging
+try:
+    import oslo_messaging as messaging
+except ImportError:
+    from oslo import messaging
 from paste import deploy
 import pecan
 

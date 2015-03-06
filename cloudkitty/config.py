@@ -17,7 +17,10 @@
 #
 from oslo.config import cfg
 from oslo.db import options as db_options  # noqa
-from oslo.messaging import opts  # noqa
+try:
+    from oslo_messaging import opts  # noqa
+except ImportError:
+    from oslo.messaging import opts  # noqa
 
 from cloudkitty.openstack.common import log  # noqa
 

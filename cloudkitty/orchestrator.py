@@ -21,7 +21,10 @@ import decimal
 import eventlet
 from keystoneclient.v2_0 import client as kclient
 from oslo.config import cfg
-from oslo import messaging
+try:
+    import oslo_messaging as messaging
+except ImportError:
+    from oslo import messaging
 from stevedore import driver
 from stevedore import extension
 
