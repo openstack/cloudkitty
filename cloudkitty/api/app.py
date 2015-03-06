@@ -18,6 +18,7 @@
 import os
 from wsgiref import simple_server
 
+from keystonemiddleware import auth_token
 from oslo.config import cfg
 try:
     import oslo_messaging as messaging
@@ -81,7 +82,7 @@ def setup_app(pecan_config=None, extra_hooks=None):
         hooks.StorageHook(storage_backend),
     ]
 
-    return pecan.make_app(
+    app = pecan.make_app(
         app_conf.app.root,
         static_root=app_conf.app.static_root,
         template_path=app_conf.app.template_path,
@@ -90,6 +91,8 @@ def setup_app(pecan_config=None, extra_hooks=None):
         hooks=app_hooks,
         guess_content_type_from_ext=False
     )
+
+    return auth_token.AuthProtocol(app, dict(CONF))
 
 
 def setup_wsgi():
