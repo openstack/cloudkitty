@@ -15,6 +15,8 @@
 #
 # @author: Stéphane Albert
 #
+import six
+
 from cloudkitty import transformer
 
 
@@ -23,19 +25,25 @@ class CeilometerTransformer(transformer.BaseTransformer):
         pass
 
     def _strip_compute(self, data):
-        res_data = {}
-        res_data['name'] = data.metadata.get('display_name')
-        res_data['flavor'] = data.metadata.get('flavor.name')
-        res_data['vcpus'] = data.metadata.get('vcpus')
-        res_data['memory'] = data.metadata.get('memory_mb')
-        res_data['image_id'] = data.metadata.get('image.id')
-        res_data['availability_zone'] = (
-            data.metadata.get('OS-EXT-AZ.availability_zone')
-        )
+        metadata_map = {
+            'name': ['display_name'],
+            'flavor': ['flavor.name', 'instance_type'],
+            'vcpus': ['vcpus'],
+            'memory': ['memory_mb'],
+            'image_id': ['image.id', 'image_meta.base_image_ref'],
+            'availability_zone': ['availability_zone',
+                                  'OS-EXT-AZ.availability_zone'],
+        }
 
+        res_data = {}
         res_data['instance_id'] = data.resource_id
         res_data['project_id'] = data.project_id
         res_data['user_id'] = data.user_id
+
+        for key, meta_keys in six.iteritems(metadata_map):
+            for meta_key in meta_keys:
+                if key not in res_data or res_data[key] is None:
+                    res_data[key] = data.metadata.get(meta_key)
 
         res_data['metadata'] = {}
         for field in data.metadata:
