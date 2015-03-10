@@ -16,6 +16,7 @@
 # @author: Stéphane Albert
 #
 import pecan
+from pecan import rest
 from pecan import routing
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
@@ -44,7 +45,19 @@ class Mapping(wtypes.Base):
         return sample
 
 
-class BasicHashMapConfigController(billing.BillingConfigController):
+class BasicHashMapConfigController(rest.RestController):
+    """RestController for hashmap's configuration."""
+
+    _custom_actions = {
+        'types': ['GET']
+    }
+
+    @wsme_pecan.wsexpose([wtypes.text])
+    def get_types(self):
+        """Return the list of every mapping type available.
+
+        """
+        return MAP_TYPE.values
 
     @pecan.expose()
     def _route(self, args, request=None):
@@ -194,37 +207,13 @@ class BasicHashMapConfigController(billing.BillingConfigController):
         pecan.response.status = 204
 
 
-class BasicHashMapController(billing.BillingController):
-
-    module_name = 'hashmap'
-
-    _custom_actions = {
-        'types': ['GET']
-    }
-
-    config = BasicHashMapConfigController()
-
-    def get_module_info(self):
-        module = BasicHashMap()
-        infos = {
-            'name': self.module_name,
-            'description': 'Basic hashmap billing module.',
-            'enabled': module.enabled,
-            'hot_config': True,
-        }
-        return infos
-
-    @wsme_pecan.wsexpose([wtypes.text])
-    def get_types(self):
-        """Return the list of every mapping type available.
-
-        """
-        return MAP_TYPE.values
-
-
 class BasicHashMap(billing.BillingProcessorBase):
 
-    controller = BasicHashMapController
+    module_name = 'hashmap'
+    description = 'Basic hashmap billing module.'
+    hot_config = True
+    config_controller = BasicHashMapConfigController
+
     db_api = api.get_instance()
 
     def __init__(self, tenant_id=None):

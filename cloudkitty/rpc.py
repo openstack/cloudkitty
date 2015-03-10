@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# Copyright 2014 Objectif Libre
+#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -9,22 +12,27 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from oslo.config import cfg
+#
+# @author: Guillaume Espanel
+#
+from oslo import messaging
 
-from cloudkitty import config  # noqa
+from cloudkitty.common import rpc
 
 
-# Pecan Application Configurations
-app = {
-    'root': 'cloudkitty.api.root.RootController',
-    'modules': ['cloudkitty.api'],
-    'static_root': '%(confdir)s/public',
-    'template_path': '%(confdir)s/templates',
-    'debug': False,
-    'enable_acl': True,
-    'acl_public_routes': ['/', '/v1'],
-}
+_RPC_CLIENT = None
+_RPC_TARGET = None
 
-wsme = {
-    'debug': cfg.CONF.debug,
-}
+
+def get_target():
+    global _RPC_TARGET
+    if _RPC_TARGET is None:
+        _RPC_TARGET = messaging.Target(topic='cloudkitty', version=1.0)
+    return _RPC_TARGET
+
+
+def get_client():
+    global _RPC_CLIENT
+    if _RPC_CLIENT is None:
+        _RPC_CLIENT = rpc.get_client(get_target())
+    return _RPC_CLIENT

@@ -5,53 +5,50 @@ CloudKitty REST API (v1)
 Collector
 =========
 
-.. rest-controller:: cloudkitty.api.controllers.v1:CollectorController
+.. rest-controller:: cloudkitty.api.v1.controllers.collector:CollectorController
    :webprefix: /v1/collector
 
-.. rest-controller:: cloudkitty.api.controllers.v1:MappingController
+.. rest-controller:: cloudkitty.api.v1.controllers.collector:MappingController
    :webprefix: /v1/collector/mapping
-
-.. autotype:: cloudkitty.api.controllers.v1.MetricToCollectorMapping
-   :members:
 
 
 Billing
 =======
 
-.. rest-controller:: cloudkitty.billing:BillingEnableController
-   :webprefix: /v1/billing/modules/(module)/enabled
-
-.. rest-controller:: cloudkitty.billing:BillingConfigController
-   :webprefix: /v1/billing/modules/(module)/config
-
-.. rest-controller:: cloudkitty.api.controllers.v1:ModulesController
+.. rest-controller:: cloudkitty.api.v1.controllers.billing:ModulesController
    :webprefix: /v1/billing/modules
 
-.. rest-controller:: cloudkitty.api.controllers.v1:BillingController
+.. rest-controller:: cloudkitty.api.v1.controllers.billing:BillingController
    :webprefix: /v1/billing
 
-.. autotype:: cloudkitty.billing.ExtensionSummary
+.. autotype:: cloudkitty.api.v1.datamodels.billing.CloudkittyModule
    :members:
 
-.. autotype:: cloudkitty.api.controllers.v1.ResourceDescriptor
+.. autotype:: cloudkitty.api.v1.datamodels.billing.CloudkittyModuleCollection
+   :members:
+
+.. autotype:: cloudkitty.api.v1.datamodels.billing.CloudkittyResource
+   :members:
+
+.. autotype:: cloudkitty.api.v1.datamodels.billing.CloudkittyResourceCollection
    :members:
 
 
 Report
 ======
 
-.. rest-controller:: cloudkitty.api.controllers.v1:ReportController
+.. rest-controller:: cloudkitty.api.v1.controllers.report:ReportController
    :webprefix: /v1/report
 
 
 Storage
 =======
 
-.. rest-controller:: cloudkitty.api.controllers.v1:StorageController
+.. rest-controller:: cloudkitty.api.v1.controllers.storage:StorageController
    :webprefix: /v1/storage
 
-.. autotype:: cloudkitty.api.controllers.v1.DataFrame
+.. autotype:: cloudkitty.api.v1.datamodels.storage.DataFrame
    :members:
 
-.. autotype:: cloudkitty.api.controllers.v1.RatedResource
+.. autotype:: cloudkitty.api.v1.datamodels.storage.RatedResource
    :members:
