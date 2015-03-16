@@ -18,9 +18,10 @@
 from __future__ import print_function
 
 from oslo.config import cfg
+from oslo_utils import importutils as i_utils
 from stevedore import driver
 
-from cloudkitty.openstack.common import importutils as i_utils
+from cloudkitty import config  # noqa
 from cloudkitty import service
 from cloudkitty import write_orchestrator
 

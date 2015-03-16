@@ -17,7 +17,8 @@
 #
 import decimal
 
-from cloudkitty.openstack.common import log as logging
+from oslo_log import log as logging
+
 from cloudkitty import rating
 from cloudkitty.rating.hash.controllers import root as root_api
 from cloudkitty.rating.hash.db import api as hash_db_api

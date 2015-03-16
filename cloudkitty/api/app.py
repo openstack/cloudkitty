@@ -20,13 +20,13 @@ import os
 from wsgiref import simple_server
 
 from oslo.config import cfg
+from oslo_log import log
 from paste import deploy
 import pecan
 
 from cloudkitty.api import config as api_config
 from cloudkitty.api import hooks
 from cloudkitty.api import middleware
-from cloudkitty.openstack.common import log
 from cloudkitty import rpc
 from cloudkitty import storage
 

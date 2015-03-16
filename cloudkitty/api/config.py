@@ -9,8 +9,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from oslo.config import cfg
-
 from cloudkitty import config  # noqa
 
 
@@ -23,8 +21,4 @@ app = {
     'debug': False,
     'enable_acl': True,
     'acl_public_routes': ['/', '/v1'],
-}
-
-wsme = {
-    'debug': cfg.CONF.debug,
 }

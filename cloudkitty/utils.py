@@ -24,7 +24,7 @@ to ease maintenance in case of library modifications.
 import calendar
 import datetime
 
-from oslo.utils import timeutils
+from oslo_utils import timeutils
 
 
 def dt2ts(orig_dt):

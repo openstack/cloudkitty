@@ -18,11 +18,11 @@
 from oslo.db import exception
 from oslo.db.sqlalchemy import utils
 from oslo.utils import uuidutils
+from oslo_log import log as logging
 import six
 import sqlalchemy
 
 from cloudkitty import db
-from cloudkitty.openstack.common import log as logging
 from cloudkitty.rating.hash.db import api
 from cloudkitty.rating.hash.db.sqlalchemy import migration
 from cloudkitty.rating.hash.db.sqlalchemy import models

@@ -20,8 +20,6 @@ import cloudkitty.api.app
 import cloudkitty.collector
 import cloudkitty.collector.ceilometer
 import cloudkitty.config
-import cloudkitty.openstack.common.lockutils
-import cloudkitty.openstack.common.log
 import cloudkitty.service
 import cloudkitty.storage
 import cloudkitty.tenant_fetcher
@@ -47,9 +45,6 @@ _opts = [
     ('tenant_fetcher', list(itertools.chain(
         cloudkitty.tenant_fetcher.fetchers_opts))),
     (None, list(itertools.chain(
-        cloudkitty.openstack.common.lockutils.util_opts,
-        cloudkitty.openstack.common.log.common_cli_opts,
-        cloudkitty.openstack.common.log.logging_cli_opts,
         cloudkitty.api.app.auth_opts,
         cloudkitty.service.service_opts)))
 ]

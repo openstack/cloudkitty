@@ -22,8 +22,6 @@ try:
 except ImportError:
     from oslo.messaging import opts  # noqa
 
-from cloudkitty.openstack.common import log  # noqa
-
 
 state_opts = [
     cfg.StrOpt('backend',

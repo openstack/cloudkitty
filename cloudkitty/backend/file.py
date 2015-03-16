@@ -17,7 +17,7 @@
 #
 
 
-class FileBackend(file):
+class FileBackend(file):  # noqa
     def __init__(self, path, mode='ab+'):
         try:
             super(FileBackend, self).__init__(path, mode)

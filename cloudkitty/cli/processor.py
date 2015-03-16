@@ -16,9 +16,9 @@
 # @author: Stéphane Albert
 #
 from oslo.config import cfg
+from oslo_log import log as logging
 
 from cloudkitty.common import rpc
-from cloudkitty.openstack.common import log as logging
 from cloudkitty import orchestrator
 from cloudkitty import service
 

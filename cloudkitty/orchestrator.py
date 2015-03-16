@@ -20,20 +20,17 @@ import decimal
 
 import eventlet
 from oslo.config import cfg
-try:
-    import oslo_messaging as messaging
-except ImportError:
-    from oslo import messaging
+from oslo_concurrency import lockutils
+from oslo_log import log as logging
+import oslo_messaging as messaging
 import six
 from stevedore import driver
 from stevedore import extension
 
 from cloudkitty import collector
 from cloudkitty.common import rpc
-from cloudkitty import config  # NOQA
+from cloudkitty import config  # noqa
 from cloudkitty import extension_manager
-from cloudkitty.openstack.common import lockutils
-from cloudkitty.openstack.common import log as logging
 from cloudkitty import utils as ck_utils
 
 eventlet.monkey_patch()

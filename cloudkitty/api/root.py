@@ -15,13 +15,13 @@
 #
 # @author: Stéphane Albert
 #
+from oslo_log import log as logging
 import pecan
 from pecan import rest
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import controllers as v1_api
-from cloudkitty.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

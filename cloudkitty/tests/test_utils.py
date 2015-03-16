@@ -19,7 +19,7 @@ import datetime
 import unittest
 
 import mock
-from oslo.utils import timeutils
+from oslo_utils import timeutils
 
 from cloudkitty import utils as ck_utils
 

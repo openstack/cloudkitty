@@ -15,7 +15,7 @@
 #
 # @author: Guillaume Espanel
 #
-from oslo import messaging
+import oslo_messaging as messaging
 
 from cloudkitty.common import rpc
 

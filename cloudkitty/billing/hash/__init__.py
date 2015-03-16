@@ -17,7 +17,7 @@
 #
 import warnings
 
-from cloudkitty.rating.hash import *  # noqa
+from cloudkitty.api.v1.datamodels.rating import *  # noqa
 
 
 def deprecated():

@@ -16,7 +16,7 @@
 # @author: Stéphane Albert
 #
 from oslo.config import cfg
-from oslo import messaging
+import oslo_messaging as messaging
 
 TRANSPORT = None
 

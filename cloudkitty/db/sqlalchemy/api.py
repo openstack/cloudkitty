@@ -17,6 +17,7 @@
 #
 from oslo.config import cfg
 from oslo.db.sqlalchemy import utils
+from oslo_log import log as logging
 import sqlalchemy
 
 from cloudkitty import config  # NOQA
@@ -24,7 +25,6 @@ from cloudkitty import db
 from cloudkitty.db import api
 from cloudkitty.db.sqlalchemy import migration
 from cloudkitty.db.sqlalchemy import models
-from cloudkitty.openstack.common import log as logging
 
 CONF = cfg.CONF
 

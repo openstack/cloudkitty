@@ -19,8 +19,7 @@ import socket
 import sys
 
 from oslo.config import cfg
-
-from cloudkitty.openstack.common import log as logging
+from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
@@ -38,5 +37,7 @@ cfg.CONF.register_opts(service_opts)
 
 
 def prepare_service():
+    logging.register_options(cfg.CONF)
     cfg.CONF(sys.argv[1:], project='cloudkitty')
-    logging.setup('cloudkitty')
+
+    logging.setup(cfg.CONF, 'cloudkitty')
