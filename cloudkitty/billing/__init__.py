@@ -73,6 +73,15 @@ class BillingProcessorBase(object):
         client.cast({}, operation, name=self.module_name)
         return module_db.set_state(self.module_name, enabled)
 
+    def quote(self, data):
+        """Compute rating informations from data.
+
+        :param data: An internal CloudKitty dictionary used to describe
+                     resources.
+        :type data: dict(str:?)
+        """
+        return self.process(data)
+
     @abc.abstractmethod
     def process(self, data):
         """Add billing informations to data
