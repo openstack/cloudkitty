@@ -17,8 +17,8 @@
 #
 from pecan import rest
 
-from cloudkitty.api.v1.controllers import billing as billing_api
 from cloudkitty.api.v1.controllers import collector as collector_api
+from cloudkitty.api.v1.controllers import rating as rating_api
 from cloudkitty.api.v1.controllers import report as report_api
 from cloudkitty.api.v1.controllers import storage as storage_api
 
@@ -28,7 +28,8 @@ class V1Controller(rest.RestController):
 
     """
 
-    billing = billing_api.BillingController()
+    billing = rating_api.RatingController()
     collector = collector_api.CollectorController()
+    rating = rating_api.RatingController()
     report = report_api.ReportController()
     storage = storage_api.StorageController()

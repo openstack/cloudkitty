@@ -45,12 +45,12 @@ CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
 
 COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 TRANSFORMERS_NAMESPACE = 'cloudkitty.transformers'
-PROCESSORS_NAMESPACE = 'cloudkitty.billing.processors'
+PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
-class BillingEndpoint(object):
-    target = messaging.Target(namespace='billing',
+class RatingEndpoint(object):
+    target = messaging.Target(namespace='rating',
                               version='1.0')
 
     def __init__(self, orchestrator):
@@ -103,11 +103,11 @@ class BaseWorker(object):
     def __init__(self, tenant_id=None):
         self._tenant_id = tenant_id
 
-        # Billing processors
+        # Rating processors
         self._processors = {}
-        self._load_billing_processors()
+        self._load_rating_processors()
 
-    def _load_billing_processors(self):
+    def _load_rating_processors(self):
         self._processors = {}
         processors = extension_manager.EnabledExtensionManager(
             PROCESSORS_NAMESPACE,
@@ -132,7 +132,7 @@ class APIWorker(BaseWorker):
         for res in res_data:
             for res_usage in res['usage'].values():
                 for data in res_usage:
-                    price += data.get('billing', {}).get('price', 0.0)
+                    price += data.get('rating', {}).get('price', 0.0)
         return price
 
 
@@ -179,7 +179,7 @@ class Worker(BaseWorker):
             for service in CONF.collect.services:
                 try:
                     data = self._collect(service, timestamp)
-                    # Billing
+                    # Rating
                     for processor in self._processors.values():
                         processor.process(data)
                     # Writing
@@ -232,7 +232,7 @@ class Orchestrator(object):
 
         # RPC
         self.server = None
-        self._billing_endpoint = BillingEndpoint(self)
+        self._rating_endpoint = RatingEndpoint(self)
         self._init_messaging()
 
     def _load_tenant_list(self):
@@ -254,7 +254,7 @@ class Orchestrator(object):
                                   server=CONF.host,
                                   version='1.0')
         endpoints = [
-            self._billing_endpoint,
+            self._rating_endpoint,
         ]
         self.server = rpc.get_server(target, endpoints)
         self.server.start()
@@ -297,8 +297,8 @@ class Orchestrator(object):
     def process_messages(self):
         # TODO(sheeprine): Code kept to handle threading and asynchronous
         # reloading
-        # pending_reload = self._billing_endpoint.get_reload_list()
-        # pending_states = self._billing_endpoint.get_module_state()
+        # pending_reload = self._rating_endpoint.get_reload_list()
+        # pending_states = self._rating_endpoint.get_module_state()
         pass
 
     def process(self):

@@ -139,7 +139,7 @@ class BaseReportWriter(object):
                 self._usage_data[service] = data[service]
             # Update totals
             for entry in data[service]:
-                self.total += entry['billing']['price']
+                self.total += entry['rating']['price']
 
     def append(self, data, start, end):
         # FIXME we should use the real time values

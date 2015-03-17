@@ -31,7 +31,7 @@ collect_opts = [
                help='Number of samples to collect per call.'),
     cfg.IntOpt('period',
                default=3600,
-               help='Billing period in seconds.'),
+               help='Rating period in seconds.'),
     cfg.IntOpt('wait_periods',
                default=2,
                help='Wait for N periods before collecting new data.'),

@@ -48,7 +48,7 @@ Modules
    :maxdepth: 1
    :glob:
 
-   webapi/billing/*
+   webapi/rating/*
 
 
 Indices and tables

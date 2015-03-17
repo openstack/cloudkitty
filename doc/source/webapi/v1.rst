@@ -12,25 +12,25 @@ Collector
    :webprefix: /v1/collector/mapping
 
 
-Billing
-=======
+Rating
+======
 
-.. rest-controller:: cloudkitty.api.v1.controllers.billing:ModulesController
-   :webprefix: /v1/billing/modules
+.. rest-controller:: cloudkitty.api.v1.controllers.rating:ModulesController
+   :webprefix: /v1/rating/modules
 
-.. rest-controller:: cloudkitty.api.v1.controllers.billing:BillingController
-   :webprefix: /v1/billing
+.. rest-controller:: cloudkitty.api.v1.controllers.rating:RatingController
+   :webprefix: /v1/rating
 
-.. autotype:: cloudkitty.api.v1.datamodels.billing.CloudkittyModule
+.. autotype:: cloudkitty.api.v1.datamodels.rating.CloudkittyModule
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.billing.CloudkittyModuleCollection
+.. autotype:: cloudkitty.api.v1.datamodels.rating.CloudkittyModuleCollection
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.billing.CloudkittyResource
+.. autotype:: cloudkitty.api.v1.datamodels.rating.CloudkittyResource
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.billing.CloudkittyResourceCollection
+.. autotype:: cloudkitty.api.v1.datamodels.rating.CloudkittyResourceCollection
    :members:
 
 

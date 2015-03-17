@@ -15,33 +15,4 @@
 #
 # @author: Stéphane Albert
 #
-import os
-
-from cloudkitty.common.db.alembic import migration
-
-ALEMBIC_REPO = os.path.join(os.path.dirname(__file__), 'alembic')
-
-
-def upgrade(revision):
-    config = migration.load_alembic_config(ALEMBIC_REPO)
-    return migration.upgrade(config, revision)
-
-
-def downgrade(revision):
-    config = migration.load_alembic_config(ALEMBIC_REPO)
-    return migration.downgrade(config, revision)
-
-
-def version():
-    config = migration.load_alembic_config(ALEMBIC_REPO)
-    return migration.version(config)
-
-
-def revision(message, autogenerate):
-    config = migration.load_alembic_config(ALEMBIC_REPO)
-    return migration.revision(config, message, autogenerate)
-
-
-def stamp(revision):
-    config = migration.load_alembic_config(ALEMBIC_REPO)
-    return migration.stamp(config, revision)
+from cloudkitty.rating.hash.db.api.sqlalchemy.migration import *  # noqa

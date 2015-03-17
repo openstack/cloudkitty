@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # Copyright 2014 Objectif Libre
 #
@@ -16,87 +15,17 @@
 #
 # @author: Stéphane Albert
 #
-import decimal
+import warnings
 
-from oslo.config import cfg
-from wsme import types as wtypes
-
-from cloudkitty.api.v1 import types as cktypes
-from cloudkitty import config  # noqa
-
-CONF = cfg.CONF
-CONF.import_opt('services', 'cloudkitty.collector', 'collect')
-CLOUDKITTY_SERVICES = wtypes.Enum(wtypes.text,
-                                  *CONF.collect.services)
+from cloudkitty.api.v1.datamodels.rating import *  # noqa
 
 
-class CloudkittyResource(wtypes.Base):
-    """Type describing a resource in CloudKitty.
-
-    """
-
-    service = CLOUDKITTY_SERVICES
-    """Name of the service."""
-
-    # FIXME(sheeprine): values should be dynamic
-    # Testing with ironic dynamic type
-    desc = {wtypes.text: cktypes.MultiType(wtypes.text, int, float, dict)}
-    """Description of the resources parameters."""
-
-    volume = decimal.Decimal
-    """Volume of resources."""
-
-    def to_json(self):
-        res_dict = {}
-        res_dict[self.service] = [{'desc': self.desc,
-                                   'vol': {'qty': self.volume,
-                                           'unit': 'undef'}
-                                   }]
-        return res_dict
-
-    @classmethod
-    def sample(cls):
-        sample = cls(service='compute',
-                     desc={
-                         'image_id': 'a41fba37-2429-4f15-aa00-b5bc4bf557bf'
-                     },
-                     volume=decimal.Decimal(1))
-        return sample
+def deprecated():
+    warnings.warn(
+        ('The billing datamodels are deprecated. '
+         'Please use rating\'s one instead.'),
+        DeprecationWarning,
+        stacklevel=3)
 
 
-class CloudkittyResourceCollection(wtypes.Base):
-    """A list of CloudKittyResources."""
-
-    resources = [CloudkittyResource]
-
-
-class CloudkittyModule(wtypes.Base):
-    """A billing extension summary
-
-    """
-
-    module_id = wtypes.wsattr(wtypes.text, mandatory=True)
-    """Name of the extension."""
-
-    description = wtypes.wsattr(wtypes.text, mandatory=False)
-    """Short description of the extension."""
-
-    enabled = wtypes.wsattr(bool, default=False)
-    """Extension status."""
-
-    hot_config = wtypes.wsattr(bool, default=False, name='hot-config')
-    """On-the-fly configuration support."""
-
-    @classmethod
-    def sample(cls):
-        sample = cls(name='example',
-                     description='Sample extension.',
-                     enabled=True,
-                     hot_config=False)
-        return sample
-
-
-class CloudkittyModuleCollection(wtypes.Base):
-    """A list of billing extensions."""
-
-    modules = [CloudkittyModule]
+deprecated()

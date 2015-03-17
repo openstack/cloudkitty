@@ -15,44 +15,4 @@
 #
 # @author: Stéphane Albert
 #
-from wsme import types as wtypes
-
-from cloudkitty.api.v1 import types as ck_types
-
-
-class Group(wtypes.Base):
-    """Type describing a group.
-
-    A group is used to divide calculations. It can be used to create a group
-    for the instance rating (flavor) and one if we have premium images
-    (image_id). So you can take into account multiple parameters during the
-    rating.
-    """
-
-    group_id = wtypes.wsattr(ck_types.UuidType(),
-                             mandatory=False,
-                             readonly=True)
-    """UUID of the group."""
-
-    name = wtypes.wsattr(wtypes.text, mandatory=True)
-    """Name of the group."""
-
-    @classmethod
-    def sample(cls):
-        sample = cls(group_id='afe898cb-86d8-4557-ad67-f4f01891bbee',
-                     name='instance_rating')
-        return sample
-
-
-class GroupCollection(wtypes.Base):
-    """Type describing a list of groups.
-
-    """
-
-    groups = [Group]
-    """List of groups."""
-
-    @classmethod
-    def sample(cls):
-        sample = Group.sample()
-        return cls(groups=[sample])
+from cloudkitty.rating.hash.datamodels.group import *  # noqa

@@ -315,7 +315,7 @@
 # Number of samples to collect per call. (integer value)
 #window = 1800
 
-# Billing period in seconds. (integer value)
+# Rating period in seconds. (integer value)
 #period = 3600
 
 # Wait for N periods before collecting new data. (integer value)

@@ -15,11 +15,30 @@
 #
 # @author: Stéphane Albert
 #
-from cloudkitty.billing.hash.db.sqlalchemy import models
-from cloudkitty.common.db.alembic import env  # noqa
-
-target_metadata = models.Base.metadata
-version_table = 'hashmap_alembic'
+from cloudkitty import rating
 
 
-env.run_migrations_online(target_metadata, version_table)
+class Noop(rating.RatingProcessorBase):
+
+    module_name = "noop"
+    description = 'Dummy test module.'
+
+    @property
+    def enabled(self):
+        """Check if the module is enabled
+
+        :returns: bool if module is enabled
+        """
+        return True
+
+    def reload_config(self):
+        pass
+
+    def process(self, data):
+        for cur_data in data:
+            cur_usage = cur_data['usage']
+            for service in cur_usage:
+                for entry in cur_usage[service]:
+                    if 'rating' not in entry:
+                        entry['rating'] = {'price': 0}
+        return data

@@ -20,17 +20,17 @@ import decimal
 
 from wsme import types as wtypes
 
-from cloudkitty.api.v1.datamodels import billing as billing_resources
+from cloudkitty.api.v1.datamodels import rating as rating_resources
 
 
-class RatedResource(billing_resources.CloudkittyResource):
+class RatedResource(rating_resources.CloudkittyResource):
     """Represents a rated CloudKitty resource."""
 
-    billing = decimal.Decimal
+    rating = decimal.Decimal
 
     def to_json(self):
         res_dict = super(RatedResource, self).to_json()
-        res_dict['billing'] = self.billing
+        res_dict['rating'] = self.rating
         return res_dict
 
 

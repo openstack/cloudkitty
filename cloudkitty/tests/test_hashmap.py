@@ -20,8 +20,8 @@ import decimal
 import mock
 from oslo.utils import uuidutils
 
-from cloudkitty.billing import hash
-from cloudkitty.billing.hash.db import api
+from cloudkitty.rating import hash
+from cloudkitty.rating.hash.db import api
 from cloudkitty import tests
 
 TEST_TS = 1388577600
@@ -391,7 +391,7 @@ class HashMapRatingTest(tests.TestCase):
         self.assertEqual([], mappings)
 
     # Processing tests
-    def test_load_billing_rates(self):
+    def test_load_rates(self):
         service_db = self._db_api.create_service('compute')
         field_db = self._db_api.create_field(service_db.service_id,
                                              'flavor')
@@ -450,9 +450,9 @@ class HashMapRatingTest(tests.TestCase):
         actual_data = CK_RESOURCES_DATA[:]
         expected_data = CK_RESOURCES_DATA[:]
         compute_list = expected_data[0]['usage']['compute']
-        compute_list[0]['billing'] = {'price': decimal.Decimal('2.757')}
-        compute_list[1]['billing'] = {'price': decimal.Decimal('2.757')}
-        compute_list[2]['billing'] = {'price': decimal.Decimal('2.757')}
+        compute_list[0]['rating'] = {'price': decimal.Decimal('2.757')}
+        compute_list[1]['rating'] = {'price': decimal.Decimal('2.757')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal('2.757')}
         self._hash.process(actual_data)
         self.assertEqual(expected_data, actual_data)
 
@@ -484,13 +484,13 @@ class HashMapRatingTest(tests.TestCase):
         actual_data = CK_RESOURCES_DATA[:]
         expected_data = CK_RESOURCES_DATA[:]
         compute_list = expected_data[0]['usage']['compute']
-        compute_list[0]['billing'] = {'price': decimal.Decimal('1.337')}
-        compute_list[1]['billing'] = {'price': decimal.Decimal('1.42')}
-        compute_list[2]['billing'] = {'price': decimal.Decimal('1.47070')}
+        compute_list[0]['rating'] = {'price': decimal.Decimal('1.337')}
+        compute_list[1]['rating'] = {'price': decimal.Decimal('1.42')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal('1.47070')}
         self._hash.process(actual_data)
         self.assertEqual(expected_data, actual_data)
 
-    def test_process_billing(self):
+    def test_process_rating(self):
         service_db = self._db_api.create_service('compute')
         field_db = self._db_api.create_field(service_db.service_id,
                                              'flavor')
@@ -513,8 +513,8 @@ class HashMapRatingTest(tests.TestCase):
         actual_data = CK_RESOURCES_DATA[:]
         expected_data = CK_RESOURCES_DATA[:]
         compute_list = expected_data[0]['usage']['compute']
-        compute_list[0]['billing'] = {'price': decimal.Decimal('1.337')}
-        compute_list[1]['billing'] = {'price': decimal.Decimal('1.42')}
-        compute_list[2]['billing'] = {'price': decimal.Decimal('1.42')}
+        compute_list[0]['rating'] = {'price': decimal.Decimal('1.337')}
+        compute_list[1]['rating'] = {'price': decimal.Decimal('1.42')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal('1.42')}
         self._hash.process(actual_data)
         self.assertEqual(expected_data, actual_data)

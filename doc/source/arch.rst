@@ -45,7 +45,7 @@ The data format of CloudKitty is the following:
    {
        "myservice": [
            {
-               "billing": {
+               "rating": {
                    "price": 0.1
                },
                "desc": {
@@ -83,34 +83,17 @@ Rating
 **Loaded with stevedore**
 
 This is where every rating calculations is done. The data gathered by the
-collector is pushed in a pipeline of billing processors. Every processor does
+collector is pushed in a pipeline of rating processors. Every processor does
 its calculations and updates the data.
 
 Example of minimal rating module (taken from the Noop module):
 
 .. code-block:: python
 
-   class NoopController(billing.BillingController):
-
-    module_name = 'noop'
-
-    def get_module_info(self):
-        module = Noop()
-        infos = {
-            'name': self.module_name,
-            'description': 'Dummy test module.',
-            'enabled': module.enabled,
-            'hot_config': False,
-        }
-        return infos
-
-
-    class Noop(billing.BillingProcessorBase):
+    class Noop(rating.RatingProcessorBase):
 
         controller = NoopController
-
-        def __init__(self):
-            pass
+        description = 'Dummy test module'
 
         @property
         def enabled(self):
@@ -128,8 +111,8 @@ Example of minimal rating module (taken from the Noop module):
                 cur_usage = cur_data['usage']
                 for service in cur_usage:
                     for entry in cur_usage[service]:
-                        if 'billing' not in entry:
-                            entry['billing'] = {'price': 0}
+                        if 'rating' not in entry:
+                            entry['rating'] = {'price': 0}
             return data
 
 

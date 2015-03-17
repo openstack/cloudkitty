@@ -19,7 +19,7 @@ from stevedore import enabled
 
 
 class EnabledExtensionManager(enabled.EnabledExtensionManager):
-    """CloudKitty Billing processor manager
+    """CloudKitty Rating processor manager
 
     Override default EnabledExtensionManager to check for an internal
     object property in the extension.

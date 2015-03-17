@@ -87,7 +87,7 @@ class WriteOrchestrator(object):
         for service in data:
             # Update totals
             for entry in data[service]:
-                self.total += entry['billing']['price']
+                self.total += entry['rating']['price']
         # Dispatch data to writing pipeline
         for backend in self._write_pipeline:
             backend.append(data, self.usage_start, self.usage_end)

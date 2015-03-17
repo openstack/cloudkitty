@@ -23,6 +23,7 @@ from cloudkitty.db import api as db_api
 from cloudkitty import service
 
 CONF = cfg.CONF
+PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
 
 
 class ModuleNotFound(Exception):
@@ -43,23 +44,23 @@ class MultipleModulesRevisions(Exception):
 class DBCommand(object):
 
     def __init__(self):
-        self.billing_models = {}
-        self._load_billing_models()
+        self.rating_models = {}
+        self._load_rating_models()
 
-    def _load_billing_models(self):
+    def _load_rating_models(self):
         extensions = extension.ExtensionManager(
-            'cloudkitty.billing.processors')
-        self.billing_models = {}
+            PROCESSORS_NAMESPACE)
+        self.rating_models = {}
         for ext in extensions:
             if hasattr(ext.plugin, 'db_api'):
-                self.billing_models[ext.name] = ext.plugin.db_api
+                self.rating_models[ext.name] = ext.plugin.db_api
 
     def get_module_migration(self, name):
         if name == 'cloudkitty':
             mod_migration = db_api.get_instance().get_migration()
         else:
             try:
-                module = self.billing_models[name]
+                module = self.rating_models[name]
                 mod_migration = module.get_migration()
             except IndexError:
                 raise ModuleNotFound(name)
@@ -69,7 +70,7 @@ class DBCommand(object):
         if not name:
             migrations = []
             migrations.append(self.get_module_migration('cloudkitty'))
-            for model in self.billing_models.values():
+            for model in self.rating_models.values():
                 migrations.append(model.get_migration())
         else:
             return [self.get_module_migration(name)]

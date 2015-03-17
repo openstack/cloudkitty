@@ -42,7 +42,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
     def _pre_commit(self, tenant_id):
         if not self._has_data:
             empty_frame = {'vol': {'qty': 0, 'unit': 'None'},
-                           'billing': {'price': 0}, 'desc': ''}
+                           'rating': {'price': 0}, 'desc': ''}
             self._append_time_frame('_NO_DATA_', empty_frame, tenant_id)
 
     def _commit(self, tenant_id):
@@ -143,7 +143,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
         vol_dict = frame['vol']
         qty = vol_dict['qty']
         unit = vol_dict['unit']
-        rating_dict = frame['billing']
+        rating_dict = frame['rating']
         rate = rating_dict['price']
         desc = json.dumps(frame['desc'])
         self.add_time_frame(self.usage_start_dt.get(tenant_id),

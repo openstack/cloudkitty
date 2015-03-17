@@ -65,7 +65,7 @@ class RatedDataFrame(Base, models.ModelBase):
         res_dict = {}
 
         # Encapsulate informations in a resource dict
-        res_dict['billing'] = rating_dict
+        res_dict['rating'] = rating_dict
         res_dict['desc'] = json.loads(self.desc)
         res_dict['vol'] = vol_dict
         res_dict['tenant_id'] = self.tenant_id

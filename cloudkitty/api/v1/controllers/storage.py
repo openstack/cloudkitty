@@ -62,12 +62,12 @@ class StorageController(rest.RestController):
                 resources = []
                 for data in data_list:
                     desc = data['desc'] if data['desc'] else {}
-                    price = decimal.Decimal(data['billing']['price'])
+                    price = decimal.Decimal(data['rating']['price'])
                     resource = storage_models.RatedResource(
                         service=service,
                         desc=desc,
                         volume=data['vol']['qty'],
-                        billing=price)
+                        rating=price)
                     resources.append(resource)
                 data_frame = storage_models.DataFrame(
                     begin=ck_utils.iso2dt(frame['period']['begin']),
