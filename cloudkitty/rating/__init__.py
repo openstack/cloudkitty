@@ -44,26 +44,50 @@ class RatingProcessorBase(object):
             'name': self.module_name,
             'description': self.description,
             'hot_config': self.hot_config,
-            'enabled': self.enabled, }
+            'enabled': self.enabled,
+            'priority': self.priority}
 
     def __init__(self, tenant_id=None):
         self._tenant_id = tenant_id
 
-    @abc.abstractproperty
+    @property
     def enabled(self):
         """Check if the module is enabled
 
         :returns: bool if module is enabled
         """
+        api = db_api.get_instance()
+        module_db = api.get_module_enable_state()
+        return module_db.get_state(self.module_name) or False
+
+    @property
+    def priority(self):
+        """Get the priority of the module.
+
+        """
+        api = db_api.get_instance()
+        module_db = api.get_module_info()
+        return module_db.get_priority(self.module_name)
+
+    def set_priority(self, priority):
+        """Set the priority of the module.
+
+        :param priority: (int) The new priority, the higher the number, the
+        higher the priority.
+        """
+        api = db_api.get_instance()
+        module_db = api.get_module_info()
+        self.notify_reload()
+        return module_db.set_priority(self.module_name, priority)
 
     def set_state(self, enabled):
-        """Enable or disable a module
+        """Enable or disable a module.
 
         :param enabled: (bool) The state to put the module in.
         :return:  bool
         """
         api = db_api.get_instance()
-        module_db = api.get_module_enable_state()
+        module_db = api.get_module_info()
         client = rpc.get_client().prepare(namespace='rating',
                                           fanout=True)
         if enabled:

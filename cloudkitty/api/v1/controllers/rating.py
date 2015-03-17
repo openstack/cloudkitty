@@ -53,8 +53,7 @@ class ModulesController(rest.RestController):
             modules_list.append(rating_models.CloudkittyModule(**infos))
 
         return rating_models.CloudkittyModuleCollection(
-            modules=modules_list
-        )
+            modules=modules_list)
 
     @wsme_pecan.wsexpose(rating_models.CloudkittyModule, wtypes.text)
     def get_one(self, module_id):
@@ -65,7 +64,7 @@ class ModulesController(rest.RestController):
         try:
             module = self.extensions[module_id]
         except KeyError:
-            pecan.abort(404)
+            pecan.abort(404, 'Module not found.')
         infos = module.obj.module_info.copy()
         infos['module_id'] = infos.pop('name')
         return rating_models.CloudkittyModule(**infos)
@@ -75,16 +74,19 @@ class ModulesController(rest.RestController):
                          body=rating_models.CloudkittyModule,
                          status_code=302)
     def put(self, module_id, module):
-        """Change the state of a module (enabled/disabled)
+        """Change the state and priority of a module.
 
         :param module_id: name of the module to modify
         :param module: CloudKittyModule object describing the new desired state
-        ## :return: CloudKittyModule object describing the desired state
         """
         try:
-            self.extensions[module_id].obj.set_state(module.enabled)
+            ext = self.extensions[module_id].obj
         except KeyError:
-            pecan.abort(404)
+            pecan.abort(404, 'Module not found.')
+        if ext.enabled != module.enabled:
+            ext.set_state(module.enabled)
+        if ext.priority != module.priority:
+            ext.set_priority(module.priority)
         pecan.response.location = pecan.request.path
 
 

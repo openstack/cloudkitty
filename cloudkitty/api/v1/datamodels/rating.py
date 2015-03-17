@@ -85,12 +85,16 @@ class CloudkittyModule(wtypes.Base):
     hot_config = wtypes.wsattr(bool, default=False, name='hot-config')
     """On-the-fly configuration support."""
 
+    priority = wtypes.wsattr(int, default=1)
+    """Priority of the extension."""
+
     @classmethod
     def sample(cls):
         sample = cls(name='example',
                      description='Sample extension.',
                      enabled=True,
-                     hot_config=False)
+                     hot_config=False,
+                     priority=2)
         return sample
 
 

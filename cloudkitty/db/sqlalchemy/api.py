@@ -39,15 +39,11 @@ class State(api.State):
 
     def get_state(self, name):
         session = db.get_session()
-        try:
-            return utils.model_query(
-                models.StateInfo,
-                session
-            ).filter_by(
-                name=name,
-            ).value('state')
-        except sqlalchemy.orm.exc.NoResultFound:
-            return None
+        q = utils.model_query(
+            models.StateInfo,
+            session)
+        q = q.filter(models.StateInfo.name == name)
+        return q.value(models.StateInfo.state)
 
     def set_state(self, name, state):
         session = db.get_session()
@@ -55,54 +51,55 @@ class State(api.State):
             try:
                 q = utils.model_query(
                     models.StateInfo,
-                    session
-                ).filter_by(
-                    name=name,
-                ).with_lockmode('update')
+                    session)
+                q = q.filter(models.StateInfo.name == name)
+                q = q.with_lockmode('update')
                 db_state = q.one()
                 db_state.state = state
             except sqlalchemy.orm.exc.NoResultFound:
-                db_state = models.StateInfo(name=name, state=state)
+                db_state = models.StateInfo(name=name,
+                                            state=state)
                 session.add(db_state)
         return db_state.state
 
     def get_metadata(self, name):
         session = db.get_session()
-        return utils.model_query(
+        q = utils.model_query(
             models.StateInfo,
-            session
-        ).filter_by(
-            name=name,
-        ).value('s_metadata')
+            session)
+        q.filter(models.StateInfo.name == name)
+        return q.value(models.StateInfo.s_metadata)
 
     def set_metadata(self, name, metadata):
         session = db.get_session()
-        try:
-            db_state = utils.model_query(
-                models.StateInfo,
-                session
-            ).filter_by(
-                name=name,
-            ).with_lockmode('update').one()
-            db_state.s_metadata = metadata
-        except sqlalchemy.orm.exc.NoResultFound:
-            db_state = models.StateInfo(name=name, s_metadata=metadata)
-            session.add(db_state)
-        finally:
-            session.flush()
+        with session.begin():
+            try:
+                q = utils.model_query(
+                    models.StateInfo,
+                    session)
+                q = q.filter(models.StateInfo.name == name)
+                q = q.with_lockmode('update')
+                db_state = q.one()
+                db_state.s_metadata = metadata
+            except sqlalchemy.orm.exc.NoResultFound:
+                db_state = models.StateInfo(name=name,
+                                            s_metadata=metadata)
+                session.add(db_state)
 
 
 class ModuleEnableState(api.ModuleEnableState):
+    """Deprecated, use ModuleInfo instead.
 
+    """
     def get_state(self, name):
         session = db.get_session()
         try:
-            return bool(utils.model_query(
+            q = utils.model_query(
                 models.ModuleStateInfo,
-                session
-            ).filter_by(
-                name=name,
-            ).value('state'))
+                session)
+            q = q.filter(models.ModuleStateInfo.name == name)
+            res = q.value(models.ModuleStateInfo.state)
+            return bool(res)
         except sqlalchemy.orm.exc.NoResultFound:
             return None
 
@@ -112,10 +109,9 @@ class ModuleEnableState(api.ModuleEnableState):
             try:
                 q = utils.model_query(
                     models.ModuleStateInfo,
-                    session
-                ).filter_by(
-                    name=name,
-                ).with_lockmode('update')
+                    session)
+                q = q.filter(models.ModuleStateInfo.name == name)
+                q = q.with_lockmode('update')
                 db_state = q.one()
                 db_state.state = state
             except sqlalchemy.orm.exc.NoResultFound:
@@ -124,19 +120,52 @@ class ModuleEnableState(api.ModuleEnableState):
         return bool(db_state.state)
 
 
+class ModuleInfo(ModuleEnableState):
+    """Base class for module info management."""
+
+    def get_priority(self, name):
+        session = db.get_session()
+        q = utils.model_query(
+            models.ModuleStateInfo,
+            session)
+        q = q.filter(models.ModuleStateInfo.name == name)
+        res = q.value(models.ModuleStateInfo.priority)
+        if res:
+            return int(res)
+        else:
+            return 1
+
+    def set_priority(self, name, priority):
+        session = db.get_session()
+        with session.begin():
+            try:
+                q = utils.model_query(
+                    models.ModuleStateInfo,
+                    session)
+                q = q.filter(
+                    models.ModuleStateInfo.name == name)
+                q = q.with_lockmode('update')
+                db_state = q.one()
+                db_state.priority = priority
+            except sqlalchemy.orm.exc.NoResultFound:
+                db_state = models.ModuleStateInfo(name=name,
+                                                  priority=priority)
+                session.add(db_state)
+        return int(db_state.priority)
+
+
 class ServiceToCollectorMapping(object):
     """Base class for service to collector mapping."""
 
     def get_mapping(self, service):
         session = db.get_session()
         try:
-            res = utils.model_query(
+            q = utils.model_query(
                 models.ServiceToCollectorMapping,
-                session
-            ).filter_by(
-                service=service,
-            ).one()
-            return res
+                session)
+            q.filter(
+                models.ServiceToCollectorMapping.service == service)
+            return q.one()
         except sqlalchemy.orm.exc.NoResultFound:
             raise api.NoSuchMapping(service)
 
@@ -146,15 +175,16 @@ class ServiceToCollectorMapping(object):
             try:
                 q = utils.model_query(
                     models.ServiceToCollectorMapping,
-                    session
-                ).filter_by(
-                    service=service,
-                ).with_lockmode('update')
+                    session)
+                q = q.filter_by(
+                    service=service)
+                q = q.with_lockmode('update')
                 db_mapping = q.one()
                 db_mapping.collector = collector
             except sqlalchemy.orm.exc.NoResultFound:
                 model = models.ServiceToCollectorMapping
-                db_mapping = model(service=service, collector=collector)
+                db_mapping = model(service=service,
+                                   collector=collector)
                 session.add(db_mapping)
         return db_mapping
 
@@ -162,21 +192,18 @@ class ServiceToCollectorMapping(object):
         session = db.get_session()
         q = utils.model_query(
             models.ServiceToCollectorMapping,
-            session
-        )
+            session)
         res = q.distinct().values(
-            models.ServiceToCollectorMapping.service
-        )
+            models.ServiceToCollectorMapping.service)
         return res
 
     def delete_mapping(self, service):
         session = db.get_session()
-        r = utils.model_query(
+        q = utils.model_query(
             models.ServiceToCollectorMapping,
-            session
-        ).filter_by(
-            service=service,
-        ).delete()
+            session)
+        q = q.filter(models.ServiceToCollectorMapping.service == service)
+        r = q.delete()
         if not r:
             raise api.NoSuchMapping(service)
 
@@ -190,6 +217,10 @@ class DBAPIManager(object):
     @staticmethod
     def get_module_enable_state():
         return ModuleEnableState()
+
+    @staticmethod
+    def get_module_info():
+        return ModuleInfo()
 
     @staticmethod
     def get_service_to_collector_mapping():

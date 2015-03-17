@@ -60,6 +60,9 @@ class ModuleStateInfo(Base, models.ModelBase):
         sqlalchemy.Boolean(),
         nullable=False,
         default=False)
+    priority = sqlalchemy.Column(
+        sqlalchemy.Integer(),
+        default=1)
 
     def __repr__(self):
         return ('<ModuleStateInfo[{name}]: '
