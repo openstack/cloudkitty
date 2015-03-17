@@ -34,13 +34,16 @@ class StorageController(rest.RestController):
     @wsme_pecan.wsexpose([storage_models.DataFrame],
                          datetime.datetime,
                          datetime.datetime,
+                         wtypes.text,
                          wtypes.text)
-    def get_all(self, begin, end, tenant_id=None):
+    def get_all(self, begin, end, tenant_id=None, resource_type=None):
         """Return a list of rated resources for a time period and a tenant.
 
         :param begin: Start of the period
         :param end: End of the period
-        :return: List of RatedResource objects.
+        :param tenant_id: UUID of the tenant to filter on.
+        :param resource_type: Type of the resource to filter on.
+        :return: List of DataFrame objects.
         """
 
         begin_ts = ck_utils.dt2ts(begin)
@@ -48,7 +51,8 @@ class StorageController(rest.RestController):
         backend = pecan.request.storage_backend
         try:
             frames = backend.get_time_frame(begin_ts, end_ts,
-                                            tenant_id=tenant_id)
+                                            tenant_id=tenant_id,
+                                            res_type=resource_type)
         except ck_storage.NoTimeFrame:
             return []
 
