@@ -124,7 +124,7 @@ class APIWorker(BaseWorker):
 
     def quote(self, res_data):
         for processor in self._processors.values():
-            processor.process(res_data)
+            processor.quote(res_data)
 
         price = decimal.Decimal(0)
         for res in res_data:
