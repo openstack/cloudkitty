@@ -17,6 +17,7 @@ import copy
 import itertools
 
 import cloudkitty.api.app
+import cloudkitty.collector
 import cloudkitty.collector.ceilometer
 import cloudkitty.config
 import cloudkitty.openstack.common.lockutils
@@ -34,7 +35,7 @@ _opts = [
     ('ceilometer_collector', list(itertools.chain(
         cloudkitty.collector.ceilometer.ceilometer_collector_opts))),
     ('collect', list(itertools.chain(
-        cloudkitty.config.collect_opts))),
+        cloudkitty.collector.collect_opts))),
     ('output', list(itertools.chain(
         cloudkitty.config.output_opts))),
     ('state', list(itertools.chain(

@@ -17,9 +17,29 @@
 #
 import abc
 
+from oslo.config import cfg
 import six
 
 import cloudkitty.utils as ck_utils
+
+collect_opts = [
+    cfg.StrOpt('collector',
+               default='ceilometer',
+               help='Data collector.'),
+    cfg.IntOpt('window',
+               default=1800,
+               help='Number of samples to collect per call.'),
+    cfg.IntOpt('period',
+               default=3600,
+               help='Billing period in seconds.'),
+    cfg.IntOpt('wait_periods',
+               default=2,
+               help='Wait for N periods before collecting new data.'),
+    cfg.ListOpt('services',
+                default=['compute', 'image'],
+                help='Services to monitor.'), ]
+
+cfg.CONF.register_opts(collect_opts, 'collect')
 
 
 class TransformerDependencyError(Exception):
@@ -31,6 +51,19 @@ class TransformerDependencyError(Exception):
                                                                 collector))
         self.collector = collector
         self.transformer = transformer
+
+
+class NoDataCollected(Exception):
+    """Raised when the collection returned no data.
+
+    """
+
+    def __init__(self, collector, resource):
+        super(NoDataCollected, self).__init__(
+            "Collector '%s' returned no data for resource '%s'" % (
+                collector, resource))
+        self.collector = collector
+        self.resource = resource
 
 
 @six.add_metaclass(abc.ABCMeta)

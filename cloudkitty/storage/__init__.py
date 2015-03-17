@@ -24,17 +24,19 @@ from stevedore import driver
 from cloudkitty import utils as ck_utils
 
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
+CONF = cfg.CONF
+
 storage_opts = [
     cfg.StrOpt('backend',
                default='sqlalchemy',
                help='Name of the storage backend driver.')
 ]
 
-cfg.CONF.register_opts(storage_opts, group='storage')
+CONF.register_opts(storage_opts, group='storage')
+CONF.import_opt('period', 'cloudkitty.collector', 'collect')
 
 
 def get_storage():
-    cfg.CONF.import_opt('period', 'cloudkitty.config', 'collect')
     storage_args = {'period': cfg.CONF.collect.period}
     backend = driver.DriverManager(
         STORAGES_NAMESPACE,
@@ -58,7 +60,7 @@ class BaseStorage(object):
 
         Handle incoming data from the global orchestrator, and store them.
     """
-    def __init__(self, period=3600):
+    def __init__(self, period=CONF.collect.period):
         self._period = period
 
         # State vars
@@ -66,6 +68,7 @@ class BaseStorage(object):
         self.usage_start_dt = {}
         self.usage_end = {}
         self.usage_end_dt = {}
+        self._has_data = False
 
     @staticmethod
     def init():
@@ -108,6 +111,7 @@ class BaseStorage(object):
         """Called after every commit.
 
         """
+        self._has_data = False
 
     @abc.abstractmethod
     def _dispatch(self, data, tenant_id):
@@ -171,6 +175,19 @@ class BaseStorage(object):
                     self.usage_end.get(tenant_id))
 
             self._dispatch(data, tenant_id)
+            self._has_data = True
+
+    def nodata(self, begin, end, tenant_id):
+        """Append a no data frame to the storage backend.
+
+        :param begin: Begin of the period with no data.
+        :param end: End of the period with no data.
+        :param tenant_id: Tenant to update with no data marker for the period.
+        """
+        usage_end = self.usage_end.get(tenant_id)
+        if usage_end is not None and begin >= usage_end:
+            self.commit(tenant_id)
+            self.usage_start.pop(tenant_id)
 
     def commit(self, tenant_id):
         """Commit the changes to the backend.

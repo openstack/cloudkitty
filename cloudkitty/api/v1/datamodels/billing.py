@@ -25,6 +25,7 @@ from cloudkitty.api.v1 import types as cktypes
 from cloudkitty import config  # noqa
 
 CONF = cfg.CONF
+CONF.import_opt('services', 'cloudkitty.collector', 'collect')
 CLOUDKITTY_SERVICES = wtypes.Enum(wtypes.text,
                                   *CONF.collect.services)
 

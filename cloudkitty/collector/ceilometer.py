@@ -168,6 +168,8 @@ class CeilometerCollector(collector.BaseCollector):
             compute_data.append(self.t_cloudkitty.format_item(instance,
                                                               'instance',
                                                               1))
+        if not compute_data:
+            raise collector.NoDataCollected(self.collector_name, 'compute')
         return self.t_cloudkitty.format_service('compute', compute_data)
 
     def get_image(self, start, end=None, project_id=None, q_filter=None):
@@ -187,4 +189,6 @@ class CeilometerCollector(collector.BaseCollector):
             image_data.append(self.t_cloudkitty.format_item(image,
                                                             'image',
                                                             1))
+        if not image_data:
+            raise collector.NoDataCollected(self.collector_name, 'image')
         return self.t_cloudkitty.format_service('image', image_data)

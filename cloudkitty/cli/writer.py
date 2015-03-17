@@ -20,18 +20,19 @@ from __future__ import print_function
 from oslo.config import cfg
 from stevedore import driver
 
-from cloudkitty import config  # noqa
 from cloudkitty.openstack.common import importutils as i_utils
 from cloudkitty import service
 from cloudkitty import write_orchestrator
 
 CONF = cfg.CONF
+CONF.import_opt('period', 'cloudkitty.collector', 'collect')
+CONF.import_opt('backend', 'cloudkitty.config', 'output')
+CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
 def load_storage_backend():
     storage_args = {'period': CONF.collect.period}
-    CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
     backend = driver.DriverManager(
         STORAGES_NAMESPACE,
         CONF.storage.backend,
@@ -41,7 +42,6 @@ def load_storage_backend():
 
 
 def load_output_backend():
-    CONF.import_opt('backend', 'cloudkitty.config', 'output')
     backend = i_utils.import_class(CONF.output.backend)
     return backend
 
@@ -56,7 +56,6 @@ class DBCommand(object):
 
     def _load_storage_backend(self):
         storage_args = {'period': CONF.collect.period}
-        CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
         backend = driver.DriverManager(
             STORAGES_NAMESPACE,
             CONF.storage.backend,
@@ -65,7 +64,6 @@ class DBCommand(object):
         self._storage = backend
 
     def _load_output_backend(self):
-        CONF.import_opt('backend', 'cloudkitty.config', 'output')
         backend = i_utils.import_class(CONF.output.backend)
         self._output = backend
 

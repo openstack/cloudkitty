@@ -42,23 +42,6 @@ auth_opts = [
                default='',
                help='OpenStack auth URL.'), ]
 
-collect_opts = [
-    cfg.StrOpt('collector',
-               default='ceilometer',
-               help='Data collector.'),
-    cfg.IntOpt('window',
-               default=1800,
-               help='Number of samples to collect per call.'),
-    cfg.IntOpt('period',
-               default=3600,
-               help='Billing period in seconds.'),
-    cfg.IntOpt('wait_periods',
-               default=2,
-               help='Wait for N periods before collecting new data.'),
-    cfg.ListOpt('services',
-                default=['compute', 'image'],
-                help='Services to monitor.'), ]
-
 state_opts = [
     cfg.StrOpt('backend',
                default='cloudkitty.backend.file.FileBackend',
@@ -80,7 +63,6 @@ output_opts = [
 
 
 cfg.CONF.register_opts(auth_opts, 'auth')
-cfg.CONF.register_opts(collect_opts, 'collect')
 cfg.CONF.register_opts(state_opts, 'state')
 cfg.CONF.register_opts(output_opts, 'output')
 

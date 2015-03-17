@@ -39,6 +39,12 @@ class SQLAlchemyStorage(storage.BaseStorage):
     def init():
         migration.upgrade('head')
 
+    def _pre_commit(self, tenant_id):
+        if not self._has_data:
+            empty_frame = {'vol': {'qty': 0, 'unit': 'None'},
+                           'billing': {'price': 0}, 'desc': ''}
+            self._append_time_frame('_NO_DATA_', empty_frame, tenant_id)
+
     def _commit(self, tenant_id):
         self._session[tenant_id].commit()
         self._session[tenant_id].begin()
@@ -47,13 +53,6 @@ class SQLAlchemyStorage(storage.BaseStorage):
         for service in data:
             for frame in data[service]:
                 self._append_time_frame(service, frame, tenant_id)
-            # HACK(adriant) Quick hack to allow billing windows to
-            # progress. This check/insert probably ought to be moved
-            # somewhere else.
-            if not data[service]:
-                empty_frame = {'vol': {'qty': 0, 'unit': 'None'},
-                               'billing': {'price': 0}, 'desc': ''}
-                self._append_time_frame(service, empty_frame, tenant_id)
 
     def append(self, raw_data, tenant_id):
         session = self._session.get(tenant_id)

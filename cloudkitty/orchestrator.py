@@ -28,6 +28,7 @@ except ImportError:
 from stevedore import driver
 from stevedore import extension
 
+from cloudkitty import collector
 from cloudkitty.common import rpc
 from cloudkitty import config  # NOQA
 from cloudkitty import extension_manager
@@ -40,6 +41,7 @@ eventlet.monkey_patch()
 LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
+CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
 
 COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 TRANSFORMERS_NAMESPACE = 'cloudkitty.transformers'
@@ -140,12 +142,12 @@ class Worker(BaseWorker):
         self._storage = storage
 
         self._period = CONF.collect.period
-        self._wait_time = CONF.collect.wait_periods * CONF.collect.period
+        self._wait_time = CONF.collect.wait_periods * self._period
 
         super(Worker, self).__init__(tenant_id)
 
     def _collect(self, service, start_timestamp):
-        next_timestamp = start_timestamp + CONF.collect.period
+        next_timestamp = start_timestamp + self._period
         raw_data = self._collector.retrieve(service,
                                             start_timestamp,
                                             next_timestamp,
@@ -175,14 +177,19 @@ class Worker(BaseWorker):
                 break
 
             for service in CONF.collect.services:
-                data = self._collect(service, timestamp)
-
-                # Billing
-                for processor in self._processors.values():
-                    processor.process(data)
-
-                # Writing
-                self._storage.append(data, self._tenant_id)
+                try:
+                    data = self._collect(service, timestamp)
+                    # Billing
+                    for processor in self._processors.values():
+                        processor.process(data)
+                    # Writing
+                    self._storage.append(data, self._tenant_id)
+                except collector.NoDataCollected:
+                    begin = timestamp
+                    end = begin + self._period
+                    for processor in self._processors.values():
+                        processor.nodata(begin, end)
+                    self._storage.nodata(begin, end, self._tenant_id)
 
             # We're getting a full period so we directly commit
             self._storage.commit(self._tenant_id)
@@ -216,7 +223,6 @@ class Orchestrator(object):
             invoke_on_load=True,
             invoke_kwds=collector_args).driver
 
-        CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
         storage_args = {'period': CONF.collect.period}
         self.storage = driver.DriverManager(
             STORAGES_NAMESPACE,
