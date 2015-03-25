@@ -15,6 +15,8 @@
 #
 # @author: Stéphane Albert
 #
+import decimal
+
 from cloudkitty.openstack.common import log as logging
 from cloudkitty import rating
 from cloudkitty.rating.hash.controllers import root as root_api
@@ -39,8 +41,7 @@ class HashMap(rating.RatingProcessorBase):
 
     def __init__(self, tenant_id=None):
         super(HashMap, self).__init__(tenant_id)
-        self._service_mappings = {}
-        self._field_mappings = {}
+        self._entries = {}
         self._res = {}
         self._load_rates()
 
@@ -61,98 +62,203 @@ class HashMap(rating.RatingProcessorBase):
                 group_name = '_DEFAULT_'
             if group_name not in mappings:
                 mappings[group_name] = {}
+            current_scope = mappings[group_name]
+
             mapping_value = mapping_db.value
-            map_dict = {}
-            map_dict['cost'] = mapping_db.cost
-            map_dict['type'] = mapping_db.map_type
             if mapping_value:
-                mappings[group_name][mapping_value] = map_dict
-            else:
-                mappings[group_name] = map_dict
+                current_scope[mapping_value] = {}
+                current_scope = current_scope[mapping_value]
+            current_scope['type'] = mapping_db.map_type
+            current_scope['cost'] = mapping_db.cost
         return mappings
 
-    def _load_service_mappings(self, service_name, service_uuid):
+    def _load_thresholds(self, thresholds_uuid_list):
         hashmap = hash_db_api.get_instance()
-        mappings_uuid_list = hashmap.list_mappings(service_uuid=service_uuid)
-        mappings = self._load_mappings(mappings_uuid_list)
-        if mappings:
-            self._service_mappings[service_name] = mappings
+        thresholds = {}
+        for threshold_uuid in thresholds_uuid_list:
+            threshold_db = hashmap.get_threshold(uuid=threshold_uuid)
+            if threshold_db.group_id:
+                group_name = threshold_db.group.name
+            else:
+                group_name = '_DEFAULT_'
+            if group_name not in thresholds:
+                thresholds[group_name] = {}
+            current_scope = thresholds[group_name]
 
-    def _load_field_mappings(self, service_name, field_name, field_uuid):
+            threshold_level = threshold_db.level
+            current_scope[threshold_level] = {}
+            current_scope = current_scope[threshold_level]
+            current_scope['type'] = threshold_db.map_type
+            current_scope['cost'] = threshold_db.cost
+        return thresholds
+
+    def _load_service_entries(self, service_name, service_uuid):
+        hashmap = hash_db_api.get_instance()
+        self._entries[service_name] = {}
+        mappings_uuid_list = hashmap.list_mappings(
+            service_uuid=service_uuid)
+        mappings = self._load_mappings(mappings_uuid_list)
+        self._entries[service_name]['mappings'] = mappings
+        thresholds_uuid_list = hashmap.list_thresholds(
+            service_uuid=service_uuid)
+        thresholds = self._load_thresholds(thresholds_uuid_list)
+        self._entries[service_name]['thresholds'] = thresholds
+
+    def _load_field_entries(self, service_name, field_name, field_uuid):
         hashmap = hash_db_api.get_instance()
         mappings_uuid_list = hashmap.list_mappings(field_uuid=field_uuid)
         mappings = self._load_mappings(mappings_uuid_list)
-        if mappings:
-            self._field_mappings[service_name] = {}
-            self._field_mappings[service_name][field_name] = mappings
+        thresholds_uuid_list = hashmap.list_thresholds(field_uuid=field_uuid)
+        thresholds = self._load_thresholds(thresholds_uuid_list)
+        if service_name not in self._entries:
+            self._entries[service_name] = {}
+        if 'fields' not in self._entries[service_name]:
+            self._entries[service_name]['fields'] = {}
+        scope = self._entries[service_name]['fields'][field_name] = {}
+        scope['mappings'] = mappings
+        scope['thresholds'] = thresholds
 
     def _load_rates(self):
-        self._service_mappings = {}
-        self._field_mappings = {}
+        self._entries = {}
         hashmap = hash_db_api.get_instance()
         services_uuid_list = hashmap.list_services()
         for service_uuid in services_uuid_list:
             service_db = hashmap.get_service(uuid=service_uuid)
             service_name = service_db.name
-            self._load_service_mappings(service_name, service_uuid)
+            self._load_service_entries(service_name, service_uuid)
             fields_uuid_list = hashmap.list_fields(service_uuid)
             for field_uuid in fields_uuid_list:
                 field_db = hashmap.get_field(uuid=field_uuid)
                 field_name = field_db.name
-                self._load_field_mappings(service_name, field_name, field_uuid)
+                self._load_field_entries(service_name, field_name, field_uuid)
 
     def add_rating_informations(self, data):
         if 'rating' not in data:
             data['rating'] = {'price': 0}
         for entry in self._res.values():
-            res = entry['rate'] * entry['flat']
-            data['rating']['price'] += res * data['vol']['qty']
+            rate = entry['rate']
+            flat = entry['flat']
+            if entry['threshold']['scope'] == 'field':
+                if entry['threshold']['type'] == 'flat':
+                    flat += entry['threshold']['cost']
+                else:
+                    rate *= entry['threshold']['cost']
+            res = rate * flat
+            res *= data['vol']['qty']
+            if entry['threshold']['scope'] == 'service':
+                if entry['threshold']['type'] == 'flat':
+                    res += entry['threshold']['cost']
+                else:
+                    res *= entry['threshold']['cost']
+            data['rating']['price'] += res
 
-    def update_result(self, group, map_type, value):
+    def update_result(self,
+                      group,
+                      map_type,
+                      cost,
+                      level=0,
+                      is_threshold=False,
+                      threshold_scope='field'):
         if group not in self._res:
             self._res[group] = {'flat': 0,
-                                'rate': 1}
+                                'rate': 1,
+                                'threshold': {
+                                    'level': -1,
+                                    'cost': 0,
+                                    'type': 'flat',
+                                    'scope': 'field'}}
+        if is_threshold:
+            best = self._res[group]['threshold']['level']
+            if level > best:
+                self._res[group]['threshold']['level'] = level
+                self._res[group]['threshold']['cost'] = cost
+                self._res[group]['threshold']['type'] = map_type
+                self._res[group]['threshold']['scope'] = threshold_scope
+        else:
+            if map_type == 'rate':
+                self._res[group]['rate'] *= cost
+            elif map_type == 'flat':
+                new_flat = cost
+                cur_flat = self._res[group]['flat']
+                if new_flat > cur_flat:
+                    self._res[group]['flat'] = new_flat
 
-        if map_type == 'rate':
-            self._res[group]['rate'] *= value
-        elif map_type == 'flat':
-            new_flat = value
-            cur_flat = self._res[group]['flat']
-            if new_flat > cur_flat:
-                self._res[group]['flat'] = new_flat
+    def process_mappings(self,
+                         mapping_groups,
+                         cmp_value):
+        for group_name, mappings in mapping_groups.items():
+            mapping_default = mappings.get('_DEFAULT_', {})
+            matched = False
+            for mapping_value, mapping in mappings.items():
+                if mapping is mapping_default:
+                    continue
+                if cmp_value == mapping_value:
+                    self.update_result(
+                        group_name,
+                        mapping['type'],
+                        mapping['cost'])
+                    matched = True
+            if not matched and mapping_default:
+                self.update_result(
+                    group_name,
+                    mapping_default['type'],
+                    mapping_default['cost'])
 
-    def process_service_map(self, service_name, data):
-        if service_name not in self._service_mappings:
+    def process_thresholds(self,
+                           threshold_groups,
+                           cmp_level,
+                           threshold_type):
+        for group_name, thresholds in threshold_groups.items():
+            threshold_default = thresholds.get('_DEFAULT_', {})
+            matched = False
+            for threshold_level, threshold in thresholds.items():
+                if threshold is threshold_default:
+                    continue
+                if cmp_level >= threshold_level:
+                    self.update_result(
+                        group_name,
+                        threshold['type'],
+                        threshold['cost'],
+                        threshold_level,
+                        True,
+                        threshold_type)
+                    matched = True
+            if not matched and threshold_default:
+                self.update_result(
+                    group_name,
+                    threshold_default['type'],
+                    threshold_default['cost'],
+                    True,
+                    threshold_type)
+
+    def process_services(self, service_name, data):
+        if service_name not in self._entries:
             return
-        serv_map = self._service_mappings[service_name]
-        for group_name, mapping in serv_map.items():
+        service_mappings = self._entries[service_name]['mappings']
+        for group_name, mapping in service_mappings.items():
             self.update_result(group_name,
                                mapping['type'],
                                mapping['cost'])
+        service_thresholds = self._entries[service_name]['thresholds']
+        self.process_thresholds(service_thresholds,
+                                data['vol']['qty'],
+                                'service')
 
-    def process_field_map(self, service_name, data):
-        if service_name not in self._field_mappings:
-            return {}
-        field_map = self._field_mappings[service_name]
+    def process_fields(self, service_name, data):
+        if service_name not in self._entries:
+            return
         desc_data = data['desc']
-        for field_name, group_mappings in field_map.items():
+        field_mappings = self._entries[service_name]['fields']
+        for field_name, group_mappings in field_mappings.items():
             if field_name not in desc_data:
                 continue
-            for group_name, mappings in group_mappings.items():
-                mapping_default = mappings.pop('_DEFAULT_', {})
-                matched = False
-                for mapping_value, mapping in mappings.items():
-                    if desc_data[field_name] == mapping_value:
-                        self.update_result(
-                            group_name,
-                            mapping['type'],
-                            mapping['cost'])
-                        matched = True
-                if not matched and mapping_default:
-                    self.update_result(
-                        group_name,
-                        mapping_default['type'],
-                        mapping_default['cost'])
+            cmp_value = desc_data[field_name]
+            self.process_mappings(group_mappings['mappings'],
+                                  cmp_value)
+            if group_mappings['thresholds']:
+                self.process_thresholds(group_mappings['thresholds'],
+                                        decimal.Decimal(cmp_value),
+                                        'field')
 
     def process(self, data):
         for cur_data in data:
@@ -160,7 +266,7 @@ class HashMap(rating.RatingProcessorBase):
             for service_name, service_data in cur_usage.items():
                 for item in service_data:
                     self._res = {}
-                    self.process_service_map(service_name, item)
-                    self.process_field_map(service_name, item)
+                    self.process_services(service_name, item)
+                    self.process_fields(service_name, item)
                     self.add_rating_informations(item)
         return data

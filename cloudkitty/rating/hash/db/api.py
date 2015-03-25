@@ -70,6 +70,15 @@ class NoSuchMapping(Exception):
         self.uuid = uuid
 
 
+class NoSuchThreshold(Exception):
+    """Raised when the threshold doesn't exist."""
+
+    def __init__(self, uuid):
+        msg = ("No such threshold: %s" % uuid)
+        super(NoSuchThreshold, self).__init__(msg)
+        self.uuid = uuid
+
+
 class NoSuchType(Exception):
     """Raised when a mapping type is not handled."""
 
@@ -120,12 +129,31 @@ class MappingAlreadyExists(Exception):
         self.uuid = uuid
 
 
+class ThresholdAlreadyExists(Exception):
+    """Raised when the threshold already exists."""
+
+    def __init__(self, threshold, uuid):
+        super(ThresholdAlreadyExists, self).__init__(
+            "Threshold %s already exists (UUID: %s)" % (threshold, uuid))
+        self.threshold = threshold
+        self.uuid = uuid
+
+
 class MappingHasNoGroup(Exception):
     """Raised when the mapping is not attached to a group."""
 
     def __init__(self, uuid):
         super(MappingHasNoGroup, self).__init__(
             "Mapping has no group (UUID: %s)" % uuid)
+        self.uuid = uuid
+
+
+class ThresholdHasNoGroup(Exception):
+    """Raised when the threshold is not attached to a group."""
+
+    def __init__(self, uuid):
+        super(ThresholdHasNoGroup, self).__init__(
+            "Threshold has no group (UUID: %s)" % uuid)
         self.uuid = uuid
 
 
@@ -171,6 +199,13 @@ class HashMap(object):
         """
 
     @abc.abstractmethod
+    def get_threshold(self, uuid):
+        """Return a threshold object.
+
+        :param uuid: UUID of the threshold to get.
+        """
+
+    @abc.abstractmethod
     def list_services(self):
         """Return an UUID list of every service.
 
@@ -203,6 +238,22 @@ class HashMap(object):
         :param no_group: Filter on mappings without a group.
 
         :return list(str): List of mappings' UUID.
+        """
+
+    @abc.abstractmethod
+    def list_thresholds(self,
+                        service_uuid=None,
+                        field_uuid=None,
+                        group_uuid=None,
+                        no_group=False):
+        """Return an UUID list of every threshold.
+
+        :param service_uuid: The service to filter on.
+        :param field_uuid: The field to filter on.
+        :param group_uuid: The group to filter on.
+        :param no_group: Filter on thresholds without a group.
+
+        :return list(str): List of thresholds' UUID.
         """
 
     @abc.abstractmethod
@@ -246,6 +297,24 @@ class HashMap(object):
         """
 
     @abc.abstractmethod
+    def create_threshold(self,
+                         cost,
+                         map_type='rate',
+                         level=None,
+                         service_id=None,
+                         field_id=None,
+                         group_id=None):
+        """Create a new service/field threshold.
+
+        :param cost: Rating value to apply to this threshold.
+        :param map_type: The type of rating rule.
+        :param level: Level of the field this threshold is applying to.
+        :param service_id: Service the threshold is applying to.
+        :param field_id: Field the threshold is applying to.
+        :param group_id: The group of calculations to apply.
+        """
+
+    @abc.abstractmethod
     def update_mapping(self, uuid, **kwargs):
         """Update a mapping.
 
@@ -253,6 +322,17 @@ class HashMap(object):
         :param cost: Rating value to apply to this mapping.
         :param map_type: The type of rating rule.
         :param value: Value of the field this mapping is applying to.
+        :param group_id: The group of calculations to apply.
+        """
+
+    @abc.abstractmethod
+    def update_threshold(self, uuid, **kwargs):
+        """Update a mapping.
+
+        :param uuid UUID of the threshold to modify.
+        :param cost: Rating value to apply to this threshold.
+        :param map_type: The type of rating rule.
+        :param level: Level of the field this threshold is applying to.
         :param group_id: The group of calculations to apply.
         """
 
@@ -283,4 +363,10 @@ class HashMap(object):
         """Delete a mapping
 
         :param uuid: UUID of the mapping to delete.
+        """
+    @abc.abstractmethod
+    def delete_threshold(self, uuid):
+        """Delete a threshold
+
+        :param uuid: UUID of the threshold to delete.
         """

@@ -16,7 +16,6 @@
 # @author: Stéphane Albert
 #
 from oslo.utils import uuidutils
-from wsme import exc
 from wsme import types as wtypes
 
 from cloudkitty.i18n import _LE
@@ -30,7 +29,7 @@ class UuidType(wtypes.UuidType):
     @staticmethod
     def validate(value):
         if not uuidutils.is_uuid_like(value):
-            raise exc.InvalidType(_LE("Invalid UUID, got '%s'") % value)
+            raise ValueError(_LE("Invalid UUID, got '%s'") % value)
         return value
 
 

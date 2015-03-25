@@ -20,29 +20,32 @@ import decimal
 from wsme import types as wtypes
 
 from cloudkitty.api.v1 import types as ck_types
+from cloudkitty.rating.hash.datamodels import mapping as mapping_models
 
-MAP_TYPE = wtypes.Enum(wtypes.text, 'flat', 'rate')
 
+class Threshold(wtypes.Base):
+    """Type describing a Threshold.
 
-class Mapping(wtypes.Base):
-    """Type describing a Mapping.
-
-    A mapping is used to apply rating rules based on a value, if the parent is
-    a field then it's check the value of a metadata. If it's a service then it
-    directly apply the rate to the volume.
+    A threshold is used to apply rating rules based on a level, if the parent
+    is a field then the level is checked against a metadata. If it's a service
+    then it's the quantity of the resource that is checked.
     """
 
-    mapping_id = wtypes.wsattr(ck_types.UuidType(), mandatory=False)
-    """UUID of the mapping."""
+    threshold_id = wtypes.wsattr(ck_types.UuidType(), mandatory=False)
+    """UUID of the threshold."""
 
-    value = wtypes.wsattr(wtypes.text, mandatory=False, default='')
-    """Key of the mapping."""
+    level = wtypes.wsattr(decimal.Decimal,
+                          mandatory=True,
+                          default=decimal.Decimal('0'))
+    """Level of the threshold."""
 
-    map_type = wtypes.wsattr(MAP_TYPE, default='flat', name='type')
-    """Type of the mapping."""
+    map_type = wtypes.wsattr(mapping_models.MAP_TYPE,
+                             default='flat',
+                             name='type')
+    """Type of the threshold."""
 
     cost = wtypes.wsattr(decimal.Decimal, mandatory=True)
-    """Value of the mapping."""
+    """Value of the threshold."""
 
     service_id = wtypes.wsattr(ck_types.UuidType(),
                                mandatory=False)
@@ -58,23 +61,23 @@ class Mapping(wtypes.Base):
 
     @classmethod
     def sample(cls):
-        sample = cls(mapping_id='39dbd39d-f663-4444-a795-fb19d81af136',
+        sample = cls(threshold_id='39dbd39d-f663-4444-a795-fb19d81af136',
                      field_id='ac55b000-a05b-4832-b2ff-265a034886ab',
-                     value='m1.micro',
+                     level=decimal.Decimal('1024'),
                      map_type='flat',
                      cost=decimal.Decimal('4.2'))
         return sample
 
 
-class MappingCollection(wtypes.Base):
+class ThresholdCollection(wtypes.Base):
     """Type describing a list of mappings.
 
     """
 
-    mappings = [Mapping]
-    """List of mappings."""
+    thresholds = [Threshold]
+    """List of thresholds."""
 
     @classmethod
     def sample(cls):
-        sample = Mapping.sample()
-        return cls(mappings=[sample])
+        sample = Threshold.sample()
+        return cls(thresholds=[sample])

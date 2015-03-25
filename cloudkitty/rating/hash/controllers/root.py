@@ -23,6 +23,7 @@ from cloudkitty.rating.hash.controllers import field as field_api
 from cloudkitty.rating.hash.controllers import group as group_api
 from cloudkitty.rating.hash.controllers import mapping as mapping_api
 from cloudkitty.rating.hash.controllers import service as service_api
+from cloudkitty.rating.hash.controllers import threshold as threshold_api
 from cloudkitty.rating.hash.datamodels import mapping as mapping_models
 
 
@@ -39,6 +40,7 @@ class HashMapConfigController(rest.RestController):
     fields = field_api.HashMapFieldsController()
     groups = group_api.HashMapGroupsController()
     mappings = mapping_api.HashMapMappingsController()
+    thresholds = threshold_api.HashMapThresholdsController()
 
     @wsme_pecan.wsexpose([wtypes.text])
     def get_types(self):
