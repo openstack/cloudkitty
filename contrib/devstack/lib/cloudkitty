@@ -164,6 +164,9 @@ function configure_cloudkitty {
     # database
     local dburl=`database_connection_url cloudkitty`
     iniset $CLOUDKITTY_CONF database connection $dburl
+
+    # keystone middleware
+    configure_auth_token_middleware $CLOUDKITTY_CONF cloudkitty $CLOUDKITTY_AUTH_CACHE_DIR
 }
 
 # create_cloudkitty_cache_dir() - Part of the init_cloudkitty() process
