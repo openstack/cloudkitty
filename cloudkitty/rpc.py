@@ -27,7 +27,7 @@ _RPC_TARGET = None
 def get_target():
     global _RPC_TARGET
     if _RPC_TARGET is None:
-        _RPC_TARGET = messaging.Target(topic='cloudkitty', version=1.0)
+        _RPC_TARGET = messaging.Target(topic='cloudkitty', version='1.0')
     return _RPC_TARGET
 
 
