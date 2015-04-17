@@ -18,13 +18,13 @@
 import os
 from wsgiref import simple_server
 
-from keystonemiddleware import auth_token
 from oslo.config import cfg
 from paste import deploy
 import pecan
 
 from cloudkitty.api import config as api_config
 from cloudkitty.api import hooks
+from cloudkitty.api import middleware
 from cloudkitty.openstack.common import log as logging
 from cloudkitty import rpc
 from cloudkitty import storage
@@ -84,7 +84,8 @@ def setup_app(pecan_config=None, extra_hooks=None):
         guess_content_type_from_ext=False
     )
 
-    return auth_token.AuthProtocol(app, dict(CONF))
+    return middleware.AuthTokenMiddleware(app, dict(CONF),
+                                          app_conf.app.acl_public_routes)
 
 
 def setup_wsgi():
