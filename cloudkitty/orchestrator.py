@@ -75,7 +75,7 @@ class RatingEndpoint(object):
     def quote(self, ctxt, res_data):
         LOG.debug('Received quote from RPC.')
         worker = APIWorker()
-        return worker.quote(res_data)
+        return str(worker.quote(res_data))
 
     def reload_module(self, ctxt, name):
         LOG.info('Received reload command for module {}.'.format(name))
