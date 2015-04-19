@@ -7,6 +7,7 @@ if is_service_enabled ck-api; then
     elif [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing CloudKitty"
         install_cloudkitty
+        install_python_cloudkittyclient
         cleanup_cloudkitty
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring CloudKitty"
