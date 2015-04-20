@@ -23,6 +23,7 @@
 # start_cloudkitty
 # stop_cloudkitty
 # cleanup_cloudkitty
+# install_python_cloudkittyclient
 
 # Save trace setting
 XTRACE=$(set +o | grep xtrace)
@@ -74,6 +75,10 @@ CLOUDKITTY_OUTPUT_BACKEND=${CLOUDKITTY_OUTPUT_BACKEND:-"cloudkitty.backend.file.
 CLOUDKITTY_OUTPUT_BASEPATH=${CLOUDKITTY_OUTPUT_BASEPATH:-$CLOUDKITTY_REPORTS_DIR}
 CLOUDKITTY_OUTPUT_PIPELINE=${CLOUDKITTY_OUTPUT_PIPELINE:-"osrf"}
 
+# Set Cloudkitty client info
+GITREPO["python-cloudkittyclient"]=${CLOUDKITTYCLIENT_REPO:-${GIT_BASE}/stackforge/python-cloudkittyclient.git}
+GITDIR["python-cloudkittyclient"]=$DEST/python-cloudkittyclient
+GITBRANCH["python-cloudkittyclient"]=${CLOUDKITTYCLIENT_BRANCH:-master}
 
 # Tell Tempest this project is present
 TEMPEST_SERVICES+=,cloudkitty
@@ -228,6 +233,12 @@ function stop_cloudkitty {
     done
 }
 
+# install_python_cloudkittyclient() - Collect source and prepare
+function install_python_cloudkittyclient {
+    # Install from git since we don't have a release (yet)
+    git_clone_by_name "python-cloudkittyclient"
+    setup_dev_lib "python-cloudkittyclient"
+}
 
 # Restore xtrace
 $XTRACE
