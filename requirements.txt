@@ -9,7 +9,7 @@ posix_ipc
 pecan>=0.8.0
 WSME>=0.6,!=0.6.2
 oslo.config>=1.2.0
-oslo.messaging<1.6.0
+oslo.messaging
 oslo.db
 oslo.i18n
 oslo.utils
