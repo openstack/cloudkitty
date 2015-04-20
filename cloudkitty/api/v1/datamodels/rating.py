@@ -47,7 +47,7 @@ class CloudkittyResource(wtypes.Base):
     def to_json(self):
         res_dict = {}
         res_dict[self.service] = [{'desc': self.desc,
-                                   'vol': {'qty': self.volume,
+                                   'vol': {'qty': str(self.volume),
                                            'unit': 'undef'}
                                    }]
         return res_dict
