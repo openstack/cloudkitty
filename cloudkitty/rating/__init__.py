@@ -98,6 +98,5 @@ class RatingProcessorBase(object):
         """
 
     def notify_reload(self):
-        client = rpc.get_rpc_client().prepare(namespace='rating',
-                                              fanout=True)
+        client = rpc.get_client().prepare(namespace='rating', fanout=True)
         client.cast({}, 'reload_module', name=self.module_name)
