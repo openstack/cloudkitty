@@ -31,6 +31,10 @@ class Noop(rating.RatingProcessorBase):
         """
         return True
 
+    @property
+    def priority(self):
+        return 1
+
     def reload_config(self):
         pass
 

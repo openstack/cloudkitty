@@ -15,7 +15,6 @@
 #
 # @author: Stéphane Albert
 #
-from cloudkitty.db import api as ck_db_api
 from cloudkitty.openstack.common import log as logging
 from cloudkitty import rating
 from cloudkitty.rating.hash.controllers import root as root_api
@@ -44,16 +43,6 @@ class HashMap(rating.RatingProcessorBase):
         self._field_mappings = {}
         self._res = {}
         self._load_rates()
-
-    @property
-    def enabled(self):
-        """Check if the module is enabled
-
-        :returns: bool if module is enabled
-        """
-        db_api = ck_db_api.get_instance()
-        module_db = db_api.get_module_enable_state()
-        return module_db.get_state('hashmap') or False
 
     def reload_config(self):
         """Reload the module's configuration.

@@ -84,10 +84,31 @@ class ModuleEnableState(object):
 
     @abc.abstractmethod
     def set_state(self, name, state):
-        """Retrieve the module state.
+        """Set the module state.
 
         :param name: Name of the module
         :param value: State of the module
+        """
+
+
+@six.add_metaclass(abc.ABCMeta)
+class ModuleInfo(ModuleEnableState):
+    """Base class for module info management."""
+
+    @abc.abstractmethod
+    def get_priority(self, name):
+        """Retrieve the module priority.
+
+        :param name: Name of the module
+        :return int: Priority of the module
+        """
+
+    @abc.abstractmethod
+    def set_priority(self, name, priority):
+        """Set the module state.
+
+        :param name: Name of the module
+        :param priority: New priority of the module
         """
 
 

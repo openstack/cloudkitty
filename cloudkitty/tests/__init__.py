@@ -20,7 +20,34 @@ from oslotest import base
 import testscenarios
 
 from cloudkitty import db
-from cloudkitty.db import api as db_api
+from cloudkitty.db import api as ck_db_api
+from cloudkitty import rating
+
+
+class FakeRatingModule(rating.RatingProcessorBase):
+    module_name = 'fake'
+    description = 'fake rating module'
+
+    def __init__(self, tenant_id=None):
+        super(FakeRatingModule, self).__init__()
+
+    def quote(self, data):
+        self.process(data)
+
+    def process(self, data):
+        for cur_data in data:
+            cur_usage = cur_data['usage']
+            for service in cur_usage:
+                for entry in cur_usage[service]:
+                    if 'rating' not in entry:
+                        entry['rating'] = {'price': 0}
+        return data
+
+    def reload_config(self):
+        pass
+
+    def notify_reload(self):
+        pass
 
 
 class TestCase(testscenarios.TestWithScenarios, base.BaseTestCase):
@@ -32,7 +59,7 @@ class TestCase(testscenarios.TestWithScenarios, base.BaseTestCase):
         super(TestCase, self).setUp()
         self.conf = self.useFixture(config_fixture.Config()).conf
         self.conf.set_override('connection', self.db_url, 'database')
-        self.conn = db_api.get_instance()
+        self.conn = ck_db_api.get_instance()
         migration = self.conn.get_migration()
         migration.upgrade('head')
 

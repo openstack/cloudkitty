@@ -104,20 +104,19 @@ class BaseWorker(object):
         self._tenant_id = tenant_id
 
         # Rating processors
-        self._processors = {}
+        self._processors = []
         self._load_rating_processors()
 
     def _load_rating_processors(self):
-        self._processors = {}
+        self._processors = []
         processors = extension_manager.EnabledExtensionManager(
             PROCESSORS_NAMESPACE,
             invoke_kwds={'tenant_id': self._tenant_id}
         )
 
         for processor in processors:
-            b_name = processor.name
-            b_obj = processor.obj
-            self._processors[b_name] = b_obj
+            self._processors.append(processor)
+        self._processors.sort(key=lambda x: x.obj.priority, reverse=True)
 
 
 class APIWorker(BaseWorker):
@@ -125,8 +124,8 @@ class APIWorker(BaseWorker):
         super(APIWorker, self).__init__(tenant_id)
 
     def quote(self, res_data):
-        for processor in self._processors.values():
-            processor.quote(res_data)
+        for processor in self._processors:
+            processor.obj.quote(res_data)
 
         price = decimal.Decimal(0)
         for res in res_data:
