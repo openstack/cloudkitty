@@ -179,15 +179,15 @@ class Worker(BaseWorker):
                 try:
                     data = self._collect(service, timestamp)
                     # Rating
-                    for processor in self._processors.values():
-                        processor.process(data)
+                    for processor in self._processors:
+                        processor.obj.process(data)
                     # Writing
                     self._storage.append(data, self._tenant_id)
                 except collector.NoDataCollected:
                     begin = timestamp
                     end = begin + self._period
-                    for processor in self._processors.values():
-                        processor.nodata(begin, end)
+                    for processor in self._processors:
+                        processor.obj.nodata(begin, end)
                     self._storage.nodata(begin, end, self._tenant_id)
 
             # We're getting a full period so we directly commit
