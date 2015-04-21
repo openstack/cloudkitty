@@ -106,6 +106,14 @@ class RatingProcessorBase(object):
         """
         return self.process(data)
 
+    def nodata(self, begin, end):
+        """Handle billing processing when no data has been collected.
+
+        :param begin: Begin of the period.
+        :param end: End of the period.
+        """
+        pass
+
     @abc.abstractmethod
     def process(self, data):
         """Add rating informations to data
