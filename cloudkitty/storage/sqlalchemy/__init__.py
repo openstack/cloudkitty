@@ -132,8 +132,9 @@ class SQLAlchemyStorage(storage.BaseStorage):
             model.begin >= ck_utils.ts2dt(begin),
             model.end <= ck_utils.ts2dt(end)
         )
-        for cur_filter in filters:
-            q = q.filter(getattr(model, cur_filter) == filters[cur_filter])
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                q = q.filter(getattr(model, filter_name) == filter_value)
         r = q.all()
         if not r:
             raise storage.NoTimeFrame()
