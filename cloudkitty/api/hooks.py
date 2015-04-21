@@ -15,7 +15,10 @@
 #
 # @author: Stéphane Albert
 #
+from oslo_context import context
 from pecan import hooks
+
+from cloudkitty.common import policy
 
 
 class RPCHook(hooks.PecanHook):
@@ -32,3 +35,20 @@ class StorageHook(hooks.PecanHook):
 
     def before(self, state):
         state.request.storage_backend = self._storage_backend
+
+
+class ContextHook(hooks.PecanHook):
+    def before(self, state):
+        headers = state.request.headers
+
+        roles = headers.get('X-Roles', '').split(',')
+        is_admin = policy.check_is_admin(roles)
+
+        creds = {
+            'user': headers.get('X-User') or headers.get('X-User-Id'),
+            'tenant': headers.get('X-Tenant') or headers.get('X-Tenant-Id'),
+            'auth_token': headers.get('X-Auth-Token'),
+            'is_admin': is_admin,
+        }
+
+        state.request.context = context.RequestContext(**creds)
