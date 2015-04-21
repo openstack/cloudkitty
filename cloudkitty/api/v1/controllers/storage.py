@@ -28,10 +28,10 @@ from cloudkitty import storage as ck_storage
 from cloudkitty import utils as ck_utils
 
 
-class StorageController(rest.RestController):
+class DataFramesController(rest.RestController):
     """REST Controller to access stored data frames."""
 
-    @wsme_pecan.wsexpose([storage_models.DataFrame],
+    @wsme_pecan.wsexpose(storage_models.DataFrameCollection,
                          datetime.datetime,
                          datetime.datetime,
                          wtypes.text,
@@ -43,7 +43,7 @@ class StorageController(rest.RestController):
         :param end: End of the period
         :param tenant_id: UUID of the tenant to filter on.
         :param resource_type: Type of the resource to filter on.
-        :return: List of DataFrame objects.
+        :return: Collection of DataFrame objects.
         """
 
         begin_ts = ck_utils.dt2ts(begin)
@@ -56,7 +56,7 @@ class StorageController(rest.RestController):
         except ck_storage.NoTimeFrame:
             return []
 
-        ret = []
+        dataframes = []
         for frame in frames:
             for service, data_list in frame['usage'].items():
                 resources = []
@@ -69,10 +69,16 @@ class StorageController(rest.RestController):
                         volume=data['vol']['qty'],
                         rating=price)
                     resources.append(resource)
-                data_frame = storage_models.DataFrame(
+                dataframe = storage_models.DataFrame(
                     begin=ck_utils.iso2dt(frame['period']['begin']),
                     end=ck_utils.iso2dt(frame['period']['end']),
                     tenant_id=tenant_id,  # FIXME
                     resources=resources)
-                ret.append(data_frame)
-        return ret
+                dataframes.append(dataframe)
+        return storage_models.DataFrameCollection(dataframes=dataframes)
+
+
+class StorageController(rest.RestController):
+    """REST Controller to access stored data."""
+
+    dataframes = DataFramesController()

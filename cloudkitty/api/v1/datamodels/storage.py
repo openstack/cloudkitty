@@ -33,9 +33,17 @@ class RatedResource(rating_resources.CloudkittyResource):
         res_dict['rating'] = self.rating
         return res_dict
 
+    @classmethod
+    def sample(cls):
+        sample = cls(volume=decimal.Decimal('1.0'),
+                     service='compute',
+                     rating=decimal.Decimal('1.0'),
+                     desc={'flavor': 'm1.tiny', 'vcpus': '1'})
+        return sample
+
 
 class DataFrame(wtypes.Base):
-    """Type describing a stored dataframe."""
+    """Type describing a stored data frame."""
 
     begin = datetime.datetime
     """Begin date for the sample."""
@@ -54,3 +62,23 @@ class DataFrame(wtypes.Base):
                 'end': self.end,
                 'tenant_id': self.tenant_id,
                 'resources': self.resources}
+
+    @classmethod
+    def sample(cls):
+        res_sample = RatedResource.sample()
+        sample = cls(tenant_id='69d12143688f413cbf5c3cfe03ed0a12',
+                     begin=datetime.datetime(2015, 4, 22, 7),
+                     end=datetime.datetime(2015, 4, 22, 8),
+                     resources=[res_sample])
+        return sample
+
+
+class DataFrameCollection(wtypes.Base):
+    """A list of stored data frames."""
+
+    dataframes = [DataFrame]
+
+    @classmethod
+    def sample(cls):
+        sample = DataFrame.sample()
+        return cls(dataframes=[sample])
