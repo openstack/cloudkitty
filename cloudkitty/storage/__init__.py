@@ -120,6 +120,38 @@ class BaseStorage(object):
         :param data: The rated data frames.
         """
 
+    def _update_start(self, begin, tenant_id):
+        """Update usage_start with a new timestamp.
+
+        :param begin: New usage beginning timestamp.
+        :param tenant_id: Tenant ID to update.
+        """
+        self.usage_start[tenant_id] = begin
+        self.usage_start_dt[tenant_id] = ck_utils.ts2dt(begin)
+
+    def _update_end(self, end, tenant_id):
+        """Update usage_end with a new timestamp.
+
+        :param end: New usage end timestamp.
+        :param tenant_id: Tenant ID to update.
+        """
+        self.usage_end[tenant_id] = end
+        self.usage_end_dt[tenant_id] = ck_utils.ts2dt(end)
+
+    def _check_commit(self, usage_start, tenant_id):
+        """Check if the period for a given tenant must be committed.
+
+        :param usage_start: Start of the period.
+        :param tenant_id: Tenant ID to check for.
+        """
+        usage_end = self.usage_end.get(tenant_id)
+        if usage_end is not None and usage_start >= usage_end:
+            self.commit(tenant_id)
+            self.usage_start.pop(tenant_id)
+        if self.usage_start.get(tenant_id) is None:
+            self._update_start(tenant_id, usage_start)
+            self._update_end(tenant_id, usage_start + self._period)
+
     @abc.abstractmethod
     def get_state(self, tenant_id=None):
         """Return the last written frame's timestamp.
@@ -161,19 +193,7 @@ class BaseStorage(object):
         """
         while raw_data:
             usage_start, data = self._filter_period(raw_data)
-            usage_end = self.usage_end.get(tenant_id)
-            if usage_end is not None and usage_start >= usage_end:
-                self.commit(tenant_id)
-                self.usage_start.pop(tenant_id)
-
-            if self.usage_start.get(tenant_id) is None:
-                self.usage_start[tenant_id] = usage_start
-                self.usage_end[tenant_id] = usage_start + self._period
-                self.usage_start_dt[tenant_id] = ck_utils.ts2dt(
-                    self.usage_start.get(tenant_id))
-                self.usage_end_dt[tenant_id] = ck_utils.ts2dt(
-                    self.usage_end.get(tenant_id))
-
+            self._check_commit(usage_start, tenant_id)
             self._dispatch(data, tenant_id)
             self._has_data = True
 
@@ -184,10 +204,7 @@ class BaseStorage(object):
         :param end: End of the period with no data.
         :param tenant_id: Tenant to update with no data marker for the period.
         """
-        usage_end = self.usage_end.get(tenant_id)
-        if usage_end is not None and begin >= usage_end:
-            self.commit(tenant_id)
-            self.usage_start.pop(tenant_id)
+        self._check_commit(begin, tenant_id)
 
     def commit(self, tenant_id):
         """Commit the changes to the backend.
