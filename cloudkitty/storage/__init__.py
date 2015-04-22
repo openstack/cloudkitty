@@ -149,8 +149,8 @@ class BaseStorage(object):
             self.commit(tenant_id)
             self.usage_start.pop(tenant_id)
         if self.usage_start.get(tenant_id) is None:
-            self._update_start(tenant_id, usage_start)
-            self._update_end(tenant_id, usage_start + self._period)
+            self._update_start(usage_start, tenant_id)
+            self._update_end(usage_start + self._period, tenant_id)
 
     @abc.abstractmethod
     def get_state(self, tenant_id=None):
