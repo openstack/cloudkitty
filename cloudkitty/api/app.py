@@ -15,6 +15,7 @@
 #
 # @author: Stéphane Albert
 #
+import logging
 import os
 from wsgiref import simple_server
 
@@ -25,12 +26,12 @@ import pecan
 from cloudkitty.api import config as api_config
 from cloudkitty.api import hooks
 from cloudkitty.api import middleware
-from cloudkitty.openstack.common import log as logging
+from cloudkitty.openstack.common import log
 from cloudkitty import rpc
 from cloudkitty import storage
 
 
-LOG = logging.getLogger(__name__)
+LOG = log.getLogger(__name__)
 
 auth_opts = [
     cfg.StrOpt('api_paste_config',
@@ -99,6 +100,16 @@ def build_server():
     # Create the WSGI server and start it
     host = CONF.api.host_ip
     port = CONF.api.port
+    LOG.info('Starting server in PID %s' % os.getpid())
+    LOG.info("Configuration:")
+    cfg.CONF.log_opt_values(LOG, logging.INFO)
+
+    if host == '0.0.0.0':
+        LOG.info('serving on 0.0.0.0:%(sport)s, view at http://127.0.0.1:%'
+                 '(vport)s' % {'sport': port, 'vport': port})
+    else:
+        LOG.info("serving on http://%(host)s:%(port)s" %
+                 {'host': host, 'port': port})
 
     server_cls = simple_server.WSGIServer
     handler_cls = simple_server.WSGIRequestHandler
