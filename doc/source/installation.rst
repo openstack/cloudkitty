@@ -57,6 +57,14 @@ The following shows the basic configuration items:
     region = RegionOne
     url = http://localhost:5000/v2.0
 
+    [keystone_authtoken]
+    username = cloudkitty
+    password = CK_PASSWORD
+    project_name = service
+    region = RegionOne
+    auth_url = http://localhost:5000/v2.0
+    auth_plugin = password
+
     [database]
     connection = mysql://cloudkitty:CK_DBPASS@localhost/cloudkitty
 
