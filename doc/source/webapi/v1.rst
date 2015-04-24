@@ -47,8 +47,14 @@ Storage
 .. rest-controller:: cloudkitty.api.v1.controllers.storage:StorageController
    :webprefix: /v1/storage
 
+.. rest-controller:: cloudkitty.api.v1.controllers.storage:DataFramesController
+   :webprefix: /v1/storage/dataframes
+
+.. autotype:: cloudkitty.api.v1.datamodels.storage.RatedResource
+   :members:
+
 .. autotype:: cloudkitty.api.v1.datamodels.storage.DataFrame
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.storage.RatedResource
+.. autotype:: cloudkitty.api.v1.datamodels.storage.DataFrameCollection
    :members:
