@@ -19,7 +19,6 @@
 import decimal
 
 import eventlet
-from keystoneclient.v2_0 import client as kclient
 from oslo.config import cfg
 try:
     import oslo_messaging as messaging
@@ -42,8 +41,10 @@ LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
+CONF.import_opt('backend', 'cloudkitty.tenant_fetcher', 'tenant_fetcher')
 
 COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
+FETCHERS_NAMESPACE = 'cloudkitty.tenant.fetchers'
 TRANSFORMERS_NAMESPACE = 'cloudkitty.transformers'
 PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
@@ -196,19 +197,11 @@ class Worker(BaseWorker):
 
 class Orchestrator(object):
     def __init__(self):
-        # Load credentials informations
-        self.user = CONF.auth.username
-        self.password = CONF.auth.password
-        self.tenant = CONF.auth.tenant
-        self.region = CONF.auth.region
-        self.keystone_url = CONF.auth.url
-
-        # Initialize keystone admin session
-        self.admin_ks = kclient.Client(username=self.user,
-                                       password=self.password,
-                                       tenant_name=self.tenant,
-                                       region_name=self.region,
-                                       auth_url=self.keystone_url)
+        # Tenant fetcher
+        self.fetcher = driver.DriverManager(
+            FETCHERS_NAMESPACE,
+            CONF.fetchers.backend,
+            invoke_on_load=True).driver
 
         # Transformers
         self.transformers = {}
@@ -235,18 +228,7 @@ class Orchestrator(object):
         self._init_messaging()
 
     def _load_tenant_list(self):
-        ks = kclient.Client(username=self.user,
-                            password=self.password,
-                            auth_url=self.keystone_url,
-                            region_name=self.region)
-        tenant_list = ks.tenants.list()
-        self._tenants = []
-        for tenant in tenant_list:
-            roles = self.admin_ks.roles.roles_for_user(self.admin_ks.user_id,
-                                                       tenant)
-            for role in roles:
-                if role.name == 'rating':
-                    self._tenants.append(tenant)
+        self._tenants = self.fetcher.get_tenants()
 
     def _init_messaging(self):
         target = messaging.Target(topic='cloudkitty',

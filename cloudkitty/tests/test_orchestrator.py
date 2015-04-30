@@ -38,11 +38,16 @@ class OrchestratorTest(tests.TestCase):
         super(OrchestratorTest, self).setUp()
         messaging_conf = self.useFixture(conffixture.ConfFixture(self.conf))
         messaging_conf.transport_driver = 'fake'
-        self.conf.set_override('username', 'cloudkitty', 'auth')
-        self.conf.set_override('password', 'cloudkitty', 'auth')
-        self.conf.set_override('tenant', 'cloudkitty', 'auth')
-        self.conf.set_override('region', 'RegionOne', 'auth')
-        self.conf.set_override('url', 'http://127.0.0.1:5000/v2.0', 'auth')
+        self.conf.set_override('backend', 'keystone', 'tenant_fetcher')
+        self.conf.import_group('keystone_fetcher',
+                               'cloudkitty.tenant_fetcher.keystone')
+        self.conf.set_override('username', 'cloudkitty', 'keystone_fetcher')
+        self.conf.set_override('password', 'cloudkitty', 'keystone_fetcher')
+        self.conf.set_override('tenant', 'cloudkitty', 'keystone_fetcher')
+        self.conf.set_override('region', 'RegionOne', 'keystone_fetcher')
+        self.conf.set_override('url',
+                               'http://127.0.0.1:5000/v2.0',
+                               'keystone_fetcher')
 
     def setup_fake_modules(self):
         fake_module1 = tests.FakeRatingModule()

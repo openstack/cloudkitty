@@ -25,23 +25,6 @@ except ImportError:
 from cloudkitty.openstack.common import log  # noqa
 
 
-auth_opts = [
-    cfg.StrOpt('username',
-               default='',
-               help='OpenStack username.'),
-    cfg.StrOpt('password',
-               default='',
-               help='OpenStack password.'),
-    cfg.StrOpt('tenant',
-               default='',
-               help='OpenStack tenant.'),
-    cfg.StrOpt('region',
-               default='',
-               help='OpenStack region.'),
-    cfg.StrOpt('url',
-               default='',
-               help='OpenStack auth URL.'), ]
-
 state_opts = [
     cfg.StrOpt('backend',
                default='cloudkitty.backend.file.FileBackend',
@@ -62,7 +45,6 @@ output_opts = [
                 help='Output pipeline'), ]
 
 
-cfg.CONF.register_opts(auth_opts, 'auth')
 cfg.CONF.register_opts(state_opts, 'state')
 cfg.CONF.register_opts(output_opts, 'output')
 

@@ -24,6 +24,8 @@ import cloudkitty.openstack.common.lockutils
 import cloudkitty.openstack.common.log
 import cloudkitty.service
 import cloudkitty.storage
+import cloudkitty.tenant_fetcher
+import cloudkitty.tenant_fetcher.keystone
 
 __all__ = ['list_opts']
 
@@ -36,12 +38,16 @@ _opts = [
         cloudkitty.collector.ceilometer.ceilometer_collector_opts))),
     ('collect', list(itertools.chain(
         cloudkitty.collector.collect_opts))),
+    ('keystone_fetcher', list(itertools.chain(
+        cloudkitty.tenant_fetcher.keystone.keystone_fetcher_opts))),
     ('output', list(itertools.chain(
         cloudkitty.config.output_opts))),
     ('state', list(itertools.chain(
         cloudkitty.config.state_opts))),
     ('storage', list(itertools.chain(
         cloudkitty.storage.storage_opts))),
+    ('tenant_fetcher', list(itertools.chain(
+        cloudkitty.tenant_fetcher.fetchers_opts))),
     (None, list(itertools.chain(
         cloudkitty.openstack.common.lockutils.util_opts,
         cloudkitty.openstack.common.log.common_cli_opts,
