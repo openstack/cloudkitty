@@ -146,11 +146,11 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
 
     # auth
-    iniset $CLOUDKITTY_CONF auth url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v2.0/"
-    iniset $CLOUDKITTY_CONF auth username cloudkitty
-    iniset $CLOUDKITTY_CONF auth password $SERVICE_PASSWORD
-    iniset $CLOUDKITTY_CONF auth tenant $SERVICE_TENANT_NAME
-    iniset $CLOUDKITTY_CONF auth region $REGION_NAME
+    iniset $CLOUDKITTY_CONF keystone_fetcher url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v2.0/"
+    iniset $CLOUDKITTY_CONF keystone_fetcher username cloudkitty
+    iniset $CLOUDKITTY_CONF keystone_fetcher password $SERVICE_PASSWORD
+    iniset $CLOUDKITTY_CONF keystone_fetcher tenant $SERVICE_TENANT_NAME
+    iniset $CLOUDKITTY_CONF keystone_fetcher region $REGION_NAME
 
     iniset $CLOUDKITTY_CONF ceilometer_collector url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v2.0/"
     iniset $CLOUDKITTY_CONF ceilometer_collector username cloudkitty
