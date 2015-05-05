@@ -13,6 +13,8 @@ oslo.messaging
 oslo.db
 oslo.i18n
 oslo.utils
+oslo.context
+oslo.policy
 sqlalchemy
 six>=1.7.0
 stevedore
