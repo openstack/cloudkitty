@@ -30,8 +30,6 @@ import cloudkitty.tenant_fetcher.keystone
 __all__ = ['list_opts']
 
 _opts = [
-    ('auth', list(itertools.chain(
-        cloudkitty.config.auth_opts))),
     ('api', list(itertools.chain(
         cloudkitty.api.app.api_opts,))),
     ('ceilometer_collector', list(itertools.chain(
