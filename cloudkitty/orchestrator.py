@@ -200,7 +200,7 @@ class Orchestrator(object):
         # Tenant fetcher
         self.fetcher = driver.DriverManager(
             FETCHERS_NAMESPACE,
-            CONF.fetchers.backend,
+            CONF.tenant_fetcher.backend,
             invoke_on_load=True).driver
 
         # Transformers

@@ -46,11 +46,11 @@ class KeystoneFetcher(tenant_fetcher.BaseFetcher):
     """Keystone tenants fetcher."""
 
     def __init__(self):
-        self.user = CONF.auth.username
-        self.password = CONF.auth.password
-        self.tenant = CONF.auth.tenant
-        self.region = CONF.auth.region
-        self.keystone_url = CONF.auth.url
+        self.user = CONF.keystone_fetcher.username
+        self.password = CONF.keystone_fetcher.password
+        self.tenant = CONF.keystone_fetcher.tenant
+        self.region = CONF.keystone_fetcher.region
+        self.keystone_url = CONF.keystone_fetcher.url
         self.admin_ks = kclient.Client(
             username=self.user,
             password=self.password,
