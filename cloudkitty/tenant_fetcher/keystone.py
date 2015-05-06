@@ -67,8 +67,6 @@ class KeystoneFetcher(tenant_fetcher.BaseFetcher):
         for tenant in tenant_list:
             roles = self.admin_ks.roles.roles_for_user(self.admin_ks.user_id,
                                                        tenant)
-            for role in roles:
-                if role.name == 'rating':
-                    tenant_list.remove(tenant)
-
+            if 'rating' not in [role.name for role in roles]:
+                tenant_list.remove(tenant)
         return tenant_list
