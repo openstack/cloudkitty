@@ -42,14 +42,23 @@ API References
    webapi/v1
 
 
-Modules
-=======
+Modules API
+===========
 
 .. toctree::
    :maxdepth: 1
    :glob:
 
    webapi/rating/*
+
+Modules documentation
+=====================
+
+.. toctree::
+   :maxdepth: 1
+   :glob:
+
+   rating/*
 
 
 Indices and tables

@@ -31,6 +31,7 @@ extensions = [
     'sphinx.ext.graphviz',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
+    'sphinx.ext.mathjax',
     'wsmeext.sphinxext',
     'sphinxcontrib.pecanwsme.rest',
     'sphinxcontrib.httpdomain',
