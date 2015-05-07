@@ -32,6 +32,12 @@ HashMap Module REST API
 .. autotype:: cloudkitty.rating.hash.datamodels.mapping.MappingCollection
    :members:
 
+.. autotype:: cloudkitty.rating.hash.datamodels.threshold.Threshold
+   :members:
+
+.. autotype:: cloudkitty.rating.hash.datamodels.threshold.ThresholdCollection
+   :members:
+
 .. rest-controller:: cloudkitty.rating.hash.controllers.group:HashMapGroupsController
    :webprefix: /v1/rating/module_config/hashmap/groups
 

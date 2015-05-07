@@ -62,7 +62,7 @@ class DBCommand(object):
             try:
                 module = self.rating_models[name]
                 mod_migration = module.get_migration()
-            except IndexError:
+            except KeyError:
                 raise ModuleNotFound(name)
         return mod_migration
 
