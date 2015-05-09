@@ -17,8 +17,11 @@
 #
 import abc
 
+import pecan
+from pecan import rest
 import six
 
+from cloudkitty.common import policy
 from cloudkitty.db import api as db_api
 from cloudkitty import rpc
 
@@ -132,3 +135,14 @@ class RatingProcessorBase(object):
     def notify_reload(self):
         client = rpc.get_client().prepare(namespace='rating', fanout=True)
         client.cast({}, 'reload_module', name=self.module_name)
+
+
+class RatingRestControllerBase(rest.RestController):
+    @pecan.expose()
+    def _route(self, args, request):
+        try:
+            policy.enforce(request.context, 'rating:module_config', {})
+        except policy.PolicyNotAuthorized as e:
+            pecan.abort(403, str(e))
+
+        return super(RatingRestControllerBase, self)._route(args, request)

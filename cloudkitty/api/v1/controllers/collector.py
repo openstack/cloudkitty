@@ -21,6 +21,7 @@ from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1.datamodels import collector as collector_models
+from cloudkitty.common import policy
 from cloudkitty.db import api as db_api
 
 
@@ -36,6 +37,7 @@ class MappingController(rest.RestController):
 
         :return: List of every services mapped.
         """
+        policy.enforce(pecan.request.context, 'collector:list_mappings', {})
         return [mapping.service for mapping in self._db.list_services()]
 
     @wsme_pecan.wsexpose(collector_models.ServiceToCollectorMapping,
@@ -45,6 +47,7 @@ class MappingController(rest.RestController):
 
         :param service: Name of the service to filter on.
         """
+        policy.enforce(pecan.request.context, 'collector:get_mapping', {})
         try:
             return self._db.get_mapping(service)
         except db_api.NoSuchMapping as e:
@@ -70,6 +73,7 @@ class CollectorController(rest.RestController):
         :param collector: Name of the collector.
         :return: State of the collector.
         """
+        policy.enforce(pecan.request.context, 'collector:get_state', {})
         return self._db.get_state('collector_{}'.format(collector))
 
     @wsme_pecan.wsexpose(bool, wtypes.text, body=bool)
@@ -80,4 +84,5 @@ class CollectorController(rest.RestController):
         :param state: New state for the collector.
         :return: State of the collector.
         """
+        policy.enforce(pecan.request.context, 'collector:update_state', {})
         return self._db.set_state('collector_{}'.format(collector), state)

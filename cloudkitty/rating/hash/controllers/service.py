@@ -16,16 +16,16 @@
 # @author: Stéphane Albert
 #
 import pecan
-from pecan import rest
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import types as ck_types
+from cloudkitty import rating
 from cloudkitty.rating.hash.controllers import field as field_api
 from cloudkitty.rating.hash.datamodels import service as service_models
 from cloudkitty.rating.hash.db import api as db_api
 
 
-class HashMapServicesController(rest.RestController):
+class HashMapServicesController(rating.RatingRestControllerBase):
     """Controller responsible of services management.
 
     """

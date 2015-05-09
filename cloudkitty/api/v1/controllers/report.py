@@ -23,6 +23,8 @@ from pecan import rest
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
+from cloudkitty.common import policy
+
 
 class ReportController(rest.RestController):
     """REST Controller managing the reporting.
@@ -41,6 +43,7 @@ class ReportController(rest.RestController):
         """Return the list of rated tenants.
 
         """
+        policy.enforce(pecan.request.context, 'report:list_tenants', {})
         storage = pecan.request.storage_backend
         tenants = storage.get_tenants(begin, end)
         return tenants
@@ -53,6 +56,7 @@ class ReportController(rest.RestController):
         """Return the amount to pay for a given period.
 
         """
+        policy.enforce(pecan.request.context, 'report:get_total', {})
         storage = pecan.request.storage_backend
         # FIXME(sheeprine): We should filter on user id.
         # Use keystone token information by default but make it overridable and

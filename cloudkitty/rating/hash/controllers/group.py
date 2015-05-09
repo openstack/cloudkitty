@@ -16,16 +16,16 @@
 # @author: Stéphane Albert
 #
 import pecan
-from pecan import rest
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import types as ck_types
+from cloudkitty import rating
 from cloudkitty.rating.hash.datamodels import group as group_models
 from cloudkitty.rating.hash.datamodels import mapping as mapping_models
 from cloudkitty.rating.hash.db import api as db_api
 
 
-class HashMapGroupsController(rest.RestController):
+class HashMapGroupsController(rating.RatingRestControllerBase):
     """Controller responsible of groups management.
 
     """

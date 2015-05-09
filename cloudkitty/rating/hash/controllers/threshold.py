@@ -16,16 +16,16 @@
 # @author: Stéphane Albert
 #
 import pecan
-from pecan import rest
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import types as ck_types
+from cloudkitty import rating
 from cloudkitty.rating.hash.datamodels import group as group_models
 from cloudkitty.rating.hash.datamodels import threshold as threshold_models
 from cloudkitty.rating.hash.db import api as db_api
 
 
-class HashMapThresholdsController(rest.RestController):
+class HashMapThresholdsController(rating.RatingRestControllerBase):
     """Controller responsible of thresholds management.
 
     """

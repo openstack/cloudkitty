@@ -1,3 +1,21 @@
 {
-    "context_is_admin": "role:admin"
+    "context_is_admin":  "role:admin",
+    "default": "",
+
+    "rating:list_modules": "role:admin",
+    "rating:get_module": "role:admin",
+    "rating:update_module": "role:admin",
+    "rating:quote": "",
+
+    "report:list_tenants": "role:admin",
+    "report:get_total": "",
+
+    "collector:list_mappings": "role:admin",
+    "collector:get_mapping": "role:admin",
+    "collector:get_state": "role:admin",
+    "collector:update_state": "role:admin",
+
+    "storage:list_data_frames": "",
+
+    "rating:module_config": "role:admin"
 }
