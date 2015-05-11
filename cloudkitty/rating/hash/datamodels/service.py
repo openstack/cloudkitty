@@ -26,9 +26,7 @@ class Service(wtypes.Base):
     A service is directly mapped to the usage key, the collected service.
     """
 
-    service_id = wtypes.wsattr(ck_types.UuidType(),
-                               mandatory=False,
-                               readonly=True)
+    service_id = wtypes.wsattr(ck_types.UuidType(), mandatory=False)
     """UUID of the service."""
 
     name = wtypes.wsattr(wtypes.text, mandatory=True)

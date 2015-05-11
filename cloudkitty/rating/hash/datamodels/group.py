@@ -29,9 +29,7 @@ class Group(wtypes.Base):
     rating.
     """
 
-    group_id = wtypes.wsattr(ck_types.UuidType(),
-                             mandatory=False,
-                             readonly=True)
+    group_id = wtypes.wsattr(ck_types.UuidType(), mandatory=False)
     """UUID of the group."""
 
     name = wtypes.wsattr(wtypes.text, mandatory=True)

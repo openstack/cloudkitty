@@ -27,16 +27,13 @@ class Field(wtypes.Base):
     used to map the name of a metadata.
     """
 
-    field_id = wtypes.wsattr(ck_types.UuidType(),
-                             mandatory=False,
-                             readonly=True)
+    field_id = wtypes.wsattr(ck_types.UuidType(), mandatory=False)
     """UUID of the field."""
 
     name = wtypes.wsattr(wtypes.text, mandatory=True)
     """Name of the field."""
 
-    service_id = wtypes.wsattr(ck_types.UuidType(),
-                               mandatory=True)
+    service_id = wtypes.wsattr(ck_types.UuidType(), mandatory=True)
     """UUID of the parent service."""
 
     @classmethod

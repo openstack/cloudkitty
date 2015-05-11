@@ -244,11 +244,14 @@ class HashMap(api.HashMap):
                     name=name,
                     field_id=uuidutils.generate_uuid())
                 session.add(field_db)
-            return field_db
-        except exception.DBDuplicateEntry:
+            # FIXME(sheeprine): backref are not populated as they used to be.
+            #                   Querying the item again to get backref.
             field_db = self.get_field(service_uuid=service_uuid,
                                       name=name)
+        except exception.DBDuplicateEntry:
             raise api.FieldAlreadyExists(field_db.name, field_db.field_id)
+        else:
+            return field_db
 
     def create_group(self, name):
         session = db.get_session()
@@ -302,11 +305,14 @@ class HashMap(api.HashMap):
                 if group_fk:
                     field_map.group_id = group_fk
                 session.add(field_map)
-            return field_map
         except exception.DBDuplicateEntry:
             raise api.MappingAlreadyExists(value, field_map.field_id)
         except exception.DBError:
             raise api.NoSuchType(map_type)
+        # FIXME(sheeprine): backref are not populated as they used to be.
+        #                   Querying the item again to get backref.
+        field_map = self.get_mapping(field_map.mapping_id)
+        return field_map
 
     def create_threshold(self,
                          level,
@@ -342,11 +348,14 @@ class HashMap(api.HashMap):
                 if group_fk:
                     threshold_db.group_id = group_fk
                 session.add(threshold_db)
-            return threshold_db
         except exception.DBDuplicateEntry:
             raise api.ThresholdAlreadyExists(level, threshold_db.field_id)
         except exception.DBError:
             raise api.NoSuchType(map_type)
+        # FIXME(sheeprine): backref are not populated as they used to be.
+        #                   Querying the item again to get backref.
+        threshold_db = self.get_threshold(threshold_db.threshold_id)
+        return threshold_db
 
     def update_mapping(self, uuid, **kwargs):
         session = db.get_session()
