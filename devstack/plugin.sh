@@ -138,7 +138,7 @@ function cleanup_cloudkitty {
     rm -rf $CLOUDKITTY_AUTH_CACHE_DIR/*
     rm -rf $CLOUDKITTY_CONF_DIR/*
     rm -rf $CLOUDKITTY_OUTPUT_BASEPATH/*
-    sudo rm $CLOUDKITTY_HORIZON_ENABLED_FILE
+    rm -f $CLOUDKITTY_HORIZON_ENABLED_FILE
 }
 
 # configure_cloudkitty() - Set config files, create data dirs, etc
@@ -260,15 +260,16 @@ function install_cloudkitty_dashboard {
     # Install from git since we don't have a release (yet)
     git_clone_by_name "cloudkitty-dashboard"
     setup_dev_lib "cloudkitty-dashboard"
+}
+
+# configure_cloudkitty_dashboard() - Set config files, create data dirs, etc
+function configure_cloudkitty_dashboard {
     sudo ln -s  $CLOUDKITTY_ENABLED_FILE $CLOUDKITTY_HORIZON_ENABLED_FILE
     restart_apache_server
 }
 
 if is_service_enabled ck-api; then
-    if [[ "$1" == "source" ]]; then
-        # Initial source
-        source $TOP_DIR/lib/cloudkitty
-    elif [[ "$1" == "stack" && "$2" == "install" ]]; then
+    if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing CloudKitty"
         install_cloudkitty
         install_python_cloudkittyclient
@@ -279,7 +280,9 @@ if is_service_enabled ck-api; then
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring CloudKitty"
         configure_cloudkitty
-
+        if is_service_enabled horizon; then
+            configure_cloudkitty_dashboard
+        fi
         if is_service_enabled key; then
             create_cloudkitty_accounts
         fi
