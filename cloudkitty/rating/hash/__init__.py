@@ -144,7 +144,8 @@ class HashMap(rating.RatingProcessorBase):
                 else:
                     rate *= entry['threshold']['cost']
             res = rate * flat
-            res *= data['vol']['qty']
+            # FIXME(sheeprine): Added here to ensure that qty is decimal
+            res *= decimal.Decimal(data['vol']['qty'])
             if entry['threshold']['scope'] == 'service':
                 if entry['threshold']['type'] == 'flat':
                     res += entry['threshold']['cost']
