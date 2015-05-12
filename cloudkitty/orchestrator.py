@@ -178,17 +178,21 @@ class Worker(BaseWorker):
 
             for service in CONF.collect.services:
                 try:
-                    data = self._collect(service, timestamp)
+                    try:
+                        data = self._collect(service, timestamp)
+                    except collector.NoDataCollected:
+                        raise
+                    except Exception as e:
+                        LOG.warn('Error while collecting service {service}:'
+                                 ' {error}'.format(service=service,
+                                                   error=str(e)))
+                        raise collector.NoDataCollected('', service)
                 except collector.NoDataCollected:
                     begin = timestamp
                     end = begin + self._period
                     for processor in self._processors:
                         processor.obj.nodata(begin, end)
                     self._storage.nodata(begin, end, self._tenant_id)
-                except Exception as e:
-                    LOG.warn('Error while collecting service {service}:'
-                             ' {error}'.format(service=service,
-                                               error=str(e)))
                 else:
                     # Rating
                     for processor in self._processors:
