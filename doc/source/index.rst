@@ -20,6 +20,7 @@ Installation
    :maxdepth: 1
 
    installation
+   devstack
 
 
 Architecture

@@ -1,4 +1,4 @@
-# lib/cloudkitty
+# CloudKitty devstack plugin
 # Install and start **CloudKitty** service
 
 # To enable a minimal set of CloudKitty services:
@@ -14,6 +14,7 @@
 # - SERVICE_PASSWORD, SERVICE_TENANT_NAME for auth in api
 # - IDENTITY_API_VERSION for the version of Keystone
 # - STACK_USER service user
+# - HORIZON_DIR for horizon integration
 
 # stack.sh
 # ---------
@@ -40,6 +41,10 @@ CLOUDKITTY_CONF=$CLOUDKITTY_CONF_DIR/cloudkitty.conf
 CLOUDKITTY_API_LOG_DIR=/var/log/cloudkitty
 CLOUDKITTY_AUTH_CACHE_DIR=${CLOUDKITTY_AUTH_CACHE_DIR:-/var/cache/cloudkitty}
 CLOUDKITTY_REPORTS_DIR=${DATA_DIR}/cloudkitty/reports
+# Horizon enabled file
+CLOUDKITTY_DASHBOARD=$DEST/cloudkitty-dashboard/cloudkittydashboard
+CLOUDKITTY_ENABLED_FILE=${CLOUDKITTY_ENABLED_FILE:-${CLOUDKITTY_DASHBOARD}/_90_enable_ck.py}
+CLOUDKITTY_HORIZON_ENABLED_FILE=${CLOUDKITTY_HORIZON_ENABLED_FILE:-$HORIZON_DIR/openstack_dashboard/enabled/_90_enable_ck.py}
 
 # Support potential entry-points console scripts
 if [[ -d $CLOUDKITTY_DIR/bin ]]; then
@@ -80,6 +85,11 @@ GITREPO["python-cloudkittyclient"]=${CLOUDKITTYCLIENT_REPO:-${GIT_BASE}/stackfor
 GITDIR["python-cloudkittyclient"]=$DEST/python-cloudkittyclient
 GITBRANCH["python-cloudkittyclient"]=${CLOUDKITTYCLIENT_BRANCH:-master}
 
+# Set CloudKitty dashboard info
+GITREPO["cloudkitty-dashboard"]=${CLOUDKITTYDASHBOARD_REPO:-${GIT_BASE}/stackforge/cloudkitty-dashboard.git}
+GITDIR["cloudkitty-dashboard"]=$DEST/cloudkitty-dashboard
+GITBRANCH["cloudkitty-dashboard"]=${CLOUDKITTYDASHBOARD_BRANCH:-master}
+
 # Tell Tempest this project is present
 TEMPEST_SERVICES+=,cloudkitty
 
@@ -109,6 +119,9 @@ function create_cloudkitty_accounts {
 
     # Make cloudkitty an admin
     get_or_add_user_project_role admin cloudkitty service
+
+    # Make CloudKitty monitor demo project for rating purposes
+    get_or_add_user_project_role rating cloudkitty demo
 }
 
 # Test if any CloudKitty services are enabled
@@ -125,6 +138,7 @@ function cleanup_cloudkitty {
     rm -rf $CLOUDKITTY_AUTH_CACHE_DIR/*
     rm -rf $CLOUDKITTY_CONF_DIR/*
     rm -rf $CLOUDKITTY_OUTPUT_BASEPATH/*
+    sudo rm $CLOUDKITTY_HORIZON_ENABLED_FILE
 }
 
 # configure_cloudkitty() - Set config files, create data dirs, etc
@@ -240,6 +254,50 @@ function install_python_cloudkittyclient {
     git_clone_by_name "python-cloudkittyclient"
     setup_dev_lib "python-cloudkittyclient"
 }
+
+# install_cloudkitty_dashboard() - Collect source and prepare
+function install_cloudkitty_dashboard {
+    # Install from git since we don't have a release (yet)
+    git_clone_by_name "cloudkitty-dashboard"
+    setup_dev_lib "cloudkitty-dashboard"
+    sudo ln -s  $CLOUDKITTY_ENABLED_FILE $CLOUDKITTY_HORIZON_ENABLED_FILE
+    restart_apache_server
+}
+
+if is_service_enabled ck-api; then
+    if [[ "$1" == "source" ]]; then
+        # Initial source
+        source $TOP_DIR/lib/cloudkitty
+    elif [[ "$1" == "stack" && "$2" == "install" ]]; then
+        echo_summary "Installing CloudKitty"
+        install_cloudkitty
+        install_python_cloudkittyclient
+        if is_service_enabled horizon; then
+            install_cloudkitty_dashboard
+        fi
+        cleanup_cloudkitty
+    elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
+        echo_summary "Configuring CloudKitty"
+        configure_cloudkitty
+
+        if is_service_enabled key; then
+            create_cloudkitty_accounts
+        fi
+
+    elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
+        # Initialize cloudkitty
+        echo_summary "Initializing CloudKitty"
+        init_cloudkitty
+
+        # Start the CloudKitty API and CloudKitty processor components
+        echo_summary "Starting CloudKitty"
+        start_cloudkitty
+    fi
+
+    if [[ "$1" == "unstack" ]]; then
+        stop_cloudkitty
+    fi
+fi
 
 # Restore xtrace
 $XTRACE
