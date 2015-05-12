@@ -52,8 +52,19 @@ class CeilometerTransformer(transformer.BaseTransformer):
 
         return res_data
 
+    def _strip_volume(self, data):
+        res_data = {}
+        res_data['user_id'] = data.user_id
+        res_data['project_id'] = data.project_id
+        res_data['volume_id'] = data.metadata['volume_id']
+        res_data['availability_zone'] = data.metadata['availability_zone']
+        res_data['size'] = data.metadata['size']
+        return res_data
+
     def strip_resource_data(self, res_type, res_data):
         if res_type == 'compute':
             return self._strip_compute(res_data)
-        elif res_type == 'image':
+        elif res_type == 'volume':
+            return self._strip_volume(res_data)
+        else:
             return res_data.metadata

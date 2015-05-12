@@ -36,7 +36,12 @@ collect_opts = [
                default=2,
                help='Wait for N periods before collecting new data.'),
     cfg.ListOpt('services',
-                default=['compute', 'image'],
+                default=['compute',
+                         'image',
+                         'volume',
+                         'network.bw.in',
+                         'network.bw.out',
+                         'network.floating'],
                 help='Services to monitor.'), ]
 
 cfg.CONF.register_opts(collect_opts, 'collect')
