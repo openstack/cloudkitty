@@ -297,12 +297,12 @@ class Orchestrator(object):
             self._load_tenant_list()
             while len(self._tenants):
                 for tenant in self._tenants:
-                    if not self._check_state(tenant.id):
+                    if not self._check_state(tenant):
                         self._tenants.remove(tenant)
                     else:
                         worker = Worker(self.collector,
                                         self.storage,
-                                        tenant.id)
+                                        tenant)
                         worker.run()
             # FIXME(sheeprine): We may cause a drift here
             eventlet.sleep(CONF.collect.period)

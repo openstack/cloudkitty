@@ -69,4 +69,4 @@ class KeystoneFetcher(tenant_fetcher.BaseFetcher):
                                                        tenant)
             if 'rating' not in [role.name for role in roles]:
                 tenant_list.remove(tenant)
-        return tenant_list
+        return [tenant.id for tenant in tenant_list]

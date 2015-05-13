@@ -28,6 +28,11 @@ class FakeRole(object):
         self.name = name
 
 
+class FakeTenant(object):
+    def __init__(self, id):
+        self.id = id
+
+
 class FakeKeystoneClient(object):
 
     user_id = 'd89e3fee-2b92-4387-b564-63901d62e591'
@@ -38,8 +43,8 @@ class FakeKeystoneClient(object):
     class FakeTenants(object):
         @classmethod
         def list(cls):
-            return ['f266f30b11f246b589fd266f85eeec39',
-                    '4dfb25b0947c4f5481daf7b948c14187']
+            return [FakeTenant('f266f30b11f246b589fd266f85eeec39'),
+                    FakeTenant('4dfb25b0947c4f5481daf7b948c14187')]
 
     class FakeRoles(object):
         roles_mapping = {
@@ -50,7 +55,7 @@ class FakeKeystoneClient(object):
 
         @classmethod
         def roles_for_user(cls, user_id, tenant, **kwargs):
-            return cls.roles_mapping[user_id][tenant]
+            return cls.roles_mapping[user_id][tenant.id]
 
     roles = FakeRoles()
     tenants = FakeTenants()
