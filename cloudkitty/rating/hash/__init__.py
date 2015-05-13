@@ -248,6 +248,8 @@ class HashMap(rating.RatingProcessorBase):
     def process_fields(self, service_name, data):
         if service_name not in self._entries:
             return
+        if 'fields' not in self._entries[service_name]:
+            return
         desc_data = data['desc']
         field_mappings = self._entries[service_name]['fields']
         for field_name, group_mappings in field_mappings.items():
