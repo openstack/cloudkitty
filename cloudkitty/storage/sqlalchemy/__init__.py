@@ -138,10 +138,11 @@ class SQLAlchemyStorage(storage.BaseStorage):
         for filter_name, filter_value in filters.items():
             if filter_value:
                 q = q.filter(getattr(model, filter_name) == filter_value)
+        if not filters.get('res_type'):
+            q = q.filter(model.res_type != '_NO_DATA_')
         count = q.count()
         if not count:
             raise storage.NoTimeFrame()
-        q = q.filter(model.res_type != '_NO_DATA_')
         r = q.all()
         return [entry.to_cloudkitty() for entry in r]
 

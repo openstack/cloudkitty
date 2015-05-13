@@ -49,32 +49,31 @@ class DataFramesController(rest.RestController):
         begin_ts = ck_utils.dt2ts(begin)
         end_ts = ck_utils.dt2ts(end)
         backend = pecan.request.storage_backend
+        dataframes = []
         try:
             frames = backend.get_time_frame(begin_ts, end_ts,
                                             tenant_id=tenant_id,
                                             res_type=resource_type)
+            for frame in frames:
+                for service, data_list in frame['usage'].items():
+                    resources = []
+                    for data in data_list:
+                        desc = data['desc'] if data['desc'] else {}
+                        price = decimal.Decimal(data['rating']['price'])
+                        resource = storage_models.RatedResource(
+                            service=service,
+                            desc=desc,
+                            volume=data['vol']['qty'],
+                            rating=price)
+                        resources.append(resource)
+                    dataframe = storage_models.DataFrame(
+                        begin=ck_utils.iso2dt(frame['period']['begin']),
+                        end=ck_utils.iso2dt(frame['period']['end']),
+                        tenant_id=tenant_id,  # FIXME
+                        resources=resources)
+                    dataframes.append(dataframe)
         except ck_storage.NoTimeFrame:
-            return []
-
-        dataframes = []
-        for frame in frames:
-            for service, data_list in frame['usage'].items():
-                resources = []
-                for data in data_list:
-                    desc = data['desc'] if data['desc'] else {}
-                    price = decimal.Decimal(data['rating']['price'])
-                    resource = storage_models.RatedResource(
-                        service=service,
-                        desc=desc,
-                        volume=data['vol']['qty'],
-                        rating=price)
-                    resources.append(resource)
-                dataframe = storage_models.DataFrame(
-                    begin=ck_utils.iso2dt(frame['period']['begin']),
-                    end=ck_utils.iso2dt(frame['period']['end']),
-                    tenant_id=tenant_id,  # FIXME
-                    resources=resources)
-                dataframes.append(dataframe)
+            pass
         return storage_models.DataFrameCollection(dataframes=dataframes)
 
 
