@@ -24,6 +24,7 @@ from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1.datamodels import storage as storage_models
+from cloudkitty.common import policy
 from cloudkitty import storage as ck_storage
 from cloudkitty import utils as ck_utils
 
@@ -45,6 +46,8 @@ class DataFramesController(rest.RestController):
         :param resource_type: Type of the resource to filter on.
         :return: Collection of DataFrame objects.
         """
+
+        policy.enforce(pecan.request.context, 'storage:list_data_frames', {})
 
         begin_ts = ck_utils.dt2ts(begin)
         end_ts = ck_utils.dt2ts(end)

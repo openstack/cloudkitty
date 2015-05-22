@@ -15,10 +15,10 @@
 #
 # @author: Stéphane Albert
 #
-from pecan import rest
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
+from cloudkitty import rating
 from cloudkitty.rating.hash.controllers import field as field_api
 from cloudkitty.rating.hash.controllers import group as group_api
 from cloudkitty.rating.hash.controllers import mapping as mapping_api
@@ -27,7 +27,7 @@ from cloudkitty.rating.hash.controllers import threshold as threshold_api
 from cloudkitty.rating.hash.datamodels import mapping as mapping_models
 
 
-class HashMapConfigController(rest.RestController):
+class HashMapConfigController(rating.RatingRestControllerBase):
     """Controller exposing all management sub controllers.
 
     """

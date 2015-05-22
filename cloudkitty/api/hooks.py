@@ -15,9 +15,9 @@
 #
 # @author: Stéphane Albert
 #
-from oslo_context import context
 from pecan import hooks
 
+from cloudkitty.common import context
 from cloudkitty.common import policy
 
 
@@ -49,6 +49,7 @@ class ContextHook(hooks.PecanHook):
             'tenant': headers.get('X-Tenant') or headers.get('X-Tenant-Id'),
             'auth_token': headers.get('X-Auth-Token'),
             'is_admin': is_admin,
+            'roles': roles,
         }
 
         state.request.context = context.RequestContext(**creds)

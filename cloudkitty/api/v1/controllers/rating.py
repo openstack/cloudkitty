@@ -22,6 +22,7 @@ from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1.datamodels import rating as rating_models
+from cloudkitty.common import policy
 from cloudkitty.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -40,12 +41,21 @@ class ModulesController(rest.RestController):
             invoke_on_load=True
         )
 
+    def route(self, *args):
+        route = args[0]
+        if route.startswith('/v1/module_config'):
+            policy.enforce(pecan.request.context, 'rating:module_config', {})
+
+        super(ModulesController, self).route(*args)
+
     @wsme_pecan.wsexpose(rating_models.CloudkittyModuleCollection)
     def get_all(self):
         """return the list of loaded modules.
 
         :return: name of every loaded modules.
         """
+        policy.enforce(pecan.request.context, 'rating:list_modules', {})
+
         modules_list = []
         for module in self.extensions:
             infos = module.obj.module_info.copy()
@@ -61,6 +71,8 @@ class ModulesController(rest.RestController):
 
         :return: CloudKittyModule
         """
+        policy.enforce(pecan.request.context, 'rating:get_module', {})
+
         try:
             module = self.extensions[module_id]
         except KeyError:
@@ -79,6 +91,8 @@ class ModulesController(rest.RestController):
         :param module_id: name of the module to modify
         :param module: CloudKittyModule object describing the new desired state
         """
+        policy.enforce(pecan.request.context, 'rating:update_module', {})
+
         try:
             ext = self.extensions[module_id].obj
         except KeyError:
@@ -153,6 +167,8 @@ class RatingController(rest.RestController):
         :param res_data: List of resource descriptions.
         :return: Total price for these descriptions.
         """
+        policy.enforce(pecan.request.context, 'rating:quote', {})
+
         client = pecan.request.rpc_client.prepare(namespace='rating')
         res_dict = {}
         for res in res_data.resources:
