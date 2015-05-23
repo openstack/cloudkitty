@@ -60,6 +60,9 @@ def enforce(context, action, target):
        :raises PolicyNotAuthorized: if verification fails.
 
     """
+    if CONF.auth_strategy != "keystone":
+        return
+
     init()
 
     return _ENFORCER.enforce(action, target, context.to_dict(),

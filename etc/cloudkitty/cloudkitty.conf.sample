@@ -61,6 +61,11 @@
 # Configuration file for WSGI definition of API. (string value)
 #api_paste_config = api_paste.ini
 
+# The strategy to use for auth. Supports noauth and keystone (string
+# value)
+# Allowed values: noauth, keystone
+#auth_strategy = keystone
+
 # Name of this node. This can be an opaque identifier. It is not
 # necessarily a hostname, FQDN, or IP address. However, the node name
 # must be valid within an AMQP key, and if using ZeroMQ, a valid
@@ -189,7 +194,7 @@
 #wait_periods = 2
 
 # Services to monitor. (list value)
-#services = compute,image
+#services = compute,image,volume,network.bw.in,network.bw.out,network.floating
 
 
 [database]
