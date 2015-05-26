@@ -11,6 +11,18 @@ Collector
 .. rest-controller:: cloudkitty.api.v1.controllers.collector:MappingController
    :webprefix: /v1/collector/mapping
 
+.. rest-controller:: cloudkitty.api.v1.controllers.collector:CollectorStateController
+   :webprefix: /v1/collector/state
+
+.. autotype:: cloudkitty.api.v1.datamodels.collector.CollectorInfos
+   :members:
+
+.. autotype:: cloudkitty.api.v1.datamodels.collector.ServiceToCollectorMapping
+   :members:
+
+.. autotype:: cloudkitty.api.v1.datamodels.collector.ServiceToCollectorMappingCollection
+   :members:
+
 
 Rating
 ======

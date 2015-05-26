@@ -163,7 +163,7 @@ class ServiceToCollectorMapping(object):
             q = utils.model_query(
                 models.ServiceToCollectorMapping,
                 session)
-            q.filter(
+            q = q.filter(
                 models.ServiceToCollectorMapping.service == service)
             return q.one()
         except sqlalchemy.orm.exc.NoResultFound:
@@ -176,8 +176,8 @@ class ServiceToCollectorMapping(object):
                 q = utils.model_query(
                     models.ServiceToCollectorMapping,
                     session)
-                q = q.filter_by(
-                    service=service)
+                q = q.filter(
+                    models.ServiceToCollectorMapping.service == service)
                 q = q.with_lockmode('update')
                 db_mapping = q.one()
                 db_mapping.collector = collector
@@ -188,13 +188,27 @@ class ServiceToCollectorMapping(object):
                 session.add(db_mapping)
         return db_mapping
 
-    def list_services(self):
+    def list_services(self, collector=None):
         session = db.get_session()
         q = utils.model_query(
             models.ServiceToCollectorMapping,
             session)
+        if collector:
+            q = q.filter(
+                models.ServiceToCollectorMapping.collector == collector)
         res = q.distinct().values(
             models.ServiceToCollectorMapping.service)
+        return res
+
+    def list_mappings(self, collector=None):
+        session = db.get_session()
+        q = utils.model_query(
+            models.ServiceToCollectorMapping,
+            session)
+        if collector:
+            q = q.filter(
+                models.ServiceToCollectorMapping.collector == collector)
+        res = q.all()
         return res
 
     def delete_mapping(self, service):
