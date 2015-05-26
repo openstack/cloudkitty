@@ -38,6 +38,11 @@ auth_opts = [
                default="api_paste.ini",
                help="Configuration file for WSGI definition of API."
                ),
+    cfg.StrOpt('auth_strategy',
+               choices=['noauth', 'keystone'],
+               default='keystone',
+               help=("The strategy to use for auth. Supports noauth and "
+                     "keystone")),
 ]
 
 api_opts = [
@@ -73,8 +78,10 @@ def setup_app(pecan_config=None, extra_hooks=None):
     app_hooks = [
         hooks.RPCHook(client),
         hooks.StorageHook(storage_backend),
-        hooks.ContextHook(),
     ]
+
+    if CONF.auth_strategy == 'keystone':
+        app_hooks.append(hooks.ContextHook())
 
     app = pecan.make_app(
         app_conf.app.root,
@@ -86,8 +93,11 @@ def setup_app(pecan_config=None, extra_hooks=None):
         guess_content_type_from_ext=False
     )
 
-    return middleware.AuthTokenMiddleware(app, dict(CONF),
-                                          app_conf.app.acl_public_routes)
+    if CONF.auth_strategy == 'keystone':
+        return middleware.AuthTokenMiddleware(app, dict(CONF),
+                                              app_conf.app.acl_public_routes)
+    else:
+        return app
 
 
 def setup_wsgi():

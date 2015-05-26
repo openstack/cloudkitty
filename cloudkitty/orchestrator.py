@@ -24,6 +24,7 @@ try:
     import oslo_messaging as messaging
 except ImportError:
     from oslo import messaging
+import six
 from stevedore import driver
 from stevedore import extension
 
@@ -185,7 +186,7 @@ class Worker(BaseWorker):
                     except Exception as e:
                         LOG.warn('Error while collecting service {service}:'
                                  ' {error}'.format(service=service,
-                                                   error=str(e)))
+                                                   error=six.text_type(e)))
                         raise collector.NoDataCollected('', service)
                 except collector.NoDataCollected:
                     begin = timestamp
