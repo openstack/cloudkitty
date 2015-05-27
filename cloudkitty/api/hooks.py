@@ -38,7 +38,7 @@ class StorageHook(hooks.PecanHook):
 
 
 class ContextHook(hooks.PecanHook):
-    def before(self, state):
+    def on_route(self, state):
         headers = state.request.headers
 
         roles = headers.get('X-Roles', '').split(',')
