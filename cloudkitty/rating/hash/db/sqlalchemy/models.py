@@ -235,9 +235,9 @@ class HashMapThreshold(Base, HashMapBase):
     @declarative.declared_attr
     def __table_args__(cls):
         args = (schema.UniqueConstraint('level', 'field_id',
-                                        name='uniq_field_mapping'),
+                                        name='uniq_field_threshold'),
                 schema.UniqueConstraint('level', 'service_id',
-                                        name='uniq_service_mapping'),
+                                        name='uniq_service_threshold'),
                 HashMapBase.__table_args__,)
         return args
 

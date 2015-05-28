@@ -23,8 +23,7 @@ def upgrade():
     sa.UniqueConstraint('name'),
     sa.UniqueConstraint('service_id'),
     mysql_charset='utf8',
-    mysql_engine='InnoDB'
-    )
+    mysql_engine='InnoDB')
     op.create_table('hashmap_groups',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('group_id', sa.String(length=36), nullable=False),
@@ -33,8 +32,7 @@ def upgrade():
     sa.UniqueConstraint('group_id'),
     sa.UniqueConstraint('name'),
     mysql_charset='utf8',
-    mysql_engine='InnoDB'
-    )
+    mysql_engine='InnoDB')
     op.create_table('hashmap_fields',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('field_id', sa.String(length=36), nullable=False),
@@ -47,8 +45,7 @@ def upgrade():
     sa.UniqueConstraint('field_id', 'name', name='uniq_field'),
     sa.UniqueConstraint('service_id', 'name', name='uniq_map_service_field'),
     mysql_charset='utf8',
-    mysql_engine='InnoDB'
-    )
+    mysql_engine='InnoDB')
     op.create_table('hashmap_maps',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('mapping_id', sa.String(length=36), nullable=False),
@@ -70,8 +67,7 @@ def upgrade():
     sa.UniqueConstraint('value', 'field_id', name='uniq_field_mapping'),
     sa.UniqueConstraint('value', 'service_id', name='uniq_service_mapping'),
     mysql_charset='utf8',
-    mysql_engine='InnoDB'
-    )
+    mysql_engine='InnoDB')
 
 
 def downgrade():
@@ -79,3 +75,6 @@ def downgrade():
     op.drop_table('hashmap_fields')
     op.drop_table('hashmap_groups')
     op.drop_table('hashmap_services')
+    bind = op.get_bind()
+    old_enum = sa.Enum('flat', 'rate', name='enum_map_type')
+    old_enum.drop(bind)

@@ -15,7 +15,8 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('modules_state', sa.Column('priority', sa.Integer(), nullable=True))
+    op.add_column('modules_state',
+                  sa.Column('priority', sa.Integer(), nullable=True))
 
 
 def downgrade():

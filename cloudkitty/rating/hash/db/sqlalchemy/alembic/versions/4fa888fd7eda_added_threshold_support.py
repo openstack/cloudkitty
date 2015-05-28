@@ -15,6 +15,12 @@ import sqlalchemy as sa
 
 
 def upgrade():
+    # NOTE(sheeprine): Hack to let the migrations pass for postgresql
+    dialect = op.get_context().dialect.name
+    if dialect == 'postgresql':
+        constraints = ['uniq_field_threshold', 'uniq_service_threshold']
+    else:
+        constraints = ['uniq_field_mapping', 'uniq_service_mapping']
     op.create_table('hashmap_thresholds',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('threshold_id', sa.String(length=36), nullable=False),
@@ -33,11 +39,10 @@ def upgrade():
                             ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('threshold_id'),
-    sa.UniqueConstraint('level', 'field_id', name='uniq_field_mapping'),
-    sa.UniqueConstraint('level', 'service_id', name='uniq_service_mapping'),
+    sa.UniqueConstraint('level', 'field_id', name=constraints[0]),
+    sa.UniqueConstraint('level', 'service_id', name=constraints[1]),
     mysql_charset='utf8',
-    mysql_engine='InnoDB'
-    )
+    mysql_engine='InnoDB')
 
 
 def downgrade():
