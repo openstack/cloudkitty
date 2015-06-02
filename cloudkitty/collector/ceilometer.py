@@ -227,20 +227,19 @@ class CeilometerCollector(collector.BaseCollector):
             volume_id = volume_stats.groupby['resource_id']
             if not self._cacher.has_resource_detail('volume',
                                                     volume_id):
-                volume = self.t_ceilometer.strip_resource_data(
-                    'volume',
-                    volume_stats)
+                raw_resource = self._conn.resources.get(volume_id)
+                volume = self.t_ceilometer.strip_resource_data('volume',
+                                                               raw_resource)
                 self._cacher.add_resource_detail('volume',
                                                  volume_id,
                                                  volume)
             volume = self._cacher.get_resource_detail('volume',
                                                       volume_id)
-            raw_resource = self._conn.resources.get(volume_id)
-            volume = self.t_ceilometer.strip_resource_data('volume',
-                                                           raw_resource)
             volume_data.append(self.t_cloudkitty.format_item(volume,
                                                              'GB',
                                                              volume_stats.max))
+        if not volume_data:
+            raise collector.NoDataCollected(self.collector_name, 'volume')
         return self.t_cloudkitty.format_service('volume', volume_data)
 
     def _get_network_bw(self,
