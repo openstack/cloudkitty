@@ -50,6 +50,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
         self._session[tenant_id].commit()
 
     def _post_commit(self, tenant_id):
+        super(SQLAlchemyStorage, self)._post_commit(tenant_id)
         del self._session[tenant_id]
 
     def _check_session(self, tenant_id):
