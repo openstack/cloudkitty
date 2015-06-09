@@ -1,23 +1,26 @@
+# The order of packages is significant, because pip processes them in the order
+# of appearance. Changing the order has an impact on the overall integration
+# process, which may cause wedges in the gate later.
 pbr>=0.6,!=0.7,<1.0
-eventlet>=0.13.0
-keystonemiddleware
-python-ceilometerclient
-python-keystoneclient
-iso8601
-PasteDeploy==1.5.2
+eventlet>=0.16.1,!=0.17.0
+keystonemiddleware>=1.5.0,<1.6.0
+python-ceilometerclient>=1.0.13,<1.1.0
+python-keystoneclient>=1.1.0,<1.4.0
+iso8601>=0.1.9
+PasteDeploy>=1.5.0
 posix_ipc
 pecan>=0.8.0
-WSME>=0.7
-oslo.config>=1.2.0
-oslo.context
-oslo.concurrency
-oslo.db
-oslo.i18n
-oslo.log
-oslo.messaging
-oslo.middleware
-oslo.policy
-oslo.utils
-sqlalchemy
-six>=1.7.0
-stevedore
+WSME>=0.6
+oslo.config>=1.9.3,<1.10.0  # Apache-2.0
+oslo.context>=0.2.0,<0.3.0                     # Apache-2.0
+oslo.concurrency>=1.8.0,<1.9.0         # Apache-2.0
+oslo.db>=1.7.0,<1.8.0  # Apache-2.0
+oslo.i18n>=1.5.0,<1.6.0  # Apache-2.0
+oslo.log>=1.0.0,<1.1.0  # Apache-2.0
+oslo.messaging>=1.8.0,<1.9.0  # Apache-2.0
+oslo.middleware>=1.0.0,<1.1.0                  # Apache-2.0
+oslo.policy>=0.3.1,<0.4.0  # Apache-2.0
+oslo.utils>=1.4.0,<1.5.0                       # Apache-2.0
+SQLAlchemy>=0.9.7,<=0.9.99
+six>=1.9.0
+stevedore>=1.3.0,<1.4.0  # Apache-2.0
