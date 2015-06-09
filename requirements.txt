@@ -7,7 +7,7 @@ iso8601
 PasteDeploy==1.5.2
 posix_ipc
 pecan>=0.8.0
-WSME>=0.6,!=0.6.2
+WSME>=0.7
 oslo.config>=1.2.0
 oslo.context
 oslo.concurrency
