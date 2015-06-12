@@ -26,8 +26,7 @@ def upgrade():
     sa.Column('desc', sa.Text(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     mysql_charset='utf8',
-    mysql_engine='InnoDB'
-    )
+    mysql_engine='InnoDB')
 
 
 def downgrade():
