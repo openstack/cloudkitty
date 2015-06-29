@@ -112,6 +112,9 @@ class WriteOrchestrator(object):
         if data:
             for timeframe in data:
                 self._dispatch(timeframe['usage'])
+            return True
+        else:
+            return False
 
     def _commit_data(self):
         for backend in self._write_pipeline:
@@ -135,8 +138,8 @@ class WriteOrchestrator(object):
             self.usage_start = storage_state
             self.usage_end = self.usage_start + self._period
         while storage_state > self.usage_start:
-            self._push_data()
-            self._commit_data()
+            if self._push_data():
+                self._commit_data()
             self._update_state_manager_data()
             self._load_state_manager_data()
             storage_state = self._storage.get_state()
