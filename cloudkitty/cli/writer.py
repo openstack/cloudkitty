@@ -32,21 +32,6 @@ CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
-def load_storage_backend():
-    storage_args = {'period': CONF.collect.period}
-    backend = driver.DriverManager(
-        STORAGES_NAMESPACE,
-        CONF.storage.backend,
-        invoke_on_load=True,
-        invoke_kwds=storage_args).driver
-    return backend
-
-
-def load_output_backend():
-    backend = i_utils.import_class(CONF.output.backend)
-    return backend
-
-
 class DBCommand(object):
 
     def __init__(self):
