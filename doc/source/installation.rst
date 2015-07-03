@@ -9,7 +9,7 @@ Install from source
 There is no release of CloudKitty as of now, the installation can be done from
 the git repository.
 
-Retrieve and install CloudKitty :
+Retrieve and install CloudKitty:
 
 ::
 
@@ -26,7 +26,7 @@ executables:
 * ``cloudkitty-storage-init``: Tool to initiate the storage backend
 * ``cloudkitty-writer``: Reporting tool
 
-Install a sample configuration file :
+Install a sample configuration file:
 
 ::
 
@@ -134,9 +134,45 @@ Create the ``rating`` service and its endpoints:
 Start CloudKitty
 ================
 
-Start the API and processing services :
+Start the API and processing services:
 
 ::
 
     cloudkitty-api --config-file /etc/cloudkitty/cloudkitty.conf
     cloudkitty-processor --config-file /etc/cloudkitty/cloudkitty.conf
+
+
+Horizon integration
+===================
+
+Retrieve and install CloudKitty's dashboard:
+
+::
+
+    git clone git://git.openstack.org/stackforge/cloudkitty-dashboard
+    cd cloudkitty-dashboard
+    python setup.py install
+
+Find where the python packages are installed:
+
+::
+
+    PY_PACKAGES_PATH=`pip --version | cut -d' ' -f4`
+
+
+Then add the enabled file to the horizon settings or installation. Depending on
+your setup, you might need to add it to ``/usr/share`` or directly in the
+horizon python package:
+
+::
+
+    # If horizon is installed by packages:
+    ln -s $PY_PACKAGES_PATH/cloudkittydashboard/_90_enable_ck.py \
+    /usr/share/openstack-dashboard/openstack_dashboard/enabled/_90_enable_ck.py
+
+    # Directly from sources:
+    ln -s $PY_PACKAGES_PATH/cloudkittydashboard/_90_enable_ck.py \
+    $PY_PACKAGES_PATH/openstack_dashboard/enabled/_90_enable_ck.py
+
+
+Restart the web server hosting Horizon.
