@@ -28,6 +28,7 @@ from cloudkitty import write_orchestrator
 CONF = cfg.CONF
 CONF.import_opt('period', 'cloudkitty.collector', 'collect')
 CONF.import_opt('backend', 'cloudkitty.config', 'output')
+CONF.import_opt('basepath', 'cloudkitty.config', 'output')
 CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
@@ -62,7 +63,8 @@ class DBCommand(object):
         for tenant in tenants:
             wo = write_orchestrator.WriteOrchestrator(self._output,
                                                       tenant,
-                                                      self._storage)
+                                                      self._storage,
+                                                      CONF.output.basepath)
             wo.init_writing_pipeline()
             if not CONF.command.begin:
                 wo.restart_month()
