@@ -70,7 +70,7 @@ class UtilsTimeCalculationsTest(unittest.TestCase):
         date = datetime.datetime(2014, 1, 1)
         trans_dt = ck_utils.get_month_start()
         self.assertEqual(date, trans_dt)
-        patch_utcnow_mock.assert_called_once()
+        patch_utcnow_mock.assert_called_once_with()
 
     @mock.patch.object(ck_utils, 'utcnow',
                        return_value=iso2dt('2014-01-15T00:00:00Z'))
@@ -78,7 +78,7 @@ class UtilsTimeCalculationsTest(unittest.TestCase):
         date = datetime.datetime(2014, 1, 31)
         trans_dt = ck_utils.get_month_end()
         self.assertEqual(date, trans_dt)
-        patch_utcnow_mock.assert_called_once()
+        patch_utcnow_mock.assert_called_once_with()
 
     @mock.patch.object(ck_utils, 'utcnow',
                        return_value=iso2dt('2014-01-31T00:00:00Z'))
@@ -86,7 +86,7 @@ class UtilsTimeCalculationsTest(unittest.TestCase):
         date = datetime.datetime(2013, 12, 1)
         trans_dt = ck_utils.get_last_month()
         self.assertEqual(date, trans_dt)
-        patch_utcnow_mock.assert_called_once()
+        patch_utcnow_mock.assert_called_once_with()
 
     @mock.patch.object(ck_utils, 'utcnow',
                        return_value=iso2dt('2014-01-31T00:00:00Z'))
@@ -94,7 +94,7 @@ class UtilsTimeCalculationsTest(unittest.TestCase):
         date = datetime.datetime(2014, 2, 1)
         trans_dt = ck_utils.get_next_month()
         self.assertEqual(date, trans_dt)
-        patch_utcnow_mock.assert_called_once()
+        patch_utcnow_mock.assert_called_once_with()
 
     def test_get_last_month_leap(self):
         base_date = datetime.datetime(2016, 3, 31)

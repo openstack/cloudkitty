@@ -86,7 +86,9 @@ class OrchestratorTest(tests.TestCase):
                 'cloudkitty.rating.processors')
             stevemock.return_value = fake_mgr
             worker = orchestrator.BaseWorker()
-            stevemock.assertCalled()
+            stevemock.assert_called_once_with(
+                'cloudkitty.rating.processors',
+                invoke_kwds={'tenant_id': None})
             self.assertEqual('fake1', worker._processors[0].name)
             self.assertEqual(3, worker._processors[0].obj.priority)
             self.assertEqual('fake3', worker._processors[1].name)

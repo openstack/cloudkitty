@@ -84,6 +84,11 @@ class KeystoneFetcherTest(tests.TestCase):
         with mock.patch(kclient) as kclientmock:
             kclientmock.return_value = Client()
             fetcher = keystone.KeystoneFetcher()
-            kclientmock.assertCalled()
+            kclientmock.assert_called_once_with(
+                auth_url='http://127.0.0.1:5000/v2.0',
+                username='cloudkitty',
+                password='cloudkitty',
+                tenant_name='cloudkitty',
+                region_name='RegionOne')
             tenants = fetcher.get_tenants()
             self.assertEqual(['f266f30b11f246b589fd266f85eeec39'], tenants)

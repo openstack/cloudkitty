@@ -96,7 +96,7 @@ class HashMapRatingTest(tests.TestCase):
         self._db_api.create_group('test_group')
         groups = self._db_api.list_groups()
         self.assertEqual([FAKE_UUID], groups)
-        patch_generate_uuid.assert_called_once()
+        patch_generate_uuid.assert_called_once_with()
 
     def test_create_duplicate_group(self):
         self._db_api.create_group('test_group')
@@ -213,7 +213,7 @@ class HashMapRatingTest(tests.TestCase):
         self._db_api.create_service('compute')
         services = self._db_api.list_services()
         self.assertEqual([FAKE_UUID], services)
-        patch_generate_uuid.assert_called_once()
+        patch_generate_uuid.assert_called_once_with()
 
     def test_create_duplicate_service(self):
         self._db_api.create_service('compute')
