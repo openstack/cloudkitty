@@ -17,6 +17,7 @@
 #
 import pecan
 from pecan import rest
+import six
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
@@ -31,15 +32,6 @@ class MappingController(rest.RestController):
     def __init__(self):
         self._db = db_api.get_instance().get_service_to_collector_mapping()
 
-    @wsme_pecan.wsexpose([wtypes.text])
-    def get_all(self):
-        """Return the list of every services mapped.
-
-        :return: List of every services mapped.
-        """
-        policy.enforce(pecan.request.context, 'collector:list_mappings', {})
-        return [mapping.service for mapping in self._db.list_services()]
-
     @wsme_pecan.wsexpose(collector_models.ServiceToCollectorMapping,
                          wtypes.text)
     def get_one(self, service):
@@ -49,40 +41,105 @@ class MappingController(rest.RestController):
         """
         policy.enforce(pecan.request.context, 'collector:get_mapping', {})
         try:
-            return self._db.get_mapping(service)
+            mapping = self._db.get_mapping(service)
+            return collector_models.ServiceToCollectorMapping(
+                **mapping.as_dict())
         except db_api.NoSuchMapping as e:
-            pecan.abort(400, str(e))
+            pecan.abort(400, six.str_type(e))
+
+    @wsme_pecan.wsexpose(collector_models.ServiceToCollectorMappingCollection,
+                         wtypes.text,
+                         wtypes.text)
+    def get_all(self, collector=None):
+        """Return the list of every services mapped to a collector.
+
+        :param collector: Filter on the collector name.
+        :return: Service to collector mappings collection.
+        """
+        policy.enforce(pecan.request.context, 'collector:list_mappings', {})
+        mappings = [collector_models.ServiceToCollectorMapping(
+            **mapping.as_dict())
+            for mapping in self._db.list_mappings(collector)]
+        return collector_models.ServiceToCollectorMappingCollection(
+            mappings=mappings)
+
+    @wsme_pecan.wsexpose(collector_models.ServiceToCollectorMapping,
+                         wtypes.text,
+                         wtypes.text)
+    def post(self, collector, service):
+        """Create a service to collector mapping.
+
+        :param collector: Name of the collector to apply mapping on.
+        :param service: Name of the service to apply mapping on.
+        """
+        policy.enforce(pecan.request.context, 'collector:manage_mapping', {})
+        new_mapping = self._db.set_mapping(service, collector)
+        return collector_models.ServiceToCollectorMapping(
+            service=new_mapping.service,
+            collector=new_mapping.collector)
+
+    @wsme_pecan.wsexpose(None,
+                         wtypes.text,
+                         wtypes.text,
+                         status_code=204)
+    def delete(self, collector, service):
+        """Delete a service to collector mapping.
+
+        :param collector: Name of the collector to filter on.
+        :param service: Name of the service to filter on.
+        """
+        policy.enforce(pecan.request.context, 'collector:manage_mapping', {})
+        try:
+            self._db.delete_mapping(service)
+        except db_api.NoSuchMapping as e:
+            pecan.abort(400, six.str_type(e))
+
+
+class CollectorStateController(rest.RestController):
+    """REST Controller managing collector states."""
+
+    def __init__(self):
+        self._db = db_api.get_instance().get_module_info()
+
+    @wsme_pecan.wsexpose(collector_models.CollectorInfos, wtypes.text)
+    def get(self, name):
+        """Query the enable state of a collector.
+
+        :param name: Name of the collector.
+        :return: State of the collector.
+        """
+        policy.enforce(pecan.request.context, 'collector:get_state', {})
+        enabled = self._db.get_state('collector_{}'.format(name))
+        collector = collector_models.CollectorInfos(name=name,
+                                                    enabled=enabled)
+        return collector
+
+    @wsme_pecan.wsexpose(collector_models.CollectorInfos,
+                         wtypes.text,
+                         body=collector_models.CollectorInfos)
+    def put(self, name, infos):
+        """Set the enable state of a collector.
+
+        :param name: Name of the collector.
+        :param infos: New state informations of the collector.
+        :return: State of the collector.
+        """
+        policy.enforce(pecan.request.context, 'collector:update_state', {})
+        enabled = self._db.set_state('collector_{}'.format(name),
+                                     infos.enabled)
+        collector = collector_models.CollectorInfos(name=name,
+                                                    enabled=enabled)
+        return collector
 
 
 class CollectorController(rest.RestController):
     """REST Controller managing collector modules."""
 
-    mapping = MappingController()
+    mappings = MappingController()
+    state = CollectorStateController()
 
-    _custom_actions = {
-        'state': ['GET', 'POST']
-    }
-
-    def __init__(self):
-        self._db = db_api.get_instance().get_module_enable_state()
-
-    @wsme_pecan.wsexpose(bool, wtypes.text)
-    def state(self, collector):
-        """Query the enable state of a collector.
-
-        :param collector: Name of the collector.
-        :return: State of the collector.
-        """
-        policy.enforce(pecan.request.context, 'collector:get_state', {})
-        return self._db.get_state('collector_{}'.format(collector))
-
-    @wsme_pecan.wsexpose(bool, wtypes.text, body=bool)
-    def post_state(self, collector, state):
-        """Set the enable state of a collector.
-
-        :param collector: Name of the collector.
-        :param state: New state for the collector.
-        :return: State of the collector.
-        """
-        policy.enforce(pecan.request.context, 'collector:update_state', {})
-        return self._db.set_state('collector_{}'.format(collector), state)
+    # FIXME(sheeprine): Stub function used to pass requests to subcontrollers
+    @wsme_pecan.wsexpose(None)
+    def get(self):
+        "Unused function, hack to let pecan route requests to subcontrollers."
+        return

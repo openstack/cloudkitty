@@ -117,7 +117,7 @@ class NoSuchMapping(Exception):
 
     def __init__(self, service):
         super(NoSuchMapping, self).__init__(
-            "No such mapping for service: %s" % service)
+            "No mapping for service: %s" % service)
         self.service = service
 
 
@@ -142,11 +142,20 @@ class ServiceToCollectorMapping(object):
         """
 
     @abc.abstractmethod
-    def list_services(self):
+    def list_services(self, collector=None):
         """Retrieve the list of every services mapped.
 
+        :param collector: Filter on a collector name.
         :return list(str): List of services' name.
         """
+    @abc.abstractmethod
+    def list_mappings(self, collector=None):
+        """Retrieve the list of every mappings.
+
+        :param collector: Filter on a collector's name.
+        :return [tuple(str, str)]: List of mappings.
+        """
+
     @abc.abstractmethod
     def delete_mapping(self, service):
         """Remove a mapping.

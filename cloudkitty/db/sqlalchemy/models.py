@@ -70,6 +70,12 @@ class ModuleStateInfo(Base, models.ModelBase):
                     name=self.name,
                     state=self.state)
 
+    def as_dict(self):
+        d = {}
+        for c in self.__table__.columns:
+            d[c.name] = self[c.name]
+        return d
+
 
 class ServiceToCollectorMapping(Base, models.ModelBase):
     """Collector module state.
@@ -88,3 +94,9 @@ class ServiceToCollectorMapping(Base, models.ModelBase):
                 'collector={collector}>').format(
                     service=self.service,
                     collector=self.collector)
+
+    def as_dict(self):
+        d = {}
+        for c in self.__table__.columns:
+            d[c.name] = self[c.name]
+        return d

@@ -12,6 +12,7 @@
 
     "collector:list_mappings": "role:admin",
     "collector:get_mapping": "role:admin",
+    "collector:manage_mappings": "role:admin",
     "collector:get_state": "role:admin",
     "collector:update_state": "role:admin",
 

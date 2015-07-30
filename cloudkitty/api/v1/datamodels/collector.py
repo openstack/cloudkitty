@@ -18,6 +18,29 @@
 from wsme import types as wtypes
 
 
+class CollectorInfos(wtypes.Base):
+    """Type describing a collector module.
+
+    """
+
+    name = wtypes.wsattr(wtypes.text, mandatory=False)
+    """Name of the collector."""
+
+    enabled = wtypes.wsattr(bool, mandatory=True)
+    """State of the collector."""
+
+    def to_json(self):
+        res_dict = {'name': self.name,
+                    'enabled': self.enabled}
+        return res_dict
+
+    @classmethod
+    def sample(cls):
+        sample = cls(name='ceilometer',
+                     enabled=True)
+        return sample
+
+
 class ServiceToCollectorMapping(wtypes.Base):
     """Type describing a service to collector mapping.
 
@@ -30,12 +53,32 @@ class ServiceToCollectorMapping(wtypes.Base):
     """Name of the collector."""
 
     def to_json(self):
-        res_dict = {}
-        res_dict[self.service] = self.collector
+        res_dict = {'service': self.service,
+                    'collector': self.collector}
         return res_dict
 
     @classmethod
     def sample(cls):
         sample = cls(service='compute',
                      collector='ceilometer')
+        return sample
+
+
+class ServiceToCollectorMappingCollection(wtypes.Base):
+    """Type describing a service to collector mapping collection.
+
+    """
+
+    mappings = [ServiceToCollectorMapping]
+    """List of service to collector mappings."""
+
+    def to_json(self):
+        res_dict = {'mappings': self.mappings}
+        return res_dict
+
+    @classmethod
+    def sample(cls):
+        mapping = ServiceToCollectorMapping(service='compute',
+                                            collector='ceilometer')
+        sample = cls(mappings=[mapping])
         return sample
