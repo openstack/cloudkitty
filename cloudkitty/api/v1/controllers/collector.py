@@ -45,10 +45,9 @@ class MappingController(rest.RestController):
             return collector_models.ServiceToCollectorMapping(
                 **mapping.as_dict())
         except db_api.NoSuchMapping as e:
-            pecan.abort(400, six.str_type(e))
+            pecan.abort(400, six.text_type(e))
 
     @wsme_pecan.wsexpose(collector_models.ServiceToCollectorMappingCollection,
-                         wtypes.text,
                          wtypes.text)
     def get_all(self, collector=None):
         """Return the list of every services mapped to a collector.
@@ -80,19 +79,17 @@ class MappingController(rest.RestController):
 
     @wsme_pecan.wsexpose(None,
                          wtypes.text,
-                         wtypes.text,
                          status_code=204)
-    def delete(self, collector, service):
+    def delete(self, service):
         """Delete a service to collector mapping.
 
-        :param collector: Name of the collector to filter on.
         :param service: Name of the service to filter on.
         """
         policy.enforce(pecan.request.context, 'collector:manage_mapping', {})
         try:
             self._db.delete_mapping(service)
         except db_api.NoSuchMapping as e:
-            pecan.abort(400, six.str_type(e))
+            pecan.abort(400, six.text_type(e))
 
 
 class CollectorStateController(rest.RestController):
@@ -136,7 +133,7 @@ class CollectorController(rest.RestController):
     """REST Controller managing collector modules."""
 
     mappings = MappingController()
-    state = CollectorStateController()
+    states = CollectorStateController()
 
     # FIXME(sheeprine): Stub function used to pass requests to subcontrollers
     @wsme_pecan.wsexpose(None)
