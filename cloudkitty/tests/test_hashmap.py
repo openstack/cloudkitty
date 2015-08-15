@@ -149,7 +149,7 @@ class HashMapRatingTest(tests.TestCase):
         groups = self._db_api.list_groups()
         self.assertEqual([], groups)
         new_mapping_db = self._db_api.get_mapping(mapping_db.mapping_id)
-        self.assertEqual(None, new_mapping_db.group_id)
+        self.assertIsNone(new_mapping_db.group_id)
 
     def test_list_mappings_from_group(self):
         service_db = self._db_api.create_service('compute')
