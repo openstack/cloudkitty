@@ -16,6 +16,7 @@
 # @author: Stéphane Albert
 #
 import pecan
+import six
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import types as ck_types
@@ -47,7 +48,7 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
                 uuid=threshold_id)
             return group_models.Group(**group_db.export_model())
         except db_api.ThresholdHasNoGroup as e:
-            pecan.abort(404, str(e))
+            pecan.abort(404, six.text_type(e))
 
     @wsme_pecan.wsexpose(threshold_models.ThresholdCollection,
                          ck_types.UuidType(),
@@ -93,7 +94,7 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
             return threshold_models.Threshold(
                 **threshold_db.export_model())
         except db_api.NoSuchThreshold as e:
-            pecan.abort(400, str(e))
+            pecan.abort(400, six.text_type(e))
 
     @wsme_pecan.wsexpose(threshold_models.Threshold,
                          body=threshold_models.Threshold,
@@ -119,7 +120,7 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
             return threshold_models.Threshold(
                 **threshold_db.export_model())
         except db_api.ThresholdAlreadyExists as e:
-            pecan.abort(409, str(e))
+            pecan.abort(409, six.text_type(e))
 
     @wsme_pecan.wsexpose(None,
                          ck_types.UuidType(),
@@ -144,7 +145,7 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
         except (db_api.NoSuchService,
                 db_api.NoSuchField,
                 db_api.NoSuchThreshold) as e:
-            pecan.abort(400, str(e))
+            pecan.abort(400, six.text_type(e))
 
     @wsme_pecan.wsexpose(None,
                          ck_types.UuidType(),
@@ -160,4 +161,4 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
         except (db_api.NoSuchService,
                 db_api.NoSuchField,
                 db_api.NoSuchThreshold) as e:
-            pecan.abort(400, str(e))
+            pecan.abort(400, six.text_type(e))

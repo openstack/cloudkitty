@@ -16,6 +16,7 @@
 # @author: Stéphane Albert
 #
 import pecan
+import six
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import types as ck_types
@@ -78,7 +79,7 @@ class HashMapGroupsController(rating.RatingRestControllerBase):
             group_db = hashmap.get_group(uuid=group_id)
             return group_models.Group(**group_db.export_model())
         except db_api.NoSuchGroup as e:
-            pecan.abort(400, str(e))
+            pecan.abort(400, six.text_type(e))
 
     @wsme_pecan.wsexpose(group_models.Group,
                          body=group_models.Group,
@@ -98,7 +99,7 @@ class HashMapGroupsController(rating.RatingRestControllerBase):
             return group_models.Group(
                 **group_db.export_model())
         except db_api.GroupAlreadyExists as e:
-            pecan.abort(409, str(e))
+            pecan.abort(409, six.text_type(e))
 
     @wsme_pecan.wsexpose(None,
                          ck_types.UuidType(),
@@ -114,4 +115,4 @@ class HashMapGroupsController(rating.RatingRestControllerBase):
         try:
             hashmap.delete_group(uuid=group_id, recurse=recursive)
         except db_api.NoSuchGroup as e:
-            pecan.abort(400, str(e))
+            pecan.abort(400, six.text_type(e))

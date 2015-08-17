@@ -143,6 +143,6 @@ class RatingRestControllerBase(rest.RestController):
         try:
             policy.enforce(request.context, 'rating:module_config', {})
         except policy.PolicyNotAuthorized as e:
-            pecan.abort(403, str(e))
+            pecan.abort(403, six.text_type(e))
 
         return super(RatingRestControllerBase, self)._route(args, request)
