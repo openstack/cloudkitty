@@ -9,10 +9,10 @@ Collector
    :webprefix: /v1/collector
 
 .. rest-controller:: cloudkitty.api.v1.controllers.collector:MappingController
-   :webprefix: /v1/collector/mapping
+   :webprefix: /v1/collector/mappings
 
 .. rest-controller:: cloudkitty.api.v1.controllers.collector:CollectorStateController
-   :webprefix: /v1/collector/state
+   :webprefix: /v1/collector/states
 
 .. autotype:: cloudkitty.api.v1.datamodels.collector.CollectorInfos
    :members:
@@ -29,6 +29,9 @@ Rating
 
 .. rest-controller:: cloudkitty.api.v1.controllers.rating:ModulesController
    :webprefix: /v1/rating/modules
+
+.. rest-controller:: cloudkitty.api.v1.controllers.rating:ModulesExposer
+   :webprefix: /v1/rating/module_config
 
 .. rest-controller:: cloudkitty.api.v1.controllers.rating:RatingController
    :webprefix: /v1/rating

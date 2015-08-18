@@ -5,26 +5,28 @@ CloudKitty's Architecture
 CloudKitty can be cut in four big parts:
 
 * API
-* Collector
+* Data collection (collector)
 * Rating processing
-* Writing pipeline
+* Storage
+* Report writer
 
 
-.. graphviz:: graph/arch.dot
+.. Graph is outdated, and needs to be modified. Skipping it.
+    .. graphviz:: graph/arch.dot
 
 
 Module loading and extensions
 =============================
 
-Nearly every part of CloudKitty make use of stevedore to load extensions
+Nearly every part of CloudKitty makes use of stevedore to load extensions
 dynamically.
 
 Every rating module is loaded at runtime and can be enabled/disabled directly
 via CloudKitty's API. The module is responsible of its own API to ease the
 management of its configuration.
 
-Collectors and writers are loaded with stevedore but configured in CloudKitty's
-configuration file.
+Collectors and storage backends are loaded with stevedore but configured in
+CloudKitty's configuration file.
 
 
 Collector
@@ -35,7 +37,7 @@ Collector
 The name of the collector to use is specified in the configuration, only one
 collector can be loaded at once.
 This part is responsible of information gathering. It consists of a python
-class that load data from a backend and return them in a format that CloudKitty
+class that loads data from a backend and return it in a format that CloudKitty
 can handle.
 
 The data format of CloudKitty is the following:
@@ -61,6 +63,7 @@ The data format of CloudKitty is the following:
        ]
    }
 
+
 Example code of a basic collector:
 
 .. code-block:: python
@@ -76,6 +79,10 @@ Example code of a basic collector:
 
 You'll now be able to add the gathering of mydata in CloudKitty by modifying
 the configuration and specifying the new service in collect/services.
+
+If you need to load multiple collectors, you can use the ``meta`` collector and
+use its API to enable/disable collector loading, and set priority.
+
 
 Rating
 ======
@@ -114,6 +121,18 @@ Example of minimal rating module (taken from the Noop module):
                         if 'rating' not in entry:
                             entry['rating'] = {'price': 0}
             return data
+
+
+Storage
+=======
+
+**Loaded with stevedore**
+
+The storage module is responsible of storing the data in a backend. It
+implements an API on top of the storage to be able to query the data without
+the need of knowing the type of backend used.
+
+You can use the API to create reports on the fly for example.
 
 
 Writer

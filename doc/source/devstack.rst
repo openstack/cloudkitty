@@ -3,7 +3,7 @@ Devstack installation
 #####################
 
 The installation of CloudKitty from devstack is pretty straightforward. Just
-add the following to your local.conf file.
+add the following lines to your local.conf file.
 
 ::
 

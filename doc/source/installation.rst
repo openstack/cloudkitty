@@ -33,6 +33,7 @@ Install a sample configuration file:
     mkdir /etc/cloudkitty
     cp etc/cloudkitty/cloudkitty.conf.sample /etc/cloudkitty/cloudkitty.conf
 
+
 Configure CloudKitty
 ====================
 
@@ -68,12 +69,20 @@ The following shows the basic configuration items:
     [database]
     connection = mysql://cloudkitty:CK_DBPASS@localhost/cloudkitty
 
+    [keystone_fetcher]
+    username = admin
+    password = ADMIN_PASSWORD
+    tenant = admin
+    region = RegionOne
+    url = http://localhost:5000/v2.0
+
     [ceilometer_collector]
     username = cloudkitty
     password = CK_PASSWORD
     tenant = service
     region = RegionOne
     url = http://localhost:5000
+
 
 Setup the database and storage backend
 ======================================
@@ -88,17 +97,20 @@ the ``mysql`` client:
     GRANT ALL PRIVILEGES ON cloudkitty.* TO 'cloudkitty'@'localhost' IDENTIFIED BY 'CK_DBPASS';
     EOF
 
+
 Run the database synchronisation scripts:
 
 ::
 
     cloudkitty-dbsync upgrade
 
+
 Init the storage backend:
 
 ::
 
     cloudkitty-storage-init
+
 
 Setup Keystone
 ==============
@@ -113,6 +125,7 @@ administrator):
     keystone user-create --name cloudkitty --pass CK_PASS
     keystone user-role-add --user cloudkitty --role admin --tenant service
 
+
 Give the ``rating`` role to ``cloudkitty`` for each tenant that should be
 handled by CloudKitty:
 
@@ -120,6 +133,7 @@ handled by CloudKitty:
 
     keystone role-create --name rating
     keystone user-role-add --user cloudkitty --role rating --tenant XXX
+
 
 Create the ``rating`` service and its endpoints:
 
@@ -152,6 +166,7 @@ Retrieve and install CloudKitty's dashboard:
     git clone git://git.openstack.org/stackforge/cloudkitty-dashboard
     cd cloudkitty-dashboard
     python setup.py install
+
 
 Find where the python packages are installed:
 
