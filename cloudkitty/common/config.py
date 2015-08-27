@@ -30,8 +30,6 @@ __all__ = ['list_opts']
 _opts = [
     ('api', list(itertools.chain(
         cloudkitty.api.app.api_opts,))),
-    ('ceilometer_collector', list(itertools.chain(
-        cloudkitty.collector.ceilometer.ceilometer_collector_opts))),
     ('collect', list(itertools.chain(
         cloudkitty.collector.collect_opts))),
     ('keystone_fetcher', list(itertools.chain(

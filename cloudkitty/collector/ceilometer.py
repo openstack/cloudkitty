@@ -16,29 +16,21 @@
 # @author: Stéphane Albert
 #
 from ceilometerclient import client as cclient
+from keystoneclient import auth as ks_auth
+from keystoneclient import session as ks_session
 from oslo_config import cfg
 
 from cloudkitty import collector
 from cloudkitty import utils as ck_utils
 
-ceilometer_collector_opts = [
-    cfg.StrOpt('username',
-               default='cloudkitty',
-               help='OpenStack username.'),
-    cfg.StrOpt('password',
-               default='',
-               help='OpenStack password.'),
-    cfg.StrOpt('tenant',
-               default='service',
-               help='OpenStack tenant.'),
-    cfg.StrOpt('region',
-               default='',
-               help='OpenStack region.'),
-    cfg.StrOpt('url',
-               default='http://127.0.0.1:5000',
-               help='OpenStack auth URL.'), ]
-
-cfg.CONF.register_opts(ceilometer_collector_opts, 'ceilometer_collector')
+CEILOMETER_COLLECTOR_OPTS = 'ceilometer_collector'
+ks_session.Session.register_conf_options(
+    cfg.CONF,
+    CEILOMETER_COLLECTOR_OPTS)
+ks_auth.register_conf_options(
+    cfg.CONF,
+    CEILOMETER_COLLECTOR_OPTS)
+CONF = cfg.CONF
 
 
 class ResourceNotFound(Exception):
@@ -83,23 +75,22 @@ class CeilometerCollector(collector.BaseCollector):
     def __init__(self, transformers, **kwargs):
         super(CeilometerCollector, self).__init__(transformers, **kwargs)
 
-        self.user = cfg.CONF.ceilometer_collector.username
-        self.password = cfg.CONF.ceilometer_collector.password
-        self.tenant = cfg.CONF.ceilometer_collector.tenant
-        self.region = cfg.CONF.ceilometer_collector.region
-        self.keystone_url = cfg.CONF.ceilometer_collector.url
-
         self.t_ceilometer = self.transformers['CeilometerTransformer']
         self.t_cloudkitty = self.transformers['CloudKittyFormatTransformer']
 
         self._cacher = CeilometerResourceCacher()
 
-        self._conn = cclient.get_client('2',
-                                        os_username=self.user,
-                                        os_password=self.password,
-                                        os_auth_url=self.keystone_url,
-                                        os_tenant_name=self.tenant,
-                                        os_region_name=self.region)
+        self.auth = ks_auth.load_from_conf_options(
+            CONF,
+            CEILOMETER_COLLECTOR_OPTS)
+        self.session = ks_session.Session.load_from_conf_options(
+            CONF,
+            CEILOMETER_COLLECTOR_OPTS,
+            auth=self.auth)
+        self._conn = cclient.get_client(
+            '2',
+            session=self.session,
+            auth_url=self.auth.auth_url)
 
     def gen_filter(self, op='eq', **kwargs):
         """Generate ceilometer filter from kwargs."""
