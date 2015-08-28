@@ -26,12 +26,13 @@ executables:
 * ``cloudkitty-storage-init``: Tool to initiate the storage backend
 * ``cloudkitty-writer``: Reporting tool
 
-Install a sample configuration file:
+Install sample configuration files:
 
 ::
 
     mkdir /etc/cloudkitty
     cp etc/cloudkitty/cloudkitty.conf.sample /etc/cloudkitty/cloudkitty.conf
+    cp etc/cloudkitty/policy.json /etc/cloudkitty
 
 
 Configure CloudKitty
