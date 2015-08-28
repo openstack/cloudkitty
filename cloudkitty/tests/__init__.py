@@ -19,9 +19,18 @@ from oslo_config import fixture as config_fixture
 from oslotest import base
 import testscenarios
 
+from cloudkitty import collector
 from cloudkitty import db
 from cloudkitty.db import api as ck_db_api
 from cloudkitty import rating
+
+
+class FakeCollectorModule(collector.BaseCollector):
+    collector_name = 'test_fake'
+    dependencies = tuple()
+
+    def __init__(self):
+        super(FakeCollectorModule, self).__init__([], period=3600)
 
 
 class FakeRatingModule(rating.RatingProcessorBase):

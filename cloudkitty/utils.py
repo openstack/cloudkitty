@@ -26,6 +26,7 @@ import datetime
 import sys
 
 from oslo_utils import timeutils
+from six import moves
 from stevedore import extension
 
 
@@ -128,8 +129,20 @@ def get_next_month_timestamp(dt=None):
 
 
 def refresh_stevedore(namespace=None):
-    # Trigger reload of entry points
-    reload(sys.modules['pkg_resources'])
+    """Trigger reload of entry points.
+
+    Useful to have dynamic loading/unloading of stevedore modules.
+    """
+    # NOTE(sheeprine): pkg_resources doesn't support reload on python3 due to
+    # defining basestring which is still there on reload hence executing
+    # python2 related code.
+    try:
+        del sys.modules['pkg_resources'].basestring
+    except AttributeError:
+        # python2, do nothing
+        pass
+    # Force working_set reload
+    moves.reload_module(sys.modules['pkg_resources'])
     # Clear stevedore cache
     cache = extension.ExtensionManager.ENTRY_POINT_CACHE
     if namespace:

@@ -54,25 +54,28 @@ class DataFramesController(rest.RestController):
         backend = pecan.request.storage_backend
         dataframes = []
         try:
-            frames = backend.get_time_frame(begin_ts, end_ts,
+            frames = backend.get_time_frame(begin_ts,
+                                            end_ts,
                                             tenant_id=tenant_id,
                                             res_type=resource_type)
             for frame in frames:
                 for service, data_list in frame['usage'].items():
+                    frame_tenant = None
                     resources = []
                     for data in data_list:
                         desc = data['desc'] if data['desc'] else {}
-                        price = decimal.Decimal(data['rating']['price'])
+                        price = decimal.Decimal(str(data['rating']['price']))
                         resource = storage_models.RatedResource(
                             service=service,
                             desc=desc,
                             volume=data['vol']['qty'],
                             rating=price)
+                        frame_tenant = data['tenant_id']
                         resources.append(resource)
                     dataframe = storage_models.DataFrame(
                         begin=ck_utils.iso2dt(frame['period']['begin']),
                         end=ck_utils.iso2dt(frame['period']['end']),
-                        tenant_id=tenant_id,  # FIXME
+                        tenant_id=frame_tenant,
                         resources=resources)
                     dataframes.append(dataframe)
         except ck_storage.NoTimeFrame:

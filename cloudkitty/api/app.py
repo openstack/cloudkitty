@@ -48,12 +48,13 @@ auth_opts = [
 api_opts = [
     cfg.StrOpt('host_ip',
                default="0.0.0.0",
-               help="Host serving the API."
-               ),
+               help="Host serving the API."),
     cfg.IntOpt('port',
                default=8888,
-               help="Host port serving the API."
-               ),
+               help="Host port serving the API."),
+    cfg.BoolOpt('pecan_debug',
+                default=False,
+                help='Toggle Pecan Debug Middleware.'),
 ]
 
 CONF = cfg.CONF
@@ -87,7 +88,7 @@ def setup_app(pecan_config=None, extra_hooks=None):
         app_conf.app.root,
         static_root=app_conf.app.static_root,
         template_path=app_conf.app.template_path,
-        debug=CONF.debug,
+        debug=CONF.api.pecan_debug,
         force_canonical=getattr(app_conf.app, 'force_canonical', True),
         hooks=app_hooks,
         guess_content_type_from_ext=False

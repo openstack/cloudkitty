@@ -1,0 +1,158 @@
+fixtures:
+  - ConfigFixture
+  - RatingModulesFixture
+  - QuoteFakeRPC
+
+tests:
+  - name: reload list of modules available
+    url: /v1/rating/reload_modules
+    status: 204
+
+  - name: list all modules available
+    url: /v1/rating/modules
+    status: 200
+    response_json_paths:
+      $.modules.`len`: 3
+      $.modules[0].priority: 3
+      $.modules[0].module_id: "fake1"
+      $.modules[0].enabled: false
+      $.modules[0].description: "fake rating module"
+      $.modules[0].hot-config: false
+      $.modules[1].priority: 1
+      $.modules[1].module_id: "fake2"
+      $.modules[1].enabled: false
+      $.modules[1].description: "fake rating module"
+      $.modules[1].hot-config: false
+      $.modules[2].priority: 2
+      $.modules[2].module_id: "fake3"
+      $.modules[2].enabled: false
+      $.modules[2].description: "fake rating module"
+      $.modules[2].hot-config: false
+
+  - name: get information of one module
+    url: /v1/rating/modules/fake2
+    status: 200
+    response_json_paths:
+      $.priority: 1
+      $.module_id: "fake2"
+      $.enabled: false
+      $.description: "fake rating module"
+      $.hot-config: false
+
+  - name: get information of a unknown module
+    url: /v1/rating/modules/fakb
+    status: 400
+    response_strings:
+      - "Module not found."
+
+  - name: change priority of a module
+    url: /v1/rating/modules/fake3
+    method: PUT
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      module_id: "fake3"
+      priority: 5
+    status: 302
+    response_headers:
+      location: "$SCHEME://$NETLOC/v1/rating/modules/fake3"
+
+  - name: get information of the modified module (priority)
+    url: $LOCATION
+    status: 200
+    response_json_paths:
+      $.priority: 5
+      $.module_id: "fake3"
+      $.enabled: false
+      $.description: "fake rating module"
+      $.hot-config: false
+
+  - name: change enabled status of a module
+    url: /v1/rating/modules/fake3
+    method: PUT
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      module_id: "fake3"
+      enabled: true
+    status: 302
+    response_headers:
+      location: "$SCHEME://$NETLOC/v1/rating/modules/fake3"
+
+  - name: get information of the modified module (status)
+    url: $LOCATION
+    status: 200
+    response_json_paths:
+      $.priority: 5
+      $.module_id: "fake3"
+      $.enabled: true
+      $.description: "fake rating module"
+      $.hot-config: false
+
+  - name: change status and priority of a module
+    url: /v1/rating/modules/fake3
+    method: PUT
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      module_id: "fake3"
+      priority: 3
+      enabled: false
+    status: 302
+    response_headers:
+      location: "$SCHEME://$NETLOC/v1/rating/modules/fake3"
+
+  - name: get information of the modified module (both)
+    url: $LOCATION
+    status: 200
+    response_json_paths:
+      $.priority: 3
+      $.module_id: "fake3"
+      $.enabled: false
+      $.description: "fake rating module"
+      $.hot-config: false
+
+  - name: get a quote for a resource description
+    url: /v1/rating/quote
+    method: POST
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      resources:
+        - service: "compute"
+          volume: "1.0"
+          desc:
+            test: 1
+    status: 200
+    response_strings:
+      - "1.0"
+
+  - name: module without custom API should use notconfigurable controller (GET)
+    url: /v1/rating/module_config/fake1
+    status: 409
+    response_strings:
+      - "Module is not configurable"
+
+  - name: module without custom API should use notconfigurable controller (POST)
+    url: /v1/rating/module_config/fake1
+    method: POST
+    status: 409
+    response_strings:
+      - "Module is not configurable"
+
+  - name: module without custom API should use notconfigurable controller (PUT)
+    url: /v1/rating/module_config/fake1
+    method: PUT
+    status: 409
+    response_strings:
+      - "Module is not configurable"
+
+  - name: verify module exposes its custom API
+    url: /v1/rating/module_config/fake2/test
+    status: 200
+    response_strings:
+      - "OK"

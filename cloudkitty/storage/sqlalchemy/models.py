@@ -60,7 +60,7 @@ class RatedDataFrame(Base, models.ModelBase):
 
         # Volume informations
         vol_dict = {}
-        vol_dict['qty'] = self.qty
+        vol_dict['qty'] = self.qty.normalize()
         vol_dict['unit'] = self.unit
         res_dict = {}
 

@@ -1,0 +1,68 @@
+fixtures:
+  - ConfigFixture
+  - StorageDataFixture
+  - NowStorageDataFixture
+
+tests:
+  - name: get period with two tenants
+    url: /v1/report/tenants
+    query_parameters:
+      begin: "2015-01-01T00:00:00"
+      end: "2015-01-04T00:00:00"
+    status: 200
+    response_strings:
+      - "8f82cc70-e50c-466e-8624-24bdea811375"
+      - "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
+
+  - name: by default give tenants for the current month
+    url: /v1/report/tenants
+    status: 200
+    response_strings:
+      - "3d9a1b33-482f-42fd-aef9-b575a3da9369"
+
+  - name: get period with no tenants
+    url: /v1/report/tenants
+    query_parameters:
+      begin: "2015-02-01T00:00:00"
+      end: "2015-02-02T00:00:00"
+    status: 200
+    response_strings:
+      - "[]"
+
+  - name: get total for a period
+    url: /v1/report/total
+    query_parameters:
+      begin: "2015-01-01T00:00:00"
+      end: "2015-02-04T00:00:00"
+    status: 200
+    response_strings:
+      - "110.971"
+
+  - name: get total for a period filtering on first tenant
+    url: /v1/report/total
+    query_parameters:
+      begin: "2015-01-01T00:00:00"
+      end: "2015-02-04T00:00:00"
+      tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
+    status: 200
+    response_strings:
+      - "73.535"
+
+  - name: get total for a period filtering on second tenant
+    url: /v1/report/total
+    query_parameters:
+      begin: "2015-01-01T00:00:00"
+      end: "2015-02-04T00:00:00"
+      tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
+    status: 200
+    response_strings:
+      - "37.436"
+
+  - name: get total for a period with no data
+    url: /v1/report/total
+    query_parameters:
+      begin: "2015-02-01T00:00:00"
+      end: "2015-02-02T00:00:00"
+    status: 200
+    response_strings:
+      - "0"

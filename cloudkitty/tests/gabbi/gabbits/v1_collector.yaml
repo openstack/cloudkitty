@@ -1,0 +1,138 @@
+fixtures:
+  - ConfigFixture
+
+tests:
+
+  # States
+  - name: check collector is disabled by default
+    url: /v1/collector/fake1/states
+    status: 200
+    response_json_paths:
+      $.enabled: false
+      $.name: "fake1"
+
+  - name: enable collector
+    url: /v1/collector/fake1/states
+    method: PUT
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      name: "fake1"
+      enabled: true
+    status: 200
+    response_json_paths:
+      $.enabled: true
+      $.name: "fake1"
+
+  - name: check collector state isolation
+    url: /v1/collector/fake2/states
+    status: 200
+    response_json_paths:
+      $.enabled: false
+      $.name: "fake2"
+
+  - name: disable collector
+    url: /v1/collector/fake1/states
+    method: PUT
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      name: "fake1"
+      enabled: false
+    status: 200
+    response_json_paths:
+      $.enabled: false
+      $.name: "fake1"
+
+  # Mappings
+  - name: get all mappings (empty)
+    url: /v1/collector/mappings
+    status: 200
+    response_json_paths:
+      $.mappings: []
+
+  - name: try to get an unknown mapping
+    url: /v1/collector/mappings/notfound
+    status: 400
+    response_strings:
+      - "No mapping for service: notfound"
+
+  - name: try to delete an unknown mapping
+    url: /v1/collector/mappings/notfound
+    method: DELETE
+    status: 400
+    response_strings:
+      - "No mapping for service: notfound"
+
+  - name: create mapping
+    url: /v1/collector/mappings/fake1/metric1
+    method: POST
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    status: 200
+    response_json_paths:
+      $.collector: "fake1"
+      $.service: "metric1"
+
+  - name: get all mappings
+    url: /v1/collector/mappings
+    status: 200
+    response_json_paths:
+      $.mappings[0].collector: "fake1"
+      $.mappings[0].service: "metric1"
+
+  - name: create second mapping
+    url: /v1/collector/mappings/fake2/metric8
+    method: POST
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    status: 200
+    response_json_paths:
+      $.collector: "fake2"
+      $.service: "metric8"
+
+  - name: get all mappings filtering on collector fake1
+    url: /v1/collector/mappings?collector=fake1
+    status: 200
+    response_json_paths:
+      $.mappings[0].collector: "fake1"
+      $.mappings[0].service: "metric1"
+
+  - name: get all mappings filtering on collector fake2
+    url: /v1/collector/mappings?collector=fake2
+    status: 200
+    response_json_paths:
+      $.mappings[0].collector: "fake2"
+      $.mappings[0].service: "metric8"
+
+  - name: get all mappings with no filtering
+    url: /v1/collector/mappings
+    status: 200
+    response_json_paths:
+      $.mappings.`len`: 2
+      $.mappings[0].collector: "fake1"
+      $.mappings[0].service: "metric1"
+      $.mappings[1].collector: "fake2"
+      $.mappings[1].service: "metric8"
+
+  - name: get a mapping filtering on service metric8
+    url: /v1/collector/mappings/metric8
+    status: 200
+    response_json_paths:
+      $.collector: "fake2"
+      $.service: "metric8"
+
+  - name: delete a mapping
+    url: /v1/collector/mappings/metric1
+    method: DELETE
+    status: 204
+
+  - name: check the mapping got deleted
+    url: /v1/collector/mappings/metric1
+    status: 400
+    response_strings:
+      - "No mapping for service: metric1"
