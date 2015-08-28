@@ -15,7 +15,7 @@
 #
 # @author: Stéphane Albert
 #
-from oslo.config import cfg
+from oslo_config import cfg
 from stevedore import named
 
 from cloudkitty import state

@@ -15,8 +15,8 @@
 #
 # @author: Stéphane Albert
 #
-from oslo.config import cfg
-from oslo.db.sqlalchemy import utils
+from oslo_config import cfg
+from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
 import sqlalchemy
 

@@ -16,7 +16,7 @@
 # @author: Stéphane Albert
 #
 import mock
-from oslo.utils import uuidutils
+from oslo_utils import uuidutils
 
 from cloudkitty.tenant_fetcher import keystone
 from cloudkitty import tests

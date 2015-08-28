@@ -17,7 +17,7 @@
 #
 from __future__ import print_function
 
-from oslo.config import cfg
+from oslo_config import cfg
 from oslo_utils import importutils as i_utils
 from stevedore import driver
 

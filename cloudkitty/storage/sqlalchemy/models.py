@@ -17,7 +17,7 @@
 #
 import json
 
-from oslo.db.sqlalchemy import models
+from oslo_db.sqlalchemy import models
 import sqlalchemy
 from sqlalchemy.ext import declarative
 

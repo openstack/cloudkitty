@@ -19,8 +19,8 @@
 import decimal
 
 import eventlet
-from oslo.config import cfg
 from oslo_concurrency import lockutils
+from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging as messaging
 import six

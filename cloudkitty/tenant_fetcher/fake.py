@@ -18,7 +18,7 @@
 #
 import csv
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from cloudkitty import tenant_fetcher
 

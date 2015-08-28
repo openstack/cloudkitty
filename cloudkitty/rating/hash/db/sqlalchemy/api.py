@@ -15,10 +15,10 @@
 #
 # @author: Stéphane Albert
 #
-from oslo.db import exception
-from oslo.db.sqlalchemy import utils
-from oslo.utils import uuidutils
+from oslo_db import exception
+from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
+from oslo_utils import uuidutils
 import six
 import sqlalchemy
 

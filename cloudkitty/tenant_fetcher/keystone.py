@@ -17,7 +17,7 @@
 # @author: Stéphane Albert
 #
 from keystoneclient.v2_0 import client as kclient
-from oslo.config import cfg
+from oslo_config import cfg
 
 from cloudkitty import tenant_fetcher
 

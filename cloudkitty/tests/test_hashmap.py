@@ -19,7 +19,7 @@ import copy
 import decimal
 
 import mock
-from oslo.utils import uuidutils
+from oslo_utils import uuidutils
 
 from cloudkitty.rating import hash
 from cloudkitty.rating.hash.db import api

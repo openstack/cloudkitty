@@ -18,7 +18,7 @@
 """
 Time calculations functions
 
-We're mostly using oslo.utils for time calculations but we're encapsulating it
+We're mostly using oslo_utils for time calculations but we're encapsulating it
 to ease maintenance in case of library modifications.
 """
 import calendar

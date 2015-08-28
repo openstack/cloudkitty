@@ -17,7 +17,7 @@
 #
 import json
 
-from oslo.db.sqlalchemy import utils
+from oslo_db.sqlalchemy import utils
 import sqlalchemy
 
 from cloudkitty import db

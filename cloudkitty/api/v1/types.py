@@ -15,7 +15,7 @@
 #
 # @author: Stéphane Albert
 #
-from oslo.utils import uuidutils
+from oslo_utils import uuidutils
 from wsme import types as wtypes
 
 from cloudkitty.i18n import _LE

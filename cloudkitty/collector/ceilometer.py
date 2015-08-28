@@ -16,7 +16,7 @@
 # @author: Stéphane Albert
 #
 from ceilometerclient import client as cclient
-from oslo.config import cfg
+from oslo_config import cfg
 
 from cloudkitty import collector
 from cloudkitty import utils as ck_utils

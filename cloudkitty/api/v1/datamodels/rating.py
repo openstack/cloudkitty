@@ -17,7 +17,7 @@
 #
 import decimal
 
-from oslo.config import cfg
+from oslo_config import cfg
 from wsme import types as wtypes
 
 from cloudkitty.api.v1 import types as cktypes

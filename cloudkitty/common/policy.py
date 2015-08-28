@@ -15,7 +15,7 @@
 
 # Borrowed from cinder (cinder/policy.py)
 
-from oslo.config import cfg
+from oslo_config import cfg
 from oslo_policy import policy
 import six
 

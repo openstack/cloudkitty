@@ -18,7 +18,7 @@
 import csv
 import json
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from cloudkitty import collector
 

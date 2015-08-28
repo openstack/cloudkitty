@@ -15,12 +15,9 @@
 #
 # @author: Stéphane Albert
 #
-from oslo.config import cfg
-from oslo.db import options as db_options  # noqa
-try:
-    from oslo_messaging import opts  # noqa
-except ImportError:
-    from oslo.messaging import opts  # noqa
+from oslo_config import cfg
+from oslo_db import options as db_options  # noqa
+from oslo_messaging import opts  # noqa
 
 
 state_opts = [

@@ -16,7 +16,7 @@
 # @author: Stéphane Albert
 #
 import mock
-from oslo.messaging import conffixture
+from oslo_messaging import conffixture
 from stevedore import extension
 
 from cloudkitty import orchestrator

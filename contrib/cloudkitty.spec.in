@@ -42,7 +42,7 @@ Requires: %{name}-processor = %{version}-%{release}
 %setup -q -n %{full_release}
 
 # make doc build compatible with python-oslo-sphinx RPM
-sed -i 's/oslosphinx/oslo.sphinx/' doc/source/conf.py
+sed -i 's/oslosphinx/oslo_sphinx/' doc/source/conf.py
 
 # Remove the requirements file so that pbr hooks don't add it
 # to distutils requires_dist config

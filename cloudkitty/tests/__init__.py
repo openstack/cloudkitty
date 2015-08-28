@@ -15,7 +15,7 @@
 #
 # @author: Gauvain Pocentek
 #
-from oslo.config import fixture as config_fixture
+from oslo_config import fixture as config_fixture
 from oslotest import base
 import testscenarios
 
