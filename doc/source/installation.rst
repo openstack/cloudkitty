@@ -34,6 +34,66 @@ Install sample configuration files:
     cp etc/cloudkitty/cloudkitty.conf.sample /etc/cloudkitty/cloudkitty.conf
     cp etc/cloudkitty/policy.json /etc/cloudkitty
 
+Install from packages
+=====================
+
+Packages for RHEL/CentOS 7 and Ubuntu 14.04 are available for the Kilo release.
+
+For RHEL/CentOS 7
+-----------------
+
+#. Enable the EPEL and RDO repositories for Kilo:
+
+::
+
+    yum install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+    yum install http://rdo.fedorapeople.org/openstack-kilo/rdo-release-kilo.rpm
+
+#. Create the ``/etc/yum.repos.d/cloudkitty.repo`` configuration file to enable
+   the CloudKitty repository:
+
+.. code-block:: ini
+
+    [cloudkitty]
+    name=CloudKitty repository (Kilo)
+    baseurl=http://archive.objectif-libre.com/cloudkitty/el7/kilo/
+    gpgcheck=1
+    gpgkey=http://archive.objectif-libre.com/ol.asc
+
+#. Install the packages:
+
+::
+
+    yum install cloudkitty-api cloudkitty-processor cloudkitty-dashboard
+
+
+For Ubuntu 14.04
+----------------
+
+#. Enable the Canonical cloud-archive repository for the Kilo release:
+
+::
+
+    apt-get install ubuntu-cloud-keyring
+    echo "deb http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-updates/kilo main" > \
+        /etc/apt/sources.list.d/cloudarchive-kilo.list
+
+
+#. Install the CloudKitty repository public key and configure apt:
+
+::
+
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 71E414B3
+    echo 'deb http://archive.objectif-libre.com/cloudkitty/ubuntu trusty/kilo main' > \
+        /etc/apt/sources.list.d/cloudkitty-kilo.list
+    apt-get update
+
+#. Install the packages:
+
+::
+
+    apt-get install cloudkitty-api cloudkitty-processor cloudkitty-dashboard
+
 
 Configure CloudKitty
 ====================
