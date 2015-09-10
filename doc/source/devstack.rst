@@ -1,17 +1,15 @@
 #####################
-Devstack installation
+DevStack installation
 #####################
 
-The installation of CloudKitty from devstack is pretty straightforward. Just
+The installation of CloudKitty from DevStack is pretty straightforward. Just
 add the following lines to your local.conf file.
 
 ::
 
     [[local|localrc]]
     # ceilometer
-    enable_service ceilometer-acompute ceilometer-acentral ceilometer-anotification ceilometer-collector
-    enable_service ceilometer-alarm-notifier ceilometer-alarm-evaluator
-    enable_service ceilometer-api
+    enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer.git master
 
     # horizon
     enable_service horizon
