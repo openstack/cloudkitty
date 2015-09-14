@@ -108,11 +108,7 @@ class UnconfigurableController(rest.RestController):
     """This controller raises an error when requested."""
 
     @wsme_pecan.wsexpose(None)
-    def put(self):
-        self.abort()
-
-    @wsme_pecan.wsexpose(None)
-    def get(self):
+    def _default(self):
         self.abort()
 
     def abort(self):
