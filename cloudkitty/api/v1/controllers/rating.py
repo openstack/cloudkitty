@@ -15,6 +15,7 @@
 #
 # @author: Stéphane Albert
 #
+from oslo_concurrency import lockutils
 from oslo_log import log as logging
 import pecan
 from pecan import rest
@@ -24,22 +25,43 @@ import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1.datamodels import rating as rating_models
 from cloudkitty.common import policy
+from cloudkitty import utils as ck_utils
 
 LOG = logging.getLogger(__name__)
 
 PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
 
 
-class ModulesController(rest.RestController):
-    """REST Controller managing rating modules."""
+class RatingModulesMixin(object):
+    def reload_extensions(self):
+        lock = lockutils.lock('rating-modules')
+        with lock:
+            ck_utils.refresh_stevedore(PROCESSORS_NAMESPACE)
+            # FIXME(sheeprine): Implement RPC messages to trigger reload on
+            # processors
+            self.extensions = extension.ExtensionManager(
+                PROCESSORS_NAMESPACE,
+                # FIXME(sheeprine): don't want to load it here as we just need
+                # the controller
+                invoke_on_load=True)
+            if not self._first_call:
+                self.notify_reload()
+            else:
+                self._first_call = False
+
+    def notify_reload(self):
+        client = pecan.request.rpc_client.prepare(namespace='rating',
+                                                  version='1.1')
+        client.cast({}, 'reload_modules')
 
     def __init__(self):
-        self.extensions = extension.ExtensionManager(
-            PROCESSORS_NAMESPACE,
-            # FIXME(sheeprine): don't want to load it here as we just need the
-            # controller
-            invoke_on_load=True
-        )
+        self._first_call = True
+        self.extensions = []
+        self.reload_extensions()
+
+
+class ModulesController(rest.RestController, RatingModulesMixin):
+    """REST Controller managing rating modules."""
 
     def route(self, *args):
         route = args[0]
@@ -57,10 +79,12 @@ class ModulesController(rest.RestController):
         policy.enforce(pecan.request.context, 'rating:list_modules', {})
 
         modules_list = []
-        for module in self.extensions:
-            infos = module.obj.module_info.copy()
-            infos['module_id'] = infos.pop('name')
-            modules_list.append(rating_models.CloudkittyModule(**infos))
+        lock = lockutils.lock('rating-modules')
+        with lock:
+            for module in self.extensions:
+                infos = module.obj.module_info.copy()
+                infos['module_id'] = infos.pop('name')
+                modules_list.append(rating_models.CloudkittyModule(**infos))
 
         return rating_models.CloudkittyModuleCollection(
             modules=modules_list)
@@ -74,7 +98,9 @@ class ModulesController(rest.RestController):
         policy.enforce(pecan.request.context, 'rating:get_module', {})
 
         try:
-            module = self.extensions[module_id]
+            lock = lockutils.lock('rating-modules')
+            with lock:
+                module = self.extensions[module_id]
         except KeyError:
             pecan.abort(404, 'Module not found.')
         infos = module.obj.module_info.copy()
@@ -94,7 +120,9 @@ class ModulesController(rest.RestController):
         policy.enforce(pecan.request.context, 'rating:update_module', {})
 
         try:
-            ext = self.extensions[module_id].obj
+            lock = lockutils.lock('rating-modules')
+            with lock:
+                ext = self.extensions[module_id].obj
         except KeyError:
             pecan.abort(404, 'Module not found.')
         if ext.enabled != module.enabled:
@@ -119,7 +147,7 @@ class UnconfigurableController(rest.RestController):
         pecan.abort(409, "Module is not configurable")
 
 
-class ModulesExposer(rest.RestController):
+class ModulesExposer(rest.RestController, RatingModulesMixin):
     """REST Controller exposing rating modules.
 
     This is the controller that exposes the modules own configuration
@@ -127,22 +155,27 @@ class ModulesExposer(rest.RestController):
     """
 
     def __init__(self):
-        self.extensions = extension.ExtensionManager(
-            PROCESSORS_NAMESPACE,
-            # FIXME(sheeprine): don't want to load it here as we just need the
-            # controller
-            invoke_on_load=True
-        )
+        super(ModulesExposer, self).__init__()
+        self._loaded_modules = []
         self.expose_modules()
 
     def expose_modules(self):
         """Load rating modules to expose API controllers."""
-        for ext in self.extensions:
-            # FIXME(sheeprine): we should notify two modules with same name
-            if not hasattr(self, ext.name):
+        lock = lockutils.lock('rating-modules')
+        with lock:
+            for ext in self.extensions:
+                # FIXME(sheeprine): we should notify two modules with same name
+                name = ext.name
                 if not ext.obj.config_controller:
                     ext.obj.config_controller = UnconfigurableController
-                setattr(self, ext.name, ext.obj.config_controller())
+                # Update extension reference
+                setattr(self, name, ext.obj.config_controller())
+                if name in self._loaded_modules:
+                    self._loaded_modules.remove(name)
+            # Clear removed modules
+            for module in self._loaded_modules:
+                delattr(self, module)
+            self._loaded_modules = self.extensions.names()
 
 
 class RatingController(rest.RestController):
@@ -154,6 +187,7 @@ class RatingController(rest.RestController):
 
     _custom_actions = {
         'quote': ['POST'],
+        'reload_modules': ['GET'],
     }
 
     modules = ModulesController()
@@ -179,3 +213,12 @@ class RatingController(rest.RestController):
 
         res = client.call({}, 'quote', res_data=[{'usage': res_dict}])
         return res
+
+    @wsme_pecan.wsexpose(None)
+    def reload_modules(self):
+        """Trigger a rating module list reload.
+
+        """
+        policy.enforce(pecan.request.context, 'rating:module_config', {})
+        self.modules.reload_extensions()
+        self.module_config.reload_extensions()

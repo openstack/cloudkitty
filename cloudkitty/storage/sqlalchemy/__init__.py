@@ -92,16 +92,14 @@ class SQLAlchemyStorage(storage.BaseStorage):
 
         session = db.get_session()
         q = session.query(
-            sqlalchemy.func.sum(model.rate).label('rate')
-        )
+            sqlalchemy.func.sum(model.rate).label('rate'))
         if tenant_id:
             q = q.filter(
-                models.RatedDataFrame.tenant_id == tenant_id
-            )
-        rate = q.filter(
+                models.RatedDataFrame.tenant_id == tenant_id)
+        q = q.filter(
             model.begin >= begin,
-            model.end <= end
-        ).scalar()
+            model.end <= end)
+        rate = q.scalar()
         return rate
 
     def get_tenants(self, begin=None, end=None):
