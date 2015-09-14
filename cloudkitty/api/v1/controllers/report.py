@@ -62,4 +62,4 @@ class ReportController(rest.RestController):
         # Use keystone token information by default but make it overridable and
         # enforce it by policy engine
         total = storage.get_total(begin, end, tenant_id)
-        return total
+        return total if total else decimal.Decimal('0')
