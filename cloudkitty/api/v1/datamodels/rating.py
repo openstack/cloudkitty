@@ -79,13 +79,13 @@ class CloudkittyModule(wtypes.Base):
     description = wtypes.wsattr(wtypes.text, mandatory=False)
     """Short description of the extension."""
 
-    enabled = wtypes.wsattr(bool, default=False)
+    enabled = wtypes.wsattr(bool)
     """Extension status."""
 
     hot_config = wtypes.wsattr(bool, default=False, name='hot-config')
     """On-the-fly configuration support."""
 
-    priority = wtypes.wsattr(int, default=1)
+    priority = wtypes.wsattr(int)
     """Priority of the extension."""
 
     @classmethod
