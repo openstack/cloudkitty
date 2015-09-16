@@ -97,9 +97,9 @@ class ModulesController(rest.RestController):
             ext = self.extensions[module_id].obj
         except KeyError:
             pecan.abort(404, 'Module not found.')
-        if ext.enabled != module.enabled:
+        if module.enabled != wtypes.Unset and ext.enabled != module.enabled:
             ext.set_state(module.enabled)
-        if ext.priority != module.priority:
+        if module.priority != wtypes.Unset and ext.priority != module.priority:
             ext.set_priority(module.priority)
         pecan.response.location = pecan.request.path
 
