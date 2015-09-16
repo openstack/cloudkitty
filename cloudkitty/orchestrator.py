@@ -50,9 +50,10 @@ STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 class RatingEndpoint(object):
     target = messaging.Target(namespace='rating',
-                              version='1.0')
+                              version='1.1')
 
     def __init__(self, orchestrator):
+        self._global_reload = False
         self._pending_reload = []
         self._module_state = {}
         self._orchestrator = orchestrator
@@ -75,6 +76,12 @@ class RatingEndpoint(object):
         LOG.debug('Received quote from RPC.')
         worker = APIWorker()
         return str(worker.quote(res_data))
+
+    def reload_modules(self, ctxt):
+        LOG.info('Received reload modules command.')
+        lock = lockutils.lock('module-reload')
+        with lock:
+            self._global_reload = True
 
     def reload_module(self, ctxt, name):
         LOG.info('Received reload command for module {}.'.format(name))
@@ -110,8 +117,7 @@ class BaseWorker(object):
         self._processors = []
         processors = extension_manager.EnabledExtensionManager(
             PROCESSORS_NAMESPACE,
-            invoke_kwds={'tenant_id': self._tenant_id}
-        )
+            invoke_kwds={'tenant_id': self._tenant_id})
 
         for processor in processors:
             self._processors.append(processor)

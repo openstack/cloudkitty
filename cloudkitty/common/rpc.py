@@ -23,7 +23,9 @@ TRANSPORT = None
 
 def init():
     global TRANSPORT
-    TRANSPORT = messaging.get_transport(cfg.CONF)
+    if not TRANSPORT:
+        TRANSPORT = messaging.get_transport(cfg.CONF)
+    return TRANSPORT
 
 
 def get_client(target, version_cap=None):

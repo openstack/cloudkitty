@@ -23,8 +23,10 @@ to ease maintenance in case of library modifications.
 """
 import calendar
 import datetime
+import sys
 
 from oslo_utils import timeutils
+from stevedore import extension
 
 
 def dt2ts(orig_dt):
@@ -123,3 +125,15 @@ def get_next_month(dt=None):
 
 def get_next_month_timestamp(dt=None):
     return dt2ts(get_next_month(dt))
+
+
+def refresh_stevedore(namespace=None):
+    # Trigger reload of entry points
+    reload(sys.modules['pkg_resources'])
+    # Clear stevedore cache
+    cache = extension.ExtensionManager.ENTRY_POINT_CACHE
+    if namespace:
+        if namespace in cache:
+            del cache[namespace]
+    else:
+        cache.clear()
