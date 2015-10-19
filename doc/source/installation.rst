@@ -13,7 +13,7 @@ Retrieve and install CloudKitty:
 
 ::
 
-    git clone git://git.openstack.org/stackforge/cloudkitty
+    git clone git://git.openstack.org/openstack/cloudkitty
     cd cloudkitty
     python setup.py install
 
@@ -224,7 +224,7 @@ Retrieve and install CloudKitty's dashboard:
 
 ::
 
-    git clone git://git.openstack.org/stackforge/cloudkitty-dashboard
+    git clone git://git.openstack.org/openstack/cloudkitty-dashboard
     cd cloudkitty-dashboard
     python setup.py install
 

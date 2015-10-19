@@ -15,5 +15,5 @@ add the following lines to your local.conf file.
     enable_service horizon
 
     # cloudkitty
-    enable_plugin cloudkitty https://github.com/stackforge/cloudkitty master
+    enable_plugin cloudkitty https://github.com/openstack/cloudkitty master
     enable_service ck-api ck-proc

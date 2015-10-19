@@ -57,7 +57,7 @@ fi
 CLOUDKITTY_BACKEND=${CLOUDKITTY_BACKEND:-sqlite}
 
 # Set cloudkitty repository
-CLOUDKITTY_REPO=${CLOUDKITTY_REPO:-${GIT_BASE}/stackforge/cloudkitty.git}
+CLOUDKITTY_REPO=${CLOUDKITTY_REPO:-${GIT_BASE}/openstack/cloudkitty.git}
 CLOUDKITTY_BRANCH=${CLOUDKITTY_BRANCH:-master}
 
 # Set CloudKitty connection info
@@ -81,12 +81,12 @@ CLOUDKITTY_OUTPUT_BASEPATH=${CLOUDKITTY_OUTPUT_BASEPATH:-$CLOUDKITTY_REPORTS_DIR
 CLOUDKITTY_OUTPUT_PIPELINE=${CLOUDKITTY_OUTPUT_PIPELINE:-"osrf"}
 
 # Set Cloudkitty client info
-GITREPO["python-cloudkittyclient"]=${CLOUDKITTYCLIENT_REPO:-${GIT_BASE}/stackforge/python-cloudkittyclient.git}
+GITREPO["python-cloudkittyclient"]=${CLOUDKITTYCLIENT_REPO:-${GIT_BASE}/openstack/python-cloudkittyclient.git}
 GITDIR["python-cloudkittyclient"]=$DEST/python-cloudkittyclient
 GITBRANCH["python-cloudkittyclient"]=${CLOUDKITTYCLIENT_BRANCH:-master}
 
 # Set CloudKitty dashboard info
-GITREPO["cloudkitty-dashboard"]=${CLOUDKITTYDASHBOARD_REPO:-${GIT_BASE}/stackforge/cloudkitty-dashboard.git}
+GITREPO["cloudkitty-dashboard"]=${CLOUDKITTYDASHBOARD_REPO:-${GIT_BASE}/openstack/cloudkitty-dashboard.git}
 GITDIR["cloudkitty-dashboard"]=$DEST/cloudkitty-dashboard
 GITBRANCH["cloudkitty-dashboard"]=${CLOUDKITTYDASHBOARD_BRANCH:-master}
 

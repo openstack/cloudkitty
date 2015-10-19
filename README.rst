@@ -83,10 +83,10 @@ want to install it on an older system, use a virtualenv.
 .. _launchpad: https://launchpad.net/cloudkitty
 
 
-.. _python-cloudkittyclient: https://github.com/stackforge/python-cloudkittyclient
+.. _python-cloudkittyclient: https://github.com/openstack/python-cloudkittyclient
 
 
-.. _cloudkitty-dashboard: https://github.com/stackforge/cloudkitty-dashboard
+.. _cloudkitty-dashboard: https://github.com/openstack/cloudkitty-dashboard
 
 
 .. _architecture section: https://cloudkitty.readthedocs.org/en/latest/arch.html

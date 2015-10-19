@@ -7,7 +7,7 @@ Version:	@VERSION@
 Release:	1%{?dist}
 License:	ASL 2.0
 Group:		System Environment/Base
-URL:		http://github.com/stackforge/cloudkitty
+URL:		http://github.com/openstack/cloudkitty
 Source0:	%{full_release}.tar.gz
 
 BuildArch: noarch
