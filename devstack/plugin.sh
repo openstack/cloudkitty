@@ -43,8 +43,8 @@ CLOUDKITTY_AUTH_CACHE_DIR=${CLOUDKITTY_AUTH_CACHE_DIR:-/var/cache/cloudkitty}
 CLOUDKITTY_REPORTS_DIR=${DATA_DIR}/cloudkitty/reports
 # Horizon enabled file
 CLOUDKITTY_DASHBOARD=$DEST/cloudkitty-dashboard/cloudkittydashboard
-CLOUDKITTY_ENABLED_FILE=${CLOUDKITTY_ENABLED_FILE:-${CLOUDKITTY_DASHBOARD}/_90_enable_ck.py}
-CLOUDKITTY_HORIZON_ENABLED_FILE=${CLOUDKITTY_HORIZON_ENABLED_FILE:-$HORIZON_DIR/openstack_dashboard/enabled/_90_enable_ck.py}
+CLOUDKITTY_ENABLED_DIR=${CLOUDKITTY_ENABLED_DIR:-${CLOUDKITTY_DASHBOARD}/enabled}
+CLOUDKITTY_HORIZON_ENABLED_DIR=${CLOUDKITTY_HORIZON_ENABLED_DIR:-$HORIZON_DIR/openstack_dashboard/enabled}
 
 # Support potential entry-points console scripts
 if [[ -d $CLOUDKITTY_DIR/bin ]]; then
@@ -138,7 +138,9 @@ function cleanup_cloudkitty {
     rm -rf $CLOUDKITTY_AUTH_CACHE_DIR/*
     rm -rf $CLOUDKITTY_CONF_DIR/*
     rm -rf $CLOUDKITTY_OUTPUT_BASEPATH/*
-    rm -f $CLOUDKITTY_HORIZON_ENABLED_FILE
+    for i in $(find $CLOUDKITTY_ENABLED_DIR -iname '_[0-9]*.py' -printf '%f\n'); do
+        rm -f "${CLOUDKITTY_HORIZON_ENABLED_DIR}/$i"
+    done
 }
 
 # configure_cloudkitty() - Set config files, create data dirs, etc
@@ -264,7 +266,8 @@ function install_cloudkitty_dashboard {
 
 # configure_cloudkitty_dashboard() - Set config files, create data dirs, etc
 function configure_cloudkitty_dashboard {
-    sudo ln -s  $CLOUDKITTY_ENABLED_FILE $CLOUDKITTY_HORIZON_ENABLED_FILE
+    sudo ln -s  $CLOUDKITTY_ENABLED_DIR/_[0-9]*.py \
+        $CLOUDKITTY_HORIZON_ENABLED_DIR/
     restart_apache_server
 }
 

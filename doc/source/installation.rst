@@ -243,12 +243,12 @@ horizon python package:
 ::
 
     # If horizon is installed by packages:
-    ln -s $PY_PACKAGES_PATH/cloudkittydashboard/_90_enable_ck.py \
-    /usr/share/openstack-dashboard/openstack_dashboard/enabled/_90_enable_ck.py
+    ln -s $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
+    /usr/share/openstack-dashboard/openstack_dashboard/enabled/
 
     # Directly from sources:
-    ln -s $PY_PACKAGES_PATH/cloudkittydashboard/_90_enable_ck.py \
-    $PY_PACKAGES_PATH/openstack_dashboard/enabled/_90_enable_ck.py
+    ln -s $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
+    $PY_PACKAGES_PATH/openstack_dashboard/enabled/
 
 
 Restart the web server hosting Horizon.
