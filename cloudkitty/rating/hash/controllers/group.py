@@ -23,6 +23,7 @@ from cloudkitty.api.v1 import types as ck_types
 from cloudkitty import rating
 from cloudkitty.rating.hash.datamodels import group as group_models
 from cloudkitty.rating.hash.datamodels import mapping as mapping_models
+from cloudkitty.rating.hash.datamodels import threshold as threshold_models
 from cloudkitty.rating.hash.db import api as db_api
 
 
@@ -31,8 +32,8 @@ class HashMapGroupsController(rating.RatingRestControllerBase):
 
     """
     _custom_actions = {
-        'mappings': ['GET']
-    }
+        'mappings': ['GET'],
+        'thresholds': ['GET']}
 
     @wsme_pecan.wsexpose(mapping_models.MappingCollection,
                          ck_types.UuidType())
@@ -49,6 +50,23 @@ class HashMapGroupsController(rating.RatingRestControllerBase):
             mapping_list.append(mapping_models.Mapping(
                 **mapping_db.export_model()))
         res = mapping_models.MappingCollection(mappings=mapping_list)
+        return res
+
+    @wsme_pecan.wsexpose(threshold_models.ThresholdCollection,
+                         ck_types.UuidType())
+    def thresholds(self, group_id):
+        """Get the thresholds attached to the group.
+
+        :param group_id: UUID of the group to filter on.
+        """
+        hashmap = db_api.get_instance()
+        threshold_list = []
+        thresholds_uuid_list = hashmap.list_thresholds(group_uuid=group_id)
+        for threshold_uuid in thresholds_uuid_list:
+            threshold_db = hashmap.get_threshold(uuid=threshold_uuid)
+            threshold_list.append(threshold_models.Threshold(
+                **threshold_db.export_model()))
+        res = threshold_models.ThresholdCollection(thresholds=threshold_list)
         return res
 
     @wsme_pecan.wsexpose(group_models.GroupCollection)
