@@ -16,29 +16,26 @@
 #
 # @author: Stéphane Albert
 #
-from keystoneclient.v2_0 import client as kclient
+from keystoneclient import auth as ks_auth
+from keystoneclient import client as kclient
+from keystoneclient import session as ks_session
 from oslo_config import cfg
 
 from cloudkitty import tenant_fetcher
 
+KEYSTONE_FETCHER_OPTS = 'keystone_fetcher'
 keystone_fetcher_opts = [
-    cfg.StrOpt('username',
-               default='',
-               help='OpenStack username.'),
-    cfg.StrOpt('password',
-               default='',
-               help='OpenStack password.'),
-    cfg.StrOpt('tenant',
-               default='',
-               help='OpenStack tenant.'),
-    cfg.StrOpt('region',
-               default='',
-               help='OpenStack region.'),
-    cfg.StrOpt('url',
-               default='',
-               help='OpenStack auth URL.'), ]
+    cfg.StrOpt('keystone_version',
+               default='2',
+               help='Keystone version to use.'), ]
 
-cfg.CONF.register_opts(keystone_fetcher_opts, 'keystone_fetcher')
+cfg.CONF.register_opts(keystone_fetcher_opts, KEYSTONE_FETCHER_OPTS)
+ks_session.Session.register_conf_options(
+    cfg.CONF,
+    KEYSTONE_FETCHER_OPTS)
+ks_auth.register_conf_options(
+    cfg.CONF,
+    KEYSTONE_FETCHER_OPTS)
 CONF = cfg.CONF
 
 
@@ -46,27 +43,25 @@ class KeystoneFetcher(tenant_fetcher.BaseFetcher):
     """Keystone tenants fetcher."""
 
     def __init__(self):
-        self.user = CONF.keystone_fetcher.username
-        self.password = CONF.keystone_fetcher.password
-        self.tenant = CONF.keystone_fetcher.tenant
-        self.region = CONF.keystone_fetcher.region
-        self.keystone_url = CONF.keystone_fetcher.url
+        self.auth = ks_auth.load_from_conf_options(
+            CONF,
+            KEYSTONE_FETCHER_OPTS)
+        self.session = ks_session.Session.load_from_conf_options(
+            CONF,
+            KEYSTONE_FETCHER_OPTS,
+            auth=self.auth)
         self.admin_ks = kclient.Client(
-            username=self.user,
-            password=self.password,
-            tenant_name=self.tenant,
-            region_name=self.region,
-            auth_url=self.keystone_url)
+            version=CONF.keystone_fetcher.keystone_version,
+            session=self.session,
+            auth_url=self.auth.auth_url)
 
     def get_tenants(self):
-        ks = kclient.Client(username=self.user,
-                            password=self.password,
-                            auth_url=self.keystone_url,
-                            region_name=self.region)
-        tenant_list = ks.tenants.list()
+        tenant_list = self.admin_ks.tenants.list()
+        my_user_id = self.session.get_user_id()
         for tenant in tenant_list:
-            roles = self.admin_ks.roles.roles_for_user(self.admin_ks.user_id,
-                                                       tenant)
+            roles = self.admin_ks.roles.roles_for_user(
+                my_user_id,
+                tenant)
             if 'rating' not in [role.name for role in roles]:
                 tenant_list.remove(tenant)
         return [tenant.id for tenant in tenant_list]
