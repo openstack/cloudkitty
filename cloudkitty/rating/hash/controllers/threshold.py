@@ -32,8 +32,7 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
     """
 
     _custom_actions = {
-        'group': ['GET']
-    }
+        'group': ['GET']}
 
     @wsme_pecan.wsexpose(group_models.Group,
                          ck_types.UuidType())
