@@ -1,0 +1,3 @@
+# turn on the CloudKitty services by default
+enable_service ck-api
+enable_service ck-proc

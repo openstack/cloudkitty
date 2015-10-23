@@ -31,7 +31,6 @@ Configure DevStack to run CloudKitty
         cat >> local.conf << EOF
         # cloudkitty
         enable_plugin cloudkitty https://github.com/openstack/cloudkitty master
-        enable_service ck-api ck-proc
         EOF
 
 Run devstack as normal::
