@@ -23,7 +23,6 @@ from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging as messaging
-import six
 from stevedore import driver
 from stevedore import extension
 
@@ -84,20 +83,20 @@ class RatingEndpoint(object):
             self._global_reload = True
 
     def reload_module(self, ctxt, name):
-        LOG.info('Received reload command for module {}.'.format(name))
+        LOG.info('Received reload command for module %s.', name)
         lock = lockutils.lock('module-reload')
         with lock:
             if name not in self._pending_reload:
                 self._pending_reload.append(name)
 
     def enable_module(self, ctxt, name):
-        LOG.info('Received enable command for module {}.'.format(name))
+        LOG.info('Received enable command for module %s.', name)
         lock = lockutils.lock('module-state')
         with lock:
             self._module_state[name] = True
 
     def disable_module(self, ctxt, name):
-        LOG.info('Received disable command for module {}.'.format(name))
+        LOG.info('Received disable command for module %s.', name)
         lock = lockutils.lock('module-state')
         with lock:
             self._module_state[name] = False
@@ -187,9 +186,8 @@ class Worker(BaseWorker):
                     except collector.NoDataCollected:
                         raise
                     except Exception as e:
-                        LOG.warn('Error while collecting service {service}:'
-                                 ' {error}'.format(service=service,
-                                                   error=six.text_type(e)))
+                        LOG.warn('Error while collecting service %(service)s: '
+                                 '%(error)s', {'service': service, 'error': e})
                         raise collector.NoDataCollected('', service)
                 except collector.NoDataCollected:
                     begin = timestamp
