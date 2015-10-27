@@ -15,13 +15,9 @@
 #
 # @author: Stéphane Albert
 #
-from oslo_log import log as logging
-
 from cloudkitty import rating
 from cloudkitty.rating.pyscripts.controllers import root as root_api
 from cloudkitty.rating.pyscripts.db import api as pyscripts_db_api
-
-LOG = logging.getLogger(__name__)
 
 
 class PyScripts(rating.RatingProcessorBase):

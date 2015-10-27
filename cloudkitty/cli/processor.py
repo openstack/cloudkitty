@@ -16,13 +16,11 @@
 # @author: Stéphane Albert
 #
 from oslo_config import cfg
-from oslo_log import log as logging
 
 from cloudkitty.common import rpc
 from cloudkitty import orchestrator
 from cloudkitty import service
 
-LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 

@@ -15,16 +15,12 @@
 #
 # @author: Stéphane Albert
 #
-from oslo_log import log as logging
-
 import warnings
 
 from cloudkitty.api.v1.controllers import rating as rating_api
 from cloudkitty.api.v1.controllers.rating import ModulesController  # noqa
 from cloudkitty.api.v1.controllers.rating import ModulesExposer  # noqa
 from cloudkitty.api.v1.controllers.rating import UnconfigurableController  # noqa
-
-LOG = logging.getLogger(__name__)
 
 
 def deprecated():

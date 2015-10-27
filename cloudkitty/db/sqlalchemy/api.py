@@ -17,7 +17,6 @@
 #
 from oslo_config import cfg
 from oslo_db.sqlalchemy import utils
-from oslo_log import log as logging
 import sqlalchemy
 
 from cloudkitty import config  # NOQA
@@ -27,8 +26,6 @@ from cloudkitty.db.sqlalchemy import migration
 from cloudkitty.db.sqlalchemy import models
 
 CONF = cfg.CONF
-
-LOG = logging.getLogger(__name__)
 
 
 def get_backend():
