@@ -162,17 +162,17 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
 
     # auth
-    iniset $CLOUDKITTY_CONF keystone_fetcher url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v2.0/"
-    iniset $CLOUDKITTY_CONF keystone_fetcher username cloudkitty
-    iniset $CLOUDKITTY_CONF keystone_fetcher password $SERVICE_PASSWORD
-    iniset $CLOUDKITTY_CONF keystone_fetcher tenant $SERVICE_TENANT_NAME
-    iniset $CLOUDKITTY_CONF keystone_fetcher region $REGION_NAME
+    iniset $CLOUDKITTY_CONF authinfos auth_plugin v2password
+    iniset $CLOUDKITTY_CONF authinfos auth_url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v2.0/"
+    iniset $CLOUDKITTY_CONF authinfos username cloudkitty
+    iniset $CLOUDKITTY_CONF authinfos password $SERVICE_PASSWORD
+    iniset $CLOUDKITTY_CONF authinfos tenant_name $SERVICE_TENANT_NAME
+    iniset $CLOUDKITTY_CONF authinfos region_name $REGION_NAME
+    iniset $CLOUDKITTY_CONF authinfos debug "$ENABLE_DEBUG_LOG_LEVEL"
 
-    iniset $CLOUDKITTY_CONF ceilometer_collector url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v2.0/"
-    iniset $CLOUDKITTY_CONF ceilometer_collector username cloudkitty
-    iniset $CLOUDKITTY_CONF ceilometer_collector password $SERVICE_PASSWORD
-    iniset $CLOUDKITTY_CONF ceilometer_collector tenant $SERVICE_TENANT_NAME
-    iniset $CLOUDKITTY_CONF ceilometer_collector region $REGION_NAME
+    iniset $CLOUDKITTY_CONF keystone_fetcher auth_section authinfos
+
+    iniset $CLOUDKITTY_CONF ceilometer_collector auth_section authinfos
 
     # collect
     iniset $CLOUDKITTY_CONF collect collector $CLOUDKITTY_COLLECTOR
