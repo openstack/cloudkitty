@@ -112,15 +112,15 @@ def build_server():
     # Create the WSGI server and start it
     host = CONF.api.host_ip
     port = CONF.api.port
-    LOG.info('Starting server in PID %s' % os.getpid())
+    LOG.info('Starting server in PID %s', os.getpid())
     LOG.info("Configuration:")
     cfg.CONF.log_opt_values(LOG, logging.INFO)
 
     if host == '0.0.0.0':
         LOG.info('serving on 0.0.0.0:%(sport)s, view at http://127.0.0.1:%'
-                 '(vport)s' % {'sport': port, 'vport': port})
+                 '(vport)s', {'sport': port, 'vport': port})
     else:
-        LOG.info("serving on http://%(host)s:%(port)s" %
+        LOG.info("serving on http://%(host)s:%(port)s",
                  {'host': host, 'port': port})
 
     server_cls = simple_server.WSGIServer
