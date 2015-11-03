@@ -58,7 +58,7 @@ class KeystoneFetcher(tenant_fetcher.BaseFetcher):
     def get_tenants(self):
         tenant_list = self.admin_ks.tenants.list()
         my_user_id = self.session.get_user_id()
-        for tenant in tenant_list:
+        for tenant in tenant_list[:]:
             roles = self.admin_ks.roles.roles_for_user(
                 my_user_id,
                 tenant)
