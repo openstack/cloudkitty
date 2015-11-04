@@ -52,3 +52,4 @@ doc/build/
 # Others
 *.sqlite
 *.swp
+*.DS_Store
