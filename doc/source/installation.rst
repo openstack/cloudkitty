@@ -108,9 +108,10 @@ The following shows the basic configuration items:
     verbose = True
     log_dir = /var/log/cloudkitty
 
-    rabbit_host = RABBIT_HOST
+    [oslo_messaging_rabbit]
     rabbit_userid = openstack
     rabbit_password = RABBIT_PASSWORD
+    rabbit_hosts = RABBIT_HOST
 
     [auth]
     username = cloudkitty
