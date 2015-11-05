@@ -51,3 +51,4 @@ doc/build/
 
 # Others
 *.sqlite
+*.swp
