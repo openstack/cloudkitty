@@ -81,7 +81,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
         if r:
             return ck_utils.dt2ts(r.begin)
 
-    def get_total(self, begin=None, end=None, tenant_id=None):
+    def get_total(self, begin=None, end=None, tenant_id=None, service=None):
         model = models.RatedDataFrame
 
         # Boundary calculation
@@ -96,6 +96,9 @@ class SQLAlchemyStorage(storage.BaseStorage):
         if tenant_id:
             q = q.filter(
                 models.RatedDataFrame.tenant_id == tenant_id)
+        if service:
+            q = q.filter(
+                models.RatedDataFrame.res_type == service)
         q = q.filter(
             model.begin >= begin,
             model.end <= end)

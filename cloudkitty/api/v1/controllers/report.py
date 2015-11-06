@@ -51,8 +51,9 @@ class ReportController(rest.RestController):
     @wsme_pecan.wsexpose(decimal.Decimal,
                          datetime.datetime,
                          datetime.datetime,
+                         wtypes.text,
                          wtypes.text)
-    def total(self, begin=None, end=None, tenant_id=None):
+    def total(self, begin=None, end=None, tenant_id=None, service=None):
         """Return the amount to pay for a given period.
 
         """
@@ -61,5 +62,5 @@ class ReportController(rest.RestController):
         # FIXME(sheeprine): We should filter on user id.
         # Use keystone token information by default but make it overridable and
         # enforce it by policy engine
-        total = storage.get_total(begin, end, tenant_id)
+        total = storage.get_total(begin, end, tenant_id, service)
         return total if total else decimal.Decimal('0')

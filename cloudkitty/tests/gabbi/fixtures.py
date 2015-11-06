@@ -249,7 +249,21 @@ class BaseStorageDataFixture(fixture.GabbiFixture):
                             "qty": 1,
                             "unit": "nothing"},
                         "rating": {
-                            "price": decimal.Decimal('1.337')}}]}}]
+                            "price": decimal.Decimal('1.337')}}]}}, {
+            "period": {
+                "begin": begin,
+                "end": end},
+            "usage": {
+                "image": [
+                    {
+                        "desc": {
+                            "dummy": True,
+                            "fake_meta": 1.0},
+                        "vol": {
+                            "qty": 1,
+                            "unit": "nothing"},
+                        "rating": {
+                            "price": decimal.Decimal('0.121')}}]}}]
         return data
 
     def start_fixture(self):
