@@ -15,6 +15,8 @@
 #
 # @author: Gauvain Pocentek
 #
+import decimal
+
 from oslo_config import fixture as config_fixture
 from oslotest import base
 import testscenarios
@@ -49,7 +51,7 @@ class FakeRatingModule(rating.RatingProcessorBase):
             for service in cur_usage:
                 for entry in cur_usage[service]:
                     if 'rating' not in entry:
-                        entry['rating'] = {'price': 0}
+                        entry['rating'] = {'price': decimal.Decimal(0)}
         return data
 
     def reload_config(self):

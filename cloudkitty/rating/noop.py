@@ -15,6 +15,8 @@
 #
 # @author: Stéphane Albert
 #
+import decimal
+
 from cloudkitty import rating
 
 
@@ -44,5 +46,5 @@ class Noop(rating.RatingProcessorBase):
             for service in cur_usage:
                 for entry in cur_usage[service]:
                     if 'rating' not in entry:
-                        entry['rating'] = {'price': 0}
+                        entry['rating'] = {'price': decimal.Decimal(0)}
         return data

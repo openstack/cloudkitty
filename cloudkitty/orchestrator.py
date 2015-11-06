@@ -135,7 +135,8 @@ class APIWorker(BaseWorker):
         for res in res_data:
             for res_usage in res['usage'].values():
                 for data in res_usage:
-                    price += data.get('rating', {}).get('price', 0.0)
+                    price += data.get('rating', {}).get('price',
+                                                        decimal.Decimal(0))
         return price
 
 
