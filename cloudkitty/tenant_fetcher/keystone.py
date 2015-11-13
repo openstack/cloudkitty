@@ -18,6 +18,7 @@
 #
 from keystoneclient import auth as ks_auth
 from keystoneclient import client as kclient
+from keystoneclient import discover
 from keystoneclient import session as ks_session
 from oslo_config import cfg
 
@@ -56,12 +57,21 @@ class KeystoneFetcher(tenant_fetcher.BaseFetcher):
             auth_url=self.auth.auth_url)
 
     def get_tenants(self):
-        tenant_list = self.admin_ks.tenants.list()
+        keystone_version = discover.normalize_version_number(
+            CONF.keystone_fetcher.keystone_version)
+        if discover.version_match((2,), keystone_version):
+            tenant_list = self.admin_ks.tenants.list()
+        else:
+            tenant_list = self.admin_ks.projects.list()
         my_user_id = self.session.get_user_id()
         for tenant in tenant_list[:]:
-            roles = self.admin_ks.roles.roles_for_user(
-                my_user_id,
-                tenant)
+            if discover.version_match((2,), keystone_version):
+                roles = self.admin_ks.roles.roles_for_user(
+                    my_user_id,
+                    tenant)
+            else:
+                roles = self.admin_ks.roles.list(user=my_user_id,
+                                                 project=tenant)
             if 'rating' not in [role.name for role in roles]:
                 tenant_list.remove(tenant)
         return [tenant.id for tenant in tenant_list]
