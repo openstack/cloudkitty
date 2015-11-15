@@ -1,3 +1,60 @@
 # turn on the CloudKitty services by default
 enable_service ck-api
 enable_service ck-proc
+
+# Defaults
+# Set up default directories
+# --------------------------
+
+CLOUDKITTY_DIR=$DEST/cloudkitty
+CLOUDKITTY_CONF_DIR=/etc/cloudkitty
+CLOUDKITTY_CONF=$CLOUDKITTY_CONF_DIR/cloudkitty.conf
+CLOUDKITTY_API_LOG_DIR=/var/log/cloudkitty
+CLOUDKITTY_AUTH_CACHE_DIR=${CLOUDKITTY_AUTH_CACHE_DIR:-/var/cache/cloudkitty}
+CLOUDKITTY_REPORTS_DIR=${DATA_DIR}/cloudkitty/reports
+
+# Horizon enabled file
+
+CLOUDKITTY_DASHBOARD=$DEST/cloudkitty-dashboard/cloudkittydashboard
+CLOUDKITTY_ENABLED_DIR=${CLOUDKITTY_ENABLED_DIR:-${CLOUDKITTY_DASHBOARD}/enabled}
+CLOUDKITTY_HORIZON_ENABLED_DIR=${CLOUDKITTY_HORIZON_ENABLED_DIR:-$HORIZON_DIR/openstack_dashboard/enabled}
+
+# Set up database backend
+CLOUDKITTY_BACKEND=${CLOUDKITTY_BACKEND:-sqlite}
+
+# Set cloudkitty repository
+CLOUDKITTY_REPO=${CLOUDKITTY_REPO:-${GIT_BASE}/openstack/cloudkitty.git}
+CLOUDKITTY_BRANCH=${CLOUDKITTY_BRANCH:-master}
+
+# Set CloudKitty connection info
+CLOUDKITTY_SERVICE_HOST=${CLOUDKITTY_SERVICE_HOST:-$SERVICE_HOST}
+CLOUDKITTY_SERVICE_PORT=${CLOUDKITTY_SERVICE_PORT:-8888}
+CLOUDKITTY_SERVICE_HOSTPORT="$CLOUDKITTY_SERVICE_HOST:$CLOUDKITTY_SERVICE_PORT"
+CLOUDKITTY_SERVICE_PROTOCOL=${CLOUDKITTY_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
+
+# Set CloudKitty auth info
+CLOUDKITTY_PRICING_USER=${CLOUDKITTY_PRICING_USER:-"admin"}
+CLOUDKITTY_PRICING_PASSWORD=${CLOUDKITTY_PRICING_PASSWORD:-$ADMIN_PASSWORD}
+CLOUDKITTY_PRICING_TENANT=${CLOUDKITTY_PRICING_TENANT:-"demo"}
+
+# Set CloudKitty collect info
+CLOUDKITTY_COLLECTOR=${CLOUDKITTY_COLLECTOR:-ceilometer}
+CLOUDKITTY_SERVICES=${CLOUDKITTY_SERVICES:-compute}
+
+# Set CloudKitty output info
+CLOUDKITTY_OUTPUT_BACKEND=${CLOUDKITTY_OUTPUT_BACKEND:-"cloudkitty.backend.file.FileBackend"}
+CLOUDKITTY_OUTPUT_BASEPATH=${CLOUDKITTY_OUTPUT_BASEPATH:-$CLOUDKITTY_REPORTS_DIR}
+CLOUDKITTY_OUTPUT_PIPELINE=${CLOUDKITTY_OUTPUT_PIPELINE:-"osrf"}
+
+# Set Cloudkitty client info
+GITREPO["python-cloudkittyclient"]=${CLOUDKITTYCLIENT_REPO:-${GIT_BASE}/openstack/python-cloudkittyclient.git}
+GITDIR["python-cloudkittyclient"]=$DEST/python-cloudkittyclient
+GITBRANCH["python-cloudkittyclient"]=${CLOUDKITTYCLIENT_BRANCH:-master}
+
+# Set CloudKitty dashboard info
+GITREPO["cloudkitty-dashboard"]=${CLOUDKITTYDASHBOARD_REPO:-${GIT_BASE}/openstack/cloudkitty-dashboard.git}
+GITDIR["cloudkitty-dashboard"]=$DEST/cloudkitty-dashboard
+GITBRANCH["cloudkitty-dashboard"]=${CLOUDKITTYDASHBOARD_BRANCH:-master}
+
+# Tell Tempest this project is present
+TEMPEST_SERVICES+=,cloudkitty
