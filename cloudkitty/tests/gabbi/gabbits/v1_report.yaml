@@ -36,7 +36,7 @@ tests:
       end: "2015-02-04T00:00:00"
     status: 200
     response_strings:
-      - "110.971"
+      - "121.014"
 
   - name: get total for a period filtering on first tenant
     url: /v1/report/total
@@ -46,7 +46,7 @@ tests:
       tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
     status: 200
     response_strings:
-      - "73.535"
+      - "80.19"
 
   - name: get total for a period filtering on second tenant
     url: /v1/report/total
@@ -54,6 +54,37 @@ tests:
       begin: "2015-01-01T00:00:00"
       end: "2015-02-04T00:00:00"
       tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
+    status: 200
+    response_strings:
+      - "40.824"
+
+  - name: get total for a period filtering on compute service
+    url: /v1/report/total
+    query_parameters:
+      begin: "2015-01-01T00:00:00"
+      end: "2015-02-04T00:00:00"
+      service: "compute"
+    status: 200
+    response_strings:
+      - "110.971"
+
+  - name: get total for a period filtering on image service
+    url: /v1/report/total
+    query_parameters:
+      begin: "2015-01-01T00:00:00"
+      end: "2015-02-04T00:00:00"
+      service: "image"
+    status: 200
+    response_strings:
+      - "10.043"
+
+  - name: get total for a period filtering on compute service and tenant
+    url: /v1/report/total
+    query_parameters:
+      begin: "2015-01-01T00:00:00"
+      end: "2015-02-04T00:00:00"
+      tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
+      service: "compute"
     status: 200
     response_strings:
       - "37.436"
