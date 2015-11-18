@@ -68,7 +68,7 @@ class BaseStorage(object):
         self.usage_start_dt = {}
         self.usage_end = {}
         self.usage_end_dt = {}
-        self._has_data = False
+        self._has_data = {}
 
     @staticmethod
     def init():
@@ -99,32 +99,38 @@ class BaseStorage(object):
     def _pre_commit(self, tenant_id):
         """Called before every commit.
 
+        :param tenant_id: tenant_id which information must be committed.
         """
 
     @abc.abstractmethod
     def _commit(self, tenant_id):
         """Push data to the storage backend.
 
+        :param tenant_id: tenant_id which information must be committed.
         """
 
     def _post_commit(self, tenant_id):
         """Called after every commit.
 
+        :param tenant_id: tenant_id which information must be committed.
         """
-        self._has_data = False
+        if tenant_id in self._has_data:
+            del self._has_data[tenant_id]
+        self._clear_usage_info(tenant_id)
 
     @abc.abstractmethod
     def _dispatch(self, data, tenant_id):
         """Process rated data.
 
         :param data: The rated data frames.
+        :param tenant_id: tenant_id which data must be dispatched to.
         """
 
     def _update_start(self, begin, tenant_id):
         """Update usage_start with a new timestamp.
 
         :param begin: New usage beginning timestamp.
-        :param tenant_id: Tenant ID to update.
+        :param tenant_id: tenant_id to update.
         """
         self.usage_start[tenant_id] = begin
         self.usage_start_dt[tenant_id] = ck_utils.ts2dt(begin)
@@ -133,21 +139,30 @@ class BaseStorage(object):
         """Update usage_end with a new timestamp.
 
         :param end: New usage end timestamp.
-        :param tenant_id: Tenant ID to update.
+        :param tenant_id: tenant_id to update.
         """
         self.usage_end[tenant_id] = end
         self.usage_end_dt[tenant_id] = ck_utils.ts2dt(end)
+
+    def _clear_usage_info(self, tenant_id):
+        """Clear usage information timestamps.
+
+        :param tenant_id: tenant_id which information needs to be removed.
+        """
+        self.usage_start.pop(tenant_id, None)
+        self.usage_start_dt.pop(tenant_id, None)
+        self.usage_end.pop(tenant_id, None)
+        self.usage_end_dt.pop(tenant_id, None)
 
     def _check_commit(self, usage_start, tenant_id):
         """Check if the period for a given tenant must be committed.
 
         :param usage_start: Start of the period.
-        :param tenant_id: Tenant ID to check for.
+        :param tenant_id: tenant_id to check for.
         """
         usage_end = self.usage_end.get(tenant_id)
         if usage_end is not None and usage_start >= usage_end:
             self.commit(tenant_id)
-            self.usage_start.pop(tenant_id)
         if self.usage_start.get(tenant_id) is None:
             self._update_start(usage_start, tenant_id)
             self._update_end(usage_start + self._period, tenant_id)
@@ -156,19 +171,31 @@ class BaseStorage(object):
     def get_state(self, tenant_id=None):
         """Return the last written frame's timestamp.
 
-        :param tenant_id: Tenant ID to filter on.
+        :param tenant_id: tenant_id to filter on.
         """
 
     @abc.abstractmethod
-    def get_total(self, tenant_id=None):
+    def get_total(self, begin=None, end=None, tenant_id=None, service=None):
         """Return the current total.
 
+        :param begin: When to start filtering.
+        :type begin: datetime.datetime
+        :param end: When to stop filtering.
+        :type end: datetime.datetime
+        :param tenant_id: Filter on the tenant_id.
+        :type res_type: str
+        :param service: Filter on the resource type.
+        :type service: str
         """
 
     @abc.abstractmethod
     def get_tenants(self, begin=None, end=None):
         """Return the list of rated tenants.
 
+        :param begin: When to start filtering.
+        :type begin: datetime.datetime
+        :param end: When to stop filtering.
+        :type end: datetime.datetime
         """
 
     @abc.abstractmethod
@@ -189,13 +216,12 @@ class BaseStorage(object):
         """Append rated data before committing them to the backend.
 
         :param raw_data: The rated data frames.
-        :param tenant_id: Tenant the frame is belonging.
+        :param tenant_id: Tenant the frame is belonging to.
         """
         while raw_data:
             usage_start, data = self._filter_period(raw_data)
             self._check_commit(usage_start, tenant_id)
             self._dispatch(data, tenant_id)
-            self._has_data = True
 
     def nodata(self, begin, end, tenant_id):
         """Append a no data frame to the storage backend.
@@ -209,6 +235,7 @@ class BaseStorage(object):
     def commit(self, tenant_id):
         """Commit the changes to the backend.
 
+        :param tenant_id: Tenant the changes belong to.
         """
         self._pre_commit(tenant_id)
         self._commit(tenant_id)

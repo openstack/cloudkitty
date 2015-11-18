@@ -41,7 +41,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
 
     def _pre_commit(self, tenant_id):
         self._check_session(tenant_id)
-        if not self._has_data:
+        if not self._has_data.get(tenant_id):
             empty_frame = {'vol': {'qty': 0, 'unit': 'None'},
                            'rating': {'price': 0}, 'desc': ''}
             self._append_time_frame('_NO_DATA_', empty_frame, tenant_id)
@@ -64,6 +64,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
         for service in data:
             for frame in data[service]:
                 self._append_time_frame(service, frame, tenant_id)
+                self._has_data[tenant_id] = True
 
     def get_state(self, tenant_id=None):
         session = db.get_session()
