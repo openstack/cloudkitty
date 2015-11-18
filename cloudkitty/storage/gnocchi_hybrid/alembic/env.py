@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2014 Objectif Libre
+# Copyright 2015 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -15,27 +15,11 @@
 #
 # @author: Stéphane Albert
 #
-import abc
+from cloudkitty.common.db.alembic import env  # noqa
+from cloudkitty.storage.gnocchi_hybrid import models
 
-import six
-from stevedore import extension
-
-TRANSFORMERS_NAMESPACE = 'cloudkitty.transformers'
-
-
-def get_transformers():
-    transformers = {}
-    transformer_exts = extension.ExtensionManager(
-        TRANSFORMERS_NAMESPACE,
-        invoke_on_load=True)
-    for transformer in transformer_exts:
-        t_name = transformer.name
-        t_obj = transformer.obj
-        transformers[t_name] = t_obj
-    return transformers
+target_metadata = models.Base.metadata
+version_table = 'storage_gnocchi_hybrid_alembic'
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseTransformer(object):
-    def __init__(self):
-        pass
+env.run_migrations_online(target_metadata, version_table)

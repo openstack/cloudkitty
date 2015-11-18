@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2014 Objectif Libre
+# Copyright 2015 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -15,8 +15,6 @@
 #
 # @author: Stéphane Albert
 #
-import json
-
 from oslo_db.sqlalchemy import models
 import sqlalchemy
 from sqlalchemy.ext import declarative
@@ -26,48 +24,50 @@ from cloudkitty import utils as ck_utils
 Base = declarative.declarative_base()
 
 
-class RatedDataFrame(Base, models.ModelBase):
-    """A rated data frame.
+class HybridRatedDataframe(Base, models.ModelBase):
+    """An hybrid rated dataframe.
 
     """
     __table_args__ = {'mysql_charset': "utf8",
                       'mysql_engine': "InnoDB"}
-    __tablename__ = 'rated_data_frames'
+    __tablename__ = 'ghybrid_dataframes'
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True)
-    tenant_id = sqlalchemy.Column(sqlalchemy.String(32),
-                                  nullable=True)
     begin = sqlalchemy.Column(sqlalchemy.DateTime,
                               nullable=False)
     end = sqlalchemy.Column(sqlalchemy.DateTime,
                             nullable=False)
-    unit = sqlalchemy.Column(sqlalchemy.String(255),
-                             nullable=False)
-    qty = sqlalchemy.Column(sqlalchemy.Numeric(),
-                            nullable=False)
     res_type = sqlalchemy.Column(sqlalchemy.String(255),
                                  nullable=False)
-    rate = sqlalchemy.Column(sqlalchemy.Float(),
+    rate = sqlalchemy.Column(sqlalchemy.Numeric(20, 8),
                              nullable=False)
-    desc = sqlalchemy.Column(sqlalchemy.Text(),
-                             nullable=False)
+    resource_ref = sqlalchemy.Column(sqlalchemy.String(32),
+                                     nullable=False)
+    tenant_id = sqlalchemy.Column(sqlalchemy.String(32),
+                                  nullable=True)
 
     def to_cloudkitty(self, collector=None):
+        if not collector:
+            raise Exception('Gnocchi storage needs a reference '
+                            'to the collector.')
         # Rating informations
         rating_dict = {}
         rating_dict['price'] = self.rate
 
-        # Volume informations
-        vol_dict = {}
-        vol_dict['qty'] = self.qty.normalize()
-        vol_dict['unit'] = self.unit
-        res_dict = {}
+        # Resource information from gnocchi
+        resource_data = collector.resource_info(
+            resource_type=self.res_type,
+            start=self.begin,
+            end=self.end,
+            resource_id=self.resource_ref,
+            project_id=self.tenant_id)
 
         # Encapsulate informations in a resource dict
+        res_dict = {}
+        res_dict['desc'] = resource_data['desc']
+        res_dict['vol'] = resource_data['vol']
         res_dict['rating'] = rating_dict
-        res_dict['desc'] = json.loads(self.desc)
-        res_dict['vol'] = vol_dict
         res_dict['tenant_id'] = self.tenant_id
 
         # Add resource to the usage dict

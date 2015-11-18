@@ -19,7 +19,9 @@ import abc
 
 from oslo_config import cfg
 import six
+from stevedore import driver
 
+from cloudkitty import transformer
 import cloudkitty.utils as ck_utils
 
 collect_opts = [
@@ -44,7 +46,24 @@ collect_opts = [
                          'network.floating'],
                 help='Services to monitor.'), ]
 
-cfg.CONF.register_opts(collect_opts, 'collect')
+CONF = cfg.CONF
+CONF.register_opts(collect_opts, 'collect')
+
+COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
+
+
+def get_collector(transformers=None):
+    if not transformers:
+        transformers = transformer.get_transformers()
+    collector_args = {
+        'period': CONF.collect.period,
+        'transformers': transformers}
+    collector = driver.DriverManager(
+        COLLECTORS_NAMESPACE,
+        CONF.collect.collector,
+        invoke_on_load=True,
+        invoke_kwds=collector_args).driver
+    return collector
 
 
 class TransformerDependencyError(Exception):
