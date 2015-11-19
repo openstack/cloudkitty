@@ -89,8 +89,7 @@ class CeilometerCollector(collector.BaseCollector):
             auth=self.auth)
         self._conn = cclient.get_client(
             '2',
-            session=self.session,
-            auth_url=self.auth.auth_url)
+            session=self.session)
 
     def gen_filter(self, op='eq', **kwargs):
         """Generate ceilometer filter from kwargs."""
