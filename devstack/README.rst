@@ -30,7 +30,7 @@ Configure DevStack to run CloudKitty
         $ cd ${DEVSTACK_DIR}
         cat >> local.conf << EOF
         # cloudkitty
-        enable_plugin cloudkitty https://github.com/openstack/cloudkitty master
+        enable_plugin cloudkitty https://git.openstack.org/openstack/cloudkitty master
         EOF
 
 Run devstack as normal::
