@@ -16,7 +16,6 @@
 # @author: Stéphane Albert
 #
 from oslo_concurrency import lockutils
-from oslo_log import log as logging
 import pecan
 from pecan import rest
 from stevedore import extension
@@ -26,8 +25,6 @@ import wsmeext.pecan as wsme_pecan
 from cloudkitty.api.v1.datamodels import rating as rating_models
 from cloudkitty.common import policy
 from cloudkitty import utils as ck_utils
-
-LOG = logging.getLogger(__name__)
 
 PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
 

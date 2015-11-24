@@ -17,7 +17,6 @@
 #
 from oslo_db import exception
 from oslo_db.sqlalchemy import utils
-from oslo_log import log as logging
 from oslo_utils import uuidutils
 import six
 import sqlalchemy
@@ -26,8 +25,6 @@ from cloudkitty import db
 from cloudkitty.rating.hash.db import api
 from cloudkitty.rating.hash.db.sqlalchemy import migration
 from cloudkitty.rating.hash.db.sqlalchemy import models
-
-LOG = logging.getLogger(__name__)
 
 
 def get_backend():
