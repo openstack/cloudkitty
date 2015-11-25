@@ -41,7 +41,7 @@ tests:
 
   - name: get information of a unknown module
     url: /v1/billing/modules/fakb
-    status: 400
+    status: 404
     response_strings:
       - "Module not found."
 

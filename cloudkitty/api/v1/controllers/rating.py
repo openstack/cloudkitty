@@ -99,7 +99,7 @@ class ModulesController(rest.RestController, RatingModulesMixin):
             with lock:
                 module = self.extensions[module_id]
         except KeyError:
-            pecan.abort(400, 'Module not found.')
+            pecan.abort(404, 'Module not found.')
         infos = module.obj.module_info.copy()
         infos['module_id'] = infos.pop('name')
         return rating_models.CloudkittyModule(**infos)

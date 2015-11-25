@@ -55,14 +55,14 @@ tests:
 
   - name: try to get an unknown mapping
     url: /v1/collector/mappings/notfound
-    status: 400
+    status: 404
     response_strings:
       - "No mapping for service: notfound"
 
   - name: try to delete an unknown mapping
     url: /v1/collector/mappings/notfound
     method: DELETE
-    status: 400
+    status: 404
     response_strings:
       - "No mapping for service: notfound"
 
@@ -133,6 +133,6 @@ tests:
 
   - name: check the mapping got deleted
     url: /v1/collector/mappings/metric1
-    status: 400
+    status: 404
     response_strings:
       - "No mapping for service: metric1"

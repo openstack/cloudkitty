@@ -97,7 +97,7 @@ class HashMapGroupsController(rating.RatingRestControllerBase):
             group_db = hashmap.get_group(uuid=group_id)
             return group_models.Group(**group_db.export_model())
         except db_api.NoSuchGroup as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(404, six.text_type(e))
 
     @wsme_pecan.wsexpose(group_models.Group,
                          body=group_models.Group,
@@ -133,4 +133,4 @@ class HashMapGroupsController(rating.RatingRestControllerBase):
         try:
             hashmap.delete_group(uuid=group_id, recurse=recursive)
         except db_api.NoSuchGroup as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(404, six.text_type(e))

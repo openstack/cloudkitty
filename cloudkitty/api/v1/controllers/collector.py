@@ -45,7 +45,7 @@ class MappingController(rest.RestController):
             return collector_models.ServiceToCollectorMapping(
                 **mapping.as_dict())
         except db_api.NoSuchMapping as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(404, six.text_type(e))
 
     @wsme_pecan.wsexpose(collector_models.ServiceToCollectorMappingCollection,
                          wtypes.text)
@@ -89,7 +89,7 @@ class MappingController(rest.RestController):
         try:
             self._db.delete_mapping(service)
         except db_api.NoSuchMapping as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(404, six.text_type(e))
 
 
 class CollectorStateController(rest.RestController):
