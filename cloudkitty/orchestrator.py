@@ -299,7 +299,7 @@ class Orchestrator(object):
             self.process_messages()
             self._load_tenant_list()
             while len(self._tenants):
-                for tenant in self._tenants:
+                for tenant in self._tenants[:]:
                     if not self._check_state(tenant):
                         self._tenants.remove(tenant)
                     else:
