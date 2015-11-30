@@ -19,8 +19,10 @@
 from keystoneclient import auth as ks_auth
 from keystoneclient import client as kclient
 from keystoneclient import discover
+from keystoneclient import exceptions
 from keystoneclient import session as ks_session
 from oslo_config import cfg
+import six
 
 from cloudkitty import tenant_fetcher
 
@@ -59,19 +61,22 @@ class KeystoneFetcher(tenant_fetcher.BaseFetcher):
     def get_tenants(self):
         keystone_version = discover.normalize_version_number(
             CONF.keystone_fetcher.keystone_version)
-        if discover.version_match((2,), keystone_version):
-            tenant_list = self.admin_ks.tenants.list()
-        else:
-            tenant_list = self.admin_ks.projects.list()
+        auth_dispatch = {(3,): ('project', 'projects', 'list'),
+                         (2,): ('tenant', 'tenants', 'roles_for_user')}
+        for auth_version, auth_version_mapping in six.iteritems(auth_dispatch):
+            if discover.version_match(auth_version, keystone_version):
+                return self._do_get_tenants(auth_version_mapping)
+        msg = "Keystone version you've specified is not supported"
+        raise exceptions.VersionNotAvailable(msg)
+
+    def _do_get_tenants(self, auth_version_mapping):
+        tenant_attr, tenants_attr, role_func = auth_version_mapping
+        tenant_list = getattr(self.admin_ks, tenants_attr).list()
         my_user_id = self.session.get_user_id()
         for tenant in tenant_list[:]:
-            if discover.version_match((2,), keystone_version):
-                roles = self.admin_ks.roles.roles_for_user(
-                    my_user_id,
-                    tenant)
-            else:
-                roles = self.admin_ks.roles.list(user=my_user_id,
-                                                 project=tenant)
+            roles = getattr(self.admin_ks.roles, role_func)(
+                **{'user': my_user_id,
+                   tenant_attr: tenant})
             if 'rating' not in [role.name for role in roles]:
                 tenant_list.remove(tenant)
         return [tenant.id for tenant in tenant_list]
