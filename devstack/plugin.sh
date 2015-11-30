@@ -208,11 +208,28 @@ function install_cloudkitty_dashboard {
     setup_dev_lib "cloudkitty-dashboard"
 }
 
+# update_horizon_static() - Update Horizon static files with CloudKitty's one
+function update_horizon_static {
+    # Code taken from Horizon lib
+    # Setup alias for django-admin which could be different depending on distro
+    local django_admin
+    if type -p django-admin > /dev/null; then
+        django_admin=django-admin
+    else
+        django_admin=django-admin.py
+    fi
+    DJANGO_SETTINGS_MODULE=openstack_dashboard.settings \
+        $django_admin collectstatic --noinput
+    DJANGO_SETTINGS_MODULE=openstack_dashboard.settings \
+        $django_admin compress --force
+    restart_apache_server
+}
+
 # configure_cloudkitty_dashboard() - Set config files, create data dirs, etc
 function configure_cloudkitty_dashboard {
     sudo ln -s  $CLOUDKITTY_ENABLED_DIR/_[0-9]*.py \
         $CLOUDKITTY_HORIZON_ENABLED_DIR/
-    restart_apache_server
+    update_horizon_static
 }
 
 if is_service_enabled ck-api; then
