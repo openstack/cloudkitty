@@ -107,10 +107,19 @@ class BaseCollector(object):
         month_start = ck_utils.get_month_start()
         return ck_utils.dt2ts(month_start)
 
-    def retrieve(self, resource, start, end=None, project_id=None,
-                 q_filter=None):
+    @classmethod
+    def _res_to_func(cls, resource_name):
         trans_resource = 'get_'
-        trans_resource += resource.replace('.', '_')
+        trans_resource += resource_name.replace('.', '_')
+        return trans_resource
+
+    def retrieve(self,
+                 resource,
+                 start,
+                 end=None,
+                 project_id=None,
+                 q_filter=None):
+        trans_resource = self._res_to_func(resource)
         if not hasattr(self, trans_resource):
             raise NotImplementedError(
                 "No method found in collector '%s' for resource '%s'."
