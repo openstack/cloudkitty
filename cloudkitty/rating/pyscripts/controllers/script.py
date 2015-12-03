@@ -73,7 +73,7 @@ class PyScriptsScriptsController(rating.RatingRestControllerBase):
             script_db = pyscripts.get_script(uuid=script_id)
             return script_models.Script(**script_db.export_model())
         except db_api.NoSuchScript as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(404, six.text_type(e))
 
     @wsme_pecan.wsexpose(script_models.Script,
                          body=script_models.Script,
@@ -119,7 +119,7 @@ class PyScriptsScriptsController(rating.RatingRestControllerBase):
             return script_models.Script(
                 **script_db.export_model())
         except db_api.NoSuchScript as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(404, six.text_type(e))
 
     @wsme_pecan.wsexpose(None, ck_types.UuidType(), status_code=204)
     def delete(self, script_id):
@@ -131,4 +131,4 @@ class PyScriptsScriptsController(rating.RatingRestControllerBase):
         try:
             pyscripts.delete_script(uuid=script_id)
         except db_api.NoSuchScript as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(404, six.text_type(e))

@@ -96,7 +96,7 @@ tests:
     data:
       name: "policy1"
       data: "a = 1"
-    status: 400
+    status: 404
     response_strings:
       - "No such script: None (UUID: 42)"
 
@@ -119,13 +119,13 @@ tests:
 
   - name: get unknown script
     url: /v1/rating/module_config/pyscripts/scripts/42
-    status: 400
+    status: 404
     response_strings:
       - "No such script: None (UUID: 42)"
 
   - name: delete unknown script
     url: /v1/rating/module_config/pyscripts/scripts/42
     method: DELETE
-    status: 400
+    status: 404
     response_strings:
       - "No such script: None (UUID: 42)"

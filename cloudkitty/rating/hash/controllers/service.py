@@ -60,7 +60,7 @@ class HashMapServicesController(rating.RatingRestControllerBase):
             service_db = hashmap.get_service(uuid=service_id)
             return service_models.Service(**service_db.export_model())
         except db_api.NoSuchService as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(404, six.text_type(e))
 
     @wsme_pecan.wsexpose(service_models.Service,
                          body=service_models.Service,
@@ -92,4 +92,4 @@ class HashMapServicesController(rating.RatingRestControllerBase):
         try:
             hashmap.delete_service(uuid=service_id)
         except db_api.NoSuchService as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(404, six.text_type(e))
