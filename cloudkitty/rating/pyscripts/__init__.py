@@ -36,6 +36,7 @@ class PyScripts(rating.RatingProcessorBase):
 
     def __init__(self, tenant_id=None):
         self._scripts = {}
+        self.load_scripts_in_memory()
         super(PyScripts, self).__init__(tenant_id)
 
     def load_scripts_in_memory(self):
