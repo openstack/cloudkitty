@@ -21,6 +21,8 @@ import sys
 from oslo_config import cfg
 from oslo_log import log as logging
 
+from cloudkitty.common import defaults
+
 
 service_opts = [
     cfg.StrOpt('host',
@@ -38,5 +40,6 @@ cfg.CONF.register_opts(service_opts)
 def prepare_service():
     logging.register_options(cfg.CONF)
     cfg.CONF(sys.argv[1:], project='cloudkitty')
+    defaults.set_config_defaults()
 
     logging.setup(cfg.CONF, 'cloudkitty')

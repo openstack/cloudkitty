@@ -193,6 +193,10 @@ class ConfigFixture(fixture.GabbiFixture):
                           os.path.abspath('etc/cloudkitty/policy.json'),
                           group='oslo_policy',
                           enforce_type=True)
+        conf.set_override('api_paste_config',
+                          os.path.abspath(
+                              'cloudkitty/tests/gabbi/gabbi_paste.ini')
+                          )
         conf.import_group('storage', 'cloudkitty.storage')
         conf.set_override('backend', 'sqlalchemy', 'storage',
                           enforce_type=True)
@@ -323,6 +327,27 @@ class NowStorageDataFixture(BaseStorageDataFixture):
                                 '3d9a1b33-482f-42fd-aef9-b575a3da9369')
 
 
+class CORSConfigFixture(fixture.GabbiFixture):
+    """Inject mock configuration for the CORS middleware."""
+
+    def start_fixture(self):
+        # Here we monkeypatch GroupAttr.__getattr__, necessary because the
+        # paste.ini method of initializing this middleware creates its own
+        # ConfigOpts instance, bypassing the regular config fixture.
+
+        def _mock_getattr(instance, key):
+            if key != 'allowed_origin':
+                return self._original_call_method(instance, key)
+            return "http://valid.example.com"
+
+        self._original_call_method = cfg.ConfigOpts.GroupAttr.__getattr__
+        cfg.ConfigOpts.GroupAttr.__getattr__ = _mock_getattr
+
+    def stop_fixture(self):
+        """Remove the monkeypatch."""
+        cfg.ConfigOpts.GroupAttr.__getattr__ = self._original_call_method
+
+
 def setup_app():
     rpc.init()
-    return app.setup_app()
+    return app.load_app()
