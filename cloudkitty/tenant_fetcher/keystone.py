@@ -16,11 +16,10 @@
 #
 # @author: Stéphane Albert
 #
-from keystoneclient import auth as ks_auth
+from keystoneauth1 import loading as ks_loading
 from keystoneclient import client as kclient
 from keystoneclient import discover
 from keystoneclient import exceptions
-from keystoneclient import session as ks_session
 from oslo_config import cfg
 import six
 
@@ -33,10 +32,10 @@ keystone_fetcher_opts = [
                help='Keystone version to use.'), ]
 
 cfg.CONF.register_opts(keystone_fetcher_opts, KEYSTONE_FETCHER_OPTS)
-ks_session.Session.register_conf_options(
+ks_loading.register_session_conf_options(
     cfg.CONF,
     KEYSTONE_FETCHER_OPTS)
-ks_auth.register_conf_options(
+ks_loading.register_auth_conf_options(
     cfg.CONF,
     KEYSTONE_FETCHER_OPTS)
 CONF = cfg.CONF
@@ -46,10 +45,10 @@ class KeystoneFetcher(tenant_fetcher.BaseFetcher):
     """Keystone tenants fetcher."""
 
     def __init__(self):
-        self.auth = ks_auth.load_from_conf_options(
+        self.auth = ks_loading.load_auth_from_conf_options(
             CONF,
             KEYSTONE_FETCHER_OPTS)
-        self.session = ks_session.Session.load_from_conf_options(
+        self.session = ks_loading.load_session_from_conf_options(
             CONF,
             KEYSTONE_FETCHER_OPTS,
             auth=self.auth)

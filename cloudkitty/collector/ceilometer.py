@@ -16,18 +16,17 @@
 # @author: Stéphane Albert
 #
 from ceilometerclient import client as cclient
-from keystoneclient import auth as ks_auth
-from keystoneclient import session as ks_session
+from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 
 from cloudkitty import collector
 from cloudkitty import utils as ck_utils
 
 CEILOMETER_COLLECTOR_OPTS = 'ceilometer_collector'
-ks_session.Session.register_conf_options(
+ks_loading.register_session_conf_options(
     cfg.CONF,
     CEILOMETER_COLLECTOR_OPTS)
-ks_auth.register_conf_options(
+ks_loading.register_auth_conf_options(
     cfg.CONF,
     CEILOMETER_COLLECTOR_OPTS)
 CONF = cfg.CONF
@@ -80,10 +79,10 @@ class CeilometerCollector(collector.BaseCollector):
 
         self._cacher = CeilometerResourceCacher()
 
-        self.auth = ks_auth.load_from_conf_options(
+        self.auth = ks_loading.load_auth_from_conf_options(
             CONF,
             CEILOMETER_COLLECTOR_OPTS)
-        self.session = ks_session.Session.load_from_conf_options(
+        self.session = ks_loading.load_session_from_conf_options(
             CONF,
             CEILOMETER_COLLECTOR_OPTS,
             auth=self.auth)
