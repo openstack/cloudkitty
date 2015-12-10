@@ -1,24 +1,25 @@
 # The order of packages is significant, because pip processes them in the order
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
-pbr<2.0,>=1.6
-eventlet>=0.17.4
-keystonemiddleware>=2.0.0
-python-ceilometerclient>=1.0.13
-python-keystoneclient>=1.6.0
-PasteDeploy>=1.5.0
-pecan>=1.0.0
-WSME>=0.7
-oslo.config>=2.3.0 # Apache-2.0
+pbr>=1.6 # Apache-2.0
+eventlet!=0.18.3,>=0.18.2 # MIT
+keystonemiddleware!=4.1.0,>=4.0.0 # Apache-2.0
+python-ceilometerclient>=2.2.1 # Apache-2.0
+python-keystoneclient!=1.8.0,!=2.1.0,>=1.6.0 # Apache-2.0
+iso8601>=0.1.9 # MIT
+PasteDeploy>=1.5.0 # MIT
+pecan>=1.0.0 # BSD
+WSME>=0.8 # MIT
+oslo.config>=3.7.0 # Apache-2.0
 oslo.context>=0.2.0 # Apache-2.0
-oslo.concurrency>=2.3.0 # Apache-2.0
-oslo.db>=2.4.1 # Apache-2.0
-oslo.i18n>=1.5.0 # Apache-2.0
-oslo.log>=1.8.0 # Apache-2.0
-oslo.messaging!=1.17.0,!=1.17.1,>=1.16.0 # Apache-2.0
-oslo.middleware>=2.6.1 # Apache-2.0
+oslo.concurrency>=3.5.0 # Apache-2.0
+oslo.db>=4.1.0 # Apache-2.0
+oslo.i18n>=2.1.0 # Apache-2.0
+oslo.log>=1.14.0 # Apache-2.0
+oslo.messaging>=4.0.0 # Apache-2.0
+oslo.middleware>=3.0.0 # Apache-2.0
 oslo.policy>=0.5.0 # Apache-2.0
-oslo.utils>=2.0.0 # Apache-2.0
-SQLAlchemy<1.1.0,>=0.9.7
-six>=1.9.0
+oslo.utils>=3.5.0 # Apache-2.0
+SQLAlchemy<1.1.0,>=1.0.10 # MIT
+six>=1.9.0 # MIT
 stevedore>=1.5.0 # Apache-2.0

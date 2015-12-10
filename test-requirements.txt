@@ -2,15 +2,15 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 hacking<0.10,>=0.9.2
-coverage>=3.6
-discover
-gabbi>=1.1.4 # Apache-2.0
-mox3>=0.7.0
-testscenarios>=0.4
-testrepository>=0.0.18
-mock>=1.2
-sphinx!=1.2.0,!=1.3b1,<1.3,>=1.1.2
-oslosphinx>=2.5.0 # Apache-2.0
+coverage>=3.6 # Apache-2.0
+discover # BSD
+gabbi>=1.11.0 # Apache-2.0
+mox3>=0.7.0 # Apache-2.0
+testscenarios>=0.4 # Apache-2.0/BSD
+testrepository>=0.0.18 # Apache-2.0/BSD
+mock>=1.2 # BSD
+sphinx!=1.2.0,!=1.3b1,<1.3,>=1.1.2 # BSD
+oslosphinx!=3.4.0,>=2.5.0 # Apache-2.0
 oslotest>=1.10.0 # Apache-2.0
-sphinxcontrib-httpdomain
-sphinxcontrib-pecanwsme>=0.8
+sphinxcontrib-httpdomain # BSD
+sphinxcontrib-pecanwsme>=0.8 # Apache-2.0
