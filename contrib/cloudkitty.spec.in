@@ -15,7 +15,6 @@ BuildArch: noarch
 BuildRequires: git
 BuildRequires: python-ceilometerclient
 BuildRequires: python-keystoneclient
-BuildRequires: python-iso8601
 BuildRequires: python-stevedore
 BuildRequires: python-oslo-messaging
 BuildRequires: python-setuptools
@@ -83,7 +82,6 @@ Group: System Environment/Base
 
 Requires: python-ceilometerclient
 Requires: python-keystoneclient
-Requires: python-iso8601
 Requires: python-stevedore
 Requires: python-oslo-messaging
 Requires: python-setuptools

@@ -6,7 +6,6 @@ eventlet>=0.17.4
 keystonemiddleware>=2.0.0
 python-ceilometerclient>=1.0.13
 python-keystoneclient>=1.6.0
-iso8601>=0.1.9
 PasteDeploy>=1.5.0
 posix-ipc
 pecan>=1.0.0
