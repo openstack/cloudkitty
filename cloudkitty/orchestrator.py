@@ -265,17 +265,6 @@ class Orchestrator(object):
             return next_timestamp
         return 0
 
-    def _collect(self, service, start_timestamp):
-        next_timestamp = start_timestamp + CONF.collect.period
-        raw_data = self.collector.retrieve(service,
-                                           start_timestamp,
-                                           next_timestamp)
-
-        timed_data = [{'period': {'begin': start_timestamp,
-                                  'end': next_timestamp},
-                      'usage': raw_data}]
-        return timed_data
-
     def _load_transformers(self):
         self.transformers = {}
         transformers = extension.ExtensionManager(
