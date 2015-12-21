@@ -185,33 +185,19 @@ class HashMap(rating.RatingProcessorBase):
                          mapping_groups,
                          cmp_value):
         for group_name, mappings in mapping_groups.items():
-            mapping_default = mappings.get('_DEFAULT_', {})
-            matched = False
             for mapping_value, mapping in mappings.items():
-                if mapping is mapping_default:
-                    continue
                 if cmp_value == mapping_value:
                     self.update_result(
                         group_name,
                         mapping['type'],
                         mapping['cost'])
-                    matched = True
-            if not matched and mapping_default:
-                self.update_result(
-                    group_name,
-                    mapping_default['type'],
-                    mapping_default['cost'])
 
     def process_thresholds(self,
                            threshold_groups,
                            cmp_level,
                            threshold_type):
         for group_name, thresholds in threshold_groups.items():
-            threshold_default = thresholds.get('_DEFAULT_', {})
-            matched = False
             for threshold_level, threshold in thresholds.items():
-                if threshold is threshold_default:
-                    continue
                 if cmp_level >= threshold_level:
                     self.update_result(
                         group_name,
@@ -220,14 +206,6 @@ class HashMap(rating.RatingProcessorBase):
                         threshold_level,
                         True,
                         threshold_type)
-                    matched = True
-            if not matched and threshold_default:
-                self.update_result(
-                    group_name,
-                    threshold_default['type'],
-                    threshold_default['cost'],
-                    True,
-                    threshold_type)
 
     def process_services(self, service_name, data):
         if service_name not in self._entries:

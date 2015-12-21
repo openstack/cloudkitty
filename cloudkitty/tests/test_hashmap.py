@@ -637,6 +637,31 @@ class HashMapRatingTest(tests.TestCase):
         compute_list[2]['rating'] = {'price': decimal.Decimal('1.47070')}
         self.assertEqual(expected_data, actual_data)
 
+    def test_process_fields_no_match(self):
+        service_db = self._db_api.create_service('compute')
+        flavor_field = self._db_api.create_field(service_db.service_id,
+                                                 'flavor')
+        self._db_api.create_mapping(
+            value='non-existent',
+            cost='1.337',
+            map_type='flat',
+            field_id=flavor_field.field_id)
+        self._hash.reload_config()
+        actual_data = copy.deepcopy(CK_RESOURCES_DATA)
+        expected_data = copy.deepcopy(CK_RESOURCES_DATA)
+        for cur_data in actual_data:
+            cur_usage = cur_data['usage']
+            for service_name, service_data in cur_usage.items():
+                for item in service_data:
+                    self._hash._res = {}
+                    self._hash.process_fields(service_name, item)
+                    self._hash.add_rating_informations(item)
+        compute_list = expected_data[0]['usage']['compute']
+        compute_list[0]['rating'] = {'price': decimal.Decimal('0')}
+        compute_list[1]['rating'] = {'price': decimal.Decimal('0')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal('0')}
+        self.assertEqual(expected_data, actual_data)
+
     def test_process_field_threshold(self):
         service_db = self._db_api.create_service('compute')
         field_db = self._db_api.create_field(service_db.service_id,
@@ -665,6 +690,31 @@ class HashMapRatingTest(tests.TestCase):
         compute_list[0]['rating'] = {'price': decimal.Decimal('0.1337')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('0.4')}
         compute_list[2]['rating'] = {'price': decimal.Decimal('0.1337')}
+        self.assertEqual(expected_data, actual_data)
+
+    def test_process_field_threshold_no_match(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(service_db.service_id,
+                                             'memory')
+        self._db_api.create_threshold(
+            level=10240,
+            cost='0.1337',
+            map_type='flat',
+            field_id=field_db.field_id)
+        self._hash.reload_config()
+        actual_data = copy.deepcopy(CK_RESOURCES_DATA)
+        expected_data = copy.deepcopy(CK_RESOURCES_DATA)
+        for cur_data in actual_data:
+            cur_usage = cur_data['usage']
+            for service_name, service_data in cur_usage.items():
+                for item in service_data:
+                    self._hash._res = {}
+                    self._hash.process_fields(service_name, item)
+                    self._hash.add_rating_informations(item)
+        compute_list = expected_data[0]['usage']['compute']
+        compute_list[0]['rating'] = {'price': decimal.Decimal('0')}
+        compute_list[1]['rating'] = {'price': decimal.Decimal('0')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal('0')}
         self.assertEqual(expected_data, actual_data)
 
     def test_process_service_threshold(self):
