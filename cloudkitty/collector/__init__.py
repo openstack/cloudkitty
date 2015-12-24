@@ -73,6 +73,7 @@ class NoDataCollected(Exception):
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseCollector(object):
+    collector_name = None
     dependencies = []
 
     def __init__(self, transformers, **kwargs):
@@ -111,6 +112,8 @@ class BaseCollector(object):
         trans_resource = 'get_'
         trans_resource += resource.replace('.', '_')
         if not hasattr(self, trans_resource):
-            return None
+            raise NotImplementedError(
+                "No method found in collector '%s' for resource '%s'."
+                % (self.collector_name, resource))
         func = getattr(self, trans_resource)
         return func(start, end, project_id, q_filter)

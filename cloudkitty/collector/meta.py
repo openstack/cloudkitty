@@ -82,3 +82,7 @@ class MetaCollector(collector.BaseCollector):
         func = self.map_retrieve(trans_resource, res_collector)
         if func is not None:
             return func(start, end, project_id, q_filter)
+        raise NotImplementedError(
+            "No method found in collector '%s' for resource '%s'."
+            % (res_collector.collector_name if res_collector else '',
+               resource))
