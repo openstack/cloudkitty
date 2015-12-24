@@ -119,7 +119,7 @@ Example of minimal rating module (taken from the Noop module):
                 for service in cur_usage:
                     for entry in cur_usage[service]:
                         if 'rating' not in entry:
-                            entry['rating'] = {'price': 0}
+                            entry['rating'] = {'price': decimal.Decimal(0)}
             return data
 
 
