@@ -59,30 +59,30 @@ class MetaCollector(collector.BaseCollector):
                     self.transformers,
                     period=self.period)
 
-    def map_retrieve(self, trans_resource, res_collector=None):
-        if res_collector:
-            if hasattr(res_collector, trans_resource):
-                return getattr(res_collector, trans_resource)
-        for cur_collector in self._collectors.values():
-            if hasattr(cur_collector, trans_resource):
-                return getattr(cur_collector, trans_resource)
-
-    def retrieve(self, resource, start, end=None, project_id=None,
+    def retrieve(self,
+                 resource,
+                 start,
+                 end=None,
+                 project_id=None,
                  q_filter=None):
-
-        # Resource to function translation
-        trans_resource = 'get_'
-        trans_resource += resource.replace('.', '_')
-
-        # Resource to collector mapping processing
-        res_collector = None
-        if resource in self._mappings and resource in self._collectors:
-            res_collector = self._collectors[resource]
-
-        func = self.map_retrieve(trans_resource, res_collector)
-        if func is not None:
-            return func(start, end, project_id, q_filter)
-        raise NotImplementedError(
-            "No method found in collector '%s' for resource '%s'."
-            % (res_collector.collector_name if res_collector else '',
-               resource))
+        collector_list = self._collectors.values()
+        # Set designated collector on top of the list
+        try:
+            collector_name = self._mappings[resource]
+            designated_collector = self._collectors[collector_name]
+            collector_list.remove(designated_collector)
+            collector_list.insert(0, designated_collector)
+        except KeyError:
+            pass
+        for cur_collector in collector_list:
+            # Try every collector until we get a result
+            try:
+                return cur_collector.retrieve(
+                    resource,
+                    start,
+                    end,
+                    project_id,
+                    q_filter)
+            except NotImplementedError:
+                pass
+        raise NotImplementedError("No collector for resource '%s'." % resource)
