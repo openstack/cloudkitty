@@ -102,7 +102,6 @@ function configure_cloudkitty {
     iniset_rpc_backend cloudkitty $CLOUDKITTY_CONF DEFAULT
 
     iniset $CLOUDKITTY_CONF DEFAULT notification_topics 'notifications'
-    iniset $CLOUDKITTY_CONF DEFAULT verbose True
     iniset $CLOUDKITTY_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
 
     # auth
