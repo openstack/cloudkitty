@@ -26,7 +26,6 @@ import pecan
 
 from cloudkitty.api import config as api_config
 from cloudkitty.api import hooks
-from cloudkitty.api import middleware
 from cloudkitty import rpc
 from cloudkitty import storage
 
@@ -94,17 +93,20 @@ def setup_app(pecan_config=None, extra_hooks=None):
         guess_content_type_from_ext=False
     )
 
-    if CONF.auth_strategy == 'keystone':
-        return middleware.AuthTokenMiddleware(app, dict(CONF),
-                                              app_conf.app.acl_public_routes)
-    else:
-        return app
+    return app
 
 
-def setup_wsgi():
-    cfg_file = cfg.CONF.api_paste_config
-    if not os.path.exists(cfg_file):
-        raise Exception('api_paste_config file not found')
+def load_app():
+    cfg_file = None
+    cfg_path = cfg.CONF.api_paste_config
+    if not os.path.isabs(cfg_path):
+        cfg_file = CONF.find_file(cfg_path)
+    elif os.path.exists(cfg_path):
+        cfg_file = cfg_path
+
+    if not cfg_file:
+        raise cfg.ConfigFilesNotFoundError([cfg.CONF.api_paste_config])
+    LOG.info("Full WSGI config used: %s" % cfg_file)
     return deploy.loadapp("config:" + cfg_file)
 
 
@@ -126,7 +128,7 @@ def build_server():
     server_cls = simple_server.WSGIServer
     handler_cls = simple_server.WSGIRequestHandler
 
-    app = setup_app()
+    app = load_app()
 
     srv = simple_server.make_server(
         host,
@@ -136,3 +138,7 @@ def build_server():
         handler_cls)
 
     return srv
+
+
+def app_factory(global_config, **local_conf):
+    return setup_app()
