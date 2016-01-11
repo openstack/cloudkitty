@@ -69,7 +69,8 @@ class TestCase(testscenarios.TestWithScenarios, base.BaseTestCase):
     def setUp(self):
         super(TestCase, self).setUp()
         self.conf = self.useFixture(config_fixture.Config()).conf
-        self.conf.set_override('connection', self.db_url, 'database')
+        self.conf.set_override('connection', self.db_url, 'database',
+                               enforce_type=True)
         self.conn = ck_db_api.get_instance()
         migration = self.conn.get_migration()
         migration.upgrade('head')
