@@ -187,8 +187,9 @@ class Worker(BaseWorker):
                     except collector.NoDataCollected:
                         raise
                     except Exception as e:
-                        LOG.warn('Error while collecting service %(service)s: '
-                                 '%(error)s', {'service': service, 'error': e})
+                        LOG.warning(
+                            'Error while collecting service %(service)s: '
+                            '%(error)s', {'service': service, 'error': e})
                         raise collector.NoDataCollected('', service)
                 except collector.NoDataCollected:
                     begin = timestamp
