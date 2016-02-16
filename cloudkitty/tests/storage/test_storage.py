@@ -18,6 +18,7 @@
 import copy
 
 import mock
+import six
 import sqlalchemy
 import testscenarios
 
@@ -119,7 +120,7 @@ class StorageTest(tests.TestCase):
     def test_send_nodata_between_data(self):
         working_data = copy.deepcopy(samples.RATED_DATA)
         for period in working_data:
-            for service, data in sorted(period['usage'].items()):
+            for service, data in sorted(six.iteritems(period['usage'])):
                 sub_data = [{
                     'period': period['period'],
                     'usage': {
@@ -149,6 +150,11 @@ class StorageTest(tests.TestCase):
         # We only stored the first timeframe, the second one is waiting for a
         # commit or an append with the next timeframe.
         del expected_data[2]
+        # NOTE(sheeprine): Quick and dirty sort (ensure result consistency,
+        # order is not significant to the test result)
+        if 'image' in stored_data[0]['usage']:
+            stored_data[0]['usage'], stored_data[1]['usage'] = (
+                stored_data[1]['usage'], stored_data[0]['usage'])
         self.assertEqual(
             expected_data,
             stored_data)
