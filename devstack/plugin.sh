@@ -146,6 +146,18 @@ function create_cloudkitty_cache_dir {
     rm -f $CLOUDKITTY_AUTH_CACHE_DIR/registry/*
 }
 
+# create_cloudkitty_data_dir() - Part of the init_cloudkitty() process
+function create_cloudkitty_data_dir {
+    # Create data dir
+    sudo mkdir -p $CLOUDKITTY_DATA_DIR
+    sudo chown $STACK_USER $CLOUDKITTY_DATA_DIR
+    rm -f $CLOUDKITTY_DATA_DIR/*
+    # Create locks dir
+    sudo mkdir -p $CLOUDKITTY_DATA_DIR/locks
+    sudo chown $STACK_USER $CLOUDKITTY_DATA_DIR/locks
+    rm -f $CLOUDKITTY_DATA_DIR/locks/*
+}
+
 # init_cloudkitty() - Initialize CloudKitty database
 function init_cloudkitty {
     # Delete existing cache
@@ -168,6 +180,7 @@ function init_cloudkitty {
     $CLOUDKITTY_BIN_DIR/cloudkitty-storage-init
 
     create_cloudkitty_cache_dir
+    create_cloudkitty_data_dir
 }
 
 # install_cloudkitty() - Collect source and prepare

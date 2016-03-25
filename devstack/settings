@@ -11,6 +11,7 @@ CLOUDKITTY_CONF_DIR=/etc/cloudkitty
 CLOUDKITTY_CONF=$CLOUDKITTY_CONF_DIR/cloudkitty.conf
 CLOUDKITTY_API_LOG_DIR=/var/log/cloudkitty
 CLOUDKITTY_AUTH_CACHE_DIR=${CLOUDKITTY_AUTH_CACHE_DIR:-/var/cache/cloudkitty}
+CLOUDKITTY_DATA_DIR=${CLOUDKITTY_DATA_DIR:-/var/lib/cloudkitty}
 CLOUDKITTY_REPORTS_DIR=${DATA_DIR}/cloudkitty/reports
 
 # Horizon enabled file
