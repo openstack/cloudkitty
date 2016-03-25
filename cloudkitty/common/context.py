@@ -27,8 +27,6 @@ class RequestContext(context.RequestContext):
         :param roles: List of user's roles if any.
 
         """
-        self.roles = roles or []
-
         super(RequestContext, self).__init__(auth_token=auth_token,
                                              user=user, tenant=tenant,
                                              domain=domain,
@@ -40,6 +38,7 @@ class RequestContext(context.RequestContext):
                                              request_id=request_id,
                                              resource_uuid=resource_uuid,
                                              overwrite=overwrite)
+        self.roles = roles or []
 
     def to_dict(self):
         d = super(RequestContext, self).to_dict()
