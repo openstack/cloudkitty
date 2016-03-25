@@ -15,7 +15,6 @@
 #
 # @author: Stéphane Albert
 #
-from oslo_config import cfg
 from oslo_db.sqlalchemy import utils
 import sqlalchemy
 
@@ -24,8 +23,6 @@ from cloudkitty import db
 from cloudkitty.db import api
 from cloudkitty.db.sqlalchemy import migration
 from cloudkitty.db.sqlalchemy import models
-
-CONF = cfg.CONF
 
 
 def get_backend():

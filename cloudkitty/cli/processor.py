@@ -15,14 +15,9 @@
 #
 # @author: Stéphane Albert
 #
-from oslo_config import cfg
-
 from cloudkitty.common import rpc
 from cloudkitty import orchestrator
 from cloudkitty import service
-
-
-CONF = cfg.CONF
 
 
 def main():
