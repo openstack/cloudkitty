@@ -156,11 +156,10 @@ class Worker(BaseWorker):
                                             start_timestamp,
                                             next_timestamp,
                                             self._tenant_id)
-
-        timed_data = [{'period': {'begin': start_timestamp,
-                                  'end': next_timestamp},
-                      'usage': raw_data}]
-        return timed_data
+        if raw_data:
+            return [{'period': {'begin': start_timestamp,
+                                'end': next_timestamp},
+                     'usage': raw_data}]
 
     def check_state(self):
         timestamp = self._storage.get_state(self._tenant_id)
