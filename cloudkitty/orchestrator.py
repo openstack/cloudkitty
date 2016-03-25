@@ -17,6 +17,8 @@
 # @author: Stéphane Albert
 #
 import decimal
+import random
+import uuid
 
 import eventlet
 from oslo_concurrency import lockutils
@@ -25,6 +27,7 @@ from oslo_log import log as logging
 import oslo_messaging as messaging
 from stevedore import driver
 from stevedore import extension
+from tooz import coordination
 
 from cloudkitty import collector
 from cloudkitty.common import rpc
@@ -39,6 +42,14 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
 CONF.import_opt('backend', 'cloudkitty.tenant_fetcher', 'tenant_fetcher')
+
+orchestrator_opts = [
+    cfg.StrOpt('coordination_url',
+               secret=True,
+               help='Coordination driver URL',
+               default='file:///var/lib/cloudkitty/locks'),
+]
+CONF.register_opts(orchestrator_opts, group='orchestrator')
 
 COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 FETCHERS_NAMESPACE = 'cloudkitty.tenant.fetchers'
@@ -239,8 +250,19 @@ class Orchestrator(object):
         self._rating_endpoint = RatingEndpoint(self)
         self._init_messaging()
 
+        # DLM
+        self.coord = coordination.get_coordinator(
+            CONF.orchestrator.coordination_url,
+            str(uuid.uuid4()).encode('ascii'))
+        self.coord.start()
+
+    def _lock(self, tenant_id):
+        lock_name = b"cloudkitty-" + str(tenant_id).encode('ascii')
+        return self.coord.get_lock(lock_name)
+
     def _load_tenant_list(self):
         self._tenants = self.fetcher.get_tenants()
+        random.shuffle(self._tenants)
 
     def _init_messaging(self):
         target = messaging.Target(topic='cloudkitty',
@@ -289,15 +311,22 @@ class Orchestrator(object):
             self._load_tenant_list()
             while len(self._tenants):
                 for tenant in self._tenants[:]:
-                    if not self._check_state(tenant):
-                        self._tenants.remove(tenant)
-                    else:
-                        worker = Worker(self.collector,
-                                        self.storage,
-                                        tenant)
-                        worker.run()
+                    lock = self._lock(tenant)
+                    if lock.acquire(blocking=False):
+                        if not self._check_state(tenant):
+                            self._tenants.remove(tenant)
+                        else:
+                            worker = Worker(self.collector,
+                                            self.storage,
+                                            tenant)
+                            worker.run()
+                        lock.release()
+                    self.coord.heartbeat()
+                # NOTE(sheeprine): Slow down looping if all tenants are
+                # being processed
+                eventlet.sleep(1)
             # FIXME(sheeprine): We may cause a drift here
             eventlet.sleep(CONF.collect.period)
 
     def terminate(self):
-        pass
+        self.coord.stop()
