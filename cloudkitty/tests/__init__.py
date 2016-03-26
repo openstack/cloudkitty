@@ -17,6 +17,7 @@
 #
 import decimal
 
+import mock
 from oslo_config import fixture as config_fixture
 from oslotest import base
 import testscenarios
@@ -75,7 +76,19 @@ class TestCase(testscenarios.TestWithScenarios, base.BaseTestCase):
         self.conn = ck_db_api.get_instance()
         migration = self.conn.get_migration()
         migration.upgrade('head')
+        auth = mock.patch(
+            'keystoneauth1.loading.load_auth_from_conf_options',
+            return_value=dict())
+        auth.start()
+        self.auth = auth
+        session = mock.patch(
+            'keystoneauth1.loading.load_session_from_conf_options',
+            return_value=dict())
+        session.start()
+        self.session = session
 
     def tearDown(self):
         db.get_engine().dispose()
+        self.auth.stop()
+        self.session.stop()
         super(TestCase, self).tearDown()

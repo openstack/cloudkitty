@@ -21,10 +21,8 @@ from oslo_config import cfg
 import six
 from stevedore import driver
 
+from cloudkitty import collector as ck_collector
 from cloudkitty import utils as ck_utils
-
-STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
-CONF = cfg.CONF
 
 storage_opts = [
     cfg.StrOpt('backend',
@@ -32,12 +30,16 @@ storage_opts = [
                help='Name of the storage backend driver.')
 ]
 
+CONF = cfg.CONF
 CONF.register_opts(storage_opts, group='storage')
-CONF.import_opt('period', 'cloudkitty.collector', 'collect')
+
+STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
-def get_storage():
-    storage_args = {'period': cfg.CONF.collect.period}
+def get_storage(collector=None):
+    storage_args = {
+        'period': CONF.collect.period,
+        'collector': collector if collector else ck_collector.get_collector()}
     backend = driver.DriverManager(
         STORAGES_NAMESPACE,
         cfg.CONF.storage.backend,
@@ -60,8 +62,9 @@ class BaseStorage(object):
 
         Handle incoming data from the global orchestrator, and store them.
     """
-    def __init__(self, period=CONF.collect.period):
-        self._period = period
+    def __init__(self, **kwargs):
+        self._period = kwargs.get('period', CONF.collect.period)
+        self._collector = kwargs.get('collector')
 
         # State vars
         self.usage_start = {}

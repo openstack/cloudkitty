@@ -274,7 +274,15 @@ class BaseStorageDataFixture(fixture.GabbiFixture):
         return data
 
     def start_fixture(self):
-        self.storage = storage.get_storage()
+        auth = mock.patch(
+            'keystoneauth1.loading.load_auth_from_conf_options',
+            return_value=dict())
+        session = mock.patch(
+            'keystoneauth1.loading.load_session_from_conf_options',
+            return_value=dict())
+        with auth:
+            with session:
+                self.storage = storage.get_storage()
         self.storage.init()
         self.initialize_data()
 
@@ -350,4 +358,10 @@ class CORSConfigFixture(fixture.GabbiFixture):
 
 def setup_app():
     rpc.init()
-    return app.load_app()
+    # FIXME(sheeprine): Extension fixtures are interacting with transformers
+    # loading, since collectors are not needed here we shunt them
+    no_collector = mock.patch(
+        'cloudkitty.collector.get_collector',
+        return_value=None)
+    with no_collector:
+        return app.load_app()

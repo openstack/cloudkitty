@@ -26,13 +26,14 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging as messaging
 from stevedore import driver
-from stevedore import extension
 from tooz import coordination
 
 from cloudkitty import collector
 from cloudkitty.common import rpc
 from cloudkitty import config  # noqa
 from cloudkitty import extension_manager
+from cloudkitty import storage
+from cloudkitty import transformer
 from cloudkitty import utils as ck_utils
 
 eventlet.monkey_patch()
@@ -40,7 +41,6 @@ eventlet.monkey_patch()
 LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
-CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
 CONF.import_opt('backend', 'cloudkitty.tenant_fetcher', 'tenant_fetcher')
 
 orchestrator_opts = [
@@ -51,11 +51,8 @@ orchestrator_opts = [
 ]
 CONF.register_opts(orchestrator_opts, group='orchestrator')
 
-COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 FETCHERS_NAMESPACE = 'cloudkitty.tenant.fetchers'
-TRANSFORMERS_NAMESPACE = 'cloudkitty.transformers'
 PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
-STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
 class RatingEndpoint(object):
@@ -226,24 +223,9 @@ class Orchestrator(object):
             CONF.tenant_fetcher.backend,
             invoke_on_load=True).driver
 
-        # Transformers
-        self.transformers = {}
-        self._load_transformers()
-
-        collector_args = {'transformers': self.transformers,
-                          'period': CONF.collect.period}
-        self.collector = driver.DriverManager(
-            COLLECTORS_NAMESPACE,
-            CONF.collect.collector,
-            invoke_on_load=True,
-            invoke_kwds=collector_args).driver
-
-        storage_args = {'period': CONF.collect.period}
-        self.storage = driver.DriverManager(
-            STORAGES_NAMESPACE,
-            CONF.storage.backend,
-            invoke_on_load=True,
-            invoke_kwds=storage_args).driver
+        self.transformers = transformer.get_transformers()
+        self.collector = collector.get_collector(self.transformers)
+        self.storage = storage.get_storage(self.collector)
 
         # RPC
         self.server = None
@@ -286,17 +268,6 @@ class Orchestrator(object):
         if next_timestamp + wait_time < now:
             return next_timestamp
         return 0
-
-    def _load_transformers(self):
-        self.transformers = {}
-        transformers = extension.ExtensionManager(
-            TRANSFORMERS_NAMESPACE,
-            invoke_on_load=True)
-
-        for transformer in transformers:
-            t_name = transformer.name
-            t_obj = transformer.obj
-            self.transformers[t_name] = t_obj
 
     def process_messages(self):
         # TODO(sheeprine): Code kept to handle threading and asynchronous

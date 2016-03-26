@@ -1,6 +1,6 @@
 fixtures:
-    - PyScriptsConfigFixture
-    - UUIDFixture
+  - PyScriptsConfigFixture
+  - UUIDFixture
 
 tests:
 

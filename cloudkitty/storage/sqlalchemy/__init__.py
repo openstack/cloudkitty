@@ -15,6 +15,7 @@
 #
 # @author: Stéphane Albert
 #
+import decimal
 import json
 
 from oslo_db.sqlalchemy import utils
@@ -31,8 +32,10 @@ class SQLAlchemyStorage(storage.BaseStorage):
     """SQLAlchemy Storage Backend
 
     """
-    def __init__(self, period=3600):
-        super(SQLAlchemyStorage, self).__init__(period)
+    frame_model = models.RatedDataFrame
+
+    def __init__(self, **kwargs):
+        super(SQLAlchemyStorage, self).__init__(**kwargs)
         self._session = {}
 
     @staticmethod
@@ -69,22 +72,18 @@ class SQLAlchemyStorage(storage.BaseStorage):
     def get_state(self, tenant_id=None):
         session = db.get_session()
         q = utils.model_query(
-            models.RatedDataFrame,
-            session
-        )
+            self.frame_model,
+            session)
         if tenant_id:
             q = q.filter(
-                models.RatedDataFrame.tenant_id == tenant_id
-            )
-        r = q.order_by(
-            models.RatedDataFrame.begin.desc()
-        ).first()
+                self.frame_model.tenant_id == tenant_id)
+        q = q.order_by(
+            self.frame_model.begin.desc())
+        r = q.first()
         if r:
             return ck_utils.dt2ts(r.begin)
 
     def get_total(self, begin=None, end=None, tenant_id=None, service=None):
-        model = models.RatedDataFrame
-
         # Boundary calculation
         if not begin:
             begin = ck_utils.get_month_start()
@@ -93,22 +92,20 @@ class SQLAlchemyStorage(storage.BaseStorage):
 
         session = db.get_session()
         q = session.query(
-            sqlalchemy.func.sum(model.rate).label('rate'))
+            sqlalchemy.func.sum(self.frame_model.rate).label('rate'))
         if tenant_id:
             q = q.filter(
-                models.RatedDataFrame.tenant_id == tenant_id)
+                self.frame_model.tenant_id == tenant_id)
         if service:
             q = q.filter(
-                models.RatedDataFrame.res_type == service)
+                self.frame_model.res_type == service)
         q = q.filter(
-            model.begin >= begin,
-            model.end <= end)
+            self.frame_model.begin >= begin,
+            self.frame_model.end <= end)
         rate = q.scalar()
         return rate
 
     def get_tenants(self, begin=None, end=None):
-        model = models.RatedDataFrame
-
         # Boundary calculation
         if not begin:
             begin = ck_utils.get_month_start()
@@ -117,65 +114,64 @@ class SQLAlchemyStorage(storage.BaseStorage):
 
         session = db.get_session()
         q = utils.model_query(
-            model,
-            session
-        ).filter(
-            model.begin >= begin,
-            model.end <= end
-        )
+            self.frame_model,
+            session)
+        q = q.filter(
+            self.frame_model.begin >= begin,
+            self.frame_model.end <= end)
         tenants = q.distinct().values(
-            model.tenant_id
-        )
+            self.frame_model.tenant_id)
         return [tenant.tenant_id for tenant in tenants]
 
     def get_time_frame(self, begin, end, **filters):
-        model = models.RatedDataFrame
         session = db.get_session()
         q = utils.model_query(
-            model,
-            session
-        ).filter(
-            model.begin >= ck_utils.ts2dt(begin),
-            model.end <= ck_utils.ts2dt(end)
-        )
+            self.frame_model,
+            session)
+        q = q.filter(
+            self.frame_model.begin >= ck_utils.ts2dt(begin),
+            self.frame_model.end <= ck_utils.ts2dt(end))
         for filter_name, filter_value in filters.items():
             if filter_value:
-                q = q.filter(getattr(model, filter_name) == filter_value)
+                q = q.filter(
+                    getattr(self.frame_model, filter_name) == filter_value)
         if not filters.get('res_type'):
-            q = q.filter(model.res_type != '_NO_DATA_')
+            q = q.filter(self.frame_model.res_type != '_NO_DATA_')
         count = q.count()
         if not count:
             raise storage.NoTimeFrame()
         r = q.all()
-        return [entry.to_cloudkitty() for entry in r]
+        return [entry.to_cloudkitty(self._collector) for entry in r]
 
     def _append_time_frame(self, res_type, frame, tenant_id):
         vol_dict = frame['vol']
         qty = vol_dict['qty']
         unit = vol_dict['unit']
-        rating_dict = frame['rating']
-        rate = rating_dict['price']
+        rating_dict = frame.get('rating', {})
+        rate = rating_dict.get('price')
+        if not rate:
+            rate = decimal.Decimal(0)
         desc = json.dumps(frame['desc'])
-        self.add_time_frame(self.usage_start_dt.get(tenant_id),
-                            self.usage_end_dt.get(tenant_id),
-                            tenant_id,
-                            unit,
-                            qty,
-                            res_type,
-                            rate,
-                            desc)
+        self.add_time_frame(begin=self.usage_start_dt.get(tenant_id),
+                            end=self.usage_end_dt.get(tenant_id),
+                            tenant_id=tenant_id,
+                            unit=unit,
+                            qty=qty,
+                            res_type=res_type,
+                            rate=rate,
+                            desc=desc)
 
-    def add_time_frame(self, begin, end, tenant_id, unit, qty, res_type,
-                       rate, desc):
+    def add_time_frame(self, **kwargs):
         """Create a new time frame.
 
+        :param begin: Start of the dataframe.
+        :param end: End of the dataframe.
+        :param tenant_id: tenant_id of the dataframe owner.
+        :param unit: Unit of the metric.
+        :param qty: Quantity of the metric.
+        :param res_type: Type of the resource.
+        :param rate: Calculated rate for this dataframe.
+        :param desc: Resource description (metadata).
         """
-        frame = models.RatedDataFrame(begin=begin,
-                                      end=end,
-                                      tenant_id=tenant_id,
-                                      unit=unit,
-                                      qty=qty,
-                                      res_type=res_type,
-                                      rate=rate,
-                                      desc=desc)
-        self._session[tenant_id].add(frame)
+        frame = self.frame_model(**kwargs)
+        self._session[kwargs.get('tenant_id')].add(frame)
