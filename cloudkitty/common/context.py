@@ -37,13 +37,8 @@ class RequestContext(context.RequestContext):
                                              show_deleted=show_deleted,
                                              request_id=request_id,
                                              resource_uuid=resource_uuid,
-                                             overwrite=overwrite)
-        self.roles = roles or []
-
-    def to_dict(self):
-        d = super(RequestContext, self).to_dict()
-        d['roles'] = self.roles
-        return d
+                                             overwrite=overwrite,
+                                             roles=roles)
 
     @classmethod
     def from_dict(cls, values):
