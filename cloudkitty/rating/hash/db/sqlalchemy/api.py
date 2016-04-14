@@ -47,7 +47,8 @@ class HashMap(api.HashMap):
                 q = q.filter(
                     models.HashMapService.service_id == uuid)
             else:
-                raise ValueError('You must specify either name or uuid.')
+                raise api.ClientHashMapError(
+                    'You must specify either name or uuid.')
             res = q.one()
             return res
         except sqlalchemy.orm.exc.NoResultFound:
@@ -67,23 +68,28 @@ class HashMap(api.HashMap):
                     models.HashMapService.service_id == service_uuid,
                     models.HashMapField.name == name)
             else:
-                raise ValueError('You must specify either an uuid'
-                                 ' or a service_uuid and a name.')
+                raise api.ClientHashMapError(
+                    'You must specify either an uuid'
+                    ' or a service_uuid and a name.')
             res = q.one()
             return res
         except sqlalchemy.orm.exc.NoResultFound:
             raise api.NoSuchField(uuid)
 
-    def get_group(self, uuid):
+    def get_group(self, uuid=None, name=None):
         session = db.get_session()
         try:
             q = session.query(models.HashMapGroup)
-            q = q.filter(
-                models.HashMapGroup.group_id == uuid)
+            if uuid:
+                q = q.filter(
+                    models.HashMapGroup.group_id == uuid)
+            if name:
+                q = q.filter(
+                    models.HashMapGroup.name == name)
             res = q.one()
             return res
         except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchGroup(uuid=uuid)
+            raise api.NoSuchGroup(name, uuid)
 
     def get_mapping(self, uuid):
         session = db.get_session()
@@ -179,8 +185,9 @@ class HashMap(api.HashMap):
                 models.HashMapMapping.group)
             q = q.filter(models.HashMapGroup.group_id == group_uuid)
         elif not service_uuid and not field_uuid:
-            raise ValueError('You must specify either service_uuid,'
-                             ' field_uuid or group_uuid.')
+            raise api.ClientHashMapError(
+                'You must specify either service_uuid,'
+                ' field_uuid or group_uuid.')
         elif no_group:
             q = q.filter(models.HashMapMapping.group_id == None)  # noqa
         res = q.values(
@@ -209,8 +216,9 @@ class HashMap(api.HashMap):
                 models.HashMapThreshold.group)
             q = q.filter(models.HashMapGroup.group_id == group_uuid)
         elif not service_uuid and not field_uuid:
-            raise ValueError('You must specify either service_uuid,'
-                             ' field_uuid or group_uuid.')
+            raise api.ClientHashMapError(
+                'You must specify either service_uuid,'
+                ' field_uuid or group_uuid.')
         elif no_group:
             q = q.filter(models.HashMapThreshold.group_id == None)  # noqa
         res = q.values(
@@ -243,9 +251,9 @@ class HashMap(api.HashMap):
                 session.add(field_db)
             # FIXME(sheeprine): backref are not populated as they used to be.
             #                   Querying the item again to get backref.
-            field_db = self.get_field(service_uuid=service_uuid,
-                                      name=name)
+            field_db = self.get_field(service_uuid=service_uuid, name=name)
         except exception.DBDuplicateEntry:
+            field_db = self.get_field(service_uuid=service_uuid, name=name)
             raise api.FieldAlreadyExists(field_db.name, field_db.field_id)
         else:
             return field_db
@@ -260,6 +268,7 @@ class HashMap(api.HashMap):
                 session.add(group_db)
             return group_db
         except exception.DBDuplicateEntry:
+            group_db = self.get_group(name=name)
             raise api.GroupAlreadyExists(name, group_db.group_id)
 
     def create_mapping(self,
@@ -270,13 +279,17 @@ class HashMap(api.HashMap):
                        field_id=None,
                        group_id=None):
         if field_id and service_id:
-            raise ValueError('You can only specify one parent.')
-        if not value and not service_id:
-            raise ValueError('You must either specify a value'
-                             ' or a service_id')
+            raise api.ClientHashMapError('You can only specify one parent.')
+        elif not service_id and not field_id:
+            raise api.ClientHashMapError('You must specify one parent.')
         elif value and service_id:
-            raise ValueError('You can\'t specify a value'
-                             ' and a service_id.')
+            raise api.ClientHashMapError(
+                'You can\'t specify a value'
+                ' and a service_id.')
+        elif not value and field_id:
+            raise api.ClientHashMapError(
+                'You must specify a value'
+                ' for a field mapping.')
         field_fk = None
         if field_id:
             field_db = self.get_field(uuid=field_id)
@@ -303,7 +316,13 @@ class HashMap(api.HashMap):
                     field_map.group_id = group_fk
                 session.add(field_map)
         except exception.DBDuplicateEntry:
-            raise api.MappingAlreadyExists(value, field_map.field_id)
+            if field_id:
+                puuid = field_id
+                ptype = 'field'
+            else:
+                puuid = service_id
+                ptype = 'service'
+            raise api.MappingAlreadyExists(value, puuid, ptype)
         except exception.DBError:
             raise api.NoSuchType(map_type)
         # FIXME(sheeprine): backref are not populated as they used to be.
@@ -319,7 +338,9 @@ class HashMap(api.HashMap):
                          field_id=None,
                          group_id=None):
         if field_id and service_id:
-            raise ValueError('You can only specify one parent.')
+            raise api.ClientHashMapError('You can only specify one parent.')
+        elif not service_id and not field_id:
+            raise api.ClientHashMapError('You must specify one parent.')
         field_fk = None
         if field_id:
             field_db = self.get_field(uuid=field_id)
@@ -346,7 +367,13 @@ class HashMap(api.HashMap):
                     threshold_db.group_id = group_fk
                 session.add(threshold_db)
         except exception.DBDuplicateEntry:
-            raise api.ThresholdAlreadyExists(level, threshold_db.field_id)
+            if field_id:
+                puuid = field_id
+                ptype = 'field'
+            else:
+                puuid = service_id
+                ptype = 'service'
+            raise api.ThresholdAlreadyExists(level, puuid, ptype)
         except exception.DBError:
             raise api.NoSuchType(map_type)
         # FIXME(sheeprine): backref are not populated as they used to be.
@@ -360,10 +387,15 @@ class HashMap(api.HashMap):
             with session.begin():
                 q = session.query(models.HashMapMapping)
                 q = q.filter(
-                    models.HashMapMapping.mapping_id == uuid
-                )
+                    models.HashMapMapping.mapping_id == uuid)
                 mapping_db = q.with_lockmode('update').one()
                 if kwargs:
+                    # NOTE(sheeprine): We want to check that value is not set
+                    # to a None value.
+                    if mapping_db.field_id and not kwargs.get('value', 'GOOD'):
+                        raise api.ClientHashMapError(
+                            'You must specify a value'
+                            ' for a field mapping.')
                     # Resolve FK
                     if 'group_id' in kwargs:
                         group_id = kwargs.pop('group_id')
@@ -379,10 +411,11 @@ class HashMap(api.HashMap):
                         if hasattr(mapping_db, attribute):
                             setattr(mapping_db, attribute, value)
                         else:
-                            raise ValueError('No such attribute: {}'.format(
-                                attribute))
+                            raise api.ClientHashMapError(
+                                'No such attribute: {}'.format(
+                                    attribute))
                 else:
-                    raise ValueError('No attribute to update.')
+                    raise api.ClientHashMapError('No attribute to update.')
                 return mapping_db
         except sqlalchemy.orm.exc.NoResultFound:
             raise api.NoSuchMapping(uuid)
@@ -411,10 +444,11 @@ class HashMap(api.HashMap):
                         if hasattr(threshold_db, attribute):
                             setattr(threshold_db, attribute, value)
                         else:
-                            raise ValueError('No such attribute: {}'.format(
-                                attribute))
+                            raise api.ClientHashMapError(
+                                'No such attribute: {}'.format(
+                                    attribute))
                 else:
-                    raise ValueError('No attribute to update.')
+                    raise api.ClientHashMapError('No attribute to update.')
                 return threshold_db
         except sqlalchemy.orm.exc.NoResultFound:
             raise api.NoSuchThreshold(uuid)
@@ -429,7 +463,8 @@ class HashMap(api.HashMap):
         elif uuid:
             q = q.filter(models.HashMapService.service_id == uuid)
         else:
-            raise ValueError('You must specify either name or uuid.')
+            raise api.ClientHashMapError(
+                'You must specify either name or uuid.')
         r = q.delete()
         if not r:
             raise api.NoSuchService(name, uuid)

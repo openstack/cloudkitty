@@ -1,0 +1,28 @@
+fixtures:
+  - HashMapConfigFixture
+
+tests:
+
+  - name: list services (empty)
+    url: /v1/rating/module_config/hashmap/services
+    status: 200
+    response_strings:
+      - "[]"
+
+  - name: list fields from invalid service (empty)
+    url: /v1/rating/module_config/hashmap/fields?service_id=d28490b2-fb3c-11e5-988b-eb9539c935dc
+    status: 200
+    response_strings:
+      - "[]"
+
+  - name: list mappings from invalid service (empty)
+    url: /v1/rating/module_config/hashmap/mappings?service_id=d28490b2-fb3c-11e5-988b-eb9539c935dc
+    status: 200
+    response_strings:
+      - "[]"
+
+  - name: list mappings from invalid field (empty)
+    url: /v1/rating/module_config/hashmap/mappings?field_id=d28490b2-fb3c-11e5-988b-eb9539c935dc
+    status: 200
+    response_strings:
+      - "[]"

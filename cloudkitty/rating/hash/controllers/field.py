@@ -83,8 +83,10 @@ class HashMapFieldsController(rating.RatingRestControllerBase):
             pecan.response.location += field_db.field_id
             return field_models.Field(
                 **field_db.export_model())
-        except (db_api.FieldAlreadyExists, db_api.NoSuchService) as e:
+        except db_api.FieldAlreadyExists as e:
             pecan.abort(409, six.text_type(e))
+        except db_api.ClientHashMapError as e:
+            pecan.abort(400, six.text_type(e))
 
     @wsme_pecan.wsexpose(None,
                          ck_types.UuidType(),
@@ -97,5 +99,5 @@ class HashMapFieldsController(rating.RatingRestControllerBase):
         hashmap = db_api.get_instance()
         try:
             hashmap.delete_field(uuid=field_id)
-        except db_api.NoSuchService as e:
+        except db_api.NoSuchField as e:
             pecan.abort(404, six.text_type(e))

@@ -120,6 +120,8 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
                 **mapping_db.export_model())
         except db_api.MappingAlreadyExists as e:
             pecan.abort(409, six.text_type(e))
+        except db_api.ClientHashMapError as e:
+            pecan.abort(400, six.text_type(e))
 
     @wsme_pecan.wsexpose(None,
                          ck_types.UuidType(),
@@ -141,10 +143,10 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
                 map_type=mapping.map_type,
                 group_id=mapping.group_id)
             pecan.response.headers['Location'] = pecan.request.path
-        except (db_api.NoSuchService,
-                db_api.NoSuchField,
-                db_api.NoSuchMapping) as e:
+        except db_api.NoSuchMapping as e:
             pecan.abort(404, six.text_type(e))
+        except db_api.ClientHashMapError as e:
+            pecan.abort(400, six.text_type(e))
 
     @wsme_pecan.wsexpose(None,
                          ck_types.UuidType(),
@@ -157,7 +159,5 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
         hashmap = db_api.get_instance()
         try:
             hashmap.delete_mapping(uuid=mapping_id)
-        except (db_api.NoSuchService,
-                db_api.NoSuchField,
-                db_api.NoSuchMapping) as e:
+        except db_api.NoSuchMapping as e:
             pecan.abort(404, six.text_type(e))

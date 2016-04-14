@@ -118,6 +118,8 @@ class HashMapGroupsController(rating.RatingRestControllerBase):
                 **group_db.export_model())
         except db_api.GroupAlreadyExists as e:
             pecan.abort(409, six.text_type(e))
+        except db_api.ClientHashMapError as e:
+            pecan.abort(400, six.text_type(e))
 
     @wsme_pecan.wsexpose(None,
                          ck_types.UuidType(),
