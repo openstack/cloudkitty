@@ -1,0 +1,257 @@
+fixtures:
+  - HashMapConfigFixture
+
+tests:
+
+  - name: check hashmap module is loaded
+    url: /v1/rating/modules
+    response_strings:
+      - '"module_id": "hashmap"'
+      - '"description": "HashMap rating module."'
+
+  - name: create a service
+    url: /v1/rating/module_config/hashmap/services
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      name: "compute"
+    status: 201
+    response_json_paths:
+      $.name: "compute"
+    response_store_environ:
+      hash_service_id: $.service_id
+
+  - name: get a service
+    url: /v1/rating/module_config/hashmap/services/$RESPONSE['$.service_id']
+    status: 200
+    response_json_paths:
+      $.service_id: $RESPONSE['$.service_id']
+      $.name: "compute"
+
+  - name: create a flat service mapping
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: $RESPONSE['$.service_id']
+      type: "flat"
+      cost: "0.10000000"
+    status: 201
+    response_json_paths:
+      $.service_id: $RESPONSE['$.service_id']
+      $.type: "flat"
+      $.cost: "0.10000000"
+
+  - name: delete a flat service mapping
+    url: /v1/rating/module_config/hashmap/mappings/$RESPONSE['$.mapping_id']
+    method: DELETE
+    status: 204
+
+  - name: list services
+    url: /v1/rating/module_config/hashmap/services
+    status: 200
+    response_json_paths:
+      $.services.`len`: 1
+      $.services[0].name: "compute"
+
+  - name: create a rate service mapping
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: $RESPONSE['$.services[0].service_id']
+      type: "rate"
+      cost: "0.2"
+    status: 201
+    response_json_paths:
+      $.service_id: $RESPONSE['$.services[0].service_id']
+      $.type: "rate"
+      $.cost: "0.20000000"
+
+  - name: create a field
+    url: /v1/rating/module_config/hashmap/fields
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: $RESPONSE['$.service_id']
+      name: "flavor_id"
+    status: 201
+    response_json_paths:
+      $.service_id: $RESPONSE['$.service_id']
+      $.name: "flavor_id"
+    response_store_environ:
+      hash_field_id: $.field_id
+
+  - name: get a field
+    url: /v1/rating/module_config/hashmap/fields/$RESPONSE['$.field_id']
+    status: 200
+    response_json_paths:
+      $.service_id: $RESPONSE['$.service_id']
+      $.name: "flavor_id"
+      $.field_id: $RESPONSE['$.field_id']
+
+  - name: create a flat field mapping
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      field_id: $RESPONSE['$.field_id']
+      type: "rate"
+      cost: "0.2"
+      value: "e2083e22-0004-11e6-82bd-2f02489b068b"
+    status: 201
+    response_json_paths:
+      $.field_id: $RESPONSE['$.field_id']
+      $.type: "rate"
+      $.cost: "0.20000000"
+
+  - name: delete a flat field mapping
+    url: /v1/rating/module_config/hashmap/mappings/$RESPONSE['$.mapping_id']
+    method: DELETE
+    status: 204
+
+  - name: list fields
+    url: /v1/rating/module_config/hashmap/fields?service_id=$ENVIRON['hash_service_id']
+    status: 200
+    response_json_paths:
+      $.fields.`len`: 1
+      $.fields[0].service_id: $ENVIRON['hash_service_id']
+      $.fields[0].field_id: $ENVIRON['hash_field_id']
+      $.fields[0].name: "flavor_id"
+
+  - name: create a rate field mapping
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      field_id: $RESPONSE['$.fields[0].field_id']
+      type: "rate"
+      cost: "0.2"
+      value: "f17a0674-0004-11e6-a16b-cf941f4668c4"
+    status: 201
+    response_json_paths:
+      $.field_id: $RESPONSE['$.fields[0].field_id']
+      $.type: "rate"
+      $.cost: "0.20000000"
+    response_store_environ:
+      hash_rate_mapping_id: $.mapping_id
+
+  - name: change the cost of a mapping
+    url: /v1/rating/module_config/hashmap/mappings/$RESPONSE['$.mapping_id']
+    method: PUT
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      type: "rate"
+      cost: "0.3"
+      value: "f17a0674-0004-11e6-a16b-cf941f4668c4"
+    status: 302
+
+  - name: check updated mapping
+    url: /v1/rating/module_config/hashmap/mappings/$ENVIRON['hash_rate_mapping_id']
+    status: 200
+    response_json_paths:
+      $.mapping_id: $ENVIRON['hash_rate_mapping_id']
+      $.field_id: $ENVIRON['hash_field_id']
+      $.type: "rate"
+      $.cost: "0.30000000"
+      $.value: "f17a0674-0004-11e6-a16b-cf941f4668c4"
+
+  - name: delete a field
+    url: /v1/rating/module_config/hashmap/fields/$ENVIRON['hash_field_id']
+    method: DELETE
+    status: 204
+
+  - name: check field got deleted
+    url: /v1/rating/module_config/hashmap/fields/$ENVIRON['hash_field_id']
+    method: DELETE
+    status: 404
+    response_strings:
+      - "No such field: $ENVIRON['hash_field_id']"
+
+  - name: check child mappings got deleted
+    url: /v1/rating/module_config/hashmap/mappings/?field_id=$ENVIRON['hash_field_id']
+    status: 200
+    response_json_paths:
+      $.mappings.`len`: 0
+
+  - name: delete a service
+    url: /v1/rating/module_config/hashmap/services/$ENVIRON['hash_service_id']
+    method: DELETE
+    status: 204
+
+  - name: check service got deleted
+    url: /v1/rating/module_config/hashmap/services/$ENVIRON['hash_service_id']
+    method: DELETE
+    status: 404
+    response_strings:
+      - "No such service: None (UUID: $ENVIRON['hash_service_id'])"
+
+  - name: create a service for recursive delete
+    url: /v1/rating/module_config/hashmap/services
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      name: "service"
+    status: 201
+    response_store_environ:
+      hash_service_id: $.service_id
+
+  - name: create a field for recursive delete
+    url: /v1/rating/module_config/hashmap/fields
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: $RESPONSE['$.service_id']
+      name: "flavor_id"
+    status: 201
+    response_store_environ:
+      hash_field_id: $.field_id
+
+  - name: create a field mapping for recursive delete
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      field_id: $RESPONSE['$.field_id']
+      value: "flavor_id"
+      cost: "0.1"
+    status: 201
+    response_store_environ:
+      hash_mapping_id: $.mapping_id
+
+  - name: delete a service with recursive
+    url: /v1/rating/module_config/hashmap/services/$ENVIRON['hash_service_id']
+    method: DELETE
+    status: 204
+
+  - name: check mapping got recursively deleted
+    url: /v1/rating/module_config/hashmap/mappings/$ENVIRON['hash_mapping_id']
+    status: 404
+    response_strings:
+      - "No such mapping: $ENVIRON['hash_mapping_id']"
+
+  - name: check field got recursively deleted
+    url: /v1/rating/module_config/hashmap/fields/$ENVIRON['hash_field_id']
+    status: 404
+    response_strings:
+      - "No such field: $ENVIRON['hash_field_id']"

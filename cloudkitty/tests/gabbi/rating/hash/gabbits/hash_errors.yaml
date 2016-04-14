@@ -1,0 +1,318 @@
+fixtures:
+  - HashMapConfigFixture
+
+tests:
+
+  - name: get an invalid service
+    url: /v1/rating/module_config/hashmap/services/d28490b2-fb3c-11e5-988b-eb9539c935dc
+    status: 404
+    response_strings:
+      - "No such service: None (UUID: d28490b2-fb3c-11e5-988b-eb9539c935dc)"
+
+  - name: get an invalid field
+    url: /v1/rating/module_config/hashmap/fields/d28490b2-fb3c-11e5-988b-eb9539c935dc
+    status: 404
+    response_strings:
+      - "No such field: d28490b2-fb3c-11e5-988b-eb9539c935dc"
+
+  - name: get an invalid mapping
+    url: /v1/rating/module_config/hashmap/mappings/d28490b2-fb3c-11e5-988b-eb9539c935dc
+    status: 404
+    response_strings:
+      - "No such mapping: d28490b2-fb3c-11e5-988b-eb9539c935dc"
+
+  - name: get an invalid threshold
+    url: /v1/rating/module_config/hashmap/thresholds/d28490b2-fb3c-11e5-988b-eb9539c935dc
+    status: 404
+    response_strings:
+      - "No such threshold: d28490b2-fb3c-11e5-988b-eb9539c935dc"
+
+  - name: get an invalid group
+    url: /v1/rating/module_config/hashmap/groups/d28490b2-fb3c-11e5-988b-eb9539c935dc
+    status: 404
+    response_strings:
+      - "No such group: None (UUID: d28490b2-fb3c-11e5-988b-eb9539c935dc)"
+
+  - name: create a service
+    url: /v1/rating/module_config/hashmap/services
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      name: "compute"
+    status: 201
+    response_json_paths:
+      $.name: "compute"
+    response_store_environ:
+      hash_error_service_id: $.service_id
+
+  - name: create a duplicate service
+    url: /v1/rating/module_config/hashmap/services
+    method: POST
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      name: "compute"
+    status: 409
+    response_strings:
+      - "Service compute already exists (UUID: $RESPONSE['$.service_id'])"
+
+  - name: create a service mapping with an invalid type
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: "371bcd08-009f-11e6-91de-8745729038b2"
+      type: "fail"
+      cost: "0.2"
+    status: 400
+    response_strings:
+      - "Invalid input for field/attribute type. Value: 'fail'. Value should be one of: "
+
+  - name: create a field
+    url: /v1/rating/module_config/hashmap/fields
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: $ENVIRON['hash_error_service_id']
+      name: "flavor_id"
+    status: 201
+    response_json_paths:
+      $.service_id: $ENVIRON['hash_error_service_id']
+      $.name: "flavor_id"
+    response_store_environ:
+      hash_error_field_id: $.field_id
+
+  - name: create a duplicate field
+    url: /v1/rating/module_config/hashmap/fields
+    method: POST
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      service_id: $RESPONSE['$.service_id']
+      name: "flavor_id"
+    status: 409
+    response_strings:
+      - "Field $RESPONSE['$.name'] already exists (UUID: $RESPONSE['$.field_id'])"
+
+  - name: modify unknown mapping
+    url: /v1/rating/module_config/hashmap/mappings/42
+    method: PUT
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: "cf1e7d1e-fcc4-11e5-9c93-b7775ce62e3c"
+      type: "flat"
+      cost: "0.10000000"
+    status: 404
+    response_strings:
+      - "No such mapping: 42"
+
+  - name: create a field mapping to check updates
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      field_id: $ENVIRON['hash_error_field_id']
+      type: "flat"
+      cost: "0.2"
+      value: "fail"
+    status: 201
+
+  - name: remove the value of a field mapping
+    url: /v1/rating/module_config/hashmap/mappings/$RESPONSE['$.mapping_id']
+    method: PUT
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      type: "rate"
+      cost: "0.2"
+      value: ''
+    status: 400
+    response_strings:
+      - "You must specify a value for a field mapping."
+
+  - name: create a service mapping with an invalid service_id
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
+      type: "flat"
+      cost: "0.2"
+    status: 400
+    response_strings:
+      - "No such service: None (UUID: de23e3fe-0097-11e6-a44d-2b09512e61d9)"
+
+  - name: create a field mapping with an invalid field_id
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      field_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
+      type: "flat"
+      cost: "0.2"
+      value: "fail"
+    status: 400
+    response_strings:
+      - "No such field: de23e3fe-0097-11e6-a44d-2b09512e61d9"
+
+  - name: create a service threshold with an invalid service_id
+    url: /v1/rating/module_config/hashmap/thresholds
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
+      type: "flat"
+      cost: "0.2"
+      level: "1.0"
+    status: 400
+    response_strings:
+      - "No such service: None (UUID: de23e3fe-0097-11e6-a44d-2b09512e61d9)"
+
+  - name: create a field threshold with an invalid field_id
+    url: /v1/rating/module_config/hashmap/thresholds
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      field_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
+      type: "flat"
+      cost: "0.2"
+      level: "1.0"
+    status: 400
+    response_strings:
+      - "No such field: de23e3fe-0097-11e6-a44d-2b09512e61d9"
+
+  - name: create a mapping with both parent id set
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
+      field_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
+      type: "flat"
+      cost: "0.2"
+    status: 400
+    response_strings:
+      - "You can only specify one parent."
+
+  - name: create a mapping with a value and no parent
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      type: "flat"
+      cost: "0.2"
+      value: "fail"
+    status: 400
+    response_strings:
+      - "You must specify one parent."
+
+  - name: create a field mapping with a parent and no value
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      field_id: $ENVIRON['hash_error_field_id']
+      type: "flat"
+      cost: "0.2"
+    status: 400
+    response_strings:
+      - "You must specify a value for a field mapping."
+
+  - name: create a threshold with both parent id set
+    url: /v1/rating/module_config/hashmap/thresholds
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
+      field_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
+      type: "flat"
+      cost: "0.2"
+      level: "1.0"
+    status: 400
+    response_strings:
+      - "You can only specify one parent."
+
+  - name: create a threshold with no parent
+    url: /v1/rating/module_config/hashmap/thresholds
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      type: "flat"
+      cost: "0.2"
+      level: "1.0"
+    status: 400
+    response_strings:
+      - "You must specify one parent."
+
+  - name: create a service threshold with a parent and no level
+    url: /v1/rating/module_config/hashmap/thresholds
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: $ENVIRON['hash_error_service_id']
+      type: "flat"
+      cost: "0.2"
+    status: 400
+    response_strings:
+      - "Invalid input for field/attribute level. Value: 'None'. Mandatory field missing."
+
+  - name: delete unknown threshold
+    url: /v1/rating/module_config/hashmap/thresholds/d28490b2-fb3c-11e5-988b-eb9539c935dc
+    method: DELETE
+    status: 404
+    response_strings:
+      - "No such threshold: d28490b2-fb3c-11e5-988b-eb9539c935dc"
+
+  - name: delete unknown mapping
+    url: /v1/rating/module_config/hashmap/mappings/d28490b2-fb3c-11e5-988b-eb9539c935dc
+    method: DELETE
+    status: 404
+    response_strings:
+      - "No such mapping: d28490b2-fb3c-11e5-988b-eb9539c935dc"
+
+  - name: delete unknown field
+    url: /v1/rating/module_config/hashmap/fields/d28490b2-fb3c-11e5-988b-eb9539c935dc
+    method: DELETE
+    status: 404
+    response_strings:
+      - "No such field: d28490b2-fb3c-11e5-988b-eb9539c935dc"
+
+  - name: delete unknown service
+    url: /v1/rating/module_config/hashmap/services/d28490b2-fb3c-11e5-988b-eb9539c935dc
+    method: DELETE
+    status: 404
+    response_strings:
+      - "No such service: None (UUID: d28490b2-fb3c-11e5-988b-eb9539c935dc)"

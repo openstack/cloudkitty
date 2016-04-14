@@ -1,0 +1,144 @@
+fixtures:
+  - HashMapConfigFixture
+  - UUIDFixture
+
+tests:
+
+  - name: check redirect on service creation
+    url: /v1/rating/module_config/hashmap/services
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      name: "compute"
+    status: 201
+    response_json_paths:
+      $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.name: "compute"
+    response_headers:
+      location: $SCHEME://$NETLOC/v1/rating/module_config/hashmap/services/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+
+  - name: check redirect on service mapping creation
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      type: "flat"
+      cost: "0.10000000"
+    status: 201
+    response_json_paths:
+      $.mapping_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.type: "flat"
+      $.cost: "0.10000000"
+    response_headers:
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+
+  - name: delete test mapping
+    url: /v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+    method: DELETE
+    status: 204
+
+  - name: check redirect on service threshold creation
+    url: /v1/rating/module_config/hashmap/thresholds
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      level: "2"
+      type: "flat"
+      cost: "0.10000000"
+    status: 201
+    response_json_paths:
+      $.threshold_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.level: "2.00000000"
+      $.type: "flat"
+      $.cost: "0.10000000"
+    response_headers:
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+
+  - name: delete test threshold
+    url: /v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+    method: DELETE
+    status: 204
+
+  - name: check redirect on field creation
+    url: /v1/rating/module_config/hashmap/fields
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      name: "flavor_id"
+    status: 201
+    response_json_paths:
+      $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.name: "flavor_id"
+      $.field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+    response_headers:
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/fields/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+
+  - name: check redirect on field mapping creation
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      value: "04774238-fcad-11e5-a90e-6391fd56aab2"
+      type: "flat"
+      cost: "0.10000000"
+    status: 201
+    response_json_paths:
+      $.mapping_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.value: "04774238-fcad-11e5-a90e-6391fd56aab2"
+      $.type: "flat"
+      $.cost: "0.10000000"
+    response_headers:
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+
+  - name: check redirect on field threshold creation
+    url: /v1/rating/module_config/hashmap/thresholds
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      level: "2"
+      type: "flat"
+      cost: "0.10000000"
+    status: 201
+    response_json_paths:
+      $.threshold_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.level: "2.00000000"
+      $.type: "flat"
+      $.cost: "0.10000000"
+    response_headers:
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+
+  - name: check redirect on group creation
+    url: /v1/rating/module_config/hashmap/groups
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      name: "compute_uptime"
+    status: 201
+    response_json_paths:
+      $.group_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.name: "compute_uptime"
+    response_headers:
+      location: $SCHEME://$NETLOC/v1/rating/module_config/hashmap/groups/6c1b8a30-797f-4b7e-ad66-9879b79059fb

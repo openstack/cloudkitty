@@ -350,7 +350,7 @@ class HashMapRatingTest(tests.TestCase):
         service_db = self._db_api.create_service('compute')
         field_db = self._db_api.create_field(service_db.service_id,
                                              'flavor')
-        self.assertRaises(ValueError,
+        self.assertRaises(api.ClientHashMapError,
                           self._db_api.create_mapping,
                           value='m1.tiny',
                           cost='1.337',
