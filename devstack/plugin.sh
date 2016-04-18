@@ -151,11 +151,10 @@ function create_cloudkitty_data_dir {
     # Create data dir
     sudo mkdir -p $CLOUDKITTY_DATA_DIR
     sudo chown $STACK_USER $CLOUDKITTY_DATA_DIR
-    rm -f $CLOUDKITTY_DATA_DIR/*
+    rm -rf $CLOUDKITTY_DATA_DIR/*
     # Create locks dir
     sudo mkdir -p $CLOUDKITTY_DATA_DIR/locks
     sudo chown $STACK_USER $CLOUDKITTY_DATA_DIR/locks
-    rm -f $CLOUDKITTY_DATA_DIR/locks/*
 }
 
 # init_cloudkitty() - Initialize CloudKitty database
