@@ -17,6 +17,8 @@
 #
 import decimal
 
+import six
+
 from cloudkitty import rating
 from cloudkitty.rating.hash.controllers import root as root_api
 from cloudkitty.rating.hash.db import api as hash_db_api
@@ -89,31 +91,53 @@ class HashMap(rating.RatingProcessorBase):
             current_scope['cost'] = threshold_db.cost
         return thresholds
 
-    def _load_service_entries(self, service_name, service_uuid):
+    def _update_entries(self,
+                        entry_type,
+                        root,
+                        service_uuid=None,
+                        field_uuid=None,
+                        tenant_uuid=None):
         hashmap = hash_db_api.get_instance()
-        self._entries[service_name] = {}
-        mappings_uuid_list = hashmap.list_mappings(
-            service_uuid=service_uuid)
-        mappings = self._load_mappings(mappings_uuid_list)
-        self._entries[service_name]['mappings'] = mappings
-        thresholds_uuid_list = hashmap.list_thresholds(
-            service_uuid=service_uuid)
-        thresholds = self._load_thresholds(thresholds_uuid_list)
-        self._entries[service_name]['thresholds'] = thresholds
+        list_func = getattr(hashmap, 'list_{}'.format(entry_type))
+        entries_uuid_list = list_func(
+            service_uuid=service_uuid,
+            field_uuid=field_uuid,
+            tenant_uuid=tenant_uuid)
+        load_func = getattr(self, '_load_{}'.format(entry_type))
+        entries = load_func(entries_uuid_list)
+        if entry_type in root:
+            res = root[entry_type]
+            for group, values in six.iteritems(entries):
+                if group in res:
+                    res[group].update(values)
+                else:
+                    res[group] = values
+        else:
+            root[entry_type] = entries
+
+    def _load_service_entries(self, service_name, service_uuid):
+        self._entries[service_name] = dict()
+        for entry_type in ('mappings', 'thresholds'):
+            for tenant in (None, self._tenant_id):
+                self._update_entries(
+                    entry_type,
+                    self._entries[service_name],
+                    service_uuid=service_uuid,
+                    tenant_uuid=tenant)
 
     def _load_field_entries(self, service_name, field_name, field_uuid):
-        hashmap = hash_db_api.get_instance()
-        mappings_uuid_list = hashmap.list_mappings(field_uuid=field_uuid)
-        mappings = self._load_mappings(mappings_uuid_list)
-        thresholds_uuid_list = hashmap.list_thresholds(field_uuid=field_uuid)
-        thresholds = self._load_thresholds(thresholds_uuid_list)
         if service_name not in self._entries:
             self._entries[service_name] = {}
         if 'fields' not in self._entries[service_name]:
             self._entries[service_name]['fields'] = {}
         scope = self._entries[service_name]['fields'][field_name] = {}
-        scope['mappings'] = mappings
-        scope['thresholds'] = thresholds
+        for entry_type in ('mappings', 'thresholds'):
+            for tenant in (None, self._tenant_id):
+                self._update_entries(
+                    entry_type,
+                    scope,
+                    field_uuid=field_uuid,
+                    tenant_uuid=tenant)
 
     def _load_rates(self):
         self._entries = {}

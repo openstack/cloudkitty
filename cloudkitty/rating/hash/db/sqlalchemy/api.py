@@ -167,7 +167,8 @@ class HashMap(api.HashMap):
                       service_uuid=None,
                       field_uuid=None,
                       group_uuid=None,
-                      no_group=False):
+                      no_group=False,
+                      **kwargs):
 
         session = db.get_session()
         q = session.query(models.HashMapMapping)
@@ -180,14 +181,17 @@ class HashMap(api.HashMap):
             q = q.join(
                 models.HashMapMapping.field)
             q = q.filter(models.HashMapField.field_id == field_uuid)
-        if group_uuid:
-            q = q.join(
-                models.HashMapMapping.group)
-            q = q.filter(models.HashMapGroup.group_id == group_uuid)
         elif not service_uuid and not field_uuid:
             raise api.ClientHashMapError(
                 'You must specify either service_uuid,'
                 ' field_uuid or group_uuid.')
+        if 'tenant_uuid' in kwargs:
+            q = q.filter(
+                models.HashMapMapping.tenant_id == kwargs.get('tenant_uuid'))
+        if group_uuid:
+            q = q.join(
+                models.HashMapMapping.group)
+            q = q.filter(models.HashMapGroup.group_id == group_uuid)
         elif no_group:
             q = q.filter(models.HashMapMapping.group_id == None)  # noqa
         res = q.values(
@@ -198,7 +202,8 @@ class HashMap(api.HashMap):
                         service_uuid=None,
                         field_uuid=None,
                         group_uuid=None,
-                        no_group=False):
+                        no_group=False,
+                        **kwargs):
 
         session = db.get_session()
         q = session.query(models.HashMapThreshold)
@@ -211,14 +216,17 @@ class HashMap(api.HashMap):
             q = q.join(
                 models.HashMapThreshold.field)
             q = q.filter(models.HashMapField.field_id == field_uuid)
-        if group_uuid:
-            q = q.join(
-                models.HashMapThreshold.group)
-            q = q.filter(models.HashMapGroup.group_id == group_uuid)
         elif not service_uuid and not field_uuid:
             raise api.ClientHashMapError(
                 'You must specify either service_uuid,'
                 ' field_uuid or group_uuid.')
+        if 'tenant_uuid' in kwargs:
+            q = q.filter(
+                models.HashMapThreshold.tenant_id == kwargs.get('tenant_uuid'))
+        if group_uuid:
+            q = q.join(
+                models.HashMapThreshold.group)
+            q = q.filter(models.HashMapGroup.group_id == group_uuid)
         elif no_group:
             q = q.filter(models.HashMapThreshold.group_id == None)  # noqa
         res = q.values(
@@ -277,7 +285,8 @@ class HashMap(api.HashMap):
                        value=None,
                        service_id=None,
                        field_id=None,
-                       group_id=None):
+                       group_id=None,
+                       tenant_id=None):
         if field_id and service_id:
             raise api.ClientHashMapError('You can only specify one parent.')
         elif not service_id and not field_id:
@@ -311,7 +320,8 @@ class HashMap(api.HashMap):
                     cost=cost,
                     field_id=field_fk,
                     service_id=service_fk,
-                    map_type=map_type)
+                    map_type=map_type,
+                    tenant_id=tenant_id)
                 if group_fk:
                     field_map.group_id = group_fk
                 session.add(field_map)
@@ -322,7 +332,11 @@ class HashMap(api.HashMap):
             else:
                 puuid = service_id
                 ptype = 'service'
-            raise api.MappingAlreadyExists(value, puuid, ptype)
+            raise api.MappingAlreadyExists(
+                value,
+                puuid,
+                ptype,
+                tenant_id=tenant_id)
         except exception.DBError:
             raise api.NoSuchType(map_type)
         # FIXME(sheeprine): backref are not populated as they used to be.
@@ -336,7 +350,8 @@ class HashMap(api.HashMap):
                          map_type='rate',
                          service_id=None,
                          field_id=None,
-                         group_id=None):
+                         group_id=None,
+                         tenant_id=None):
         if field_id and service_id:
             raise api.ClientHashMapError('You can only specify one parent.')
         elif not service_id and not field_id:
@@ -362,7 +377,8 @@ class HashMap(api.HashMap):
                     cost=cost,
                     field_id=field_fk,
                     service_id=service_fk,
-                    map_type=map_type)
+                    map_type=map_type,
+                    tenant_id=tenant_id)
                 if group_fk:
                     threshold_db.group_id = group_fk
                 session.add(threshold_db)
