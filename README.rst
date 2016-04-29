@@ -3,6 +3,11 @@ CloudKitty
 ==========
 |doc-status|
 
+.. image:: doc/images/cloudkitty-logo.png
+    :alt: cloudkitty
+    :align: center
+
+
 Rating as a Service component
 +++++++++++++++++++++++++++++
 
