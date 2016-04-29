@@ -43,7 +43,10 @@ class GnocchiHybridStorage(sql_storage.SQLAlchemyStorage):
         rate = rating_dict.get('price')
         if not rate:
             rate = decimal.Decimal(0)
-        resource_ref = frame.get('resource_id')
+        if res_type == '_NO_DATA_':
+            resource_ref = res_type
+        else:
+            resource_ref = frame.get('resource_id')
         if not resource_ref:
             LOG.warn('Trying to store data collected outside of gnocchi. '
                      'This driver can only be used with the gnocchi collector.'
