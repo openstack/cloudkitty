@@ -43,7 +43,7 @@ class APILink(wtypes.Base):
         sample = cls(
             rel='self',
             type='text/html',
-            href='http://127.0.0.1:8888/{id}'.format(
+            href='http://127.0.0.1:8889/{id}'.format(
                 id=version))
         return sample
 
