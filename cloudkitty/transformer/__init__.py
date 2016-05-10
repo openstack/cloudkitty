@@ -37,5 +37,29 @@ def get_transformers():
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseTransformer(object):
-    def __init__(self):
-        pass
+    metadata_item = ''
+
+    def generic_strip(self, datatype, metadata):
+        mappings = getattr(self, datatype + '_map', {})
+        result = {}
+        for key, transform in six.iteritems(mappings):
+            if isinstance(transform, list):
+                for meta_key in transform:
+                    if key not in result or result[key] is None:
+                        try:
+                            data = getattr(metadata, meta_key)
+                        except AttributeError:
+                            data = metadata.get(meta_key)
+                        result[key] = data
+            else:
+                trans_data = transform(self, metadata)
+                if trans_data:
+                    result[key] = trans_data
+        return result
+
+    def strip_resource_data(self, res_type, res_data):
+        res_metadata = getattr(res_data, self.metadata_item, res_data)
+        strip_func = getattr(self, '_strip_' + res_type, None)
+        if strip_func:
+            return strip_func(res_metadata)
+        return self.generic_strip(res_type, res_metadata) or res_metadata
