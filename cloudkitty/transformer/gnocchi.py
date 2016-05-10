@@ -17,8 +17,22 @@ from cloudkitty import transformer
 
 
 class GnocchiTransformer(transformer.BaseTransformer):
-    def __init__(self):
-        pass
+    compute_map = {
+        'instance_id': ['id'],
+        'name': ['display_name'],
+        'flavor_id': ['flavor_id'],
+        'image_id': lambda x, y: x.get_image_id(y),
+    }
+    image_map = {
+        'container_format': ['container_format'],
+        'disk_format': ['disk_format'],
+    }
+    volume_map = {
+        'name': ['display_name'],
+    }
+    network_map = {
+        'name': ['name'],
+    }
 
     def _generic_strip(self, data):
         res_data = {
@@ -28,45 +42,15 @@ class GnocchiTransformer(transformer.BaseTransformer):
             'metrics': data['metrics']}
         return res_data
 
-    def _strip_compute(self, data):
-        res_data = self._generic_strip(data)
-        res_data.update({
-            'instance_id': data['id'],
-            'project_id': data['project_id'],
-            'user_id': data['user_id'],
-            'name': data['display_name'],
-            'flavor_id': data['flavor_id']})
-        if 'image_ref' in data:
-            res_data['image_id'] = data.rpartition['image_ref'][-1]
-        return res_data
-
-    def _strip_image(self, data):
-        res_data = self._generic_strip(data)
-        res_data.update({
-            'container_format': data['container_format'],
-            'disk_format': data['disk_format']})
-        return res_data
-
-    def _strip_volume(self, data):
-        res_data = self._generic_strip(data)
-        res_data.update({
-            'name': data['display_name']})
-        return res_data
-
-    def _strip_network(self, data):
-        res_data = self._generic_strip(data)
-        res_data.update({
-            'name': data['name']})
-        return res_data
+    @staticmethod
+    def get_image_id(data):
+        image_ref = data.get('image_ref', '')
+        return image_ref.rpartition('/')[-1] or image_ref
 
     def strip_resource_data(self, res_type, res_data):
-        if res_type == 'compute':
-            return self._strip_compute(res_data)
-        elif res_type == 'image':
-            return self._strip_image(res_data)
-        elif res_type == 'volume':
-            return self._strip_volume(res_data)
-        elif res_type.startswith('network.'):
-            return self._strip_network(res_data)
-        else:
-            return self._generic_strip(res_data)
+        result = self._generic_strip(res_data)
+        stripped_data = super(GnocchiTransformer, self).strip_resource_data(
+            res_type,
+            res_data)
+        result.update(stripped_data)
+        return result
