@@ -42,7 +42,7 @@ class HybridRatedDataframe(Base, models.ModelBase):
                                  nullable=False)
     rate = sqlalchemy.Column(sqlalchemy.Numeric(20, 8),
                              nullable=False)
-    resource_ref = sqlalchemy.Column(sqlalchemy.String(32),
+    resource_ref = sqlalchemy.Column(sqlalchemy.String(36),
                                      nullable=False)
     tenant_id = sqlalchemy.Column(sqlalchemy.String(32),
                                   nullable=True)
