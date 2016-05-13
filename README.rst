@@ -3,7 +3,7 @@ CloudKitty
 ==========
 |doc-status|
 
-.. image:: doc/images/cloudkitty-logo.png
+.. image:: doc/source/images/cloudkitty-logo.png
     :alt: cloudkitty
     :align: center
 
