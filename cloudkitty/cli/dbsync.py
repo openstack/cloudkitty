@@ -30,15 +30,14 @@ class ModuleNotFound(Exception):
     def __init__(self, name):
         self.name = name
         super(ModuleNotFound, self).__init__(
-            'Module %s not found' % name)
+            "Module %s not found" % name)
 
 
 class MultipleModulesRevisions(Exception):
     def __init__(self, revision):
         self.revision = revision
         super(MultipleModulesRevisions, self).__init__(
-            'Can\'t apply revision %s to multiple modules'
-            % revision)
+            "Can't apply revision %s to multiple modules." % revision)
 
 
 class DBCommand(object):
@@ -72,28 +71,30 @@ class DBCommand(object):
             migrations.append(self.get_module_migration('cloudkitty'))
             for model in self.rating_models.values():
                 migrations.append(model.get_migration())
+            return migrations
         else:
             return [self.get_module_migration(name)]
-        return migrations
 
     def check_revsion(self, revision):
         revision = revision or 'head'
         if revision not in ('base', 'head'):
             raise MultipleModulesRevisions(revision)
 
-    def upgrade(self):
-        if CONF.command.module:
-            self.check_revsion(CONF.command.revision)
-        migrations = self.get_migrations()
+    def _version_change(self, cmd):
+        revision = CONF.command.revision
+        module = CONF.command.module
+        if not module:
+            self.check_revsion(revision)
+        migrations = self.get_migrations(module)
         for migration in migrations:
-            migration.upgrade(CONF.command.revision)
+            func = getattr(migration, cmd)
+            func(revision)
+
+    def upgrade(self):
+        self._version_change('upgrade')
 
     def downgrade(self):
-        if CONF.command.module:
-            self.check_revsion(CONF.command.revision)
-        migrations = self.get_migrations()
-        for migration in migrations:
-            migration.downgrade(CONF.command.revision)
+        self._version_change('downgrade')
 
     def revision(self):
         migration = self.get_module_migration(CONF.command.module)
