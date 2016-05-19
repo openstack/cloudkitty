@@ -15,22 +15,13 @@
 #
 # @author: Stéphane Albert
 #
-from oslo_config import cfg
-from stevedore import driver
-
-from cloudkitty import config  # noqa
 from cloudkitty import service
-
-CONF = cfg.CONF
-STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
+from cloudkitty import storage
 
 
 def init_storage_backend():
-    CONF.import_opt('backend', 'cloudkitty.storage', 'storage')
-    backend = driver.DriverManager(
-        STORAGES_NAMESPACE,
-        CONF.storage.backend)
-    backend.driver.init()
+    backend = storage.get_storage()
+    backend.init()
 
 
 def main():
