@@ -15,10 +15,11 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.create_table('service_to_collector_mappings',
-    sa.Column('service', sa.String(length=255), nullable=False),
-    sa.Column('collector', sa.String(length=255), nullable=False),
-    sa.PrimaryKeyConstraint('service'))
+    op.create_table(
+        'service_to_collector_mappings',
+        sa.Column('service', sa.String(length=255), nullable=False),
+        sa.Column('collector', sa.String(length=255), nullable=False),
+        sa.PrimaryKeyConstraint('service'))
 
 
 def downgrade():
