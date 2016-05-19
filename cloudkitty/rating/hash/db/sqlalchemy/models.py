@@ -118,13 +118,9 @@ class HashMapField(Base, HashMapBase):
     def __table_args__(cls):
         args = (
             schema.UniqueConstraint(
-                'field_id',
-                'name',
-                name='uniq_field'),
-            schema.UniqueConstraint(
                 'service_id',
                 'name',
-                name='uniq_map_service_field'),
+                name='uniq_field_per_service'),
             HashMapBase.__table_args__,)
         return args
 
