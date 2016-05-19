@@ -21,28 +21,37 @@ def upgrade():
         constraints = ['uniq_field_threshold', 'uniq_service_threshold']
     else:
         constraints = ['uniq_field_mapping', 'uniq_service_mapping']
-    op.create_table('hashmap_thresholds',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('threshold_id', sa.String(length=36), nullable=False),
-    sa.Column('level', sa.Numeric(precision=20, scale=8), nullable=True),
-    sa.Column('cost', sa.Numeric(precision=20, scale=8), nullable=False),
-    sa.Column('map_type', sa.Enum('flat', 'rate', name='enum_map_type'),
-              nullable=False),
-    sa.Column('service_id', sa.Integer(), nullable=True),
-    sa.Column('field_id', sa.Integer(), nullable=True),
-    sa.Column('group_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['field_id'], ['hashmap_fields.id'],
-                            ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['group_id'], ['hashmap_groups.id'],
-                            ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['service_id'], ['hashmap_services.id'],
-                            ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('threshold_id'),
-    sa.UniqueConstraint('level', 'field_id', name=constraints[0]),
-    sa.UniqueConstraint('level', 'service_id', name=constraints[1]),
-    mysql_charset='utf8',
-    mysql_engine='InnoDB')
+    op.create_table(
+        'hashmap_thresholds',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('threshold_id', sa.String(length=36), nullable=False),
+        sa.Column('level', sa.Numeric(precision=20, scale=8), nullable=True),
+        sa.Column('cost', sa.Numeric(precision=20, scale=8), nullable=False),
+        sa.Column(
+            'map_type',
+            sa.Enum('flat', 'rate', name='enum_map_type'),
+            nullable=False),
+        sa.Column('service_id', sa.Integer(), nullable=True),
+        sa.Column('field_id', sa.Integer(), nullable=True),
+        sa.Column('group_id', sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ['field_id'],
+            ['hashmap_fields.id'],
+            ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(
+            ['group_id'],
+            ['hashmap_groups.id'],
+            ondelete='SET NULL'),
+        sa.ForeignKeyConstraint(
+            ['service_id'],
+            ['hashmap_services.id'],
+            ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('threshold_id'),
+        sa.UniqueConstraint('level', 'field_id', name=constraints[0]),
+        sa.UniqueConstraint('level', 'service_id', name=constraints[1]),
+        mysql_charset='utf8',
+        mysql_engine='InnoDB')
 
 
 def downgrade():
