@@ -201,7 +201,7 @@ class HashMapMapping(Base, HashMapBase):
 
     Used to model final equation.
     """
-    __tablename__ = 'hashmap_maps'
+    __tablename__ = 'hashmap_mappings'
     fk_to_resolve = {
         'service_id': 'service.service_id',
         'field_id': 'field.field_id',
