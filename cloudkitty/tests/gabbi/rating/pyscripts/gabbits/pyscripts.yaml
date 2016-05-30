@@ -4,6 +4,12 @@ fixtures:
 
 tests:
 
+  - name: check pyscripts module is loaded
+    url: /v1/rating/modules
+    response_strings:
+      - '"module_id": "pyscripts"'
+      - '"description": "PyScripts rating module."'
+
   - name: typo of script
     url: /v1/rating/module_config/pyscripts/script
     status: 405
