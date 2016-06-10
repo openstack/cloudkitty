@@ -3,6 +3,10 @@ fixtures:
 
 tests:
 
+  - name: reload list of modules available
+    url: /v1/rating/reload_modules
+    status: 204
+
   - name: check hashmap module is loaded
     url: /v1/rating/modules
     response_strings:
