@@ -78,6 +78,80 @@ tests:
       $.type: "rate"
       $.cost: "0.20000000"
 
+  - name: create a flat service mapping for a tenant
+    url: /v1/rating/module_config/hashmap/mappings
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: $ENVIRON['hash_service_id']
+      type: "flat"
+      cost: "0.2"
+      tenant_id: "24a7fdae-27ff-11e6-8c4f-6b725a05bf50"
+    status: 201
+    response_json_paths:
+      $.service_id: $ENVIRON['hash_service_id']
+      $.type: "flat"
+      $.cost: "0.20000000"
+      $.tenant_id: "24a7fdae-27ff-11e6-8c4f-6b725a05bf50"
+
+  - name: list service mappings no tenant filtering
+    url: /v1/rating/module_config/hashmap/mappings?service_id=$ENVIRON['hash_service_id']
+    status: 200
+    response_json_paths:
+      $.mappings.`len`: 2
+
+  - name: list service mappings filtering on no tenant
+    url: /v1/rating/module_config/hashmap/mappings?service_id=$ENVIRON['hash_service_id']&filter_tenant=true
+    status: 200
+    response_json_paths:
+      $.mappings.`len`: 1
+
+  - name: list service mappings filtering on tenant
+    url: /v1/rating/module_config/hashmap/mappings?service_id=$ENVIRON['hash_service_id']&tenant_id=24a7fdae-27ff-11e6-8c4f-6b725a05bf50&filter_tenant=true
+    status: 200
+    response_json_paths:
+      $.mappings.`len`: 1
+
+  - name: create a flat service threshold for a tenant
+    url: /v1/rating/module_config/hashmap/thresholds
+    method: POST
+    request_headers:
+        content-type: application/json
+        x-roles: admin
+    data:
+      service_id: $ENVIRON['hash_service_id']
+      level: 2
+      type: "flat"
+      cost: "0.2"
+      tenant_id: "24a7fdae-27ff-11e6-8c4f-6b725a05bf50"
+    status: 201
+    response_json_paths:
+      $.service_id: $ENVIRON['hash_service_id']
+      $.level: "2.00000000"
+      $.type: "flat"
+      $.cost: "0.20000000"
+      $.tenant_id: "24a7fdae-27ff-11e6-8c4f-6b725a05bf50"
+
+  - name: list service thresholds no tenant filtering
+    url: /v1/rating/module_config/hashmap/thresholds?service_id=$ENVIRON['hash_service_id']
+    status: 200
+    response_json_paths:
+      $.thresholds.`len`: 1
+
+  - name: list service thresholds filtering on no tenant
+    url: /v1/rating/module_config/hashmap/thresholds?service_id=$ENVIRON['hash_service_id']&filter_tenant=true
+    status: 200
+    response_json_paths:
+      $.thresholds.`len`: 0
+
+  - name: list service thresholds filtering on tenant
+    url: /v1/rating/module_config/hashmap/thresholds?service_id=$ENVIRON['hash_service_id']&tenant_id=24a7fdae-27ff-11e6-8c4f-6b725a05bf50&filter_tenant=true
+    status: 200
+    response_json_paths:
+      $.thresholds.`len`: 1
+
   - name: create a field
     url: /v1/rating/module_config/hashmap/fields
     method: POST
@@ -85,11 +159,11 @@ tests:
         content-type: application/json
         x-roles: admin
     data:
-      service_id: $RESPONSE['$.service_id']
+      service_id: $ENVIRON['hash_service_id']
       name: "flavor_id"
     status: 201
     response_json_paths:
-      $.service_id: $RESPONSE['$.service_id']
+      $.service_id: $ENVIRON['hash_service_id']
       $.name: "flavor_id"
     response_store_environ:
       hash_field_id: $.field_id

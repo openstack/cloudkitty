@@ -22,6 +22,7 @@ import wsmeext.pecan as wsme_pecan
 from cloudkitty.api.v1 import types as ck_types
 from cloudkitty import rating
 from cloudkitty.rating.hash.controllers import field as field_api
+from cloudkitty.rating.hash.controllers import mapping as mapping_api
 from cloudkitty.rating.hash.datamodels import service as service_models
 from cloudkitty.rating.hash.db import api as db_api
 
@@ -32,6 +33,7 @@ class HashMapServicesController(rating.RatingRestControllerBase):
     """
 
     fields = field_api.HashMapFieldsController()
+    mappings = mapping_api.HashMapMappingsController()
 
     @wsme_pecan.wsexpose(service_models.ServiceCollection)
     def get_all(self):

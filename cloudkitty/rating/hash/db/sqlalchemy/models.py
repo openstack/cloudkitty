@@ -211,10 +211,12 @@ class HashMapMapping(Base, HashMapBase):
             schema.UniqueConstraint(
                 'value',
                 'field_id',
+                'tenant_id',
                 name='uniq_field_mapping'),
             schema.UniqueConstraint(
                 'value',
                 'service_id',
+                'tenant_id',
                 name='uniq_service_mapping'),
             HashMapBase.__table_args__,)
         return args
@@ -256,14 +258,19 @@ class HashMapMapping(Base, HashMapBase):
             'hashmap_groups.id',
             ondelete='SET NULL'),
         nullable=True)
+    tenant_id = sqlalchemy.Column(
+        sqlalchemy.String(36),
+        nullable=True)
 
     def __repr__(self):
         return ('<HashMapMapping[{uuid}]: '
-                'type={map_type} {value}={cost}>').format(
+                'type={map_type} {value}={cost}, '
+                'tenant={tenant}>').format(
                     uuid=self.mapping_id,
                     map_type=self.map_type,
                     value=self.value,
-                    cost=self.cost)
+                    cost=self.cost,
+                    tenant=self.tenant_id)
 
 
 class HashMapThreshold(Base, HashMapBase):
@@ -283,10 +290,12 @@ class HashMapThreshold(Base, HashMapBase):
             schema.UniqueConstraint(
                 'level',
                 'field_id',
+                'tenant_id',
                 name='uniq_field_threshold'),
             schema.UniqueConstraint(
                 'level',
                 'service_id',
+                'tenant_id',
                 name='uniq_service_threshold'),
             HashMapBase.__table_args__,)
         return args
@@ -328,11 +337,16 @@ class HashMapThreshold(Base, HashMapBase):
             'hashmap_groups.id',
             ondelete='SET NULL'),
         nullable=True)
+    tenant_id = sqlalchemy.Column(
+        sqlalchemy.String(36),
+        nullable=True)
 
     def __repr__(self):
         return ('<HashMapThreshold[{uuid}]: '
-                'type={map_type} {level}={cost}>').format(
+                'type={map_type} {level}={cost}, '
+                'tenant={tenant}>').format(
                     uuid=self.threshold_id,
                     map_type=self.map_type,
                     level=self.level,
-                    cost=self.cost)
+                    cost=self.cost,
+                    tenant=self.tenant_id)

@@ -130,32 +130,43 @@ class GroupAlreadyExists(ClientHashMapError):
 class MappingAlreadyExists(ClientHashMapError):
     """Raised when the mapping already exists."""
 
-    def __init__(self, mapping, parent_id=None, parent_type=None, uuid=None):
+    def __init__(self,
+                 mapping,
+                 parent_id=None,
+                 parent_type=None,
+                 uuid=None,
+                 tenant_id=None):
         # TODO(sheeprine): UUID is deprecated
         parent_id = parent_id if parent_id else uuid
         super(MappingAlreadyExists, self).__init__(
-            "Mapping '%s' already exists for %s '%s'" % (mapping,
-                                                         parent_type,
-                                                         parent_id))
+            "Mapping '%s' already exists for %s '%s', tenant: '%s'"
+            % (mapping, parent_type, parent_id, tenant_id))
         self.mapping = mapping
         self.uuid = parent_id
         self.parent_id = parent_id
         self.parent_type = parent_type
+        self.tenant_id = tenant_id
 
 
 class ThresholdAlreadyExists(ClientHashMapError):
     """Raised when the threshold already exists."""
 
-    def __init__(self, threshold, parent_id=None, parent_type=None, uuid=None):
+    def __init__(self,
+                 threshold,
+                 parent_id=None,
+                 parent_type=None,
+                 uuid=None,
+                 tenant_id=None):
         # TODO(sheeprine): UUID is deprecated
         parent_id = parent_id if parent_id else uuid
         super(ThresholdAlreadyExists, self).__init__(
-            "Threshold '%s' already exists for %s '%s'"
-            % (threshold, parent_type, parent_id))
+            "Threshold '%s' already exists for %s '%s', tenant: '%s'"
+            % (threshold, parent_type, parent_id, tenant_id))
         self.threshold = threshold
         self.uuid = parent_id
         self.parent_id = parent_id
         self.parent_type = parent_type
+        self.tenant_id = tenant_id
 
 
 class MappingHasNoGroup(ClientHashMapError):
@@ -249,13 +260,15 @@ class HashMap(object):
                       service_uuid=None,
                       field_uuid=None,
                       group_uuid=None,
-                      no_group=False):
+                      no_group=False,
+                      **kwargs):
         """Return an UUID list of every mapping.
 
         :param service_uuid: The service to filter on.
         :param field_uuid: The field to filter on.
         :param group_uuid: The group to filter on.
         :param no_group: Filter on mappings without a group.
+        :param tenant_uuid: The tenant to filter on.
 
         :return list(str): List of mappings' UUID.
         """
@@ -265,13 +278,15 @@ class HashMap(object):
                         service_uuid=None,
                         field_uuid=None,
                         group_uuid=None,
-                        no_group=False):
+                        no_group=False,
+                        **kwargs):
         """Return an UUID list of every threshold.
 
         :param service_uuid: The service to filter on.
         :param field_uuid: The field to filter on.
         :param group_uuid: The group to filter on.
         :param no_group: Filter on thresholds without a group.
+        :param tenant_uuid: The tenant to filter on.
 
         :return list(str): List of thresholds' UUID.
         """
@@ -305,7 +320,8 @@ class HashMap(object):
                        value=None,
                        service_id=None,
                        field_id=None,
-                       group_id=None):
+                       group_id=None,
+                       tenant_id=None):
         """Create a new service/field mapping.
 
         :param cost: Rating value to apply to this mapping.
@@ -314,6 +330,7 @@ class HashMap(object):
         :param service_id: Service the mapping is applying to.
         :param field_id: Field the mapping is applying to.
         :param group_id: The group of calculations to apply.
+        :param tenant_id: The tenant to apply calculations to.
         """
 
     @abc.abstractmethod
@@ -323,7 +340,8 @@ class HashMap(object):
                          level=None,
                          service_id=None,
                          field_id=None,
-                         group_id=None):
+                         group_id=None,
+                         tenant_id=None):
         """Create a new service/field threshold.
 
         :param cost: Rating value to apply to this threshold.
@@ -332,6 +350,7 @@ class HashMap(object):
         :param service_id: Service the threshold is applying to.
         :param field_id: Field the threshold is applying to.
         :param group_id: The group of calculations to apply.
+        :param tenant_id: The tenant to apply calculations to.
         """
 
     @abc.abstractmethod

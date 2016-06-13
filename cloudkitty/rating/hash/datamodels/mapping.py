@@ -56,13 +56,19 @@ class Mapping(wtypes.Base):
                              mandatory=False)
     """UUID of the hashmap group."""
 
+    tenant_id = wtypes.wsattr(ck_types.UuidType(),
+                              mandatory=False,
+                              default=None)
+    """UUID of the hashmap tenant."""
+
     @classmethod
     def sample(cls):
         sample = cls(mapping_id='39dbd39d-f663-4444-a795-fb19d81af136',
                      field_id='ac55b000-a05b-4832-b2ff-265a034886ab',
                      value='m1.micro',
                      map_type='flat',
-                     cost=decimal.Decimal('4.2'))
+                     cost=decimal.Decimal('4.2'),
+                     tenant_id='7977999e-2e25-11e6-a8b2-df30b233ffcb')
         return sample
 
 

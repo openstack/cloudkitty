@@ -54,25 +54,37 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
                          ck_types.UuidType(),
                          ck_types.UuidType(),
                          bool,
+                         ck_types.UuidType(),
+                         bool,
                          status_code=200)
     def get_all(self,
                 service_id=None,
                 field_id=None,
                 group_id=None,
-                no_group=False):
+                no_group=False,
+                tenant_id=None,
+                filter_tenant=False):
         """Get the threshold list
 
         :param service_id: Service UUID to filter on.
         :param field_id: Field UUID to filter on.
         :param group_id: Group UUID to filter on.
         :param no_group: Filter on orphaned thresholds.
+        :param tenant_id: Tenant UUID to filter on.
+        :param filter_tenant: Explicitly filter on tenant (default is to not
+        filter on tenant). Useful if you want to filter on tenant being None.
         :return: List of every thresholds.
         """
         hashmap = db_api.get_instance()
         threshold_list = []
-        thresholds_uuid_list = hashmap.list_thresholds(service_uuid=service_id,
-                                                       field_uuid=field_id,
-                                                       group_uuid=group_id)
+        search_opts = dict()
+        if filter_tenant:
+            search_opts['tenant_uuid'] = tenant_id
+        thresholds_uuid_list = hashmap.list_thresholds(
+            service_uuid=service_id,
+            field_uuid=field_id,
+            group_uuid=group_id,
+            **search_opts)
         for threshold_uuid in thresholds_uuid_list:
             threshold_db = hashmap.get_threshold(uuid=threshold_uuid)
             threshold_list.append(threshold_models.Threshold(
@@ -111,7 +123,8 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
                 cost=threshold_data.cost,
                 field_id=threshold_data.field_id,
                 group_id=threshold_data.group_id,
-                service_id=threshold_data.service_id)
+                service_id=threshold_data.service_id,
+                tenant_id=threshold_data.tenant_id)
             pecan.response.location = pecan.request.path_url
             if pecan.response.location[-1] != '/':
                 pecan.response.location += '/'
@@ -141,7 +154,8 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
                 level=threshold.level,
                 cost=threshold.cost,
                 map_type=threshold.map_type,
-                group_id=threshold.group_id)
+                group_id=threshold.group_id,
+                tenant_id=threshold.tenant_id)
             pecan.response.headers['Location'] = pecan.request.path
         except db_api.NoSuchThreshold as e:
             pecan.abort(404, six.text_type(e))

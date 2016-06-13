@@ -406,6 +406,65 @@ class HashMapRatingTest(tests.TestCase):
         mappings = self._db_api.list_mappings(field_uuid=field_db.field_id)
         self.assertEqual([], mappings)
 
+    def test_create_per_tenant_mapping(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'flavor')
+        mapping_db = self._db_api.create_mapping(
+            value='m1.tiny',
+            cost='1.337',
+            map_type='flat',
+            field_id=field_db.field_id,
+            tenant_id=self._tenant_id)
+        mappings = self._db_api.list_mappings(field_uuid=field_db.field_id)
+        self.assertEqual(
+            self._tenant_id,
+            mapping_db.tenant_id)
+        self.assertEqual([mapping_db.mapping_id], mappings)
+
+    def test_list_mappings_filtering_on_tenant(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'flavor')
+        mapping_db = self._db_api.create_mapping(
+            value='m1.tiny',
+            cost='1.337',
+            map_type='flat',
+            field_id=field_db.field_id,
+            tenant_id=self._tenant_id)
+        self._db_api.create_mapping(
+            value='m1.small',
+            cost='1.337',
+            map_type='flat',
+            field_id=field_db.field_id)
+        mappings = self._db_api.list_mappings(
+            field_uuid=field_db.field_id,
+            tenant_uuid=self._tenant_id)
+        self.assertEqual([mapping_db.mapping_id], mappings)
+
+    def test_list_mappings_filtering_on_no_tenant(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'flavor')
+        mapping_db = self._db_api.create_mapping(
+            value='m1.tiny',
+            cost='1.337',
+            map_type='flat',
+            field_id=field_db.field_id)
+        self._db_api.create_mapping(
+            value='m1.small',
+            cost='1.337',
+            map_type='flat',
+            field_id=field_db.field_id,
+            tenant_id=self._tenant_id)
+        mappings = self._db_api.list_mappings(
+            field_uuid=field_db.field_id,
+            tenant_uuid=None)
+        self.assertEqual([mapping_db.mapping_id], mappings)
+
     # Threshold tests
     def test_create_threshold(self):
         service_db = self._db_api.create_service('compute')
@@ -433,6 +492,163 @@ class HashMapRatingTest(tests.TestCase):
         self.assertEqual(decimal.Decimal('64'), threshold.level)
         self.assertEqual(decimal.Decimal('0.1337'), threshold.cost)
         self.assertEqual(field_db.id, threshold.field_id)
+
+    def test_list_thresholds_from_services(self):
+        service_db = self._db_api.create_service('compute')
+        threshold_db = self._db_api.create_threshold(
+            level=10,
+            cost='1.337',
+            map_type='flat',
+            service_id=service_db.service_id)
+        thresholds = self._db_api.list_thresholds(
+            service_uuid=service_db.service_id)
+        self.assertEqual([threshold_db.threshold_id], thresholds)
+
+    def test_list_thresholds_from_fields(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'memory')
+        threshold_db = self._db_api.create_threshold(
+            level='64',
+            cost='0.1337',
+            map_type='flat',
+            field_id=field_db.field_id)
+        thresholds = self._db_api.list_thresholds(field_uuid=field_db.field_id)
+        self.assertEqual([threshold_db.threshold_id], thresholds)
+
+    def test_create_threshold_with_incorrect_type(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'memory')
+        self.assertRaises(
+            api.NoSuchType,
+            self._db_api.create_threshold,
+            level='64',
+            cost='0.1337',
+            map_type='invalid',
+            field_id=field_db.field_id)
+
+    def test_create_threshold_with_two_parents(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'memory')
+        self.assertRaises(
+            api.ClientHashMapError,
+            self._db_api.create_threshold,
+            level='64',
+            cost='0.1337',
+            map_type='flat',
+            service_id=service_db.service_id,
+            field_id=field_db.field_id)
+
+    def test_update_threshold(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'memory')
+        threshold_db = self._db_api.create_threshold(
+            level='64',
+            cost='0.1337',
+            map_type='flat',
+            field_id=field_db.field_id)
+        new_threshold_db = self._db_api.update_threshold(
+            uuid=threshold_db.threshold_id,
+            level='128',
+            map_type='rate')
+        self.assertEqual('128', new_threshold_db.level)
+        self.assertEqual('rate', new_threshold_db.map_type)
+
+    def test_update_threshold_inside_group(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'memory')
+        threshold_db = self._db_api.create_threshold(
+            level='64',
+            cost='0.1337',
+            map_type='flat',
+            field_id=field_db.field_id)
+        group_db = self._db_api.create_group('test_group')
+        new_threshold_db = self._db_api.update_threshold(
+            threshold_db.threshold_id,
+            group_id=group_db.group_id)
+        self.assertEqual(group_db.id, new_threshold_db.group_id)
+
+    def test_delete_threshold(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'memory')
+        threshold_db = self._db_api.create_threshold(
+            level='64',
+            cost='0.1337',
+            map_type='flat',
+            field_id=field_db.field_id)
+        self._db_api.delete_threshold(threshold_db.threshold_id)
+        thresholds = self._db_api.list_thresholds(field_uuid=field_db.field_id)
+        self.assertEqual([], thresholds)
+
+    def test_create_per_tenant_threshold(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'memory')
+        threshold_db = self._db_api.create_threshold(
+            level='64',
+            cost='0.1337',
+            map_type='flat',
+            field_id=field_db.field_id,
+            tenant_id=self._tenant_id)
+        thresholds = self._db_api.list_thresholds(field_uuid=field_db.field_id)
+        self.assertEqual(
+            self._tenant_id,
+            threshold_db.tenant_id)
+        self.assertEqual([threshold_db.threshold_id], thresholds)
+
+    def test_list_thresholds_filtering_on_tenant(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'memory')
+        threshold_db = self._db_api.create_threshold(
+            level='64',
+            cost='0.1337',
+            map_type='flat',
+            field_id=field_db.field_id,
+            tenant_id=self._tenant_id)
+        self._db_api.create_threshold(
+            level='128',
+            cost='0.2',
+            map_type='flat',
+            field_id=field_db.field_id)
+        thresholds = self._db_api.list_thresholds(
+            field_uuid=field_db.field_id,
+            tenant_uuid=self._tenant_id)
+        self.assertEqual([threshold_db.threshold_id], thresholds)
+
+    def test_list_thresholds_filtering_on_no_tenant(self):
+        service_db = self._db_api.create_service('compute')
+        field_db = self._db_api.create_field(
+            service_db.service_id,
+            'memory')
+        threshold_db = self._db_api.create_threshold(
+            level='64',
+            cost='0.1337',
+            map_type='flat',
+            field_id=field_db.field_id)
+        self._db_api.create_threshold(
+            level='128',
+            cost='0.2',
+            map_type='flat',
+            field_id=field_db.field_id,
+            tenant_id=self._tenant_id)
+        thresholds = self._db_api.list_thresholds(
+            field_uuid=field_db.field_id,
+            tenant_uuid=None)
+        self.assertEqual([threshold_db.threshold_id], thresholds)
 
     # Processing tests
     def _generate_hashmap_rules(self):
@@ -462,6 +678,14 @@ class HashMapRatingTest(tests.TestCase):
                 map_type='rate',
                 field_id=flavor_field.field_id,
                 group_id=group_db.group_id))
+        # Per tenant override
+        mapping_list.append(
+            self._db_api.create_mapping(
+                value='m1.tiny',
+                cost='2',
+                map_type='flat',
+                field_id=flavor_field.field_id,
+                tenant_id=self._tenant_id))
         threshold_list.append(
             self._db_api.create_threshold(
                 level='64',
@@ -476,6 +700,14 @@ class HashMapRatingTest(tests.TestCase):
                 map_type='flat',
                 field_id=memory_field.field_id,
                 group_id=group_db.group_id))
+        threshold_list.append(
+            self._db_api.create_threshold(
+                level='64',
+                cost='0.03',
+                map_type='flat',
+                field_id=memory_field.field_id,
+                group_id=group_db.group_id,
+                tenant_id=self._tenant_id))
         return ([mapping.mapping_id for mapping in mapping_list],
                 [threshold.threshold_id for threshold in threshold_list])
 
@@ -489,7 +721,7 @@ class HashMapRatingTest(tests.TestCase):
                         'mappings': {
                             '_DEFAULT_': {
                                 'm1.tiny': {
-                                    'cost': decimal.Decimal('1.337'),
+                                    'cost': decimal.Decimal('2'),
                                     'type': 'flat'}},
                             'test_group': {
                                 'm1.large': {
@@ -501,7 +733,7 @@ class HashMapRatingTest(tests.TestCase):
                         'thresholds': {
                             'test_group': {
                                 64: {
-                                    'cost': decimal.Decimal('0.02'),
+                                    'cost': decimal.Decimal('0.03'),
                                     'type': 'flat'},
                                 128: {
                                     'cost': decimal.Decimal('0.03'),
