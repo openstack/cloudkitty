@@ -36,8 +36,8 @@ CONF = cfg.CONF
 
 CONF.import_opt('period', 'cloudkitty.collector', 'collect')
 
-STORAGE_GNOCCHI_OPTS = 'storage_gnocchi'
-STORAGE_OPTS = [
+GNOCCHI_STORAGE_OPTS = 'storage_gnocchi'
+gnocchi_storage_opts = [
     cfg.StrOpt('archive_policy_name',
                default='rating',
                help='Gnocchi storage archive policy name.'),
@@ -49,14 +49,14 @@ STORAGE_OPTS = [
                        '{"granularity": 86400, "timespan": "360 days"}, '
                        '{"granularity": 2592000, "timespan": "1800 days"}]',
                help='Gnocchi storage archive policy definition.'), ]
-CONF.register_opts(STORAGE_OPTS, STORAGE_GNOCCHI_OPTS)
+CONF.register_opts(gnocchi_storage_opts, GNOCCHI_STORAGE_OPTS)
 
 ks_loading.register_session_conf_options(
     CONF,
-    STORAGE_GNOCCHI_OPTS)
+    GNOCCHI_STORAGE_OPTS)
 ks_loading.register_auth_conf_options(
     CONF,
-    STORAGE_GNOCCHI_OPTS)
+    GNOCCHI_STORAGE_OPTS)
 
 CLOUDKITTY_STATE_RESOURCE = 'cloudkitty_state'
 CLOUDKITTY_STATE_METRIC = 'state'
@@ -73,10 +73,10 @@ class GnocchiStorage(storage.BaseStorage):
         super(GnocchiStorage, self).__init__(**kwargs)
         self.auth = ks_loading.load_auth_from_conf_options(
             CONF,
-            STORAGE_GNOCCHI_OPTS)
+            GNOCCHI_STORAGE_OPTS)
         self.session = ks_loading.load_session_from_conf_options(
             CONF,
-            STORAGE_GNOCCHI_OPTS,
+            GNOCCHI_STORAGE_OPTS,
             auth=self.auth)
         self._conn = gclient.Client('1', session=self.session)
         self._measures = {}

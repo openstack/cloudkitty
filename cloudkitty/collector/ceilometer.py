@@ -25,7 +25,11 @@ from oslo_utils import units
 from cloudkitty import collector
 from cloudkitty import utils as ck_utils
 
+
 CEILOMETER_COLLECTOR_OPTS = 'ceilometer_collector'
+ceilometer_collector_opts = ks_loading.get_auth_common_conf_options()
+
+cfg.CONF.register_opts(ceilometer_collector_opts, CEILOMETER_COLLECTOR_OPTS)
 ks_loading.register_session_conf_options(
     cfg.CONF,
     CEILOMETER_COLLECTOR_OPTS)

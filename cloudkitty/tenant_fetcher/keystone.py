@@ -25,11 +25,13 @@ from oslo_config import cfg
 from cloudkitty import tenant_fetcher
 
 KEYSTONE_FETCHER_OPTS = 'keystone_fetcher'
+keystone_common_opts = ks_loading.get_auth_common_conf_options()
 keystone_fetcher_opts = [
     cfg.StrOpt('keystone_version',
                default='2',
                help='Keystone version to use.'), ]
 
+cfg.CONF.register_opts(keystone_common_opts, KEYSTONE_FETCHER_OPTS)
 cfg.CONF.register_opts(keystone_fetcher_opts, KEYSTONE_FETCHER_OPTS)
 ks_loading.register_session_conf_options(
     cfg.CONF,

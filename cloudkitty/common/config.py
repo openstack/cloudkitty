@@ -19,9 +19,11 @@ import itertools
 import cloudkitty.api.app
 import cloudkitty.collector
 import cloudkitty.collector.ceilometer
+import cloudkitty.collector.gnocchi
 import cloudkitty.config
 import cloudkitty.service
 import cloudkitty.storage
+import cloudkitty.storage.gnocchi
 import cloudkitty.tenant_fetcher
 import cloudkitty.tenant_fetcher.keystone
 
@@ -32,14 +34,21 @@ _opts = [
         cloudkitty.api.app.api_opts,))),
     ('collect', list(itertools.chain(
         cloudkitty.collector.collect_opts))),
+    ('ceilometer_collector', list(itertools.chain(
+        cloudkitty.collector.ceilometer.ceilometer_collector_opts))),
+    ('gnocchi_collector', list(itertools.chain(
+        cloudkitty.collector.gnocchi.gnocchi_collector_opts))),
     ('keystone_fetcher', list(itertools.chain(
-        cloudkitty.tenant_fetcher.keystone.keystone_fetcher_opts))),
+        cloudkitty.tenant_fetcher.keystone.keystone_fetcher_opts,
+        cloudkitty.tenant_fetcher.keystone.keystone_common_opts))),
     ('output', list(itertools.chain(
         cloudkitty.config.output_opts))),
     ('state', list(itertools.chain(
         cloudkitty.config.state_opts))),
     ('storage', list(itertools.chain(
         cloudkitty.storage.storage_opts))),
+    ('storage_gnocchi', list(itertools.chain(
+        cloudkitty.storage.gnocchi.gnocchi_storage_opts))),
     ('tenant_fetcher', list(itertools.chain(
         cloudkitty.tenant_fetcher.fetchers_opts))),
     (None, list(itertools.chain(

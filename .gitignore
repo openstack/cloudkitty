@@ -23,6 +23,9 @@ var/
 cloudkitty.egg-info
 .idea/
 
+# Configuration file
+etc/cloudkitty/cloudkitty.conf.sample
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
