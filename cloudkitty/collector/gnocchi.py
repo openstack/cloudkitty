@@ -234,13 +234,15 @@ class GnocchiCollector(collector.BaseCollector):
                     resource_id=resource_id,
                     reverse_revision=True)
             return resources
+        result = []
         for resource in resources:
-            resource = self.get_resources(
+            populated_resource = self.get_resources(
                 resource_type,
                 start,
                 end,
-                resource_id=resource.get('id', ''))
-        return resources
+                resource_id=resource.get('id', ''))[0]
+            result.append(populated_resource)
+        return result
 
     def resource_info(self,
                       resource_name,
