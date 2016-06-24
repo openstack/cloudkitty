@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2014 Objectif Libre
+# Copyright 2016 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -15,16 +15,19 @@
 #
 # @author: Stéphane Albert
 #
+import six
+
+from cloudkitty.tests import samples
 from cloudkitty import transformer
 
 
-class CeilometerTransformer(transformer.BaseTransformer):
+class Transformer(transformer.BaseTransformer):
     compute_map = {
-        'name': ['display_name'],
-        'flavor': ['flavor.name', 'instance_type'],
+        'name': ['name', 'display_name'],
+        'flavor': ['flavor', 'flavor.name', 'instance_type'],
         'vcpus': ['vcpus'],
-        'memory': ['memory_mb'],
-        'image_id': ['image.id', 'image_meta.base_image_ref'],
+        'memory': ['memory', 'memory_mb'],
+        'image_id': ['image_id', 'image.id', 'image_meta.base_image_ref'],
         'availability_zone': [
             'availability_zone',
             'OS-EXT-AZ.availability_zone'],
@@ -35,21 +38,21 @@ class CeilometerTransformer(transformer.BaseTransformer):
         'availability_zone': ['availability_zone'],
         'size': ['size'],
     }
+    test_map = {'test': lambda x, y: 'ok'}
+
+    def _strip_network(self, res_metadata):
+        return {'test': 'ok'}
+
+
+class TransformerMeta(Transformer):
     metadata_item = 'metadata'
 
-    def _strip_compute(self, data):
-        res_data = self.generic_strip('compute', data)
-        res_data['instance_id'] = data.resource_id
-        res_data['project_id'] = data.project_id
-        res_data['user_id'] = data.user_id
-        res_data['metadata'] = {}
-        for field in data.metadata:
-            if field.startswith('user_metadata'):
-                res_data['metadata'][field[14:]] = data.metadata[field]
-        return res_data
 
-    def _strip_volume(self, data):
-        res_data = self.generic_strip('volume', data)
-        res_data['user_id'] = data.user_id
-        res_data['project_id'] = data.project_id
-        return res_data
+class EmptyClass(object):
+    pass
+
+
+class ClassWithAttr(object):
+    def __init__(self, items=samples.COMPUTE_METADATA):
+        for key, val in six.iteritems(items):
+            setattr(self, key, val)

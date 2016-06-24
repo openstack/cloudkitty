@@ -39,7 +39,8 @@ def get_transformers():
 class BaseTransformer(object):
     metadata_item = ''
 
-    def generic_strip(self, datatype, metadata):
+    def generic_strip(self, datatype, data):
+        metadata = getattr(data, self.metadata_item, data)
         mappings = getattr(self, datatype + '_map', {})
         result = {}
         for key, transform in six.iteritems(mappings):
@@ -58,8 +59,7 @@ class BaseTransformer(object):
         return result
 
     def strip_resource_data(self, res_type, res_data):
-        res_metadata = getattr(res_data, self.metadata_item, res_data)
         strip_func = getattr(self, '_strip_' + res_type, None)
         if strip_func:
-            return strip_func(res_metadata)
-        return self.generic_strip(res_type, res_metadata) or res_metadata
+            return strip_func(res_data)
+        return self.generic_strip(res_type, res_data) or res_data
