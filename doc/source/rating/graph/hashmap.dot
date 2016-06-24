@@ -1,0 +1,54 @@
+digraph "Hashmap's data structure" {
+
+    label="HashMap module data structure";
+    compound=true;
+
+    compute;
+    network [label="network.floating_ip"];
+    volume;
+
+    subgraph cluster_0 {
+        label="services";
+        style=dashed;
+        {rank=same; compute -> network -> volume [style=invis];}
+    }
+
+    compute -> flavor;
+
+    subgraph cluster_1 {
+        label="fields:\nAssociate to metadata";
+        style=dashed;
+        flavor;
+    }
+
+    // Mappings
+    micro [label="value=m1.micro\ntype=flat\ncost=0.1"];
+    tiny [label="value=m1.tiny\ntype=flat\ncost=0.2"];
+    small [label="value=m1.small\ntype=flat\ncost=0.4"];
+
+    floating [label="\ntype=flat\ncost=0.5"];
+
+    // Thresholds
+    1024 [label="level=1024\ntype=flat\ncost=0.1"];
+    10240 [label="level=10240\ntype=flat\ncost=0.2"];
+
+    subgraph cluster_2 {
+        label="mappings";
+        style=dashed;
+        {rank=same; micro -> tiny -> small -> floating [style=invis];}
+    }
+
+    subgraph cluster_3 {
+        label="thresholds";
+        style=dashed;
+        {rank=same; 1024 -> 10240 [style=invis];}
+    }
+
+    flavor -> micro;
+    flavor -> tiny;
+    flavor -> small;
+    network -> floating;
+    volume -> 1024;
+    volume -> 10240;
+}
+
