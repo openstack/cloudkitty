@@ -15,15 +15,17 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.create_table('states',
-    sa.Column('name', sa.String(length=255), nullable=False),
-    sa.Column('state', sa.BigInteger(), nullable=False),
-    sa.Column('s_metadata', sa.Text(), nullable=True),
-    sa.PrimaryKeyConstraint('name'))
-    op.create_table('modules_state',
-    sa.Column('name', sa.String(length=255), nullable=False),
-    sa.Column('state', sa.Boolean(), nullable=False),
-    sa.PrimaryKeyConstraint('name'))
+    op.create_table(
+        'states',
+        sa.Column('name', sa.String(length=255), nullable=False),
+        sa.Column('state', sa.BigInteger(), nullable=False),
+        sa.Column('s_metadata', sa.Text(), nullable=True),
+        sa.PrimaryKeyConstraint('name'))
+    op.create_table(
+        'modules_state',
+        sa.Column('name', sa.String(length=255), nullable=False),
+        sa.Column('state', sa.Boolean(), nullable=False),
+        sa.PrimaryKeyConstraint('name'))
 
 
 def downgrade():
