@@ -15,9 +15,9 @@
 #
 # @author: Stéphane Albert
 #
+from oslo_context import context
 from pecan import hooks
 
-from cloudkitty.common import context
 from cloudkitty.common import policy
 
 
