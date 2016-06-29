@@ -101,7 +101,7 @@
 #host_ip = 0.0.0.0
 
 # Host port serving the API. (integer value)
-#port = 8888
+#port = 8889
 
 
 [collect]

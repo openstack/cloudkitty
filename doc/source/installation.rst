@@ -203,9 +203,9 @@ Create the ``rating`` service and its endpoints:
 
     keystone service-create --name CloudKitty --type rating
     keystone endpoint-create --service-id RATING_SERVICE_ID \
-        --publicurl http://localhost:8888 \
-        --adminurl http://localhost:8888 \
-        --internalurl http://localhost:8888
+        --publicurl http://localhost:8889 \
+        --adminurl http://localhost:8889 \
+        --internalurl http://localhost:8889
 
 Start CloudKitty
 ================
