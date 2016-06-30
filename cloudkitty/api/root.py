@@ -15,12 +15,16 @@
 #
 # @author: Stéphane Albert
 #
+from oslo_config import cfg
 import pecan
 from pecan import rest
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import controllers as v1_api
+
+CONF = cfg.CONF
+CONF.import_opt('port', 'cloudkitty.api.app', 'api')
 
 
 class APILink(wtypes.Base):
@@ -43,7 +47,8 @@ class APILink(wtypes.Base):
         sample = cls(
             rel='self',
             type='text/html',
-            href='http://127.0.0.1:8889/{id}'.format(
+            href='http://127.0.0.1:{port}/{id}'.format(
+                port=CONF.api.port,
                 id=version))
         return sample
 
