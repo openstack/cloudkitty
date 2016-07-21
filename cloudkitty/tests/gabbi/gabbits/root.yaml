@@ -1,0 +1,12 @@
+fixtures:
+  - ConfigFixture
+
+tests:
+  - name: test if / is publicly available
+    url: /
+    status: 200
+
+  - name: test if HEAD / is available
+    url: /
+    status: 200
+    method: HEAD
