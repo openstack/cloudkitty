@@ -39,4 +39,4 @@ class BaseFetcher(object):
 
     @abc.abstractmethod
     def get_tenants(self):
-        """Get a list a tenants to rate."""
+        """Get a list of tenants to rate."""
