@@ -236,9 +236,3 @@ def upgrade():
         upgrade_mysql()
     elif dialect.name == 'postgresql':
         upgrade_postgresql()
-
-
-def downgrade():
-    # NOTE(sheeprine): No need to downgrade here as naming conventions will
-    # still apply.
-    pass

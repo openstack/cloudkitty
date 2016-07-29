@@ -37,26 +37,3 @@ def upgrade():
         batch_op.drop_constraint(
             'uniq_map_service_field',
             type_='unique')
-
-
-def downgrade():
-    with op.batch_alter_table(
-        'hashmap_fields',
-        reflect_args=[
-            sa.Column(
-                'service_id',
-                sa.Integer,
-                sa.ForeignKey(
-                    'hashmap_services.id',
-                    ondelete='CASCADE',
-                    name='fk_hashmap_fields_service_id_hashmap_services'),
-                nullable=False)]) as batch_op:
-        batch_op.create_unique_constraint(
-            u'uniq_field',
-            ['field_id', 'name'])
-        batch_op.create_unique_constraint(
-            'uniq_map_service_field',
-            ['service_id', 'name'])
-        batch_op.drop_constraint(
-            'uniq_field_per_service',
-            type_='unique')

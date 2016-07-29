@@ -91,13 +91,3 @@ def upgrade():
             name='uniq_service_mapping'),
         mysql_charset='utf8',
         mysql_engine='InnoDB')
-
-
-def downgrade():
-    op.drop_table('hashmap_maps')
-    op.drop_table('hashmap_fields')
-    op.drop_table('hashmap_groups')
-    op.drop_table('hashmap_services')
-    bind = op.get_bind()
-    old_enum = sa.Enum('flat', 'rate', name='enum_map_type')
-    old_enum.drop(bind)

@@ -82,15 +82,3 @@ def upgrade():
             for name, columns in six.iteritems(CONSTRAINT_MAP[table]):
                 batch_op.drop_constraint(name, type_='unique')
                 batch_op.create_unique_constraint(name, columns[0])
-
-
-def downgrade():
-    for table in ('hashmap_mappings', 'hashmap_thresholds'):
-        with op.batch_alter_table(
-            table,
-            reflect_args=get_reflect(table)
-        ) as batch_op:
-            for name, columns in six.iteritems(CONSTRAINT_MAP[table]):
-                batch_op.drop_constraint(name, type_='unique')
-                batch_op.create_unique_constraint(name, columns[1])
-            batch_op.drop_column('tenant_id')

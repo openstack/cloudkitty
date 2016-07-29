@@ -15,7 +15,3 @@ from alembic import op
 
 def upgrade():
     op.rename_table('hashmap_maps', 'hashmap_mappings')
-
-
-def downgrade():
-    op.rename_table('hashmap_mappings', 'hashmap_maps')
