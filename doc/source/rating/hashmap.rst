@@ -73,7 +73,7 @@ Create a group *instance_uptime_flavor*:
 
 .. code:: raw
 
-    $ cloudkitty hashmap-create-group -n instance_uptime_flavor
+    $ cloudkitty hashmap-group-create -n instance_uptime_flavor
     $ cloudkitty hashmap-group-list
     +------------------------+--------------------------------------+
     | Name                   | Group id                             |
@@ -144,7 +144,7 @@ Create a group *volume_thresholds*:
 
 .. code:: raw
 
-    $ cloudkitty hashmap-create-group -n volume_thresholds
+    $ cloudkitty hashmap-group-create -n volume_thresholds
     $ cloudkitty hashmap-group-list
     +-------------------+--------------------------------------+
     | Name              | Group id                             |
