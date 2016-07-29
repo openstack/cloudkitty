@@ -111,12 +111,6 @@ class PyScriptsRatingTest(tests.TestCase):
         self._db_api.get_migration().upgrade('head')
         self._pyscripts = pyscripts.PyScripts(self._tenant_id)
 
-    # Database migrations
-    def test_migration_two_way(self):
-        self._db_api.get_migration().downgrade('base')
-        self._db_api.get_migration().upgrade('head')
-        self._db_api.get_migration().downgrade('base')
-
     # Scripts tests
     @mock.patch.object(uuidutils, 'generate_uuid',
                        return_value=FAKE_UUID)

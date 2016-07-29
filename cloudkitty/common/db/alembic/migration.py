@@ -37,12 +37,6 @@ def upgrade(config, version):
     return alembic.command.upgrade(config, version or 'head')
 
 
-def downgrade(config, version):
-    if isinstance(version, int) or version is None or version.isdigit():
-        version = 'base'
-    return alembic.command.downgrade(config, version)
-
-
 def version(config):
     return alembic.command.current(config)
 

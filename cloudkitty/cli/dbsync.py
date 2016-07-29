@@ -93,9 +93,6 @@ class DBCommand(object):
     def upgrade(self):
         self._version_change('upgrade')
 
-    def downgrade(self):
-        self._version_change('downgrade')
-
     def revision(self):
         migration = self.get_module_migration(CONF.command.module)
         migration.revision(CONF.command.message, CONF.command.autogenerate)
@@ -114,11 +111,6 @@ def add_command_parsers(subparsers):
 
     parser = subparsers.add_parser('upgrade')
     parser.set_defaults(func=command_object.upgrade)
-    parser.add_argument('--revision', nargs='?')
-    parser.add_argument('--module', nargs='?')
-
-    parser = subparsers.add_parser('downgrade')
-    parser.set_defaults(func=command_object.downgrade)
     parser.add_argument('--revision', nargs='?')
     parser.add_argument('--module', nargs='?')
 
