@@ -32,6 +32,7 @@ from cloudkitty import collector
 from cloudkitty.common import rpc
 from cloudkitty import config  # noqa
 from cloudkitty import extension_manager
+from cloudkitty.i18n import _LI, _LW
 from cloudkitty import storage
 from cloudkitty import transformer
 from cloudkitty import utils as ck_utils
@@ -85,26 +86,26 @@ class RatingEndpoint(object):
         return str(worker.quote(res_data))
 
     def reload_modules(self, ctxt):
-        LOG.info('Received reload modules command.')
+        LOG.info(_LI('Received reload modules command.'))
         lock = lockutils.lock('module-reload')
         with lock:
             self._global_reload = True
 
     def reload_module(self, ctxt, name):
-        LOG.info('Received reload command for module %s.', name)
+        LOG.info(_LI('Received reload command for module %s.'), name)
         lock = lockutils.lock('module-reload')
         with lock:
             if name not in self._pending_reload:
                 self._pending_reload.append(name)
 
     def enable_module(self, ctxt, name):
-        LOG.info('Received enable command for module %s.', name)
+        LOG.info(_LI('Received enable command for module %s.'), name)
         lock = lockutils.lock('module-state')
         with lock:
             self._module_state[name] = True
 
     def disable_module(self, ctxt, name):
-        LOG.info('Received disable command for module %s.', name)
+        LOG.info(_LI('Received disable command for module %s.'), name)
         lock = lockutils.lock('module-state')
         with lock:
             self._module_state[name] = False
@@ -195,8 +196,9 @@ class Worker(BaseWorker):
                         raise
                     except Exception as e:
                         LOG.warning(
-                            'Error while collecting service %(service)s: '
-                            '%(error)s', {'service': service, 'error': e})
+                            _LW('Error while collecting service '
+                                '%(service)s: %(error)s'),
+                            {'service': service, 'error': e})
                         raise collector.NoDataCollected('', service)
                 except collector.NoDataCollected:
                     begin = timestamp
