@@ -17,3 +17,9 @@ add the following lines to your local.conf file.
     # cloudkitty
     enable_plugin cloudkitty https://git.openstack.org/openstack/cloudkitty.git master
     enable_service ck-api ck-proc
+
+Then, you can start devstack.
+
+::
+
+    ./stack.sh

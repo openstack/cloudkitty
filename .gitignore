@@ -53,3 +53,7 @@ doc/build/
 *.sqlite
 *.swp
 *.DS_Store
+
+# tox -e docs
+AUTHORS
+ChangeLog

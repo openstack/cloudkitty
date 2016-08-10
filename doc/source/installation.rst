@@ -9,11 +9,9 @@ Install from source
 There is no release of CloudKitty as of now, the installation can be done from
 the git repository.
 
-Retrieve and install CloudKitty:
+Retrieve and install CloudKitty::
 
-::
-
-    git clone git://git.openstack.org/openstack/cloudkitty
+    git clone https://git.openstack.org/openstack/cloudkitty.git
     cd cloudkitty
     python setup.py install
 
@@ -26,71 +24,51 @@ executables:
 * ``cloudkitty-storage-init``: Tool to initiate the storage backend
 * ``cloudkitty-writer``: Reporting tool
 
-Install sample configuration files:
-
-::
+Install sample configuration files::
 
     mkdir /etc/cloudkitty
+    tox -e genconfig
     cp etc/cloudkitty/cloudkitty.conf.sample /etc/cloudkitty/cloudkitty.conf
     cp etc/cloudkitty/policy.json /etc/cloudkitty
+    cp etc/cloudkitty/api_paste.ini /etc/cloudkitty
+
+Retrieve and install cloudkitty client::
+
+    git clone https://git.openstack.org/openstack/python-cloudkittyclient.git
+    cd python-cloudkittyclient
+    python setup.py install
+
 
 Install from packages
 =====================
 
-Packages for RHEL/CentOS 7 and Ubuntu 14.04 are available for the Kilo release.
+Packages for RHEL/CentOS 7 and Ubuntu 16.04 are available for the Newton release.
 
 For RHEL/CentOS 7
 -----------------
 
-#. Enable the EPEL and RDO repositories for Kilo:
+#. Install the RDO repositories for Newton::
 
-::
+    yum install -y centos-release-openstack-newton
 
-    yum install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
-    yum install http://rdo.fedorapeople.org/openstack-kilo/rdo-release-kilo.rpm
+#. Install the packages::
 
-#. Create the ``/etc/yum.repos.d/cloudkitty.repo`` configuration file to enable
-   the CloudKitty repository:
-
-.. code-block:: ini
-
-    [cloudkitty]
-    name=CloudKitty repository (Kilo)
-    baseurl=http://archive.objectif-libre.com/cloudkitty/el7/kilo/
-    gpgcheck=1
-    gpgkey=http://archive.objectif-libre.com/ol.asc
-
-#. Install the packages:
-
-::
-
-    yum install cloudkitty-api cloudkitty-processor cloudkitty-dashboard
+    yum install openstack-cloudkitty-api openstack-cloudkitty-processor openstack-cloudkitty-ui
 
 
-For Ubuntu 14.04
+For Ubuntu 16.04
 ----------------
 
-#. Enable the Canonical cloud-archive repository for the Kilo release:
+#. Enable the OpenStack repository for the Newton release::
 
-::
+    apt install software-properties-common
+    add-apt-repository ppa:objectif-libre/cloudkitty
 
-    apt-get install ubuntu-cloud-keyring
-    echo "deb http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-updates/kilo main" > \
-        /etc/apt/sources.list.d/cloudarchive-kilo.list
+#. Upgrade the packages on your host::
 
+    apt update && apt dist-upgrade
 
-#. Install the CloudKitty repository public key and configure apt:
-
-::
-
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 71E414B3
-    echo 'deb http://archive.objectif-libre.com/cloudkitty/ubuntu trusty/kilo main' > \
-        /etc/apt/sources.list.d/cloudkitty-kilo.list
-    apt-get update
-
-#. Install the packages:
-
-::
+#. Install the packages::
 
     apt-get install cloudkitty-api cloudkitty-processor cloudkitty-dashboard
 
@@ -150,9 +128,7 @@ Setup the database and storage backend
 ======================================
 
 MySQL/MariaDB is the recommended database engine. To setup the database, use
-the ``mysql`` client:
-
-::
+the ``mysql`` client::
 
     mysql -uroot -p << EOF
     CREATE DATABASE cloudkitty;
@@ -160,16 +136,12 @@ the ``mysql`` client:
     EOF
 
 
-Run the database synchronisation scripts:
-
-::
+Run the database synchronisation scripts::
 
     cloudkitty-dbsync upgrade
 
 
-Init the storage backend:
-
-::
+Init the storage backend::
 
     cloudkitty-storage-init
 
@@ -180,75 +152,62 @@ Setup Keystone
 CloudKitty uses Keystone for authentication, and provides a ``rating`` service.
 
 To integrate CloudKitty to Keystone, run the following commands (as OpenStack
-administrator):
+administrator)::
 
-::
-
-    keystone user-create --name cloudkitty --pass CK_PASS
-    keystone user-role-add --user cloudkitty --role admin --tenant service
+    openstack user create cloudkitty --password CK_PASS --email cloudkitty@localhost
+    openstack role add --project service --user cloudkitty admin
 
 
-Give the ``rating`` role to ``cloudkitty`` for each tenant that should be
-handled by CloudKitty:
+Give the ``rating`` role to ``cloudkitty`` for each project that should be
+handled by CloudKitty::
 
-::
+    openstack role create rating
+    openstack role add --project XXX --user cloudkitty rating
 
-    keystone role-create --name rating
-    keystone user-role-add --user cloudkitty --role rating --tenant XXX
+Create the ``rating`` service and its endpoints::
 
-
-Create the ``rating`` service and its endpoints:
-
-::
-
-    keystone service-create --name CloudKitty --type rating
-    keystone endpoint-create --service-id RATING_SERVICE_ID \
+    openstack service create rating --name CloudKitty \
+        --description "OpenStack Rating Service"
+    openstack endpoint create rating --region RegionOne \
         --publicurl http://localhost:8889 \
         --adminurl http://localhost:8889 \
         --internalurl http://localhost:8889
 
+
 Start CloudKitty
 ================
 
-Start the API and processing services:
-
-::
+Start the API and processing services::
 
     cloudkitty-api --config-file /etc/cloudkitty/cloudkitty.conf
     cloudkitty-processor --config-file /etc/cloudkitty/cloudkitty.conf
 
 
-Horizon integration
-===================
+Horizon integration from cloudkitty-dashboard source
+====================================================
 
-Retrieve and install CloudKitty's dashboard:
+Retrieve and install CloudKitty's dashboard::
 
-::
-
-    git clone git://git.openstack.org/openstack/cloudkitty-dashboard
+    git clone https://git.openstack.org/openstack/cloudkitty-dashboard.git
     cd cloudkitty-dashboard
     python setup.py install
 
 
-Find where the python packages are installed:
-
-::
+Find where the python packages are installed::
 
     PY_PACKAGES_PATH=`pip --version | cut -d' ' -f4`
 
 
 Then add the enabled file to the horizon settings or installation. Depending on
 your setup, you might need to add it to ``/usr/share`` or directly in the
-horizon python package:
-
-::
+horizon python package::
 
     # If horizon is installed by packages:
-    ln -s $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
+    ln -sf $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
     /usr/share/openstack-dashboard/openstack_dashboard/enabled/
 
     # Directly from sources:
-    ln -s $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
+    ln -sf $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
     $PY_PACKAGES_PATH/openstack_dashboard/enabled/
 
 
