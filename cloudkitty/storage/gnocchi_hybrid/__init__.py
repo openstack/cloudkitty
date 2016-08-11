@@ -49,9 +49,9 @@ class GnocchiHybridStorage(sql_storage.SQLAlchemyStorage):
         else:
             resource_ref = frame.get('resource_id')
         if not resource_ref:
-            LOG.warn(_LW('Trying to store data collected outside of '
-                         'gnocchi. This driver can only be used with '
-                         'the gnocchi collector. Data not stored!'))
+            LOG.warning(_LW('Trying to store data collected outside of '
+                            'gnocchi. This driver can only be used with '
+                            'the gnocchi collector. Data not stored!'))
             return
         self.add_time_frame(begin=self.usage_start_dt.get(tenant_id),
                             end=self.usage_end_dt.get(tenant_id),
