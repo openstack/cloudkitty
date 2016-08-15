@@ -21,6 +21,7 @@ var/
 .installed.cfg
 *.egg
 cloudkitty.egg-info
+.idea/
 
 # Installer logs
 pip-log.txt
@@ -52,6 +53,9 @@ doc/build/
 # Others
 *.sqlite
 *.swp
+*~
+*.swn
+*.swo
 *.DS_Store
 
 # tox -e docs
