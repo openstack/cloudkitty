@@ -15,14 +15,12 @@
 #
 # @author: Stéphane Albert
 #
-from cloudkitty.common import rpc
 from cloudkitty import orchestrator
 from cloudkitty import service
 
 
 def main():
     service.prepare_service()
-    rpc.init()
     processor = orchestrator.Orchestrator()
     try:
         processor.process()

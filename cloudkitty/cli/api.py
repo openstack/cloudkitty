@@ -16,13 +16,11 @@
 # @author: Stéphane Albert
 #
 from cloudkitty.api import app
-from cloudkitty.common import rpc
 from cloudkitty import service
 
 
 def main():
     service.prepare_service()
-    rpc.init()
     server = app.build_server()
     try:
         server.serve_forever()

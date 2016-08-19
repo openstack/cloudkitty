@@ -56,7 +56,7 @@ class RatingTest(tests.TestCase):
         self.assertEqual(expected_infos, mod_infos)
 
     def test_set_state_triggers_rpc(self):
-        with mock.patch('cloudkitty.rpc.get_client') as rpcmock:
+        with mock.patch('cloudkitty.messaging.get_client') as rpcmock:
             rpcmock.return_value = self._fake_rpc
             self._module.set_state(True)
             self.assertTrue(self._fake_rpc._fanout)
@@ -74,7 +74,7 @@ class RatingTest(tests.TestCase):
             self.assertEqual(expected_data, rpc_data)
 
     def test_enable_module(self):
-        with mock.patch('cloudkitty.rpc.get_client') as rpcmock:
+        with mock.patch('cloudkitty.messaging.get_client') as rpcmock:
             rpcmock.return_value = self._fake_rpc
             self._module.set_state(True)
         db_api = ck_db_api.get_instance()
@@ -82,7 +82,7 @@ class RatingTest(tests.TestCase):
         self.assertTrue(module_db.get_state('fake'))
 
     def test_disable_module(self):
-        with mock.patch('cloudkitty.rpc.get_client') as rpcmock:
+        with mock.patch('cloudkitty.messaging.get_client') as rpcmock:
             rpcmock.return_value = self._fake_rpc
             self._module.set_state(False)
         db_api = ck_db_api.get_instance()

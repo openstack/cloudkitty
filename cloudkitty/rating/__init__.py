@@ -23,7 +23,7 @@ import six
 
 from cloudkitty.common import policy
 from cloudkitty.db import api as db_api
-from cloudkitty import rpc
+from cloudkitty import messaging
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -91,8 +91,8 @@ class RatingProcessorBase(object):
         """
         api = db_api.get_instance()
         module_db = api.get_module_info()
-        client = rpc.get_client().prepare(namespace='rating',
-                                          fanout=True)
+        client = messaging.get_client().prepare(namespace='rating',
+                                                fanout=True)
         if enabled:
             operation = 'enable_module'
         else:
@@ -133,7 +133,8 @@ class RatingProcessorBase(object):
         """
 
     def notify_reload(self):
-        client = rpc.get_client().prepare(namespace='rating', fanout=True)
+        client = messaging.get_client().prepare(namespace='rating',
+                                                fanout=True)
         client.cast({}, 'reload_module', name=self.module_name)
 
 

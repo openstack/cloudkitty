@@ -19,9 +19,12 @@ import socket
 import sys
 
 from oslo_config import cfg
-from oslo_log import log as logging
+import oslo_i18n
+from oslo_log import log
 
 from cloudkitty.common import defaults
+from cloudkitty import messaging
+from cloudkitty import version
 
 
 service_opts = [
@@ -29,17 +32,24 @@ service_opts = [
                default=socket.getfqdn(),
                help='Name of this node. This can be an opaque identifier. '
                'It is not necessarily a hostname, FQDN, or IP address. '
-               'However, the node name must be valid within '
-               'an AMQP key, and if using ZeroMQ, a valid '
-               'hostname, FQDN, or IP address.')
+               'However, the node name must be valid within an AMQP key, '
+               'and if using ZeroMQ, a valid hostname, FQDN, or IP address.')
 ]
 
 cfg.CONF.register_opts(service_opts)
 
 
-def prepare_service():
-    logging.register_options(cfg.CONF)
-    cfg.CONF(sys.argv[1:], project='cloudkitty')
-    defaults.set_config_defaults()
+def prepare_service(argv=None, config_files=None):
+    oslo_i18n.enable_lazy()
+    log.register_options(cfg.CONF)
+    log.set_defaults()
+    defaults.set_cors_middleware_defaults()
 
-    logging.setup(cfg.CONF, 'cloudkitty')
+    if argv is None:
+        argv = sys.argv
+    cfg.CONF(argv[1:], project='cloudkitty', validate_default_values=True,
+             version=version.version_info.version_string(),
+             default_config_files=config_files)
+
+    log.setup(cfg.CONF, 'cloudkitty')
+    messaging.setup()

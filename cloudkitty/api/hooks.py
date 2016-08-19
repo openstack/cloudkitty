@@ -19,11 +19,12 @@ from oslo_context import context
 from pecan import hooks
 
 from cloudkitty.common import policy
+from cloudkitty import messaging
 
 
 class RPCHook(hooks.PecanHook):
-    def __init__(self, rcp_client):
-        self._rpc_client = rcp_client
+    def __init__(self):
+        self._rpc_client = messaging.get_client()
 
     def before(self, state):
         state.request.rpc_client = self._rpc_client

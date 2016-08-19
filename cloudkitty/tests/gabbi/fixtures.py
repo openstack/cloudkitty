@@ -24,7 +24,7 @@ import mock
 from oslo_config import cfg
 from oslo_config import fixture as conf_fixture
 from oslo_db.sqlalchemy import utils
-import oslo_messaging as messaging
+import oslo_messaging
 from oslo_messaging import conffixture
 from oslo_policy import opts as policy_opts
 import six
@@ -34,9 +34,9 @@ from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api import app
-from cloudkitty.common import rpc
 from cloudkitty import db
 from cloudkitty.db import api as ck_db_api
+from cloudkitty import messaging
 from cloudkitty import rating
 from cloudkitty import storage
 from cloudkitty.storage.sqlalchemy import models
@@ -215,14 +215,14 @@ class BaseFakeRPC(fixture.GabbiFixture):
     endpoint = None
 
     def start_fixture(self):
-        rpc.init()
-        target = messaging.Target(topic='cloudkitty',
-                                  server=cfg.CONF.host,
-                                  version='1.0')
+        messaging.setup()
+        target = oslo_messaging.Target(topic='cloudkitty',
+                                       server=cfg.CONF.host,
+                                       version='1.0')
         endpoints = [
             self.endpoint()
         ]
-        self.server = rpc.get_server(target, endpoints)
+        self.server = messaging.get_server(target, endpoints)
         self.server.start()
 
     def stop_fixture(self):
@@ -231,8 +231,8 @@ class BaseFakeRPC(fixture.GabbiFixture):
 
 class QuoteFakeRPC(BaseFakeRPC):
     class FakeRPCEndpoint(object):
-        target = messaging.Target(namespace='rating',
-                                  version='1.0')
+        target = oslo_messaging.Target(namespace='rating',
+                                       version='1.0')
 
         def quote(self, ctxt, res_data):
             return str(1.0)
@@ -357,7 +357,7 @@ class CORSConfigFixture(fixture.GabbiFixture):
 
 
 def setup_app():
-    rpc.init()
+    messaging.setup()
     # FIXME(sheeprine): Extension fixtures are interacting with transformers
     # loading, since collectors are not needed here we shunt them
     no_collector = mock.patch(

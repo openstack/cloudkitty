@@ -24,15 +24,15 @@ import eventlet
 from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_log import log as logging
-import oslo_messaging as messaging
+import oslo_messaging
 from stevedore import driver
 from tooz import coordination
 
 from cloudkitty import collector
-from cloudkitty.common import rpc
 from cloudkitty import config  # noqa
 from cloudkitty import extension_manager
 from cloudkitty.i18n import _LI, _LW
+from cloudkitty import messaging
 from cloudkitty import storage
 from cloudkitty import transformer
 from cloudkitty import utils as ck_utils
@@ -57,8 +57,8 @@ PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
 
 
 class RatingEndpoint(object):
-    target = messaging.Target(namespace='rating',
-                              version='1.1')
+    target = oslo_messaging.Target(namespace='rating',
+                                   version='1.1')
 
     def __init__(self, orchestrator):
         self._global_reload = False
@@ -249,13 +249,13 @@ class Orchestrator(object):
         random.shuffle(self._tenants)
 
     def _init_messaging(self):
-        target = messaging.Target(topic='cloudkitty',
-                                  server=CONF.host,
-                                  version='1.0')
+        target = oslo_messaging.Target(topic='cloudkitty',
+                                       server=CONF.host,
+                                       version='1.0')
         endpoints = [
             self._rating_endpoint,
         ]
-        self.server = rpc.get_server(target, endpoints)
+        self.server = messaging.get_server(target, endpoints)
         self.server.start()
 
     def _check_state(self, tenant_id):

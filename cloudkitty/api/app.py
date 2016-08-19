@@ -27,7 +27,6 @@ import pecan
 from cloudkitty.api import config as api_config
 from cloudkitty.api import hooks
 from cloudkitty.i18n import _LI
-from cloudkitty import rpc
 from cloudkitty import storage
 
 
@@ -71,13 +70,9 @@ def get_pecan_config():
 def setup_app(pecan_config=None, extra_hooks=None):
 
     app_conf = get_pecan_config()
-
-    client = rpc.get_client()
-
     storage_backend = storage.get_storage()
-
     app_hooks = [
-        hooks.RPCHook(client),
+        hooks.RPCHook(),
         hooks.StorageHook(storage_backend),
     ]
 

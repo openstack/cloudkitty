@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,27 +10,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-#
-# @author: Guillaume Espanel
-#
-import oslo_messaging as messaging
-
-from cloudkitty.common import rpc
 
 
-_RPC_CLIENT = None
-_RPC_TARGET = None
+import pbr.version
 
-
-def get_target():
-    global _RPC_TARGET
-    if _RPC_TARGET is None:
-        _RPC_TARGET = messaging.Target(topic='cloudkitty', version='1.0')
-    return _RPC_TARGET
-
-
-def get_client():
-    global _RPC_CLIENT
-    if _RPC_CLIENT is None:
-        _RPC_CLIENT = rpc.get_client(get_target())
-    return _RPC_CLIENT
+version_info = pbr.version.VersionInfo('cloudkitty')
