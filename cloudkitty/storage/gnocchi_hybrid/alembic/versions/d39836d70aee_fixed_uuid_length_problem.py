@@ -20,11 +20,3 @@ def upgrade():
             'resource_ref',
             type_=sa.String(36),
             existing_type=sa.String(32))
-
-
-def downgrade():
-    with op.batch_alter_table('ghybrid_dataframes') as batch_op:
-        batch_op.alter_column(
-            'resource_ref',
-            type_=sa.String(32),
-            existing_type=sa.String(36))

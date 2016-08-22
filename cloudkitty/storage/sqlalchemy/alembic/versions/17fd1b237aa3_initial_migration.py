@@ -27,8 +27,3 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     mysql_charset='utf8',
     mysql_engine='InnoDB')
-
-
-def downgrade():
-    op.drop_table('rated_data_frames')
-    op.drop_table('storage_sqlalchemy_alembic')

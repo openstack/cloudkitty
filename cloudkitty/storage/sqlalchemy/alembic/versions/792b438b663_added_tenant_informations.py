@@ -19,7 +19,3 @@ from cloudkitty.storage.sqlalchemy import models
 def upgrade():
     op.add_column('rated_data_frames',
                   sa.Column('tenant_id', sa.String(length=32), nullable=True))
-
-
-def downgrade():
-    op.drop_column('rated_data_frames', 'tenant_id')

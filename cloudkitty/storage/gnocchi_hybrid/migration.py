@@ -27,11 +27,6 @@ def upgrade(revision):
     return migration.upgrade(config, revision)
 
 
-def downgrade(revision):
-    config = migration.load_alembic_config(ALEMBIC_REPO)
-    return migration.downgrade(config, revision)
-
-
 def version():
     config = migration.load_alembic_config(ALEMBIC_REPO)
     return migration.version(config)
