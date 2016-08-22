@@ -117,7 +117,7 @@ class RootController(rest.RestController):
     v1 = v1_api.V1Controller()
 
     @wsme_pecan.wsexpose([APIVersion])
-    def get(self):
+    def index(self):
         """Return the version list
 
         """
