@@ -52,7 +52,3 @@ def upgrade():
         sa.UniqueConstraint('level', 'service_id', name=constraints[1]),
         mysql_charset='utf8',
         mysql_engine='InnoDB')
-
-
-def downgrade():
-    op.drop_table('hashmap_thresholds')

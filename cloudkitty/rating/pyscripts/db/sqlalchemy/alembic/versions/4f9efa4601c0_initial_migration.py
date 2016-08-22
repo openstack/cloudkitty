@@ -27,7 +27,3 @@ def upgrade():
         sa.UniqueConstraint('script_id'),
         mysql_charset='utf8',
         mysql_engine='InnoDB')
-
-
-def downgrade():
-    op.drop_table('pyscripts_scripts')
