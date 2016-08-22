@@ -26,8 +26,3 @@ def upgrade():
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('state', sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint('name'))
-
-
-def downgrade():
-    op.drop_table('modules_state')
-    op.drop_table('states')

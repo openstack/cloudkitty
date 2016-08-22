@@ -18,7 +18,3 @@ def upgrade():
     op.add_column(
         'modules_state',
         sa.Column('priority', sa.Integer(), nullable=True))
-
-
-def downgrade():
-    op.drop_column('modules_state', 'priority')

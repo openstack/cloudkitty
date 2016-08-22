@@ -20,7 +20,3 @@ def upgrade():
         sa.Column('service', sa.String(length=255), nullable=False),
         sa.Column('collector', sa.String(length=255), nullable=False),
         sa.PrimaryKeyConstraint('service'))
-
-
-def downgrade():
-    op.drop_table('service_to_collector_mappings')
