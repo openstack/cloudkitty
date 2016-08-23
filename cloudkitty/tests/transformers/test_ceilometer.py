@@ -57,6 +57,32 @@ TRANS_VOLUME = {
     'name': 'vol1',
     'size': 10}
 
+CEIL_IMAGE = {
+    'status': 'active',
+    'name': 'Cirros',
+    'deleted': 'False',
+    'disk_format': 'ami',
+    'id': 'c4a0d12e-88ff-43e1-b182-f95dfe75e40c',
+    'protected': 'False',
+    'container_format': 'ami',
+    'is_public': 'False',
+    'size': '25165824'
+}
+
+TRANS_IMAGE = {
+    'image_id': '2f58a438-3169-11e6-b36c-bfe1fa3241fe',
+    'project_id': '4480c638-3169-11e6-91de-a3bd3a7d3afb',
+    'user_id': '576808d8-3169-11e6-992b-5f931fc671df',
+    'container_format': 'ami',
+    'deleted': 'False',
+    'disk_format': 'ami',
+    'is_public': 'False',
+    'name': 'Cirros',
+    'protected': 'False',
+    'size': '25165824',
+    'status': 'active'
+}
+
 
 class CeilometerTransformerTest(tests.TestCase):
     def setUp(self):
@@ -81,3 +107,9 @@ class CeilometerTransformerTest(tests.TestCase):
         t_test = ceilometer.CeilometerTransformer()
         result = t_test.strip_resource_data('volume', resource)
         self.assertEqual(TRANS_VOLUME, result)
+
+    def test_strip_ceilometer_image(self):
+        resource = self.generate_ceilometer_resource(CEIL_IMAGE)
+        t_test = ceilometer.CeilometerTransformer()
+        result = t_test.strip_resource_data('image', resource)
+        self.assertEqual(TRANS_IMAGE, result)
