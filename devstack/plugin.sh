@@ -3,7 +3,7 @@
 
 # To enable a minimal set of CloudKitty services:
 # - enable Ceilometer ;
-# - add the following to localrc:
+# - add the following to the [[local|localrc]] section in the local.conf file:
 #
 #     enable_service ck-api ck-proc
 #
