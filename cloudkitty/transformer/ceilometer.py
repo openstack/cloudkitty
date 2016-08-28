@@ -35,6 +35,16 @@ class CeilometerTransformer(transformer.BaseTransformer):
         'availability_zone': ['availability_zone'],
         'size': ['size'],
     }
+    image_map = {
+        'container_format': ['container_format'],
+        'deleted': ['deleted'],
+        'disk_format': ['disk_format'],
+        'is_public': ['is_public'],
+        'name': ['name'],
+        'protected': ['protected'],
+        'size': ['size'],
+        'status': ['status'],
+    }
     metadata_item = 'metadata'
 
     def _strip_compute(self, data):
@@ -52,4 +62,11 @@ class CeilometerTransformer(transformer.BaseTransformer):
         res_data = self.generic_strip('volume', data)
         res_data['user_id'] = data.user_id
         res_data['project_id'] = data.project_id
+        return res_data
+
+    def _strip_image(self, data):
+        res_data = self.generic_strip('image', data)
+        res_data['image_id'] = data.resource_id
+        res_data['project_id'] = data.project_id
+        res_data['user_id'] = data.user_id
         return res_data
