@@ -181,7 +181,7 @@ class HashMap(api.HashMap):
             q = q.join(
                 models.HashMapMapping.field)
             q = q.filter(models.HashMapField.field_id == field_uuid)
-        elif not service_uuid and not field_uuid:
+        elif not service_uuid and not field_uuid and not group_uuid:
             raise api.ClientHashMapError(
                 'You must specify either service_uuid,'
                 ' field_uuid or group_uuid.')
@@ -216,7 +216,7 @@ class HashMap(api.HashMap):
             q = q.join(
                 models.HashMapThreshold.field)
             q = q.filter(models.HashMapField.field_id == field_uuid)
-        elif not service_uuid and not field_uuid:
+        elif not service_uuid and not field_uuid and not group_uuid:
             raise api.ClientHashMapError(
                 'You must specify either service_uuid,'
                 ' field_uuid or group_uuid.')

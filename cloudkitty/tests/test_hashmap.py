@@ -151,6 +151,22 @@ class HashMapRatingTest(tests.TestCase):
         new_mapping_db = self._db_api.get_mapping(mapping_db.mapping_id)
         self.assertIsNone(new_mapping_db.group_id)
 
+    def test_list_mappings_from_only_group(self):
+        service_db = self._db_api.create_service('compute')
+        group_db = self._db_api.create_group('test_group')
+        mapping_tiny = self._db_api.create_mapping(
+            cost='1.337',
+            map_type='flat',
+            service_id=service_db.service_id,
+            group_id=group_db.group_id)
+        self._db_api.create_mapping(
+            cost='42',
+            map_type='flat',
+            service_id=service_db.service_id)
+        mappings = self._db_api.list_mappings(group_uuid=group_db.group_id)
+        self.assertEqual([mapping_tiny.mapping_id],
+                         mappings)
+
     def test_list_mappings_from_group(self):
         service_db = self._db_api.create_service('compute')
         field_db = self._db_api.create_field(service_db.service_id,
@@ -492,6 +508,19 @@ class HashMapRatingTest(tests.TestCase):
         self.assertEqual(decimal.Decimal('64'), threshold.level)
         self.assertEqual(decimal.Decimal('0.1337'), threshold.cost)
         self.assertEqual(field_db.id, threshold.field_id)
+
+    def test_list_thresholds_from_only_group(self):
+        service_db = self._db_api.create_service('compute')
+        group_db = self._db_api.create_group('test_group')
+        threshold_db = self._db_api.create_threshold(
+            level=10,
+            cost='1.337',
+            map_type='flat',
+            service_id=service_db.service_id,
+            group_id=group_db.group_id)
+        thresholds = self._db_api.list_thresholds(
+            group_uuid=group_db.group_id)
+        self.assertEqual([threshold_db.threshold_id], thresholds)
 
     def test_list_thresholds_from_services(self):
         service_db = self._db_api.create_service('compute')
