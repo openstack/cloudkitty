@@ -71,17 +71,23 @@ class DBCommand(object):
             print(tenant)
 
 
-def add_command_parsers(subparsers):
-    command_object = DBCommand()
+def call_generate(command_object):
+    command_object.generate()
 
+
+def call_tenants_list(command_object):
+    command_object.tenants_list()
+
+
+def add_command_parsers(subparsers):
     parser = subparsers.add_parser('generate')
-    parser.set_defaults(func=command_object.generate)
+    parser.set_defaults(func=call_generate)
     parser.add_argument('--tenant', nargs='?')
     parser.add_argument('--begin', nargs='?')
     parser.add_argument('--end', nargs='?')
 
     parser = subparsers.add_parser('tenants_list')
-    parser.set_defaults(func=command_object.tenants_list)
+    parser.set_defaults(func=call_tenants_list)
     parser.add_argument('--begin', nargs='?')
     parser.add_argument('--end', nargs='?')
 
@@ -96,4 +102,5 @@ CONF.register_cli_opt(command_opt)
 
 def main():
     service.prepare_service()
-    CONF.command.func()
+    command_object = DBCommand()
+    CONF.command.func(command_object)
