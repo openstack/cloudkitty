@@ -36,11 +36,17 @@ class CSVMapped(csv_base.BaseCSVBackend):
              ('UsageEnd', self._trans_get_usage_end),
              ('ResourceId', self._trans_res_id),
              ('Operation', self._trans_operation),
+             ('UserId', 'desc:user_id'),
+             ('ProjectId', 'desc:project_id'),
+             ('ItemName', 'desc:name'),
+             ('ItemFlavor', 'desc:flavor'),
              ('AvailabilityZone', 'desc:availability_zone'),
+             ('Service', self._trans_service),
              ('ItemDescription', 'rating:description'),
              ('UsageQuantity', 'vol:qty'),
              ('RateId', 'rating:rate_id'),
              ('RateValue', 'rating:price'),
+             ('Cost', self._trans_calc_cost),
              ('user:*', 'desc:metadata:*')])
 
     def _write_total(self):
@@ -131,3 +137,17 @@ class CSVMapped(csv_base.BaseCSVBackend):
         """
         if context == 'compute':
             return report_data['desc'].get('instance_id')
+
+    def _trans_calc_cost(self, context, report_data):
+        """Cost calculation function.
+
+        """
+        try:
+            quantity = report_data['vol'].get('qty')
+            rate = report_data['rating'].get('price')
+            return str(float(quantity) * rate)
+        except TypeError:
+            pass
+
+    def _trans_service(self, context, report_data):
+        return context
