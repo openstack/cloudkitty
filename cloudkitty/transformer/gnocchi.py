@@ -44,8 +44,8 @@ class GnocchiTransformer(transformer.BaseTransformer):
 
     @staticmethod
     def get_image_id(data):
-        image_ref = data.get('image_ref', '')
-        return image_ref.rpartition('/')[-1] or image_ref
+        image_ref = data.get('image_ref', None)
+        return image_ref.rpartition('/')[-1] if image_ref else None
 
     def strip_resource_data(self, res_type, res_data):
         result = self._generic_strip(res_data)
