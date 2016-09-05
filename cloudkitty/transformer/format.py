@@ -19,7 +19,7 @@ from cloudkitty import transformer
 
 
 class CloudKittyFormatTransformer(transformer.BaseTransformer):
-    def format_item(self, desc, unit, qty=1):
+    def format_item(self, desc, unit, qty=1.0):
         data = {}
         data['desc'] = desc
         data['vol'] = {'unit': unit, 'qty': qty}

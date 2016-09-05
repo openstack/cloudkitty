@@ -44,7 +44,7 @@ class RatedDataFrame(Base, models.ModelBase):
                             nullable=False)
     unit = sqlalchemy.Column(sqlalchemy.String(255),
                              nullable=False)
-    qty = sqlalchemy.Column(sqlalchemy.Numeric(),
+    qty = sqlalchemy.Column(sqlalchemy.Numeric(10, 5),
                             nullable=False)
     res_type = sqlalchemy.Column(sqlalchemy.String(255),
                                  nullable=False)
