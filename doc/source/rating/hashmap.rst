@@ -25,14 +25,30 @@ for each calculation.
 Service
 -------
 
-A service is a way to map the rule to the type of data collected (**compute,
-image, volume**).
+A service is a way to map the rule to the type of data collected. Currently,
+the following services are available:
+
+* compute
+* image
+* volume
+* network.bw.in
+* network.bw.out
+* network.floating
+
+Enabled services are defined in the configuration file. By default, only the
+compute service is enabled.
 
 Field
 -----
 
 A field is referring to a metadata field of a resource. For example on an
 instance object (**compute**), you can use the flavor to define specific rules.
+With Ceilometer as the collector, the following fields are available for each
+service:
+
+* Compute: flavor, vcpus, memory (MB), image_id, availability_zone
+* Volume: name, size (GB), volume_type, availability_zone
+* Image: size, disk_format, container_format, is_public, availability_zone
 
 Mapping
 -------
@@ -131,7 +147,7 @@ instance to a cost of 0.01:
     +------------+--------------------------------------+
 
 
-In this example every machine with the flavor m1.tiny will be charge 0.01 per
+In this example every machine with the flavor m1.tiny will be charged 0.01 per
 collection period.
 
 
