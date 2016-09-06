@@ -29,6 +29,7 @@ class GnocchiTransformer(transformer.BaseTransformer):
     }
     volume_map = {
         'name': ['display_name'],
+        'volume_type': ['volume_type'],
     }
     network_map = {
         'name': ['name'],

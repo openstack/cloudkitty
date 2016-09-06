@@ -60,6 +60,7 @@ GNOCCHI_VOLUME = {
     'project_id': '4480c638-3169-11e6-91de-a3bd3a7d3afb',
     'user_id': '576808d8-3169-11e6-992b-5f931fc671df',
     'display_name': 'vol1',
+    'volume_type': 'lvmdriver-1',
     'metrics': {}}
 
 TRANS_VOLUME = {
@@ -67,6 +68,7 @@ TRANS_VOLUME = {
     'project_id': '4480c638-3169-11e6-91de-a3bd3a7d3afb',
     'user_id': '576808d8-3169-11e6-992b-5f931fc671df',
     'name': 'vol1',
+    'volume_type': 'lvmdriver-1',
     'metrics': {}}
 
 GNOCCHI_NETWORK = {
