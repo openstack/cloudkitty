@@ -327,17 +327,30 @@ Start cloudkitty
 If you installed cloudkitty from packages
 -----------------------------------------
 
-Start the API and processing services::
+Start the processing services::
 
-    systemctl start cloudkitty-api.service
     systemctl start cloudkitty-processor.service
 
 If you installed cloudkitty from sources
 -----------------------------------------
 
-Start the API and processing services::
+Start the processing services::
 
-    cloudkitty-api --config-file /etc/cloudkitty/cloudkitty.conf
     cloudkitty-processor --config-file /etc/cloudkitty/cloudkitty.conf
 
+Choose and start the API server
+-------------------------------
+
+   Cloudkitty includes the ``cloudkitty-api`` command. It can be
+   used to run the API server. For smaller or proof-of-concept
+   installations this is a reasonable choice. For larger installations it
+   is strongly recommended to install the API server in a WSGI host
+   such as mod_wsgi (see :doc:`mod_wsgi`). Doing so will provide better
+   performance and more options for making adjustments specific to the
+   installation environment.
+
+   If you are using the ``cloudkitty-api`` command it can be started
+   as::
+
+    $ cloudkitty-api -p 8889
 

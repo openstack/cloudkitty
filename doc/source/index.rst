@@ -21,6 +21,7 @@ Installation
 
    devstack
    installation
+   mod_wsgi
 
 
 Architecture

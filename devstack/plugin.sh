@@ -73,9 +73,19 @@ function is_cloudkitty_enabled {
     return 1
 }
 
+# Remove WSGI files, disable and remove Apache vhost file
+function _cloudkitty_cleanup_apache_wsgi {
+    if is_service_enabled ck-api && [ "$CLOUDKITTY_USE_MOD_WSGI" == "True" ]; then
+        sudo rm -f "$CLOUDKITTY_WSGI_DIR"/*
+        sudo rm -rf  "$CLOUDKITTY_WSGI_DIR"
+        sudo rm -f $(apache_site_config_for cloudkitty)
+    fi
+}
+
 # cleanup_cloudkitty() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_cloudkitty {
+    _cloudkitty_cleanup_apache_wsgi
     # Clean up dirs
     rm -rf $CLOUDKITTY_AUTH_CACHE_DIR/*
     rm -rf $CLOUDKITTY_CONF_DIR/*
@@ -83,6 +93,31 @@ function cleanup_cloudkitty {
     for i in $(find $CLOUDKITTY_ENABLED_DIR -iname '_[0-9]*.py' -printf '%f\n'); do
         rm -f "${CLOUDKITTY_HORIZON_ENABLED_DIR}/$i"
     done
+}
+
+
+# Configure mod_wsgi
+function _cloudkitty_config_apache_wsgi {
+    sudo mkdir -m 755 -p $CLOUDKITTY_WSGI_DIR
+
+    local cloudkitty_apache_conf=$(apache_site_config_for cloudkitty)
+    local venv_path=""
+
+    # Copy proxy vhost and wsgi file
+    sudo cp $CLOUDKITTY_DIR/cloudkitty/api/app.wsgi $CLOUDKITTY_WSGI_DIR/app.wsgi
+
+    if [[ ${USE_VENV} = True ]]; then
+        venv_path="python-path=${PROJECT_VENV["cloudkitty"]}/lib/$(python_version)/site-packages"
+    fi
+
+    sudo cp $CLOUDKITTY_DIR/devstack/apache-cloudkitty.template $cloudkitty_apache_conf
+    sudo sed -e "
+        s|%PORT%|$CLOUDKITTY_SERVICE_PORT|g;
+        s|%APACHE_NAME%|$APACHE_NAME|g;
+        s|%WSGIAPP%|$CLOUDKITTY_WSGI_DIR/app.wsgi|g;
+        s|%USER%|$STACK_USER|g;
+        s|%VIRTUALENV%|$venv_path|g
+    " -i $cloudkitty_apache_conf
 }
 
 # configure_cloudkitty() - Set config files, create data dirs, etc
@@ -137,6 +172,10 @@ function configure_cloudkitty {
 
     # keystone middleware
     configure_auth_token_middleware $CLOUDKITTY_CONF cloudkitty $CLOUDKITTY_AUTH_CACHE_DIR
+
+    if is_service_enabled ck-api && [ "$CLOUDKITTY_USE_MOD_WSGI" == "True" ]; then
+        _cloudkitty_config_apache_wsgi
+    fi
 }
 
 # create_cloudkitty_cache_dir() - Part of the init_cloudkitty() process
@@ -195,7 +234,14 @@ function install_cloudkitty {
 # start_cloudkitty() - Start running processes, including screen
 function start_cloudkitty {
     run_process ck-proc "$CLOUDKITTY_BIN_DIR/cloudkitty-processor --config-file=$CLOUDKITTY_CONF"
-    run_process ck-api "$CLOUDKITTY_BIN_DIR/cloudkitty-api --config-file=$CLOUDKITTY_CONF"
+    if [[ "$CLOUDKITTY_USE_MOD_WSGI" == "False" ]]; then
+        run_process ck-api "$CLOUDKITTY_BIN_DIR/cloudkitty-api --config-file=$CLOUDKITTY_CONF"
+    elif is_service_enabled ck-api; then
+        enable_apache_site cloudkitty
+        restart_apache_server
+        tail_log cloudkitty /var/log/$APACHE_NAME/cloudkitty.log
+        tail_log cloudkitty-api /var/log/$APACHE_NAME/cloudkitty_access.log
+    fi
     echo "Waiting for ck-api ($CLOUDKITTY_SERVICE_HOST:$CLOUDKITTY_SERVICE_PORT) to start..."
     if ! wait_for_service $SERVICE_TIMEOUT $CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOST:$CLOUDKITTY_SERVICE_PORT; then
         die $LINENO "ck-api did not start"
@@ -205,9 +251,19 @@ function start_cloudkitty {
 # stop_cloudkitty() - Stop running processes
 function stop_cloudkitty {
     # Kill the cloudkitty screen windows
-    for serv in ck-api ck-proc; do
-        stop_process $serv
-    done
+    if is_service_enabled ck-proc ; then
+        stop_process ck-proc
+    fi
+
+    if is_service_enabled ck-api ; then
+        if [ "$CLOUDKITTY_USE_MOD_WSGI" == "True" ]; then
+            disable_apache_site cloudkitty
+            restart_apache_server
+        else
+            # Kill the cloudkitty screen windows
+            stop_process ck-api
+        fi
+    fi
 }
 
 # install_python_cloudkittyclient() - Collect source and prepare

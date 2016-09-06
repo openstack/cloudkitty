@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
-# Copyright 2014 Objectif Libre
+# -*- mode: python -*-
+#
+# Copyright 2013 New Dream Network, LLC (DreamHost)
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,21 +13,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-#
-# @author: Stéphane Albert
-#
+
+"""Use this file for deploying the API under mod_wsgi.
+
+See http://pecan.readthedocs.org/en/latest/deployment.html for details.
+"""
+
 from cloudkitty.api import app
-from cloudkitty import service
 
-
-def main():
-    service.prepare_service()
-    server = app.build_server()
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-
-
-if __name__ == '__main__':
-    main()
+application = app.build_wsgi_app(argv=[])

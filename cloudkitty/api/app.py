@@ -15,9 +15,7 @@
 #
 # @author: Stéphane Albert
 #
-import logging
 import os
-from wsgiref import simple_server
 
 from oslo_config import cfg
 from oslo_log import log
@@ -26,6 +24,7 @@ import pecan
 
 from cloudkitty.api import config as api_config
 from cloudkitty.api import hooks
+from cloudkitty import service
 from cloudkitty import storage
 
 
@@ -34,8 +33,7 @@ LOG = log.getLogger(__name__)
 auth_opts = [
     cfg.StrOpt('api_paste_config',
                default="api_paste.ini",
-               help="Configuration file for WSGI definition of API."
-               ),
+               help="Configuration file for WSGI definition of API."),
     cfg.StrOpt('auth_strategy',
                choices=['noauth', 'keystone'],
                default='keystone',
@@ -45,11 +43,11 @@ auth_opts = [
 
 api_opts = [
     cfg.IPOpt('host_ip',
-              default="0.0.0.0",
-              help='Host serving the API.'),
+              default='0.0.0.0',
+              help='The listen IP for the cloudkitty API server.'),
     cfg.PortOpt('port',
                 default=8889,
-                help='Host port serving the API.'),
+                help='The port for the cloudkitty API server.'),
     cfg.BoolOpt('pecan_debug',
                 default=False,
                 help='Toggle Pecan Debug Middleware.'),
@@ -103,35 +101,9 @@ def load_app():
     return deploy.loadapp("config:" + cfg_file)
 
 
-def build_server():
-    # Create the WSGI server and start it
-    host = CONF.api.host_ip
-    port = CONF.api.port
-    LOG.info('Starting server in PID %s', os.getpid())
-    LOG.info("Configuration:")
-    cfg.CONF.log_opt_values(LOG, logging.INFO)
-
-    if host == '0.0.0.0':
-        LOG.info('serving on 0.0.0.0:%(sport)s, view at \
-                  http://127.0.0.1:%(vport)s',
-                 {'sport': port, 'vport': port})
-    else:
-        LOG.info("serving on http://%(host)s:%(port)s",
-                 {'host': host, 'port': port})
-
-    server_cls = simple_server.WSGIServer
-    handler_cls = simple_server.WSGIRequestHandler
-
-    app = load_app()
-
-    srv = simple_server.make_server(
-        host,
-        port,
-        app,
-        server_cls,
-        handler_cls)
-
-    return srv
+def build_wsgi_app(argv=None):
+    service.prepare_service([])
+    return load_app()
 
 
 def app_factory(global_config, **local_conf):
