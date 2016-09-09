@@ -261,7 +261,7 @@ class CeilometerCollector(collector.BaseCollector):
                                                  tap)
             tap = self._cacher.get_resource_detail('network.tap',
                                                    tap_id)
-            tap_bw_mb = tap_stat.max / 1048576.0
+            tap_bw_mb = tap_stat.max / 1000000.0
             bw_data.append(self.t_cloudkitty.format_item(tap,
                                                          'MB',
                                                          tap_bw_mb))
