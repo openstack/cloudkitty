@@ -43,12 +43,18 @@ Field
 
 A field is referring to a metadata field of a resource. For example on an
 instance object (**compute**), you can use the flavor to define specific rules.
+
 With Ceilometer as the collector, the following fields are available for each
 service:
 
 * Compute: flavor, vcpus, memory (MB), image_id, availability_zone
-* Volume: name, size (GB), volume_type, availability_zone
-* Image: size, disk_format, container_format, is_public, availability_zone
+* Volume: name, volume_type, availability_zone
+* Image: disk_format, container_format, is_public, availability_zone
+
+With Gnocchi as collector, the following fields are available for each service:
+
+* Compute: flavor_id, vcpus, image_id, memory (MB)
+* Image: container_format, disk_format
 
 Mapping
 -------
@@ -58,11 +64,18 @@ specific value of flavor on an instance.
 It maps cost to a value of metadata in case of field mapping. And directly a
 cost in case of service mapping.
 
+A mapping can be project specific by providing a project id at creation and
+supports overloading, i.e. you can specify multiple mappings for the same value
+with different project ids and costs.
+
 Threshold
 ---------
 
 A threshold entry is used to apply rating rules base on level. Its behaviour is
 similar to a mapping except that it applies the cost base on the level.
+
+As for mapping, a threshold can be project specific by providing a project id
+at creation.
 
 HashMap formula
 ===============
@@ -72,9 +85,18 @@ Based on all the previous objects here's the calculation formula :
 
 :G: Group
 :qty: Quantity of resource
-:t: threshold
-:m: threshold
+:T: Threshold
+:M: Mapping
 
+
+For an active resource on a collection period, quantity is defined as follow:
+
+* compute: 1 (unit: instance)
+* image: upload image size (unit: MB)
+* volume: volume size (unit: GB)
+* network.bw.in: ingoing network usage (unit: MB)
+* network.bw.out: outgoing network usage (unit: MB)
+* network.floating: 1 (unit: ip)
 
 Example
 =======
@@ -142,13 +164,14 @@ instance to a cost of 0.01:
     | group_id   | 26d2d69a-4c42-47f1-9d44-2cdfad167f7d |
     | mapping_id | df592a91-a6a5-41fa-ba2e-2f763eaa36e5 |
     | service_id | None                                 |
+    | tenant_id  | None                                 |
     | type       | flat                                 |
     | value      | m1.tiny                              |
     +------------+--------------------------------------+
 
 
-In this example every machine with the flavor m1.tiny will be charged 0.01 per
-collection period.
+In this example every machine in any project with the flavor m1.tiny will be
+charged 0.01 per collection period.
 
 
 Volume per gb with discount
@@ -197,6 +220,7 @@ Now let's setup the price per gigabyte:
     | group_id   | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
     | mapping_id | 41669786-240b-11e6-872c-af96ddb6619c |
     | service_id | 16a48060-0e64-11e6-8e4e-1b285514a36e |
+    | tenant_id  | None                                 |
     | type       | flat                                 |
     | value      | None                                 |
     +------------+--------------------------------------+
@@ -213,18 +237,40 @@ Here we set a threshold when going past 50GB, and apply a 2% discount (0.98):
     $ cloudkitty hashmap-threshold-create \
      -s 16a48060-0e64-11e6-8e4e-1b285514a36e \
      -l 50 -t rate -c 0.98 -g dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d
-    +------------+--------------------------------------+
-    | Property   | Value                                |
-    +------------+--------------------------------------+
-    | cost       | 0.98                                 |
-    | field_id   | None                                 |
-    | group_id   | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
-    | level      | 50                                   |
-    | mapping_id | 8eb45bfc-0e64-11e6-ad0e-07a62425f284 |
-    | service_id | 16a48060-0e64-11e6-8e4e-1b285514a36e |
-    | type       | rate                                 |
-    +------------+--------------------------------------+
+    +--------------+--------------------------------------+
+    | Property     | Value                                |
+    +--------------+--------------------------------------+
+    | cost         | 0.98                                 |
+    | field_id     | None                                 |
+    | group_id     | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
+    | level        | 50                                   |
+    | threshold_id | 8eb45bfc-0e64-11e6-ad0e-07a62425f284 |
+    | service_id   | 16a48060-0e64-11e6-8e4e-1b285514a36e |
+    | tenant_id    | None                                 |
+    | type         | rate                                 |
+    +--------------+--------------------------------------+
 
+Here we set the same threshold for project 8f1e8645a0e7496a95a4fdf4b2795b2c
+but with a 3% discount (0.97):
+
+.. code:: raw
+
+    $ cloudkitty hashmap-threshold-create \
+     -s 16a48060-0e64-11e6-8e4e-1b285514a36e \
+     -l 50 -t rate -c 0.98 -g dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d \
+     -p 8f1e8645a0e7496a95a4fdf4b2795b2c
+    +--------------+--------------------------------------+
+    | Property     | Value                                |
+    +--------------+--------------------------------------+
+    | cost         | 0.97                                 |
+    | field_id     | None                                 |
+    | group_id     | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
+    | level        | 50                                   |
+    | threshold_id | 8eb45bfc-0e64-11e6-ad0e-07a62425f284 |
+    | service_id   | 16a48060-0e64-11e6-8e4e-1b285514a36e |
+    | tenant_id    | 8f1e8645a0e7496a95a4fdf4b2795b2c     |
+    | type         | rate                                 |
+    +--------------+--------------------------------------+
 
 Here we set a threshold when going past 200GB, and apply a 5% discount (0.95):
 
@@ -233,24 +279,31 @@ Here we set a threshold when going past 200GB, and apply a 5% discount (0.95):
     $ cloudkitty hashmap-threshold-create \
      -s 16a48060-0e64-11e6-8e4e-1b285514a36e \
      -l 200 -t rate -c 0.95 -g dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d
-    +------------+--------------------------------------+
-    | Property   | Value                                |
-    +------------+--------------------------------------+
-    | cost       | 0.95                                 |
-    | field_id   | None                                 |
-    | group_id   | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
-    | level      | 200                                  |
-    | mapping_id | baf180c8-0e64-11e6-abb3-cbae153a6d44 |
-    | service_id | 16a48060-0e64-11e6-8e4e-1b285514a36e |
-    | type       | rate                                 |
-    +------------+--------------------------------------+
+    +--------------+--------------------------------------+
+    | Property     | Value                                |
+    +--------------+--------------------------------------+
+    | cost         | 0.95                                 |
+    | field_id     | None                                 |
+    | group_id     | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
+    | level        | 200                                  |
+    | threshold_id | baf180c8-0e64-11e6-abb3-cbae153a6d44 |
+    | service_id   | 16a48060-0e64-11e6-8e4e-1b285514a36e |
+    | tenant_id    | None                                 |
+    | type         | rate                                 |
+    +--------------+--------------------------------------+
 
 
 In this example every volume is charged 0.01 per GB but if the size goes past
 50GB you'll get a 2% discount, if you even go further you'll get 5% discount
 (only one level apply at a time).
 
+For project 8f1e8645a0e7496a95a4fdf4b2795b2c only, you'll get a 3% discount
+instead of 2% when the size goes past 50GB and the same %5 discount it it goes
+further.
+
 :20GB: 0.02 per collection period.
-:50GB: 0.049 per collection period.
-:80GB: 0.0784 per collection period.
+:50GB: 0.049 per collection period
+    (0.0485 for project 8f1e8645a0e7496a95a4fdf4b2795b2c).
+:80GB: 0.0784 per collection period
+    (0.0776 for project 8f1e8645a0e7496a95a4fdf4b2795b2c).
 :250GB: 0.2375 per collection period.
