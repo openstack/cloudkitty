@@ -277,8 +277,11 @@ class GnocchiCollector(collector.BaseCollector):
                 start,
                 end)
             resource_data.pop('metrics', None)
-            if resource_data.get('type') == 'instance_network_interface':
+            # Convert network.bw.in, network.bw.out and image unit to MB
+            if resource.get('type') == 'instance_network_interface':
                 resource_data[qty] = resource_data[qty] / 1000000.0
+            elif resource.get('type') == 'image':
+                resource_data[qty] = resource_data[qty] / 1048576.0
             data = self.t_cloudkitty.format_item(
                 resource_data,
                 unit,
