@@ -41,6 +41,7 @@ class GnocchiCollector(collector.BaseCollector):
         'volume': 'volume',
         'network.bw.out': 'instance_network_interface',
         'network.bw.in': 'instance_network_interface',
+        'network.floating': 'network',
     }
     metrics_mappings = {
         'compute': [
@@ -59,6 +60,8 @@ class GnocchiCollector(collector.BaseCollector):
             ('network.outgoing.bytes', 'max')],
         'network.bw.in': [
             ('network.incoming.bytes', 'max')],
+        'network.floating': [
+            ('ip.floating', 'max')],
     }
     units_mappings = {
         'compute': (1, 'instance'),
@@ -66,6 +69,7 @@ class GnocchiCollector(collector.BaseCollector):
         'volume': ('volume.size', 'GB'),
         'network.bw.out': ('network.outgoing.bytes', 'MB'),
         'network.bw.in': ('network.incoming.bytes', 'MB'),
+        'network.floating': ('ip.floating', 'ip'),
     }
     default_unit = (1, 'unknown')
 
