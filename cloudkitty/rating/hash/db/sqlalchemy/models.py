@@ -64,7 +64,7 @@ class HashMapBase(models.ModelBase):
 
 
 class HashMapService(Base, HashMapBase):
-    """An hashmap service.
+    """A hashmap service.
 
     Used to describe a CloudKitty service such as compute or volume.
     """
@@ -105,7 +105,7 @@ class HashMapService(Base, HashMapBase):
 
 
 class HashMapField(Base, HashMapBase):
-    """An hashmap field.
+    """A hashmap field.
 
     Used to describe a service metadata such as flavor_id or image_id for
     compute.

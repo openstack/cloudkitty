@@ -73,7 +73,7 @@ class PyScripts(object):
 
     @abc.abstractmethod
     def list_scripts(self):
-        """Return an UUID list of every scripts available.
+        """Return a UUID list of every scripts available.
 
         """
 

@@ -69,7 +69,7 @@ class HashMap(api.HashMap):
                     models.HashMapField.name == name)
             else:
                 raise api.ClientHashMapError(
-                    'You must specify either an uuid'
+                    'You must specify either a uuid'
                     ' or a service_uuid and a name.')
             res = q.one()
             return res

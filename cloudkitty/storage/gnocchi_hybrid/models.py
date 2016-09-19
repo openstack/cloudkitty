@@ -25,7 +25,7 @@ Base = declarative.declarative_base()
 
 
 class HybridRatedDataframe(Base, models.ModelBase):
-    """An hybrid rated dataframe.
+    """A hybrid rated dataframe.
 
     """
     __table_args__ = {'mysql_charset': "utf8",
