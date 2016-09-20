@@ -106,8 +106,42 @@ class GnocchiStorage(storage.BaseStorage):
         except gexceptions.ResourceAlreadyExists:
             pass
 
+    def _get_or_create_resource(self, resource_type, tenant_id):
+        """Return the id of a resource or create it.
+
+        :param resource_type: The type of the resource.
+        :type metric_name: str
+        :param tenant_id: Owner's resource tenant id.
+        :type metric_name: str
+        """
+        query = {"=": {"project_id": tenant_id}}
+        resources = self._conn.resource.search(
+            resource_type=resource_type,
+            query=query,
+            limit=1)
+        if not resources:
+            # NOTE(sheeprine): We don't have the user id information and we are
+            # doing rating on a per tenant basis. Put garbage in it
+            resource = self._conn.resource.create(
+                resource_type=resource_type,
+                resource={'id': uuid.uuid4(),
+                          'user_id': None,
+                          'project_id': tenant_id})
+            return resource['id']
+        return resources[0]['id']
+
     def _get_or_create_metric(self, metric_name, resource_id):
-        resource = self._conn.resource.get('generic', resource_id, False)
+        """Return the metric id from a metric or create it.
+
+        :param metric_name: The name of the metric.
+        :type metric_name: str
+        :param resource_id: Resource id containing the metric.
+        :type metric_name: str
+        """
+        resource = self._conn.resource.get(
+            resource_type='generic',
+            resource_id=resource_id,
+            history=False)
         metric_id = resource["metrics"].get(metric_name)
         if not metric_id:
             new_metric = {}
@@ -115,27 +149,38 @@ class GnocchiStorage(storage.BaseStorage):
             new_metric["name"] = metric_name
             new_metric["resource_id"] = resource_id
             metric = self._conn.metric.create(new_metric)
-            metric_id = metric["id"]
+            metric_id = metric['id']
         return metric_id
 
     def _pre_commit(self, tenant_id):
         measures = self._measures.pop(tenant_id, {})
-        if measures:
-            self._measures[tenant_id] = dict()
+        self._measures[tenant_id] = dict()
         for resource_id, metrics in six.iteritems(measures):
             total = metrics.pop('total.cost')
             total_id = self._get_or_create_metric(
                 'total.cost',
                 resource_id)
             # TODO(sheeprine): Find a better way to handle total
-            aux = sum([decimal.Decimal(val["value"]) for val in total])
-            total["value"] = six.text_type(aux)
-            self._measures[tenant_id][total_id] = [total]
+            total_value = sum([decimal.Decimal(val["value"]) for val in total])
+            total_timestamp = max([dateutil.parser.parse(val["timestamp"])
+                                   for val in total])
+            self._measures[tenant_id][total_id] = [{
+                'timestamp': total_timestamp.isoformat(),
+                'value': six.text_type(total_value)}]
             for metric_name, values in six.iteritems(metrics):
                 metric_id = self._get_or_create_metric(
                     metric_name,
                     resource_id)
                 self._measures[tenant_id][metric_id] = values
+        state_resource_id = self._get_or_create_resource(
+            CLOUDKITTY_STATE_RESOURCE,
+            tenant_id)
+        state_metric_id = self._get_or_create_metric(
+            CLOUDKITTY_STATE_METRIC,
+            state_resource_id)
+        self._measures[tenant_id][state_metric_id] = [{
+            'timestamp': self.usage_start_dt.get(tenant_id).isoformat(),
+            'value': 1}]
 
     def _commit(self, tenant_id):
         if tenant_id in self._measures:
@@ -143,9 +188,6 @@ class GnocchiStorage(storage.BaseStorage):
                 self._measures[tenant_id])
 
     def _post_commit(self, tenant_id):
-        self.set_state(
-            self.usage_start_dt.get(tenant_id),
-            tenant_id)
         super(GnocchiStorage, self)._post_commit(tenant_id)
         if tenant_id in self._measures:
             del self._measures[tenant_id]
@@ -169,7 +211,7 @@ class GnocchiStorage(storage.BaseStorage):
                 price = item["rating"]["price"]
                 self._append_metric(
                     resource_id,
-                    metric_name,
+                    metric_name + ".cost",
                     price,
                     tenant_id)
                 self._append_metric(
@@ -179,44 +221,27 @@ class GnocchiStorage(storage.BaseStorage):
                     tenant_id)
                 self._has_data[tenant_id] = True
 
-    def get_state_resource_id(self, tenant_id):
-        query = {"=": {"project_id": tenant_id}}
-        resources = self._conn.resource.search(
-            resource_type=CLOUDKITTY_STATE_RESOURCE,
-            query=query,
-            limit=1)
-        if not resources:
-            # NOTE(sheeprine): We don't have the user id information and we are
-            # doing rating on a per tenant basis. Put garbage in it
-            state_resource = self._conn.resource.create(
-                resource_type=CLOUDKITTY_STATE_RESOURCE,
-                resource={'id': uuid.uuid4(),
-                          'user_id': uuid.uuid4(),
-                          'project_id': tenant_id})
-            return state_resource['id']
-        return resources[0]['id']
-
     def set_state(self, state, tenant_id):
-        state_resource_id = self.get_state_resource_id(tenant_id)[0]
-        try:
-            state_metric = self._conn.metric.get(
-                metric=CLOUDKITTY_STATE_METRIC,
-                resource_id=state_resource_id)
-        except gexceptions.MetricNotFound:
-            state_metric = self._conn.metric.create(
-                {'name': CLOUDKITTY_STATE_METRIC,
-                 'archive_policy_name': self._archive_policy_name,
-                 'resource_id': state_resource_id})
+        state_resource_id = self._get_or_create_resource(
+            CLOUDKITTY_STATE_RESOURCE,
+            tenant_id)
+        state_metric_id = self._get_or_create_metric(
+            CLOUDKITTY_STATE_METRIC,
+            state_resource_id)
         self._conn.metric.add_measures(
-            state_metric['id'],
+            state_metric_id,
             [{'timestamp': state.isoformat(),
              'value': 1}])
 
     def get_state(self, tenant_id=None):
         # Return the last written frame's timestamp.
         query = {"=": {"project_id": tenant_id}} if tenant_id else {}
-        state_resource_id = self.get_state_resource_id(tenant_id)[0]
+        state_resource_id = self._get_or_create_resource(
+            CLOUDKITTY_STATE_RESOURCE,
+            tenant_id)
         try:
+            # (aolwas) add "refresh=True" to be sure to get all posted
+            # measures for this particular metric
             r = self._conn.metric.get_measures(
                 metric=CLOUDKITTY_STATE_METRIC,
                 resource_id=state_resource_id,
@@ -224,12 +249,14 @@ class GnocchiStorage(storage.BaseStorage):
                 aggregation="sum",
                 limit=1,
                 granularity=self._period,
-                needed_overlap=0)
+                needed_overlap=0,
+                refresh=True)
         except gexceptions.MetricNotFound:
             return
         if len(r) > 0:
-            return ck_utils.dt2ts(
-                max([dateutil.parser.parse(measure[0]) for measure in r]))
+            # (aolwas) According http://gnocchi.xyz/rest.html#metrics,
+            # gnocchi always returns measures ordered by timestamp
+            return ck_utils.dt2ts(dateutil.parser.parse(r[-1][0]))
 
     def get_total(self, begin=None, end=None, tenant_id=None, service=None):
         # Get total rate in timeframe from gnocchi
@@ -326,7 +353,12 @@ class GnocchiStorage(storage.BaseStorage):
 
     def get_time_frame(self, begin, end, **filters):
         tenant_id = filters.get('tenant_id')
-        query = {"=": {"project_id": tenant_id}} if tenant_id else {}
+        query = dict()
+        if tenant_id:
+            query['='] = {'project_id': tenant_id}
+        else:
+            # NOTE(sheeprine): Dummy filter to comply with gnocchi
+            query['!='] = {'project_id': None}
         res_map = self._collector.retrieve_mappings
         res_type = filters.get('res_type')
         resources = [res_type] if res_type else res_map.keys()
@@ -334,7 +366,7 @@ class GnocchiStorage(storage.BaseStorage):
         for resource in resources:
             resource_type = res_map[resource]
             r = self._conn.metric.aggregation(
-                metrics=resource + '.cost',
+                metrics=resource + ".cost",
                 resource_type=resource_type,
                 query=query,
                 start=begin,
@@ -348,13 +380,13 @@ class GnocchiStorage(storage.BaseStorage):
                 for measure in resource_measures["measures"]:
                     if not resource_data:
                         resource_data = self._get_resource_data(
-                            res_type=resource_type,
+                            res_type=resource,
                             resource_id=resource_measures["group"]["id"],
                             begin=begin,
                             end=end)
                     ck_res.append(
                         self._to_cloudkitty(
-                            res_type=filters.get('res_type'),
+                            res_type=resource,
                             resource_data=resource_data,
                             measure=measure))
         return ck_res
