@@ -30,7 +30,7 @@ from cloudkitty import messaging
 class RatingProcessorBase(object):
     """Provides the Cloudkitty integration code to the rating processors.
 
-    Every rating processor shoud sublclass this and override at least
+    Every rating processor should subclass this and override at least
     module_name, description.
 
     config_controller can be left at None to use the default one.
