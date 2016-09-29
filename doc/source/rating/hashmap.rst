@@ -112,6 +112,13 @@ Create a group *instance_uptime_flavor*:
 .. code:: raw
 
     $ cloudkitty hashmap-group-create -n instance_uptime_flavor
+    +----------+--------------------------------------+
+    | Property | Value                                |
+    +----------+--------------------------------------+
+    | group_id | 26d2d69a-4c42-47f1-9d44-2cdfad167f7d |
+    | name     | instance_uptime_flavor               |
+    +----------+--------------------------------------+
+
     $ cloudkitty hashmap-group-list
     +------------------------+--------------------------------------+
     | Name                   | Group id                             |
@@ -144,7 +151,7 @@ Create a field matching rule:
     +------------+--------------------------------------+
     | field_id   | f37364af-6525-40fc-ae08-6d4087429862 |
     | name       | flavor                               |
-    | service_id | None                                 |
+    | service_id | 08ab2d27-fe95-400c-9602-e5ad5efdda8b |
     +------------+--------------------------------------+
 
 
@@ -184,6 +191,13 @@ Create a group *volume_thresholds*:
 .. code:: raw
 
     $ cloudkitty hashmap-group-create -n volume_thresholds
+    +----------+--------------------------------------+
+    | Property | Value                                |
+    +----------+--------------------------------------+
+    | group_id | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
+    | name     | volume_thresholds                    |
+    +----------+--------------------------------------+
+
     $ cloudkitty hashmap-group-list
     +-------------------+--------------------------------------+
     | Name              | Group id                             |
@@ -222,7 +236,7 @@ Now let's setup the price per gigabyte:
     | service_id | 16a48060-0e64-11e6-8e4e-1b285514a36e |
     | tenant_id  | None                                 |
     | type       | flat                                 |
-    | value      | None                                 |
+    | value      |                                      |
     +------------+--------------------------------------+
 
 
