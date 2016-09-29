@@ -66,8 +66,7 @@ CEIL_IMAGE = {
     'protected': 'False',
     'container_format': 'ami',
     'is_public': 'False',
-    'size': '25165824'
-}
+    'size': '25165824'}
 
 TRANS_IMAGE = {
     'image_id': '2f58a438-3169-11e6-b36c-bfe1fa3241fe',
@@ -80,8 +79,43 @@ TRANS_IMAGE = {
     'name': 'Cirros',
     'protected': 'False',
     'size': '25165824',
-    'status': 'active'
-}
+    'status': 'active'}
+
+CEIL_NETWORK_TAP = {
+    'instance_host': 'dev',
+    'mac': 'fa:16:3e:90:4b:6f',
+    'host': '5b85dd1e7796f87bae6fea6dcb608cf907446eaa715de90d77dadb7b',
+    'vnic_name': 'tap704159b2-8b',
+    'instance_id': '685243d6-34f1-4a39-8446-87b018ada8d9'}
+
+TRANS_NETWORK_TAP = {
+    'instance_host': 'dev',
+    'mac': 'fa:16:3e:90:4b:6f',
+    'host': '5b85dd1e7796f87bae6fea6dcb608cf907446eaa715de90d77dadb7b',
+    'vnic_name': 'tap704159b2-8b',
+    'instance_id': '685243d6-34f1-4a39-8446-87b018ada8d9',
+    'project_id': '4480c638-3169-11e6-91de-a3bd3a7d3afb',
+    'interface_id': '2f58a438-3169-11e6-b36c-bfe1fa3241fe',
+    'user_id': '576808d8-3169-11e6-992b-5f931fc671df'}
+
+CEIL_NETWORK_FLOATING = {
+    'status': 'ACTIVE',
+    'router_id': 'a46530af-c5ba-4ba2-aa59-e2de4393151d',
+    'floating_network_id': '823daec0-b000-446b-9539-20f7463775c3',
+    'fixed_ip_address': '10.0.0.6',
+    'floating_ip_address': '172.24.4.9',
+    'port_id': '65005c79-2ab0-46d4-8ab8-f3044ec47418'}
+
+TRANS_NETWORK_FLOATING = {
+    'project_id': '4480c638-3169-11e6-91de-a3bd3a7d3afb',
+    'user_id': '576808d8-3169-11e6-992b-5f931fc671df',
+    'floatingip_id': '2f58a438-3169-11e6-b36c-bfe1fa3241fe',
+    'status': 'ACTIVE',
+    'router_id': 'a46530af-c5ba-4ba2-aa59-e2de4393151d',
+    'floating_network_id': '823daec0-b000-446b-9539-20f7463775c3',
+    'fixed_ip_address': '10.0.0.6',
+    'floating_ip_address': '172.24.4.9',
+    'port_id': '65005c79-2ab0-46d4-8ab8-f3044ec47418'}
 
 
 class CeilometerTransformerTest(tests.TestCase):
@@ -113,3 +147,15 @@ class CeilometerTransformerTest(tests.TestCase):
         t_test = ceilometer.CeilometerTransformer()
         result = t_test.strip_resource_data('image', resource)
         self.assertEqual(TRANS_IMAGE, result)
+
+    def test_strip_ceilometer_network_tap(self):
+        resource = self.generate_ceilometer_resource(CEIL_NETWORK_TAP)
+        t_test = ceilometer.CeilometerTransformer()
+        result = t_test.strip_resource_data('network_tap', resource)
+        self.assertEqual(TRANS_NETWORK_TAP, result)
+
+    def test_strip_ceilometer_network_floating(self):
+        resource = self.generate_ceilometer_resource(CEIL_NETWORK_FLOATING)
+        t_test = ceilometer.CeilometerTransformer()
+        result = t_test.strip_resource_data('network_floating', resource)
+        self.assertEqual(TRANS_NETWORK_FLOATING, result)
