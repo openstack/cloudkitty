@@ -61,3 +61,5 @@ doc/build/
 # tox -e docs
 AUTHORS
 ChangeLog
+
+releasenotes/build
