@@ -29,6 +29,16 @@ tests:
     response_strings:
       - "[]"
 
+  - name: get total when begin time bigger than end time
+    url: /v1/report/total
+    query_parameters:
+      begin: "2015-02-04T00:00:00"
+      end: "2015-01-01T00:00:00"
+      tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
+    status: 200
+    response_strings:
+      - "0"
+
   - name: get total for a period
     url: /v1/report/total
     query_parameters:
