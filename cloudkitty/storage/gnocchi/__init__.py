@@ -18,7 +18,6 @@
 import datetime
 import decimal
 import json
-import uuid
 
 import dateutil.parser
 from gnocchiclient import client as gclient
@@ -26,6 +25,7 @@ from gnocchiclient import exceptions as gexceptions
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_log import log
+from oslo_utils import uuidutils
 import six
 
 from cloudkitty import storage
@@ -124,7 +124,7 @@ class GnocchiStorage(storage.BaseStorage):
             # doing rating on a per tenant basis. Put garbage in it
             resource = self._conn.resource.create(
                 resource_type=resource_type,
-                resource={'id': uuid.uuid4(),
+                resource={'id': uuidutils.generate_uuid(),
                           'user_id': None,
                           'project_id': tenant_id})
             return resource['id']

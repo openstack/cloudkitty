@@ -18,13 +18,13 @@
 #
 import decimal
 import random
-import uuid
 
 import eventlet
 from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
+from oslo_utils import uuidutils
 from stevedore import driver
 from tooz import coordination
 
@@ -237,7 +237,7 @@ class Orchestrator(object):
         # DLM
         self.coord = coordination.get_coordinator(
             CONF.orchestrator.coordination_url,
-            str(uuid.uuid4()).encode('ascii'))
+            uuidutils.generate_uuid().encode('ascii'))
         self.coord.start()
 
     def _lock(self, tenant_id):
