@@ -37,7 +37,8 @@ class DataFramesController(rest.RestController):
                          datetime.datetime,
                          wtypes.text,
                          wtypes.text)
-    def get_all(self, begin, end, tenant_id=None, resource_type=None):
+    def get_all(self, begin=None, end=None, tenant_id=None,
+                resource_type=None):
         """Return a list of rated resources for a time period and a tenant.
 
         :param begin: Start of the period
@@ -48,6 +49,11 @@ class DataFramesController(rest.RestController):
         """
 
         policy.enforce(pecan.request.context, 'storage:list_data_frames', {})
+
+        if not begin:
+            begin = ck_utils.get_month_start()
+        if not end:
+            end = ck_utils.get_next_month()
 
         begin_ts = ck_utils.dt2ts(begin)
         end_ts = ck_utils.dt2ts(end)
