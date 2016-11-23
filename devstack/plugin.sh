@@ -48,15 +48,13 @@ fi
 function create_cloudkitty_accounts {
     create_service_user "cloudkitty"
 
-    if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
-        local cloudkitty_service=$(get_or_create_service "cloudkitty" \
-            "rating" "OpenStack Rating")
-        get_or_create_endpoint $cloudkitty_service \
-            "$REGION_NAME" \
-            "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/" \
-            "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/" \
-            "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/"
-    fi
+    local cloudkitty_service=$(get_or_create_service "cloudkitty" \
+        "rating" "OpenStack Rating")
+    get_or_create_endpoint $cloudkitty_service \
+        "$REGION_NAME" \
+        "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/" \
+        "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/" \
+        "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/"
 
     # Create the rating role
     get_or_create_role "rating"
