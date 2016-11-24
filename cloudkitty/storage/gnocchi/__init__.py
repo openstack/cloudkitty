@@ -258,12 +258,8 @@ class GnocchiStorage(storage.BaseStorage):
             # gnocchi always returns measures ordered by timestamp
             return ck_utils.dt2ts(dateutil.parser.parse(r[-1][0]))
 
-    def get_total(self, begin=None, end=None, tenant_id=None, service=None):
+    def get_total(self, begin, end, tenant_id=None, service=None):
         # Get total rate in timeframe from gnocchi
-        if not begin:
-            begin = ck_utils.get_month_start()
-        if not end:
-            end = ck_utils.get_next_month()
         metric = "total.cost"
         if service:
             metric = service + ".cost"
@@ -282,11 +278,7 @@ class GnocchiStorage(storage.BaseStorage):
             return sum([measure[2] for measure in r])
         return 0
 
-    def get_tenants(self, begin=None, end=None):
-        if not begin:
-            begin = ck_utils.get_month_start()
-        if not end:
-            end = ck_utils.get_next_month()
+    def get_tenants(self, begin, end):
         # We need to pass a query to force a post in gnocchi client metric
         # aggregation, so we use one that always meets
         query = {'=': {'type': 'cloudkitty_state'}}

@@ -17,7 +17,6 @@
 #
 import copy
 
-import mock
 import sqlalchemy
 import testscenarios
 
@@ -334,14 +333,6 @@ class StorageTest(tests.TestCase):
             end=ck_utils.ts2dt(samples.FIRST_PERIOD_END),
             service='compute')
         self.assertEqual(0.84, total)
-
-    @mock.patch.object(ck_utils, 'utcnow',
-                       return_value=ck_utils.ts2dt(samples.INITIAL_TIMESTAMP))
-    def test_get_total_no_filter(self, patch_utcnow_mock):
-        self.insert_data()
-        total = self.storage.get_total()
-        self.assertEqual(1.9473999999999998, total)
-        self.assertEqual(2, patch_utcnow_mock.call_count)
 
     # Tenants
     def test_get_empty_tenant_with_nothing_in_storage(self):

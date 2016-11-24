@@ -83,13 +83,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
         if r:
             return ck_utils.dt2ts(r.begin)
 
-    def get_total(self, begin=None, end=None, tenant_id=None, service=None):
-        # Boundary calculation
-        if not begin:
-            begin = ck_utils.get_month_start()
-        if not end:
-            end = ck_utils.get_next_month()
-
+    def get_total(self, begin, end, tenant_id=None, service=None):
         session = db.get_session()
         q = session.query(
             sqlalchemy.func.sum(self.frame_model.rate).label('rate'))
@@ -105,13 +99,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
         rate = q.scalar()
         return rate
 
-    def get_tenants(self, begin=None, end=None):
-        # Boundary calculation
-        if not begin:
-            begin = ck_utils.get_month_start()
-        if not end:
-            end = ck_utils.get_next_month()
-
+    def get_tenants(self, begin, end):
         session = db.get_session()
         q = utils.model_query(
             self.frame_model,
