@@ -1,3 +1,16 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 """Add per tenant hashmap support
 
 Revision ID: 4da82e1c11c8
@@ -50,7 +63,7 @@ def get_reflect(table):
                 name='fk_{}_field_id_hashmap_fields'.format(table)),
             nullable=True),
         sa.Column(
-            'group_id' ,
+            'group_id',
             sa.Integer,
             sa.ForeignKey(
                 'hashmap_groups.id',
@@ -63,7 +76,7 @@ def get_reflect(table):
                 'flat',
                 'rate',
                 name='enum_{}map_type'.format(
-                   'hash' if table == 'hashmap_thresholds' else '')),
+                    'hash' if table == 'hashmap_thresholds' else '')),
             nullable=False)]
     return reflect_args
 

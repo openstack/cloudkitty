@@ -1,3 +1,16 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 """Fix unnamed constraints.
 
 Revision ID: f8c799db4aa0
@@ -14,8 +27,8 @@ import copy
 from alembic import op
 import six
 
-from cloudkitty.rating.hash.db.sqlalchemy.alembic.models \
-    import f8c799db4aa0_fix_unnamed_constraints as models
+from cloudkitty.rating.hash.db.sqlalchemy.alembic.models import (
+    f8c799db4aa0_fix_unnamed_constraints as models)
 
 OPS = {
     'foreignkey': {
@@ -27,8 +40,7 @@ OPS = {
                      'hashmap_services',
                      ['service_id'],
                      ['id']],
-                 'kwargs': {
-                    'ondelete': 'CASCADE'}})],
+                 'kwargs': {'ondelete': 'CASCADE'}})],
         'hashmap_thresholds': [
             ('hashmap_thresholds_field_id_fkey',
              'fk_hashmap_thresholds_field_id_hashmap_fields',
@@ -37,8 +49,7 @@ OPS = {
                      'hashmap_fields',
                      ['field_id'],
                      ['id']],
-                 'kwargs': {
-                    'ondelete': 'CASCADE'}}),
+                 'kwargs': {'ondelete': 'CASCADE'}}),
             ('hashmap_thresholds_group_id_fkey',
              'fk_hashmap_thresholds_group_id_hashmap_groups',
              {
@@ -46,8 +57,7 @@ OPS = {
                      'hashmap_groups',
                      ['group_id'],
                      ['id']],
-                 'kwargs': {
-                    'ondelete': 'SET NULL'}}),
+                 'kwargs': {'ondelete': 'SET NULL'}}),
             ('hashmap_thresholds_service_id_fkey',
              'fk_hashmap_thresholds_service_id_hashmap_services',
              {
@@ -55,8 +65,7 @@ OPS = {
                      'hashmap_services',
                      ['service_id'],
                      ['id']],
-                 'kwargs': {
-                    'ondelete': 'CASCADE'}})],
+                 'kwargs': {'ondelete': 'CASCADE'}})],
         'hashmap_mappings': [
             ('hashmap_maps_field_id_fkey',
              'fk_hashmap_maps_field_id_hashmap_fields',
@@ -65,8 +74,7 @@ OPS = {
                      'hashmap_fields',
                      ['field_id'],
                      ['id']],
-                 'kwargs': {
-                    'ondelete': 'CASCADE'}}),
+                 'kwargs': {'ondelete': 'CASCADE'}}),
             ('hashmap_maps_group_id_fkey',
              'fk_hashmap_maps_group_id_hashmap_groups',
              {
@@ -74,8 +82,7 @@ OPS = {
                      'hashmap_groups',
                      ['group_id'],
                      ['id']],
-                 'kwargs': {
-                    'ondelete': 'SET NULL'}}),
+                 'kwargs': {'ondelete': 'SET NULL'}}),
             ('hashmap_maps_service_id_fkey',
              'fk_hashmap_maps_service_id_hashmap_services',
              {
@@ -83,8 +90,7 @@ OPS = {
                      'hashmap_fields',
                      ['field_id'],
                      ['id']],
-                 'kwargs': {
-                    'ondelete': 'CASCADE'}})]
+                 'kwargs': {'ondelete': 'CASCADE'}})]
     },
     'primary': {
         'hashmap_services': [
@@ -163,17 +169,15 @@ def upgrade_mysql():
     tables['hashmap_mappings'].constraints = set()
     tables['hashmap_thresholds'].constraints = set()
     for name, table in six.iteritems(tables):
-        with op.batch_alter_table(
-            name,
-            copy_from=table,
-            recreate='always') as batch_op:
+        with op.batch_alter_table(name,
+                                  copy_from=table,
+                                  recreate='always') as batch_op:
             batch_op.alter_column('id')
     # Final copy with constraints
     for name, table in six.iteritems(models.Base.metadata.tables):
-        with op.batch_alter_table(
-            name,
-            copy_from=table,
-            recreate='always') as batch_op:
+        with op.batch_alter_table(name,
+                                  copy_from=table,
+                                  recreate='always') as batch_op:
             batch_op.alter_column('id')
     op.execute('SET FOREIGN_KEY_CHECKS=1;')
 
@@ -205,7 +209,7 @@ def upgrade_postgresql():
     for cur_ops in ops_list:
         for constraint_type in ('foreignkey', 'unique', 'primary'):
             for table_name, constraints in six.iteritems(
-                cur_ops.get(constraint_type, dict())):
+                    cur_ops.get(constraint_type, dict())):
                 for constraint in constraints:
                     old_name = constraint[0]
                     translate_op(
@@ -215,7 +219,7 @@ def upgrade_postgresql():
                         table_name)
         for constraint_type in ('primary', 'unique', 'foreignkey'):
             for table_name, constraints in six.iteritems(
-                cur_ops.get(constraint_type, dict())):
+                    cur_ops.get(constraint_type, dict())):
                 for constraint in constraints:
                     new_name = constraint[1]
                     params = constraint[2]
