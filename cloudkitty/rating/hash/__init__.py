@@ -17,8 +17,6 @@
 #
 import decimal
 
-import six
-
 from cloudkitty import rating
 from cloudkitty.rating.hash.controllers import root as root_api
 from cloudkitty.rating.hash.db import api as hash_db_api
@@ -107,7 +105,7 @@ class HashMap(rating.RatingProcessorBase):
         entries = load_func(entries_uuid_list)
         if entry_type in root:
             res = root[entry_type]
-            for group, values in six.iteritems(entries):
+            for group, values in entries.items():
                 if group in res:
                     res[group].update(values)
                 else:

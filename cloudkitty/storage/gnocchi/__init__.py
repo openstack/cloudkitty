@@ -155,7 +155,7 @@ class GnocchiStorage(storage.BaseStorage):
     def _pre_commit(self, tenant_id):
         measures = self._measures.pop(tenant_id, {})
         self._measures[tenant_id] = dict()
-        for resource_id, metrics in six.iteritems(measures):
+        for resource_id, metrics in measures.items():
             total = metrics.pop('total.cost')
             total_id = self._get_or_create_metric(
                 'total.cost',
@@ -167,7 +167,7 @@ class GnocchiStorage(storage.BaseStorage):
             self._measures[tenant_id][total_id] = [{
                 'timestamp': total_timestamp.isoformat(),
                 'value': six.text_type(total_value)}]
-            for metric_name, values in six.iteritems(metrics):
+            for metric_name, values in metrics.items():
                 metric_id = self._get_or_create_metric(
                     metric_name,
                     resource_id)
@@ -205,7 +205,7 @@ class GnocchiStorage(storage.BaseStorage):
         metrics[metric_name] = [sample]
 
     def _dispatch(self, data, tenant_id):
-        for metric_name, metrics in six.iteritems(data):
+        for metric_name, metrics in data.items():
             for item in metrics:
                 resource_id = item["desc"]["resource_id"]
                 price = item["rating"]["price"]
