@@ -64,3 +64,8 @@ class BaseTransformer(object):
         if strip_func:
             return strip_func(res_data)
         return self.generic_strip(res_type, res_data) or res_data
+
+    def get_metadata(self, res_type):
+        """Return list of metadata available for given resource type."""
+
+        return []

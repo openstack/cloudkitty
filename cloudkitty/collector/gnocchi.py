@@ -92,6 +92,18 @@ class GnocchiCollector(collector.BaseCollector):
             session=self.session)
 
     @classmethod
+    def get_metadata(cls, resource_name, transformers):
+        info = super(GnocchiCollector, cls).get_metadata(resource_name,
+                                                         transformers)
+        try:
+            info["metadata"].extend(transformers['GnocchiTransformer']
+                                    .get_metadata(resource_name))
+            info["unit"] = cls.units_mappings[resource_name][1]
+        except KeyError:
+            pass
+        return info
+
+    @classmethod
     def gen_filter(cls, cop='=', lop='and', **kwargs):
         """Generate gnocchi filter from kwargs.
 

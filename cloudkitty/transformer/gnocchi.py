@@ -55,3 +55,28 @@ class GnocchiTransformer(transformer.BaseTransformer):
             res_data)
         result.update(stripped_data)
         return result
+
+    def get_metadata(self, res_type):
+        """Return list of metadata available after transformation for
+
+        given resource type.
+        """
+
+        class FakeData(dict):
+            """FakeData object."""
+
+            def __getitem__(self, item):
+                try:
+                    return super(FakeData, self).__getitem__(item)
+                except KeyError:
+                    return item
+
+            def get(self, item, default=None):
+                return super(FakeData, self).get(item, item)
+
+        # list of metadata is built by applying the generic strip_resource_data
+        # function to a fake data object
+
+        fkdt = FakeData()
+        res_data = self.strip_resource_data(res_type, fkdt)
+        return res_data.keys()
