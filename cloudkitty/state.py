@@ -15,6 +15,7 @@
 #
 # @author: Stéphane Albert
 #
+import decimal
 import json
 
 from cloudkitty.db import api
@@ -93,6 +94,14 @@ class StateManager(object):
         return self._metadata
 
 
+class DecimalJSONEncoder(json.JSONEncoder):
+    """Wrapper class to handle decimal.Decimal objects in json.dumps()."""
+    def default(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            return float(obj)
+        return super(DecimalJSONEncoder, self).default(obj)
+
+
 class DBStateManager(object):
     def __init__(self, user_id, report_type, distributed=False):
         self._state_name = self._gen_name(report_type, user_id)
@@ -124,4 +133,4 @@ class DBStateManager(object):
         """Set metadata attached to the state."""
 
         self._db.set_metadata(self._state_name,
-                              json.dumps(metadata))
+                              json.dumps(metadata, cls=DecimalJSONEncoder))
