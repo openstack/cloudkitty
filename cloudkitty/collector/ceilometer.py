@@ -15,9 +15,12 @@
 #
 # @author: Stéphane Albert
 #
+import decimal
+
 from ceilometerclient import client as cclient
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
+from oslo_utils import units
 
 from cloudkitty import collector
 from cloudkitty import utils as ck_utils
@@ -198,7 +201,7 @@ class CeilometerCollector(collector.BaseCollector):
                                                  image)
             image = self._cacher.get_resource_detail('image',
                                                      image_id)
-            image_size_mb = image_stats.max / 1048576.0
+            image_size_mb = decimal.Decimal(image_stats.max) / units.Mi
             image_data.append(self.t_cloudkitty.format_item(image,
                                                             'MB',
                                                             image_size_mb))
@@ -262,7 +265,7 @@ class CeilometerCollector(collector.BaseCollector):
                                                  tap)
             tap = self._cacher.get_resource_detail('network.tap',
                                                    tap_id)
-            tap_bw_mb = tap_stat.max / 1000000.0
+            tap_bw_mb = decimal.Decimal(tap_stat.max) / units.M
             bw_data.append(self.t_cloudkitty.format_item(tap,
                                                          'MB',
                                                          tap_bw_mb))
