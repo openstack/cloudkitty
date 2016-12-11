@@ -114,10 +114,9 @@ function configure_cloudkitty {
 
     iniset $CLOUDKITTY_CONF keystone_fetcher auth_section authinfos
 
-    iniset $CLOUDKITTY_CONF ceilometer_collector auth_section authinfos
-
     # collect
     iniset $CLOUDKITTY_CONF collect collector $CLOUDKITTY_COLLECTOR
+    iniset $CLOUDKITTY_CONF ${CLOUDKITTY_COLLECTOR}_collector auth_section authinfos
     iniset $CLOUDKITTY_CONF collect services $CLOUDKITTY_SERVICES
 
     # output
