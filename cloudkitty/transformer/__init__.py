@@ -43,7 +43,7 @@ class BaseTransformer(object):
         metadata = getattr(data, self.metadata_item, data)
         mappings = getattr(self, datatype + '_map', {})
         result = {}
-        for key, transform in six.iteritems(mappings):
+        for key, transform in mappings.items():
             if isinstance(transform, list):
                 for meta_key in transform:
                     if key not in result or result[key] is None:

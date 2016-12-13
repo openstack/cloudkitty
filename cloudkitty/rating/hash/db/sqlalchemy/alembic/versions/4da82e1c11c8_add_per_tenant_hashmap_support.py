@@ -24,7 +24,6 @@ revision = '4da82e1c11c8'
 down_revision = 'c88a06b1cfce'
 
 from alembic import op
-import six
 import sqlalchemy as sa
 
 CONSTRAINT_MAP = {
@@ -92,6 +91,6 @@ def upgrade():
                     'tenant_id',
                     sa.String(length=36),
                     nullable=True))
-            for name, columns in six.iteritems(CONSTRAINT_MAP[table]):
+            for name, columns in CONSTRAINT_MAP[table].items():
                 batch_op.drop_constraint(name, type_='unique')
                 batch_op.create_unique_constraint(name, columns[0])

@@ -15,8 +15,6 @@
 #
 # @author: Stéphane Albert
 #
-import six
-
 from cloudkitty.tests import samples
 from cloudkitty import transformer
 
@@ -54,5 +52,5 @@ class EmptyClass(object):
 
 class ClassWithAttr(object):
     def __init__(self, items=samples.COMPUTE_METADATA):
-        for key, val in six.iteritems(items):
+        for key, val in items.items():
             setattr(self, key, val)

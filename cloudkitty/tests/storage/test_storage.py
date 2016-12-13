@@ -18,7 +18,6 @@
 import copy
 
 import mock
-import six
 import sqlalchemy
 import testscenarios
 
@@ -120,7 +119,7 @@ class StorageTest(tests.TestCase):
     def test_send_nodata_between_data(self):
         working_data = copy.deepcopy(samples.RATED_DATA)
         for period in working_data:
-            for service, data in sorted(six.iteritems(period['usage'])):
+            for service, data in sorted(period['usage'].items()):
                 sub_data = [{
                     'period': period['period'],
                     'usage': {

@@ -18,8 +18,6 @@
 import copy
 import decimal
 
-import six
-
 from cloudkitty import utils as ck_utils
 
 TENANT = 'f266f30b11f246b589fd266f85eeec39'
@@ -110,7 +108,7 @@ def split_storage_data(raw_data):
         frame['period']['end'] = ck_utils.ts2iso(frame['period']['end'])
         usage_buffer = frame.pop('usage')
         # Sort to have a consistent result as we are converting it to a list
-        for service, data in sorted(six.iteritems(usage_buffer)):
+        for service, data in sorted(usage_buffer.items()):
             new_frame = copy.deepcopy(frame)
             new_frame['usage'] = {service: data}
             new_frame['usage'][service][0]['tenant_id'] = TENANT

@@ -18,7 +18,6 @@
 from oslo_db import exception
 from oslo_db.sqlalchemy import utils
 from oslo_utils import uuidutils
-import six
 import sqlalchemy
 
 from cloudkitty import db
@@ -89,7 +88,7 @@ class PyScripts(api.PyScripts):
                     for col in excluded_cols:
                         if col in kwargs:
                             kwargs.pop(col)
-                    for attribute, value in six.iteritems(kwargs):
+                    for attribute, value in kwargs.items():
                         if hasattr(script_db, attribute):
                             setattr(script_db, attribute, value)
                         else:

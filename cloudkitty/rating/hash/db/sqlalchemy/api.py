@@ -18,7 +18,6 @@
 from oslo_db import exception
 from oslo_db.sqlalchemy import utils
 from oslo_utils import uuidutils
-import six
 import sqlalchemy
 
 from cloudkitty import db
@@ -423,7 +422,7 @@ class HashMap(api.HashMap):
                     for col in excluded_cols:
                         if col in kwargs:
                             kwargs.pop(col)
-                    for attribute, value in six.iteritems(kwargs):
+                    for attribute, value in kwargs.items():
                         if hasattr(mapping_db, attribute):
                             setattr(mapping_db, attribute, value)
                         else:
@@ -456,7 +455,7 @@ class HashMap(api.HashMap):
                     for col in excluded_cols:
                         if col in kwargs:
                             kwargs.pop(col)
-                    for attribute, value in six.iteritems(kwargs):
+                    for attribute, value in kwargs.items():
                         if hasattr(threshold_db, attribute):
                             setattr(threshold_db, attribute, value)
                         else:
