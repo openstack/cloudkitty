@@ -18,6 +18,7 @@ import decimal
 from gnocchiclient import client as gclient
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
+from oslo_utils import units
 
 from cloudkitty import collector
 
@@ -279,9 +280,11 @@ class GnocchiCollector(collector.BaseCollector):
             resource_data.pop('metrics', None)
             # Convert network.bw.in, network.bw.out and image unit to MB
             if resource.get('type') == 'instance_network_interface':
-                resource_data[qty] = resource_data[qty] / 1000000.0
+                resource_data[qty] = (
+                    decimal.Decimal(resource_data[qty]) / units.M)
             elif resource.get('type') == 'image':
-                resource_data[qty] = resource_data[qty] / 1048576.0
+                resource_data[qty] = (
+                    decimal.Decimal(resource_data[qty]) / units.Mi)
             data = self.t_cloudkitty.format_item(
                 resource_data,
                 unit,
