@@ -16,6 +16,7 @@
 # @author: Stéphane Albert
 #
 from oslo_config import cfg
+from oslo_utils import fileutils
 from stevedore import named
 
 from cloudkitty import state
@@ -42,6 +43,8 @@ class WriteOrchestrator(object):
         self._tenant_id = tenant_id
         self._storage = storage
         self._basepath = basepath
+        if self._basepath:
+            fileutils.ensure_tree(self._basepath)
         self._period = period
         self._sm = state.DBStateManager(self._tenant_id,
                                         'writer_status')
