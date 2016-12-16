@@ -20,7 +20,7 @@ import os
 from gabbi import driver
 
 from cloudkitty.tests.gabbi import fixtures
-from cloudkitty.tests.gabbi import handlers
+from cloudkitty.tests.gabbi import handlers as cloudkitty_handlers
 from cloudkitty.tests.gabbi.rating.hash import fixtures as hash_fixtures
 
 TESTS_DIR = 'gabbits'
@@ -34,4 +34,4 @@ def load_tests(loader, tests, pattern):
                               intercept=fixtures.setup_app,
                               fixture_module=hash_fixtures,
                               response_handlers=[
-                                  handlers.EnvironStoreHandler])
+                                  cloudkitty_handlers.EnvironStoreHandler])
