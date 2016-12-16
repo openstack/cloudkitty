@@ -104,15 +104,21 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
 
     # auth
-    iniset $CLOUDKITTY_CONF authinfos auth_plugin v2password
-    iniset $CLOUDKITTY_CONF authinfos auth_url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v2.0/"
+    iniset $CLOUDKITTY_CONF authinfos auth_type v3password
+    iniset $CLOUDKITTY_CONF authinfos auth_protocol http
+    iniset $CLOUDKITTY_CONF authinfos auth_url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v3"
+    iniset $CLOUDKITTY_CONF authinfos identity_uri "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v3"
     iniset $CLOUDKITTY_CONF authinfos username cloudkitty
     iniset $CLOUDKITTY_CONF authinfos password $SERVICE_PASSWORD
+    iniset $CLOUDKITTY_CONF authinfos project_name $SERVICE_TENANT_NAME
     iniset $CLOUDKITTY_CONF authinfos tenant_name $SERVICE_TENANT_NAME
     iniset $CLOUDKITTY_CONF authinfos region_name $REGION_NAME
+    iniset $CLOUDKITTY_CONF authinfos user_domain_name default
+    iniset $CLOUDKITTY_CONF authinfos project_domain_name default
     iniset $CLOUDKITTY_CONF authinfos debug "$ENABLE_DEBUG_LOG_LEVEL"
 
     iniset $CLOUDKITTY_CONF keystone_fetcher auth_section authinfos
+    iniset $CLOUDKITTY_CONF keystone_fetcher keystone_version 3
 
     iniset $CLOUDKITTY_CONF ceilometer_collector auth_section authinfos
 
