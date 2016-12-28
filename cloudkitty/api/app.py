@@ -74,10 +74,8 @@ def setup_app(pecan_config=None, extra_hooks=None):
     app_hooks = [
         hooks.RPCHook(),
         hooks.StorageHook(storage_backend),
+        hooks.ContextHook(),
     ]
-
-    if CONF.auth_strategy == 'keystone':
-        app_hooks.append(hooks.ContextHook())
 
     app = pecan.make_app(
         app_conf.app.root,

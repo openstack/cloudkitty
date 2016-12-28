@@ -61,17 +61,25 @@ class ReportController(rest.RestController):
                          datetime.datetime,
                          datetime.datetime,
                          wtypes.text,
-                         wtypes.text)
-    def total(self, begin=None, end=None, tenant_id=None, service=None):
+                         wtypes.text,
+                         bool)
+    def total(self, begin=None, end=None, tenant_id=None, service=None,
+              all_tenants=False):
         """Return the amount to pay for a given period.
 
         """
-        policy.enforce(pecan.request.context, 'report:get_total', {})
-
         if not begin:
             begin = ck_utils.get_month_start()
         if not end:
             end = ck_utils.get_next_month()
+
+        if all_tenants:
+            tenant_id = None
+        else:
+            tenant_context = pecan.request.context.tenant
+            tenant_id = tenant_context if not tenant_id else tenant_id
+        policy.enforce(pecan.request.context, 'report:get_total',
+                       {"tenant_id": tenant_id})
 
         storage = pecan.request.storage_backend
         # FIXME(sheeprine): We should filter on user id.
@@ -89,13 +97,25 @@ class ReportController(rest.RestController):
                          datetime.datetime,
                          wtypes.text,
                          wtypes.text,
-                         wtypes.text,)
+                         wtypes.text,
+                         bool)
     def summary(self, begin=None, end=None, tenant_id=None,
-                service=None, groupby=None):
+                service=None, groupby=None, all_tenants=False):
         """Return the summary to pay for a given period.
 
         """
-        policy.enforce(pecan.request.context, 'report:get_summary', {})
+        if not begin:
+            begin = ck_utils.get_month_start()
+        if not end:
+            end = ck_utils.get_next_month()
+
+        if all_tenants:
+            tenant_id = None
+        else:
+            tenant_context = pecan.request.context.tenant
+            tenant_id = tenant_context if not tenant_id else tenant_id
+        policy.enforce(pecan.request.context, 'report:get_summary',
+                       {"tenant_id": tenant_id})
         storage = pecan.request.storage_backend
 
         summarymodels = []
