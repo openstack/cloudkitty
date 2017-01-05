@@ -23,6 +23,7 @@ from oslo_utils import importutils as i_utils
 from cloudkitty import config  # noqa
 from cloudkitty import service
 from cloudkitty import storage
+from cloudkitty import utils as ck_utils
 from cloudkitty import write_orchestrator
 
 CONF = cfg.CONF
@@ -49,6 +50,10 @@ class DBCommand(object):
 
     def generate(self):
         if not CONF.command.tenant:
+            if not CONF.command.begin:
+                CONF.command.begin = ck_utils.get_month_start()
+            if not CONF.command.end:
+                CONF.command.end = ck_utils.get_next_month()
             tenants = self._storage.get_tenants(CONF.command.begin,
                                                 CONF.command.end)
         else:
@@ -64,6 +69,10 @@ class DBCommand(object):
             wo.process()
 
     def tenants_list(self):
+        if not CONF.command.begin:
+            CONF.command.begin = ck_utils.get_month_start()
+        if not CONF.command.end:
+            CONF.command.end = ck_utils.get_next_month()
         tenants = self._storage.get_tenants(CONF.command.begin,
                                             CONF.command.end)
         print('Tenant list:')

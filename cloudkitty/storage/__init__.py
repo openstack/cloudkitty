@@ -178,7 +178,7 @@ class BaseStorage(object):
         """
 
     @abc.abstractmethod
-    def get_total(self, begin=None, end=None, tenant_id=None, service=None):
+    def get_total(self, begin, end, tenant_id=None, service=None):
         """Return the current total.
 
         :param begin: When to start filtering.
@@ -192,7 +192,7 @@ class BaseStorage(object):
         """
 
     @abc.abstractmethod
-    def get_tenants(self, begin=None, end=None):
+    def get_tenants(self, begin, end):
         """Return the list of rated tenants.
 
         :param begin: When to start filtering.

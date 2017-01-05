@@ -24,6 +24,7 @@ from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.common import policy
+from cloudkitty import utils as ck_utils
 
 
 class ReportController(rest.RestController):
@@ -44,6 +45,12 @@ class ReportController(rest.RestController):
 
         """
         policy.enforce(pecan.request.context, 'report:list_tenants', {})
+
+        if not begin:
+            begin = ck_utils.get_month_start()
+        if not end:
+            end = ck_utils.get_next_month()
+
         storage = pecan.request.storage_backend
         tenants = storage.get_tenants(begin, end)
         return tenants
@@ -58,6 +65,12 @@ class ReportController(rest.RestController):
 
         """
         policy.enforce(pecan.request.context, 'report:get_total', {})
+
+        if not begin:
+            begin = ck_utils.get_month_start()
+        if not end:
+            end = ck_utils.get_next_month()
+
         storage = pecan.request.storage_backend
         # FIXME(sheeprine): We should filter on user id.
         # Use keystone token information by default but make it overridable and
