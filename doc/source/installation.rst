@@ -284,6 +284,13 @@ Create the ``rating`` service and its endpoints::
     openstack endpoint create rating --region RegionOne \
         internal http://localhost:8889
 
+.. note::
+
+    The default port for the API service changed from 8888 to 8889
+    in the Newton release. If you installed Cloudkitty in an
+    earlier version, make sure to either explicitly define the
+    ``[api]/port`` setting to 8888 in ``cloudkitty.conf``, or update
+    your keystone endpoints to use the 8889 port.
 
 Start cloudkitty
 ================
