@@ -297,42 +297,135 @@ class StorageTest(tests.TestCase):
 
     # Total
     def test_get_empty_total(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN - 3600)
+        end = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
         self.insert_data()
         total = self.storage.get_total(
-            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN - 3600),
-            end=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN))
-        self.assertIsNone(total)
+            begin=begin,
+            end=end)
+        self.assertEqual(1, len(total))
+        self.assertIsNone(total[0]["rate"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
 
     def test_get_total_without_filter_but_timestamp(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
         self.insert_data()
         total = self.storage.get_total(
-            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN),
-            end=ck_utils.ts2dt(samples.SECOND_PERIOD_END))
+            begin=begin,
+            end=end)
         # FIXME(sheeprine): floating point error (transition to decimal)
-        self.assertEqual(1.9473999999999998, total)
+        self.assertEqual(1, len(total))
+        self.assertEqual(1.9473999999999998, total[0]["rate"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
 
     def test_get_total_filtering_on_one_period(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
         self.insert_data()
         total = self.storage.get_total(
-            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN),
-            end=ck_utils.ts2dt(samples.FIRST_PERIOD_END))
-        self.assertEqual(1.1074, total)
+            begin=begin,
+            end=end)
+        self.assertEqual(1, len(total))
+        self.assertEqual(1.1074, total[0]["rate"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
 
     def test_get_total_filtering_on_one_period_and_one_tenant(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
         self.insert_data()
         total = self.storage.get_total(
-            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN),
-            end=ck_utils.ts2dt(samples.FIRST_PERIOD_END),
+            begin=begin,
+            end=end,
             tenant_id=self._tenant_id)
-        self.assertEqual(0.5537, total)
+        self.assertEqual(1, len(total))
+        self.assertEqual(0.5537, total[0]["rate"])
+        self.assertEqual(self._tenant_id, total[0]["tenant_id"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
 
     def test_get_total_filtering_on_service(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
         self.insert_data()
         total = self.storage.get_total(
-            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN),
-            end=ck_utils.ts2dt(samples.FIRST_PERIOD_END),
+            begin=begin,
+            end=end,
             service='compute')
-        self.assertEqual(0.84, total)
+        self.assertEqual(1, len(total))
+        self.assertEqual(0.84, total[0]["rate"])
+        self.assertEqual('compute', total[0]["res_type"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+
+    def test_get_total_groupby_tenant(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end,
+            groupby="tenant_id")
+        self.assertEqual(2, len(total))
+        self.assertEqual(0.9737, total[0]["rate"])
+        self.assertEqual(self._other_tenant_id, total[0]["tenant_id"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+        self.assertEqual(0.9737, total[1]["rate"])
+        self.assertEqual(self._tenant_id, total[1]["tenant_id"])
+        self.assertEqual(begin, total[1]["begin"])
+        self.assertEqual(end, total[1]["end"])
+
+    def test_get_total_groupby_restype(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end,
+            groupby="res_type")
+        self.assertEqual(2, len(total))
+        self.assertEqual(0.2674, total[0]["rate"])
+        self.assertEqual('image', total[0]["res_type"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+        self.assertEqual(1.68, total[1]["rate"])
+        self.assertEqual('compute', total[1]["res_type"])
+        self.assertEqual(begin, total[1]["begin"])
+        self.assertEqual(end, total[1]["end"])
+
+    def test_get_total_groupby_tenant_and_restype(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end,
+            groupby="tenant_id,res_type")
+        self.assertEqual(4, len(total))
+        self.assertEqual(0.1337, total[0]["rate"])
+        self.assertEqual(self._other_tenant_id, total[0]["tenant_id"])
+        self.assertEqual('image', total[0]["res_type"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+        self.assertEqual(0.1337, total[1]["rate"])
+        self.assertEqual(self._tenant_id, total[1]["tenant_id"])
+        self.assertEqual('image', total[1]["res_type"])
+        self.assertEqual(begin, total[1]["begin"])
+        self.assertEqual(end, total[1]["end"])
+        self.assertEqual(0.84, total[2]["rate"])
+        self.assertEqual(self._other_tenant_id, total[2]["tenant_id"])
+        self.assertEqual('compute', total[2]["res_type"])
+        self.assertEqual(begin, total[2]["begin"])
+        self.assertEqual(end, total[2]["end"])
+        self.assertEqual(0.84, total[3]["rate"])
+        self.assertEqual(self._tenant_id, total[3]["tenant_id"])
+        self.assertEqual('compute', total[3]["res_type"])
+        self.assertEqual(begin, total[3]["begin"])
+        self.assertEqual(end, total[3]["end"])
 
     # Tenants
     def test_get_empty_tenant_with_nothing_in_storage(self):

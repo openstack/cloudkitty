@@ -178,7 +178,8 @@ class BaseStorage(object):
         """
 
     @abc.abstractmethod
-    def get_total(self, begin, end, tenant_id=None, service=None):
+    def get_total(self, begin=None, end=None, tenant_id=None,
+                  service=None, groupby=None):
         """Return the current total.
 
         :param begin: When to start filtering.
@@ -189,6 +190,8 @@ class BaseStorage(object):
         :type res_type: str
         :param service: Filter on the resource type.
         :type service: str
+        :param groupby: Fields to group by, separated by commas if multiple.
+        :type groupby: str
         """
 
     @abc.abstractmethod

@@ -23,6 +23,7 @@ from pecan import rest
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
+from cloudkitty.api.v1.datamodels import report as report_models
 from cloudkitty.common import policy
 from cloudkitty import utils as ck_utils
 
@@ -34,7 +35,8 @@ class ReportController(rest.RestController):
 
     _custom_actions = {
         'total': ['GET'],
-        'tenants': ['GET']
+        'tenants': ['GET'],
+        'summary': ['GET']
     }
 
     @wsme_pecan.wsexpose([wtypes.text],
@@ -76,4 +78,31 @@ class ReportController(rest.RestController):
         # Use keystone token information by default but make it overridable and
         # enforce it by policy engine
         total = storage.get_total(begin, end, tenant_id, service)
+
+        # TODO(Aaron): `get_total` return a list of dict,
+        # Get value of rate from index[0]
+        total = total[0].get('rate', decimal.Decimal('0'))
         return total if total else decimal.Decimal('0')
+
+    @wsme_pecan.wsexpose(report_models.SummaryCollectionModel,
+                         datetime.datetime,
+                         datetime.datetime,
+                         wtypes.text,
+                         wtypes.text,
+                         wtypes.text,)
+    def summary(self, begin=None, end=None, tenant_id=None,
+                service=None, groupby=None):
+        """Return the summary to pay for a given period.
+
+        """
+        policy.enforce(pecan.request.context, 'report:get_summary', {})
+        storage = pecan.request.storage_backend
+
+        summarymodels = []
+        results = storage.get_total(begin, end, tenant_id, service,
+                                    groupby=groupby)
+        for result in results:
+            summarymodel = report_models.SummaryModel(**result)
+            summarymodels.append(summarymodel)
+
+        return report_models.SummaryCollectionModel(summary=summarymodels)

@@ -83,10 +83,30 @@ class SQLAlchemyStorage(storage.BaseStorage):
         if r:
             return ck_utils.dt2ts(r.begin)
 
-    def get_total(self, begin, end, tenant_id=None, service=None):
+    def get_total(self, begin=None, end=None, tenant_id=None,
+                  service=None, groupby=None):
         session = db.get_session()
-        q = session.query(
-            sqlalchemy.func.sum(self.frame_model.rate).label('rate'))
+        querymodels = [
+            sqlalchemy.func.sum(self.frame_model.rate).label('rate')
+        ]
+
+        # Boundary calculation
+        if not begin:
+            begin = ck_utils.get_month_start()
+        if not end:
+            end = ck_utils.get_next_month()
+        if tenant_id:
+            querymodels.append(self.frame_model.tenant_id)
+        if service:
+            querymodels.append(self.frame_model.res_type)
+        if groupby:
+            groupbyfields = groupby.split(",")
+            for field in groupbyfields:
+                field_obj = self.frame_model.__dict__.get(field, None)
+                if field_obj and field_obj not in querymodels:
+                    querymodels.append(field_obj)
+
+        q = session.query(*querymodels)
         if tenant_id:
             q = q.filter(
                 self.frame_model.tenant_id == tenant_id)
@@ -95,9 +115,21 @@ class SQLAlchemyStorage(storage.BaseStorage):
                 self.frame_model.res_type == service)
         q = q.filter(
             self.frame_model.begin >= begin,
-            self.frame_model.end <= end)
-        rate = q.scalar()
-        return rate
+            self.frame_model.end <= end,
+            self.frame_model.res_type != '_NO_DATA_')
+        if groupby:
+            q = q.group_by(groupby)
+
+        # Order by sum(rate)
+        q = q.order_by(sqlalchemy.func.sum(self.frame_model.rate))
+        results = q.all()
+        totallist = []
+        for r in results:
+            total = {model.name: value for model, value in zip(querymodels, r)}
+            total["begin"] = begin
+            total["end"] = end
+            totallist.append(total)
+        return totallist
 
     def get_tenants(self, begin, end):
         session = db.get_session()

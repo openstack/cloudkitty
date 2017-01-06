@@ -9,6 +9,7 @@
 
     "report:list_tenants": "role:admin",
     "report:get_total": "",
+    "report:get_summary": "",
 
     "collector:list_mappings": "role:admin",
     "collector:get_mapping": "role:admin",

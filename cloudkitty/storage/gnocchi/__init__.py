@@ -28,6 +28,7 @@ from oslo_log import log
 from oslo_utils import uuidutils
 import six
 
+from cloudkitty.i18n import _LW
 from cloudkitty import storage
 from cloudkitty import utils as ck_utils
 
@@ -258,7 +259,8 @@ class GnocchiStorage(storage.BaseStorage):
             # gnocchi always returns measures ordered by timestamp
             return ck_utils.dt2ts(dateutil.parser.parse(r[-1][0]))
 
-    def get_total(self, begin, end, tenant_id=None, service=None):
+    def get_total(self, begin=None, end=None, tenant_id=None,
+                  service=None, groupby=None):
         # Get total rate in timeframe from gnocchi
         metric = "total.cost"
         if service:
@@ -268,15 +270,23 @@ class GnocchiStorage(storage.BaseStorage):
         query = {"and": [{">": {"started_at": "1900-01-01T00:00"}}]}
         if tenant_id:
             query = {"=": {"project_id": tenant_id}}
+        # TODO(Aaron): need support with groupby
+        if groupby:
+            LOG.warning(_LW('Now get total with groupby not support '
+                            'in gnocchi storage backend'))
         # TODO(sheeprine): Use server side aggregation
         r = self._conn.metric.aggregation(metrics=metric, query=query,
                                           start=begin, stop=end,
                                           aggregation="sum",
                                           granularity=self._period,
                                           needed_overlap=0)
-        if len(r) > 0:
-            return sum([measure[2] for measure in r])
-        return 0
+
+        rate = sum([measure[2] for measure in r]) if len(r) else 0
+        # Return a list of dict
+        totallist = []
+        total = dict(begin=begin, end=end, rate=rate)
+        totallist.append(total)
+        return totallist
 
     def get_tenants(self, begin, end):
         # We need to pass a query to force a post in gnocchi client metric
