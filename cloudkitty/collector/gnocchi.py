@@ -23,6 +23,9 @@ from oslo_utils import units
 from cloudkitty import collector
 
 GNOCCHI_COLLECTOR_OPTS = 'gnocchi_collector'
+gnocchi_collector_opts = ks_loading.get_auth_common_conf_options()
+
+cfg.CONF.register_opts(gnocchi_collector_opts, GNOCCHI_COLLECTOR_OPTS)
 ks_loading.register_session_conf_options(
     cfg.CONF,
     GNOCCHI_COLLECTOR_OPTS)
