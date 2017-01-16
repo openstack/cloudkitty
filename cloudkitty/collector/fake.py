@@ -48,6 +48,24 @@ class CSVCollector(collector.BaseCollector):
         self._file = csvfile
         self._csv = reader
 
+    @classmethod
+    def get_metadata(cls, resource_name, transformers):
+        res = super(CSVCollector, cls).get_metadata(resource_name,
+                                                    transformers)
+        try:
+            filename = cfg.CONF.fake_collector.file
+            csvfile = open(filename, 'rb')
+            reader = csv.DictReader(csvfile)
+            entry = None
+            for row in reader:
+                if row['type'] == resource_name:
+                    entry = row
+                    break
+            res['metadata'] = json.loads(entry['desc']).keys() if entry else {}
+        except IOError:
+            pass
+        return res
+
     def filter_rows(self,
                     start,
                     end=None,

@@ -104,3 +104,26 @@ class CeilometerTransformer(transformer.BaseTransformer):
         res_data['project_id'] = data.project_id
         res_data['floatingip_id'] = data.resource_id
         return res_data
+
+    def get_metadata(self, res_type):
+        """Return list of metadata available after transformation for given
+
+        resource type.
+        """
+
+        class FakeData(dict):
+            """FakeData object."""
+
+            def __getattr__(self, name, default=None):
+                try:
+                    return super(FakeData, self).__getattr__(self, name)
+                except AttributeError:
+                    return default or name
+
+        # list of metadata is built by applying the generic strip_resource_data
+        # function to a fake data object
+
+        fkdt = FakeData()
+        setattr(fkdt, self.metadata_item, FakeData())
+        res_data = self.strip_resource_data(res_type, fkdt)
+        return res_data.keys()

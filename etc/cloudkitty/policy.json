@@ -2,6 +2,10 @@
     "context_is_admin":  "role:admin",
     "default": "",
 
+    "info:list_services_info": "",
+    "info:get_service_info": "",
+    "info:get_config":"",
+
     "rating:list_modules": "role:admin",
     "rating:get_module": "role:admin",
     "rating:update_module": "role:admin",

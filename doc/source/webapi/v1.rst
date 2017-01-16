@@ -24,6 +24,22 @@ Collector
    :members:
 
 
+Info
+====
+
+.. rest-controller:: cloudkitty.api.v1.controllers.info:InfoController
+   :webprefix: /v1/info
+
+.. rest-controller:: cloudkitty.api.v1.controllers.info:ServiceInfoController
+   :webprefix: /v1/info/services
+
+.. autotype:: cloudkitty.api.v1.datamodels.info.CloudkittyServiceInfo
+   :members:
+
+.. autotype:: cloudkitty.api.v1.datamodels.info.CloudkittyServiceInfoCollection
+   :members:
+
+
 Rating
 ======
 

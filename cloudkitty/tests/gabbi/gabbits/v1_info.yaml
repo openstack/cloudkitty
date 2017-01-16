@@ -1,0 +1,45 @@
+fixtures:
+  - ConfigFixture
+
+tests:
+  - name: get config
+    url: /v1/info/config
+    status: 200
+    response_json_paths:
+      $.collect.services.`len`: 6
+      $.collect.services[0]: compute
+      $.collect.services[1]: image
+      $.collect.services[2]: volume
+      $.collect.services[3]: network.bw.in
+      $.collect.services[4]: network.bw.out
+      $.collect.services[5]: network.floating
+      $.collect.collector: ceilometer
+      $.collect.window: 1800
+      $.collect.wait_periods: 2
+      $.collect.period: 3600
+
+  - name: get services info
+    url: /v1/info/services
+    status: 200
+    response_json_paths:
+      $.services.`len`: 6
+      $.services[/service_id][0].service_id: compute
+      $.services[/service_id][0].unit: instance
+      $.services[/service_id][1].service_id: image
+      $.services[/service_id][1].unit: MB
+      $.services[/service_id][2].service_id: network.bw.in
+      $.services[/service_id][2].unit: MB
+      $.services[/service_id][3].service_id: network.bw.out
+      $.services[/service_id][3].unit: MB
+      $.services[/service_id][4].service_id: network.floating
+      $.services[/service_id][4].unit: ip
+      $.services[/service_id][5].service_id: volume
+      $.services[/service_id][5].unit: GB
+
+  - name: get compute service info
+    url: /v1/info/services/compute
+    status: 200
+    response_json_paths:
+      $.service_id: compute
+      $.unit: instance
+      $.metadata.`len`: 10

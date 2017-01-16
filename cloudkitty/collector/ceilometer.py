@@ -78,6 +78,15 @@ class CeilometerCollector(collector.BaseCollector):
     dependencies = ('CeilometerTransformer',
                     'CloudKittyFormatTransformer')
 
+    units_mappings = {
+        'compute': 'instance',
+        'image': 'MB',
+        'volume': 'GB',
+        'network.bw.out': 'MB',
+        'network.bw.in': 'MB',
+        'network.floating': 'ip',
+    }
+
     def __init__(self, transformers, **kwargs):
         super(CeilometerCollector, self).__init__(transformers, **kwargs)
 
@@ -96,6 +105,18 @@ class CeilometerCollector(collector.BaseCollector):
         self._conn = cclient.get_client(
             '2',
             session=self.session)
+
+    @classmethod
+    def get_metadata(cls, resource_name, transformers):
+        info = super(CeilometerCollector, cls).get_metadata(resource_name,
+                                                            transformers)
+        try:
+            info["metadata"].extend(transformers['CeilometerTransformer']
+                                    .get_metadata(resource_name))
+            info["unit"] = cls.units_mappings[resource_name]
+        except KeyError:
+            pass
+        return info
 
     def gen_filter(self, op='eq', **kwargs):
         """Generate ceilometer filter from kwargs."""
@@ -180,9 +201,9 @@ class CeilometerCollector(collector.BaseCollector):
                                                  instance)
             instance = self._cacher.get_resource_detail('compute',
                                                         instance_id)
-            compute_data.append(self.t_cloudkitty.format_item(instance,
-                                                              'instance',
-                                                              1))
+            compute_data.append(
+                self.t_cloudkitty.format_item(instance, self.units_mappings[
+                    "compute"], 1))
         if not compute_data:
             raise collector.NoDataCollected(self.collector_name, 'compute')
         return self.t_cloudkitty.format_service('compute', compute_data)
@@ -205,10 +226,12 @@ class CeilometerCollector(collector.BaseCollector):
                                                  image)
             image = self._cacher.get_resource_detail('image',
                                                      image_id)
+
             image_size_mb = decimal.Decimal(image_stats.max) / units.Mi
-            image_data.append(self.t_cloudkitty.format_item(image,
-                                                            'MB',
-                                                            image_size_mb))
+            image_data.append(
+                self.t_cloudkitty.format_item(image, self.units_mappings[
+                    "image"], image_size_mb))
+
         if not image_data:
             raise collector.NoDataCollected(self.collector_name, 'image')
         return self.t_cloudkitty.format_service('image', image_data)
@@ -232,9 +255,9 @@ class CeilometerCollector(collector.BaseCollector):
                                                  volume)
             volume = self._cacher.get_resource_detail('volume',
                                                       volume_id)
-            volume_data.append(self.t_cloudkitty.format_item(volume,
-                                                             'GB',
-                                                             volume_stats.max))
+            volume_data.append(
+                self.t_cloudkitty.format_item(volume, self.units_mappings[
+                    "volume"], volume_stats.max))
         if not volume_data:
             raise collector.NoDataCollected(self.collector_name, 'volume')
         return self.t_cloudkitty.format_service('volume', volume_data)
@@ -269,10 +292,12 @@ class CeilometerCollector(collector.BaseCollector):
                                                  tap)
             tap = self._cacher.get_resource_detail('network.tap',
                                                    tap_id)
+
             tap_bw_mb = decimal.Decimal(tap_stat.max) / units.M
-            bw_data.append(self.t_cloudkitty.format_item(tap,
-                                                         'MB',
-                                                         tap_bw_mb))
+            bw_data.append(
+                self.t_cloudkitty.format_item(tap, self.units_mappings[
+                    "network.bw." + direction], tap_bw_mb))
+
         ck_res_name = 'network.bw.{}'.format(direction)
         if not bw_data:
             raise collector.NoDataCollected(self.collector_name,
@@ -317,9 +342,9 @@ class CeilometerCollector(collector.BaseCollector):
                                                  floating)
             floating = self._cacher.get_resource_detail('network.floating',
                                                         floating_id)
-            floating_data.append(self.t_cloudkitty.format_item(floating,
-                                                               'ip',
-                                                               1))
+            floating_data.append(
+                self.t_cloudkitty.format_item(floating, self.units_mappings[
+                    "network.floating"], 1))
         if not floating_data:
             raise collector.NoDataCollected(self.collector_name,
                                             'network.floating')
