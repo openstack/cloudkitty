@@ -90,6 +90,7 @@ class CeilometerCollector(collector.BaseCollector):
         'network.bw.out': 'MB',
         'network.bw.in': 'MB',
         'network.floating': 'ip',
+        'radosgw.usage': 'GB'
     }
 
     def __init__(self, transformers, **kwargs):
@@ -430,3 +431,27 @@ class CeilometerCollector(collector.BaseCollector):
                                             'network.floating')
         return self.t_cloudkitty.format_service('network.floating',
                                                 floating_data)
+
+    def get_radosgw_usage(self,
+                          start,
+                          end=None,
+                          project_id=None,
+                          q_filter=None):
+        active_rgw_stats = self.resources_stats('radosgw.objects.size', start,
+                                                end, project_id, q_filter)
+        rgw_data = []
+        for rgw_stats in active_rgw_stats:
+            rgw_id = rgw_stats.groupby['resource_id']
+            if not self._cacher.has_resource_detail('radosgw.usage', rgw_id):
+                raw_resource = self._conn.resources.get(rgw_id)
+                rgw = self.t_ceilometer.strip_resource_data('radosgw.usage',
+                                                            raw_resource)
+                self._cacher.add_resource_detail('radosgw.usage', rgw_id, rgw)
+            rgw = self._cacher.get_resource_detail('radosgw.usage', rgw_id)
+            rgw_size = decimal.Decimal(rgw_stats.max) / units.Gi
+            rgw_data.append(self.t_cloudkitty.format_item(
+                rgw, self.units_mappings["radosgw.usage"], rgw_size))
+        if not rgw_data:
+            raise collector.NoDataCollected(self.collector_name,
+                                            'radosgw.usage')
+        return self.t_cloudkitty.format_service('radosgw.usage', rgw_data)

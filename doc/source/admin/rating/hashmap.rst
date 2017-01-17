@@ -34,6 +34,7 @@ the following services are available:
 * network.bw.in
 * network.bw.out
 * network.floating
+* radosgw.usage
 
 Enabled services are defined in the configuration file. By default, only the
 compute service is enabled.
@@ -97,6 +98,7 @@ For an active resource on a collection period, quantity is defined as follow:
 * network.bw.in: ingoing network usage (unit: MB)
 * network.bw.out: outgoing network usage (unit: MB)
 * network.floating: 1 (unit: ip)
+* radosgw.usage: Ceph object storage usage (unit: GB)
 
 Example
 =======

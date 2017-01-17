@@ -53,6 +53,7 @@ class GnocchiCollector(collector.BaseCollector):
         'network.bw.out': 'instance_network_interface',
         'network.bw.in': 'instance_network_interface',
         'network.floating': 'network',
+        'radosgw.usage': 'ceph_account',
     }
     metrics_mappings = {
         'compute': [
@@ -73,6 +74,8 @@ class GnocchiCollector(collector.BaseCollector):
             ('network.incoming.bytes', 'max')],
         'network.floating': [
             ('ip.floating', 'max')],
+        'radosgw.usage': [
+            ('radosgw.objects.size', 'max')],
     }
     units_mappings = {
         'compute': (1, 'instance'),
@@ -81,6 +84,7 @@ class GnocchiCollector(collector.BaseCollector):
         'network.bw.out': ('network.outgoing.bytes', 'MB'),
         'network.bw.in': ('network.incoming.bytes', 'MB'),
         'network.floating': (1, 'ip'),
+        'radosgw.usage': ('radosgw.objects.size', 'GB')
     }
     default_unit = (1, 'unknown')
 
@@ -293,6 +297,9 @@ class GnocchiCollector(collector.BaseCollector):
             elif resource.get('type') == 'image':
                 resource_data[qty] = (
                     decimal.Decimal(resource_data[qty]) / units.Mi)
+            elif resource.get('type') == 'ceph_account':
+                resource_data[qty] = (
+                    decimal.Decimal(resource_data[qty]) / units.Gi)
             data = self.t_cloudkitty.format_item(
                 resource_data, unit,
                 decimal.Decimal(

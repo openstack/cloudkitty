@@ -20,6 +20,7 @@
     network.bw.in: instance_network_interface
     network.floating: network
     image: image
+    radosgw.usage: ceph_account
 
   services_metrics:
     compute:
@@ -40,6 +41,8 @@
       - image.size: max
       - image.download: max
       - image.serve: max
+    radosgw.usage:
+      - radosgw.objects.size: max
 
   services_units:
     compute:
@@ -54,5 +57,7 @@
       1: ip
     image:
       image.size: MB
+    radosgw.usage:
+      radosgw.objects.size: GB
     default_unit:
       1: unknown
