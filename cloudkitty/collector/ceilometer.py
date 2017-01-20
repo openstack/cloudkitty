@@ -188,7 +188,7 @@ class CeilometerCollector(collector.BaseCollector):
                 for resource in resources_stats]
 
     def get_compute(self, start, end=None, project_id=None, q_filter=None):
-        active_instance_ids = self.active_resources('instance', start, end,
+        active_instance_ids = self.active_resources('cpu', start, end,
                                                     project_id, q_filter)
         compute_data = []
         for instance_id in active_instance_ids:
