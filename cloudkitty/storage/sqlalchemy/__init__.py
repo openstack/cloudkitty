@@ -28,6 +28,14 @@ from cloudkitty.storage.sqlalchemy import models
 from cloudkitty import utils as ck_utils
 
 
+class DecimalJSONEncoder(json.JSONEncoder):
+    """Wrapper class to handle decimal.Decimal objects in json.dumps()."""
+    def default(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            return float(obj)
+        return super(DecimalJSONEncoder, self).default(obj)
+
+
 class SQLAlchemyStorage(storage.BaseStorage):
     """SQLAlchemy Storage Backend
 
@@ -171,7 +179,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
         rate = rating_dict.get('price')
         if not rate:
             rate = decimal.Decimal(0)
-        desc = json.dumps(frame['desc'])
+        desc = json.dumps(frame['desc'], cls=DecimalJSONEncoder)
         self.add_time_frame(begin=self.usage_start_dt.get(tenant_id),
                             end=self.usage_end_dt.get(tenant_id),
                             tenant_id=tenant_id,
