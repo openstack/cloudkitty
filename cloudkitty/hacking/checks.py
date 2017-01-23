@@ -15,9 +15,9 @@
 
 import ast
 import re
-import six
 
 import pep8
+import six
 
 
 """
