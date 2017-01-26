@@ -40,7 +40,7 @@ class BaseIOBackend(object):
     @abc.abstractmethod
     def seek(self, offset, from_what=0):
         # 0 beg, 1 cur, 2 end
-        """Change position in the backend
+        """Change position in the backend.
 
         """
 
@@ -59,7 +59,7 @@ class BaseIOBackend(object):
 
     @abc.abstractmethod
     def read(self):
-        """Read data from the backend
+        """Read data from the backend.
 
         :return str: Data read from the backend.
         """
