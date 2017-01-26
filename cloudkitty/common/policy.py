@@ -75,6 +75,9 @@ def check_is_admin(roles):
     """Whether or not roles contains 'admin' role according to policy setting.
 
     """
+    if CONF.auth_strategy != "keystone":
+        return True
+
     init()
 
     # include project_id on target to avoid KeyError if context_is_admin
