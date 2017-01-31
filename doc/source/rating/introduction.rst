@@ -11,7 +11,7 @@ process the data depends on their priority. The module with the highest
 priority comes first.
 
 Enable or disable module
-=======================
+==========================
 
 Enable the hashmap rating module:
 

@@ -172,6 +172,7 @@ Please note that:
 
 * `http://localhost:5000/v2.0`and `http://localhost:35357/v2.0` are your
 identity endpoints.
+
 * the tenant named `service` is also commonly called `services`
 
 For keystone (identity) API v3
@@ -228,6 +229,7 @@ Please note that:
 
 * `http://localhost:5000/v3`and `http://localhost:35357/v3` are your identity
 endpoints.
+
 * the tenant named `service` is also commonly called `services`
 
 
