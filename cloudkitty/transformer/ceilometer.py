@@ -29,12 +29,43 @@ class CeilometerTransformer(transformer.BaseTransformer):
             'availability_zone',
             'OS-EXT-AZ.availability_zone'],
     }
+
     volume_map = {
         'volume_id': ['volume_id'],
         'name': ['display_name'],
         'availability_zone': ['availability_zone'],
         'size': ['size'],
+        'volume_type': ['volume_type']
     }
+
+    image_map = {
+        'container_format': ['container_format'],
+        'deleted': ['deleted'],
+        'disk_format': ['disk_format'],
+        'is_public': ['is_public'],
+        'name': ['name'],
+        'protected': ['protected'],
+        'size': ['size'],
+        'status': ['status'],
+    }
+
+    network_tap_map = {
+        'instance_host': ['instance_host'],
+        'mac': ['mac'],
+        'host': ['host'],
+        'vnic_name': ['vnic_name'],
+        'instance_id': ['instance_id'],
+    }
+
+    network_floating_map = {
+        'status': ['status'],
+        'router_id': ['router_id'],
+        'floating_network_id': ['floating_network_id'],
+        'fixed_ip_address': ['fixed_ip_address'],
+        'floating_ip_address': ['floating_ip_address'],
+        'port_id': ['port_id'],
+    }
+
     metadata_item = 'metadata'
 
     def _strip_compute(self, data):
@@ -52,4 +83,25 @@ class CeilometerTransformer(transformer.BaseTransformer):
         res_data = self.generic_strip('volume', data)
         res_data['user_id'] = data.user_id
         res_data['project_id'] = data.project_id
+        return res_data
+
+    def _strip_image(self, data):
+        res_data = self.generic_strip('image', data)
+        res_data['image_id'] = data.resource_id
+        res_data['project_id'] = data.project_id
+        res_data['user_id'] = data.user_id
+        return res_data
+
+    def _strip_network_tap(self, data):
+        res_data = self.generic_strip('network_tap', data)
+        res_data['user_id'] = data.user_id
+        res_data['project_id'] = data.project_id
+        res_data['interface_id'] = data.resource_id
+        return res_data
+
+    def _strip_network_floating(self, data):
+        res_data = self.generic_strip('network_floating', data)
+        res_data['user_id'] = data.user_id
+        res_data['project_id'] = data.project_id
+        res_data['floatingip_id'] = data.resource_id
         return res_data

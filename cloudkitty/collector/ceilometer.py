@@ -198,9 +198,10 @@ class CeilometerCollector(collector.BaseCollector):
                                                  image)
             image = self._cacher.get_resource_detail('image',
                                                      image_id)
+            image_mb = image_stats.max / 1048576.0
             image_data.append(self.t_cloudkitty.format_item(image,
                                                             'image',
-                                                            image_stats.max))
+                                                            image_mb))
         if not image_data:
             raise collector.NoDataCollected(self.collector_name, 'image')
         return self.t_cloudkitty.format_service('image', image_data)

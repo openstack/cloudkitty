@@ -59,6 +59,7 @@ class BaseTransformer(object):
         return result
 
     def strip_resource_data(self, res_type, res_data):
+        res_type = res_type.replace('.', '_')
         strip_func = getattr(self, '_strip_' + res_type, None)
         if strip_func:
             return strip_func(res_data)
