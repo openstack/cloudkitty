@@ -81,40 +81,7 @@ class State(api.State):
                 session.add(db_state)
 
 
-class ModuleEnableState(api.ModuleEnableState):
-    """Deprecated, use ModuleInfo instead.
-
-    """
-    def get_state(self, name):
-        session = db.get_session()
-        try:
-            q = utils.model_query(
-                models.ModuleStateInfo,
-                session)
-            q = q.filter(models.ModuleStateInfo.name == name)
-            res = q.value(models.ModuleStateInfo.state)
-            return bool(res)
-        except sqlalchemy.orm.exc.NoResultFound:
-            return None
-
-    def set_state(self, name, state):
-        session = db.get_session()
-        with session.begin():
-            try:
-                q = utils.model_query(
-                    models.ModuleStateInfo,
-                    session)
-                q = q.filter(models.ModuleStateInfo.name == name)
-                q = q.with_lockmode('update')
-                db_state = q.one()
-                db_state.state = state
-            except sqlalchemy.orm.exc.NoResultFound:
-                db_state = models.ModuleStateInfo(name=name, state=state)
-                session.add(db_state)
-        return bool(db_state.state)
-
-
-class ModuleInfo(ModuleEnableState):
+class ModuleInfo(api.ModuleInfo):
     """Base class for module info management."""
 
     def get_priority(self, name):
@@ -146,6 +113,34 @@ class ModuleInfo(ModuleEnableState):
                                                   priority=priority)
                 session.add(db_state)
         return int(db_state.priority)
+
+    def get_state(self, name):
+        session = db.get_session()
+        try:
+            q = utils.model_query(
+                models.ModuleStateInfo,
+                session)
+            q = q.filter(models.ModuleStateInfo.name == name)
+            res = q.value(models.ModuleStateInfo.state)
+            return bool(res)
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
+    def set_state(self, name, state):
+        session = db.get_session()
+        with session.begin():
+            try:
+                q = utils.model_query(
+                    models.ModuleStateInfo,
+                    session)
+                q = q.filter(models.ModuleStateInfo.name == name)
+                q = q.with_lockmode('update')
+                db_state = q.one()
+                db_state.state = state
+            except sqlalchemy.orm.exc.NoResultFound:
+                db_state = models.ModuleStateInfo(name=name, state=state)
+                session.add(db_state)
+        return bool(db_state.state)
 
 
 class ServiceToCollectorMapping(object):
@@ -221,10 +216,6 @@ class DBAPIManager(object):
     @staticmethod
     def get_state():
         return State()
-
-    @staticmethod
-    def get_module_enable_state():
-        return ModuleEnableState()
 
     @staticmethod
     def get_module_info():

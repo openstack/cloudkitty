@@ -60,7 +60,7 @@ class RatingProcessorBase(object):
         :returns: bool if module is enabled
         """
         api = db_api.get_instance()
-        module_db = api.get_module_enable_state()
+        module_db = api.get_module_info()
         return module_db.get_state(self.module_name) or False
 
     @property

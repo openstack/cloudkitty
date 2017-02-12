@@ -78,7 +78,7 @@ class RatingTest(tests.TestCase):
             rpcmock.return_value = self._fake_rpc
             self._module.set_state(True)
         db_api = ck_db_api.get_instance()
-        module_db = db_api.get_module_enable_state()
+        module_db = db_api.get_module_info()
         self.assertTrue(module_db.get_state('fake'))
 
     def test_disable_module(self):
@@ -86,12 +86,12 @@ class RatingTest(tests.TestCase):
             rpcmock.return_value = self._fake_rpc
             self._module.set_state(False)
         db_api = ck_db_api.get_instance()
-        module_db = db_api.get_module_enable_state()
+        module_db = db_api.get_module_info()
         self.assertFalse(module_db.get_state('fake'))
 
     def test_enabled_property(self):
         db_api = ck_db_api.get_instance()
-        module_db = db_api.get_module_enable_state()
+        module_db = db_api.get_module_info()
         module_db.set_state('fake', True)
         self.assertTrue(self._module.enabled)
         module_db.set_state('fake', False)
