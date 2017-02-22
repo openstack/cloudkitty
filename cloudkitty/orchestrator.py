@@ -55,9 +55,6 @@ CONF.register_opts(orchestrator_opts, group='orchestrator')
 FETCHERS_NAMESPACE = 'cloudkitty.tenant.fetchers'
 PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
 
-PERIOD = CONF.collect.period
-WAIT_TIME = CONF.collect.wait_periods * CONF.collect.period
-
 
 class RatingEndpoint(object):
     target = oslo_messaging.Target(namespace='rating',
@@ -156,11 +153,13 @@ class Worker(BaseWorker):
     def __init__(self, collector, storage, tenant_id=None):
         self._collector = collector
         self._storage = storage
+        self._period = CONF.collect.period
+        self._wait_time = CONF.collect.wait_periods * self._period
 
         super(Worker, self).__init__(tenant_id)
 
     def _collect(self, service, start_timestamp):
-        next_timestamp = start_timestamp + PERIOD
+        next_timestamp = start_timestamp + self._period
         raw_data = self._collector.retrieve(service,
                                             start_timestamp,
                                             next_timestamp,
@@ -172,7 +171,9 @@ class Worker(BaseWorker):
 
     def check_state(self):
         timestamp = self._storage.get_state(self._tenant_id)
-        return ck_utils.check_time_state(timestamp, PERIOD, WAIT_TIME)
+        return ck_utils.check_time_state(timestamp,
+                                         self._period,
+                                         self._wait_time)
 
     def run(self):
         while True:
@@ -194,7 +195,7 @@ class Worker(BaseWorker):
                         raise collector.NoDataCollected('', service)
                 except collector.NoDataCollected:
                     begin = timestamp
-                    end = begin + PERIOD
+                    end = begin + self._period
                     for processor in self._processors:
                         processor.obj.nodata(begin, end)
                     self._storage.nodata(begin, end, self._tenant_id)
@@ -232,6 +233,9 @@ class Orchestrator(object):
             uuidutils.generate_uuid().encode('ascii'))
         self.coord.start()
 
+        self._period = CONF.collect.period
+        self._wait_time = CONF.collect.wait_periods * self._period
+
     def _lock(self, tenant_id):
         lock_name = b"cloudkitty-" + str(tenant_id).encode('ascii')
         return self.coord.get_lock(lock_name)
@@ -252,7 +256,9 @@ class Orchestrator(object):
 
     def _check_state(self, tenant_id):
         timestamp = self.storage.get_state(tenant_id)
-        return ck_utils.check_time_state(timestamp, PERIOD, WAIT_TIME)
+        return ck_utils.check_time_state(timestamp,
+                                         self._period,
+                                         self._wait_time)
 
     def process_messages(self):
         # TODO(sheeprine): Code kept to handle threading and asynchronous
@@ -282,7 +288,7 @@ class Orchestrator(object):
                 # being processed
                 eventlet.sleep(1)
             # FIXME(sheeprine): We may cause a drift here
-            eventlet.sleep(PERIOD)
+            eventlet.sleep(self._period)
 
     def terminate(self):
         self.coord.stop()
