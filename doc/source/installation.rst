@@ -59,9 +59,9 @@ Install the dashboard module
 
     PY_PACKAGES_PATH=`pip --version | cut -d' ' -f4`
 
-#. Add the enabled file to the horizon settings or installation. Depending on
-your setup, you might need to add it to ``/usr/share`` or directly in the
-horizon python package::
+#. Add the enabled file to the horizon settings or installation.
+   Depending on your setup, you might need to add it to ``/usr/share`` or
+   directly in the horizon python package::
 
     # If horizon is installed by packages:
     ln -sf $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
@@ -170,8 +170,8 @@ For keystone (identity) API v2 (deprecated)
 
 Please note that:
 
-* `http://localhost:5000/v2.0`and `http://localhost:35357/v2.0` are your
-identity endpoints.
+* `http://localhost:5000/v2.0` and `http://localhost:35357/v2.0` are your
+  identity endpoints.
 
 * the tenant named `service` is also commonly called `services`
 
@@ -227,8 +227,8 @@ The following shows the basic configuration items:
 
 Please note that:
 
-* `http://localhost:5000/v3`and `http://localhost:35357/v3` are your identity
-endpoints.
+* `http://localhost:5000/v3` and `http://localhost:35357/v3` are your identity
+  endpoints.
 
 * the tenant named `service` is also commonly called `services`
 

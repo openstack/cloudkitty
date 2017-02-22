@@ -10,8 +10,24 @@ operator can set the priority for a module. The order in which the modules
 process the data depends on their priority. The module with the highest
 priority comes first.
 
+List current modules
+====================
+
+List current rating modules:
+
+.. code:: raw
+
+    $ cloudkitty module-list
+    +-----------+---------+----------+
+    | Module    | Enabled | Priority |
+    +-----------+---------+----------+
+    | hashmap   | False   | 1        |
+    | noop      | True    | 1        |
+    | pyscripts | True    | 1        |
+    +-----------+---------+----------+
+
 Enable or disable module
-==========================
+========================
 
 Enable the hashmap rating module:
 

@@ -2,7 +2,7 @@
 CloudKitty's Architecture
 =========================
 
-CloudKitty can be cut in four big parts:
+CloudKitty can be cut in five big parts:
 
 * API
 * Data collection (collector)
@@ -109,6 +109,10 @@ Example of minimal rating module (taken from the Noop module):
             :returns: bool if module is enabled
             """
             return True
+
+        @property
+        def priority(self):
+            return 1
 
         def reload_config(self):
             pass
