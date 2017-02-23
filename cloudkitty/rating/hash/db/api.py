@@ -21,6 +21,8 @@ from oslo_config import cfg
 from oslo_db import api as db_api
 import six
 
+from cloudkitty.i18n import _
+
 _BACKEND_MAPPING = {'sqlalchemy': 'cloudkitty.rating.hash.db.sqlalchemy.api'}
 IMPL = db_api.DBAPI.from_config(cfg.CONF,
                                 backend_mapping=_BACKEND_MAPPING,
@@ -45,7 +47,8 @@ class NoSuchService(ClientHashMapError):
 
     def __init__(self, name=None, uuid=None):
         super(NoSuchService, self).__init__(
-            "No such service: %s (UUID: %s)" % (name, uuid))
+            _("No such service: %(name)s (UUID: %(uuid)s)") % {'name': name,
+                                                               'uuid': uuid})
         self.name = name
         self.uuid = uuid
 
@@ -55,7 +58,7 @@ class NoSuchField(ClientHashMapError):
 
     def __init__(self, uuid):
         super(NoSuchField, self).__init__(
-            "No such field: %s" % uuid)
+            _("No such field: %s") % uuid)
         self.uuid = uuid
 
 
@@ -64,7 +67,8 @@ class NoSuchGroup(ClientHashMapError):
 
     def __init__(self, name=None, uuid=None):
         super(NoSuchGroup, self).__init__(
-            "No such group: %s (UUID: %s)" % (name, uuid))
+            _("No such group: %(name)s (UUID: %(uuid)s)") %
+            {'name': name, 'uuid': uuid})
         self.name = name
         self.uuid = uuid
 
@@ -73,7 +77,7 @@ class NoSuchMapping(ClientHashMapError):
     """Raised when the mapping doesn't exist."""
 
     def __init__(self, uuid):
-        msg = ("No such mapping: %s" % uuid)
+        msg = (_("No such mapping: %s") % uuid)
         super(NoSuchMapping, self).__init__(msg)
         self.uuid = uuid
 
@@ -82,7 +86,7 @@ class NoSuchThreshold(ClientHashMapError):
     """Raised when the threshold doesn't exist."""
 
     def __init__(self, uuid):
-        msg = ("No such threshold: %s" % uuid)
+        msg = (_("No such threshold: %s") % uuid)
         super(NoSuchThreshold, self).__init__(msg)
         self.uuid = uuid
 
@@ -91,8 +95,7 @@ class NoSuchType(ClientHashMapError):
     """Raised when a mapping type is not handled."""
 
     def __init__(self, map_type):
-        msg = ("No mapping type: %s"
-               % (map_type))
+        msg = (_("No mapping type: %s") % map_type)
         super(NoSuchType, self).__init__(msg)
         self.map_type = map_type
 
@@ -102,7 +105,8 @@ class ServiceAlreadyExists(ClientHashMapError):
 
     def __init__(self, name, uuid):
         super(ServiceAlreadyExists, self).__init__(
-            "Service %s already exists (UUID: %s)" % (name, uuid))
+            _("Service %(name)s already exists (UUID: %(uuid)s)") %
+            {'name': name, 'uuid': uuid})
         self.name = name
         self.uuid = uuid
 
@@ -112,7 +116,8 @@ class FieldAlreadyExists(ClientHashMapError):
 
     def __init__(self, field, uuid):
         super(FieldAlreadyExists, self).__init__(
-            "Field %s already exists (UUID: %s)" % (field, uuid))
+            _("Field %(field)s already exists (UUID: %(uuid)s)") %
+            {'field': field, 'uuid': uuid})
         self.field = field
         self.uuid = uuid
 
@@ -122,7 +127,8 @@ class GroupAlreadyExists(ClientHashMapError):
 
     def __init__(self, name, uuid):
         super(GroupAlreadyExists, self).__init__(
-            "Group %s already exists (UUID: %s)" % (name, uuid))
+            _("Group %(name)s already exists (UUID: %(uuid)s)") %
+            {'name': name, 'uuid': uuid})
         self.name = name
         self.uuid = uuid
 
@@ -139,8 +145,10 @@ class MappingAlreadyExists(ClientHashMapError):
         # TODO(sheeprine): UUID is deprecated
         parent_id = parent_id if parent_id else uuid
         super(MappingAlreadyExists, self).__init__(
-            "Mapping '%s' already exists for %s '%s', tenant: '%s'"
-            % (mapping, parent_type, parent_id, tenant_id))
+            _("Mapping '%(mapping)s' already exists for %(p_type)s '%(p_id)s',"
+              " tenant: '%(t_id)s'") %
+            {'mapping': mapping, 'p_type': parent_type,
+             'p_id': parent_id, 't_id': tenant_id})
         self.mapping = mapping
         self.uuid = parent_id
         self.parent_id = parent_id
@@ -160,8 +168,10 @@ class ThresholdAlreadyExists(ClientHashMapError):
         # TODO(sheeprine): UUID is deprecated
         parent_id = parent_id if parent_id else uuid
         super(ThresholdAlreadyExists, self).__init__(
-            "Threshold '%s' already exists for %s '%s', tenant: '%s'"
-            % (threshold, parent_type, parent_id, tenant_id))
+            _("Threshold '%(threshold)s' already exists for %(p_type)s "
+              "'%(p_id)s', tenant: '%(t_id)s'") %
+            {'threshold': threshold, 'p_type': parent_type,
+             'p_id': parent_id, 't_id': tenant_id})
         self.threshold = threshold
         self.uuid = parent_id
         self.parent_id = parent_id
@@ -174,7 +184,7 @@ class MappingHasNoGroup(ClientHashMapError):
 
     def __init__(self, uuid):
         super(MappingHasNoGroup, self).__init__(
-            "Mapping has no group (UUID: %s)" % uuid)
+            _("Mapping has no group (UUID: %s)") % uuid)
         self.uuid = uuid
 
 
@@ -183,7 +193,7 @@ class ThresholdHasNoGroup(ClientHashMapError):
 
     def __init__(self, uuid):
         super(ThresholdHasNoGroup, self).__init__(
-            "Threshold has no group (UUID: %s)" % uuid)
+            _("Threshold has no group (UUID: %s)") % uuid)
         self.uuid = uuid
 
 

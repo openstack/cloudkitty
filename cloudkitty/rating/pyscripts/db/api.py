@@ -21,6 +21,8 @@ from oslo_config import cfg
 from oslo_db import api as db_api
 import six
 
+from cloudkitty.i18n import _
+
 _BACKEND_MAPPING = {
     'sqlalchemy': 'cloudkitty.rating.pyscripts.db.sqlalchemy.api'}
 IMPL = db_api.DBAPI.from_config(cfg.CONF,
@@ -38,7 +40,8 @@ class NoSuchScript(Exception):
 
     def __init__(self, name=None, uuid=None):
         super(NoSuchScript, self).__init__(
-            "No such script: %s (UUID: %s)" % (name, uuid))
+            _("No such script: %(name)s (UUID: %(uuid)s)") % {'name': name,
+                                                              'uuid': uuid})
         self.name = name
         self.uuid = uuid
 
@@ -48,7 +51,8 @@ class ScriptAlreadyExists(Exception):
 
     def __init__(self, name, uuid):
         super(ScriptAlreadyExists, self).__init__(
-            "Script %s already exists (UUID: %s)" % (name, uuid))
+            _("Script %(name)s already exists (UUID: %(uuid)s)") %
+            {'name': name, 'uuid': uuid})
         self.name = name
         self.uuid = uuid
 
