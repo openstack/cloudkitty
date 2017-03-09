@@ -13,7 +13,7 @@ iso8601>=0.1.9 # MIT
 PasteDeploy>=1.5.0 # MIT
 pecan>=1.0.0 # BSD
 WSME>=0.8 # MIT
-oslo.config>=3.7.0 # Apache-2.0
+oslo.config>=3.7.0,<=3.22.0 # Apache-2.0
 oslo.context>=2.9.0 # Apache-2.0
 oslo.concurrency>=3.5.0 # Apache-2.0
 oslo.db>=4.1.0 # Apache-2.0

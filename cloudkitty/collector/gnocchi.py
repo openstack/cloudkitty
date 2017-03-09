@@ -74,7 +74,7 @@ class GnocchiCollector(collector.BaseCollector):
         'volume': ('volume.size', 'GB'),
         'network.bw.out': ('network.outgoing.bytes', 'MB'),
         'network.bw.in': ('network.incoming.bytes', 'MB'),
-        'network.floating': ('ip.floating', 'ip'),
+        'network.floating': (1, 'ip'),
     }
     default_unit = (1, 'unknown')
 
