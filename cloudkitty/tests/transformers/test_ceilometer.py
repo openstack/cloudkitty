@@ -119,9 +119,6 @@ TRANS_NETWORK_FLOATING = {
 
 
 class CeilometerTransformerTest(tests.TestCase):
-    def setUp(self):
-        super(CeilometerTransformerTest, self).setUp()
-
     def generate_ceilometer_resource(self, data):
         resource = t_transformers.ClassWithAttr({
             'project_id': '4480c638-3169-11e6-91de-a3bd3a7d3afb',

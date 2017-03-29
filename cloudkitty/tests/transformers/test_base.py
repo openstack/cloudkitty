@@ -31,9 +31,6 @@ TRANS_METADATA = {
 
 
 class TransformerBaseTest(tests.TestCase):
-    def setUp(self):
-        super(TransformerBaseTest, self).setUp()
-
     def test_strip_resource_on_dict(self):
         metadata = copy.deepcopy(samples.COMPUTE_METADATA)
         t_test = t_transformers.Transformer()
