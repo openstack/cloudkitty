@@ -204,6 +204,7 @@ class GnocchiCollector(collector.BaseCollector):
         if q_filter:
             query_parameters.append(q_filter)
         resources = self._conn.resource.search(
+            resource_type=resource_type,
             query=self.extend_filter(*query_parameters))
         return resources
 
