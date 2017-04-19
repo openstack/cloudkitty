@@ -107,8 +107,8 @@ function configure_cloudkitty {
     # auth
     iniset $CLOUDKITTY_CONF authinfos auth_type v3password
     iniset $CLOUDKITTY_CONF authinfos auth_protocol http
-    iniset $CLOUDKITTY_CONF authinfos auth_url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v3"
-    iniset $CLOUDKITTY_CONF authinfos identity_uri "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:5000/v3"
+    iniset $CLOUDKITTY_CONF authinfos auth_url "$KEYSTONE_SERVICE_URI/v3"
+    iniset $CLOUDKITTY_CONF authinfos identity_uri "$KEYSTONE_SERVICE_URI/v3"
     iniset $CLOUDKITTY_CONF authinfos username cloudkitty
     iniset $CLOUDKITTY_CONF authinfos password $SERVICE_PASSWORD
     iniset $CLOUDKITTY_CONF authinfos project_name $SERVICE_TENANT_NAME
