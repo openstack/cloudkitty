@@ -87,9 +87,6 @@ TRANS_NETWORK = {
 
 
 class GnocchiTransformerTest(tests.TestCase):
-    def setUp(self):
-        super(GnocchiTransformerTest, self).setUp()
-
     def test_strip_gnocchi_compute(self):
         resource = copy.deepcopy(GNOCCHI_COMPUTE)
         t_test = gnocchi.GnocchiTransformer()
