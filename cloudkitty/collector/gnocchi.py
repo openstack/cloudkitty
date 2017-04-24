@@ -171,7 +171,7 @@ class GnocchiCollector(collector.BaseCollector):
                     # ["2015-11-24T00:00:00+00:00", 86400.0, 64.0]
                     resource[name] = values[0][2]
                 except IndexError:
-                    resource[name] = None
+                    resource[name] = 0
                 except KeyError:
                     # Skip metrics not found
                     pass
