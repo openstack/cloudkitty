@@ -28,7 +28,6 @@ from oslo_log import log
 from oslo_utils import uuidutils
 import six
 
-from cloudkitty.i18n import _LW
 from cloudkitty import storage
 from cloudkitty import utils as ck_utils
 
@@ -272,8 +271,8 @@ class GnocchiStorage(storage.BaseStorage):
             query = {"=": {"project_id": tenant_id}}
         # TODO(Aaron): need support with groupby
         if groupby:
-            LOG.warning(_LW('Now get total with groupby not support '
-                            'in gnocchi storage backend'))
+            LOG.warning('Now get total with groupby not support '
+                        'in gnocchi storage backend')
         # TODO(sheeprine): Use server side aggregation
         r = self._conn.metric.aggregation(metrics=metric, query=query,
                                           start=begin, stop=end,

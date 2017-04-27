@@ -18,8 +18,6 @@
 from oslo_utils import uuidutils
 from wsme import types as wtypes
 
-from cloudkitty.i18n import _LE
-
 
 class UuidType(wtypes.UuidType):
     """A simple UUID type."""
@@ -29,7 +27,7 @@ class UuidType(wtypes.UuidType):
     @staticmethod
     def validate(value):
         if not uuidutils.is_uuid_like(value):
-            raise ValueError(_LE("Invalid UUID, got '%s'") % value)
+            raise ValueError("Invalid UUID, got '%s'" % value)
         return value
 
 
@@ -56,5 +54,5 @@ class MultiType(wtypes.UserType):
                 return value
         else:
             raise ValueError(
-                _LE("Wrong type. Expected '%(type)s', got '%(value)s'")
+                "Wrong type. Expected '%(type)s', got '%(value)s'"
                 % {'type': self.types, 'value': type(value)})
