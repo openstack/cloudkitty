@@ -21,6 +21,7 @@ import cloudkitty.collector
 import cloudkitty.collector.ceilometer
 import cloudkitty.collector.gnocchi
 import cloudkitty.config
+import cloudkitty.orchestrator
 import cloudkitty.service
 import cloudkitty.storage
 import cloudkitty.storage.gnocchi
@@ -41,6 +42,8 @@ _opts = [
     ('keystone_fetcher', list(itertools.chain(
         cloudkitty.tenant_fetcher.keystone.keystone_fetcher_opts,
         cloudkitty.tenant_fetcher.keystone.keystone_common_opts))),
+    ('orchestrator', list(itertools.chain(
+        cloudkitty.orchestrator.orchestrator_opts))),
     ('output', list(itertools.chain(
         cloudkitty.config.output_opts))),
     ('state', list(itertools.chain(
