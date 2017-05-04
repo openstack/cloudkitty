@@ -58,9 +58,8 @@ class HybridRatedDataframe(Base, models.ModelBase):
         # Resource information from gnocchi
         resource_data = collector.resource_info(
             resource_name=self.res_type,
-            start=self.begin,
-            end=self.end,
-            resource_id=self.resource_ref,
+            start=ck_utils.dt2ts(self.begin),
+            end=ck_utils.dt2ts(self.end),
             project_id=self.tenant_id)
 
         # Encapsulate informations in a resource dict

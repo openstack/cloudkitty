@@ -314,7 +314,6 @@ class GnocchiStorage(storage.BaseStorage):
             resource_name=res_type,
             start=begin,
             end=end,
-            resource_id=resource_id,
             project_id=None)
 
     def _to_cloudkitty(self, res_type, resource_data, measure):

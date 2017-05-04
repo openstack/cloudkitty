@@ -38,7 +38,8 @@ class CloudkittyResource(wtypes.Base):
 
     # FIXME(sheeprine): values should be dynamic
     # Testing with ironic dynamic type
-    desc = {wtypes.text: cktypes.MultiType(wtypes.text, int, float, dict)}
+    desc = {wtypes.text: cktypes.MultiType(wtypes.text, int, float,
+                                           dict, decimal.Decimal)}
     """Description of the resources parameters."""
 
     volume = decimal.Decimal
