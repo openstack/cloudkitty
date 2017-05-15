@@ -124,37 +124,36 @@ For keystone (identity) API v2 (deprecated)
     [DEFAULT]
     verbose = True
     log_dir = /var/log/cloudkitty
-
-    [oslo_messaging_rabbit]
-    rabbit_userid = openstack
-    rabbit_password = RABBIT_PASSWORD
-    rabbit_host = RABBIT_HOST
-    rabbit_port = 5672
+    # oslo_messaging_rabbit is deprecated
+    transport_url = rabbit://openstack:RABBIT_PASSWORD@RABBIT_HOST/
 
     [auth]
     username = cloudkitty
     password = CK_PASSWORD
     tenant = service
     region = RegionOne
-    url = http://localhost:5000/v2.0
+    url = http://KEYSTONE_HOST:5000/v2.0
 
     [keystone_authtoken]
     username = cloudkitty
     password = CK_PASSWORD
     project_name = service
     region = RegionOne
-    auth_url = http://localhost:5000/v2.0
+    auth_url = http://KEYSTONE_HOST:5000/v2.0
     auth_plugin = password
 
     [database]
-    connection = mysql://cloudkitty:CK_DBPASSWORD@localhost/cloudkitty
+    connection = mysql://cloudkitty:CK_DBPASSWORD@DB_HOST/cloudkitty
+
+    [storage]
+    backend = sqlalchemy
 
     [keystone_fetcher]
     username = cloudkitty
     password = CK_PASSWORD
     tenant = service
     region = RegionOne
-    url = http://localhost:5000/v2.0
+    url = http://KEYSTONE_HOST:5000/v2.0
 
     [collect]
     collector = ceilometer
@@ -166,14 +165,14 @@ For keystone (identity) API v2 (deprecated)
     password = CK_PASSWORD
     tenant = service
     region = RegionOne
-    url = http://localhost:5000/v2.0
+    url = http://KEYSTONE_HOST:5000/v2.0
 
-Please note that:
+.. note::
 
-* `http://localhost:5000/v2.0` and `http://localhost:35357/v2.0` are your
-  identity endpoints.
+   * ``http://KEYSTONE_HOST:5000/v2.0`` and ``http://KEYSTONE_HOST:35357/v2.0`` are your
+     identity endpoints.
 
-* the tenant named `service` is also commonly called `services`
+   * the tenant named ``service`` is also commonly called ``services``
 
 For keystone (identity) API v3
 ------------------------------
@@ -185,18 +184,14 @@ The following shows the basic configuration items:
     [DEFAULT]
     verbose = True
     log_dir = /var/log/cloudkitty
-
-    [oslo_messaging_rabbit]
-    rabbit_userid = openstack
-    rabbit_password = RABBIT_PASSWORD
-    rabbit_host = RABBIT_HOST
-    rabbit_port = 5672
+    # oslo_messaging_rabbit is deprecated
+    transport_url = rabbit://openstack:RABBIT_PASSWORD@RABBIT_HOST/
 
     [ks_auth]
     auth_type = v3password
     auth_protocol = http
-    auth_url = http://localhost:5000/v3
-    identity_uri = http://localhost:35357/v3
+    auth_url = http://KEYSTONE_HOST:5000/
+    identity_uri = http://KEYSTONE_HOST:35357/
     username = cloudkitty
     password = CK_PASSWORD
     project_name = service
@@ -208,7 +203,7 @@ The following shows the basic configuration items:
     auth_section = ks_auth
 
     [database]
-    connection = mysql://cloudkitty:CK_DBPASSWORD@localhost/cloudkitty
+    connection = mysql://cloudkitty:CK_DBPASSWORD@DB_HOST/cloudkitty
 
     [keystone_fetcher]
     auth_section = ks_auth
@@ -217,21 +212,50 @@ The following shows the basic configuration items:
     [tenant_fetcher]
     backend = keystone
 
+.. note::
+
+   The tenant named ``service`` is also commonly called ``services``
+
+It is now time to configure the storage backend. Three storage backends are
+available: ``sqlalchemy``, ``gnocchihybrid``, and ``gnocchi``.
+
+.. code-block:: ini
+
+   [storage]
+   backend = gnocchihybrid
+
+As you will see in the following example, collector and storage backends sometimes
+need additional configuration sections. (The tenant fetcher works the same way,
+but for now, only Keystone is supported). The section's name has the following
+format: ``{backend_name}_{backend_type}`` (``gnocchi_collector`` for example),
+except for ``storage_gnocchi``.
+
+.. note::
+
+   The section name format should become ``{backend_type}_{backend_name}`` for all
+   sections in the future (``storage_gnocchi`` style).
+
+If you want to use the pure gnocchi storage, add the following entry:
+
+.. code-block:: ini
+
+   [storage_gnocchi]
+   auth_section = ks_auth
+
+Two collectors are available: Ceilometer (deprecated, see the Telemetry
+documentation), and Gnocchi.
+
+.. code-block:: ini
+
     [collect]
-    collector = ceilometer
+    collector = gnocchi
+    # Metrics are collected every 3600 seconds
     period = 3600
+    # By default, only the compute service is enabled
     services = compute, volume, network.bw.in, network.bw.out, network.floating, image
 
-    [ceilometer_collector]
+    [gnocchi_collector]
     auth_section = ks_auth
-
-Please note that:
-
-* `http://localhost:5000/v3` and `http://localhost:35357/v3` are your identity
-  endpoints.
-
-* the tenant named `service` is also commonly called `services`
-
 
 Setup the database and storage backend
 ======================================
