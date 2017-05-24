@@ -183,8 +183,7 @@ def refresh_stevedore(namespace=None):
 
 def check_time_state(timestamp=None, period=0, wait_time=0):
     if not timestamp:
-        month_start = get_month_start()
-        return dt2ts(month_start)
+        return get_month_start_timestamp()
 
     now = utcnow_ts()
     next_timestamp = timestamp + period
