@@ -77,14 +77,14 @@ Install the dashboard module
 Install from packages
 =====================
 
-Packages for RHEL/CentOS 7 and Ubuntu 16.04 are available for the Newton release.
-
 For RHEL/CentOS 7
 -----------------
 
-#. Install the RDO repositories for Newton::
+Packages for RHEL/CentOS 7 are available starting from the Mitaka release.
 
-    yum install centos-release-openstack-newton
+#. Install the RDO repositories for your release::
+
+    yum install centos-release-openstack-RELEASE # RELEASE can be mitaka, newton or ocata
 
 #. Install the packages::
 
@@ -94,10 +94,13 @@ For RHEL/CentOS 7
 For Ubuntu 16.04
 ----------------
 
-#. Enable the OpenStack repository for the Newton release::
+Packages for Ubuntu 16.04 are available starting from the Newton release.
+
+#. Enable the OpenStack repository for the Newton or Ocata release::
 
     apt install software-properties-common
-    add-apt-repository ppa:objectif-libre/cloudkitty
+    add-apt-repository ppa:objectif-libre/cloudkitty # Newton
+    add-apt-repository ppa:objectif-libre/cloudkitty-ocata # Ocata
 
 #. Upgrade the packages on your host::
 
