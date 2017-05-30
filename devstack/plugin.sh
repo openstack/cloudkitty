@@ -194,10 +194,10 @@ function install_cloudkitty {
 
 # start_cloudkitty() - Start running processes, including screen
 function start_cloudkitty {
-    screen_it ck-proc "cd $CLOUDKITTY_DIR; $CLOUDKITTY_BIN_DIR/cloudkitty-processor --config-file=$CLOUDKITTY_CONF"
-    screen_it ck-api "cd $CLOUDKITTY_DIR; $CLOUDKITTY_BIN_DIR/cloudkitty-api --config-file=$CLOUDKITTY_CONF"
+    run_process ck-proc "$CLOUDKITTY_BIN_DIR/cloudkitty-processor --config-file=$CLOUDKITTY_CONF"
+    run_process ck-api "$CLOUDKITTY_BIN_DIR/cloudkitty-api --config-file=$CLOUDKITTY_CONF"
     echo "Waiting for ck-api ($CLOUDKITTY_SERVICE_HOST:$CLOUDKITTY_SERVICE_PORT) to start..."
-    if ! timeout $SERVICE_TIMEOUT sh -c "while ! wget --no-proxy -q -O- http://$CLOUDKITTY_SERVICE_HOST:$CLOUDKITTY_SERVICE_PORT; do sleep 1; done"; then
+    if ! wait_for_service $SERVICE_TIMEOUT $CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOST:$CLOUDKITTY_SERVICE_PORT; then
         die $LINENO "ck-api did not start"
     fi
 }
@@ -206,7 +206,7 @@ function start_cloudkitty {
 function stop_cloudkitty {
     # Kill the cloudkitty screen windows
     for serv in ck-api ck-proc; do
-        screen_stop $serv
+        stop_process $serv
     done
 }
 
