@@ -40,8 +40,7 @@ class StorageTest(tests.TestCase):
         super(StorageTest, self).setUp()
         self._tenant_id = samples.TENANT
         self._other_tenant_id = '8d3ae50089ea4142-9c6e1269db6a0b64'
-        self.conf.set_override('backend', self.storage_backend, 'storage',
-                               enforce_type=True)
+        self.conf.set_override('backend', self.storage_backend, 'storage')
         self.storage = storage.get_storage()
         self.storage.init()
 

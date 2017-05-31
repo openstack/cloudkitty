@@ -186,20 +186,17 @@ class ConfigFixture(fixture.GabbiFixture):
         msg_conf = conffixture.ConfFixture(conf)
         msg_conf.transport_driver = 'fake'
         conf.import_group('api', 'cloudkitty.api.app')
-        conf.set_override('auth_strategy', 'noauth', enforce_type=True)
-        conf.set_override('connection', 'sqlite:///', 'database',
-                          enforce_type=True)
+        conf.set_override('auth_strategy', 'noauth')
+        conf.set_override('connection', 'sqlite:///', 'database')
         conf.set_override('policy_file',
                           os.path.abspath('etc/cloudkitty/policy.json'),
-                          group='oslo_policy',
-                          enforce_type=True)
+                          group='oslo_policy')
         conf.set_override('api_paste_config',
                           os.path.abspath(
                               'cloudkitty/tests/gabbi/gabbi_paste.ini')
                           )
         conf.import_group('storage', 'cloudkitty.storage')
-        conf.set_override('backend', 'sqlalchemy', 'storage',
-                          enforce_type=True)
+        conf.set_override('backend', 'sqlalchemy', 'storage')
         self.conf = conf
         self.conn = ck_db_api.get_instance()
         migration = self.conn.get_migration()

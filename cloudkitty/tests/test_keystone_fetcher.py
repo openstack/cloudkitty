@@ -70,8 +70,7 @@ def Client(**kwargs):
 class KeystoneFetcherTest(tests.TestCase):
     def setUp(self):
         super(KeystoneFetcherTest, self).setUp()
-        self.conf.set_override('backend', 'keystone', 'tenant_fetcher',
-                               enforce_type=True)
+        self.conf.set_override('backend', 'keystone', 'tenant_fetcher')
         self.conf.import_group('keystone_fetcher',
                                'cloudkitty.tenant_fetcher.keystone')
 
