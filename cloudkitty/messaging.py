@@ -15,6 +15,7 @@
 
 from oslo_config import cfg
 import oslo_messaging
+from oslo_messaging.rpc import dispatcher
 
 DEFAULT_URL = "__default__"
 RPC_TARGET = None
@@ -60,11 +61,13 @@ def get_client(version_cap=None):
 
 
 def get_server(target=None, endpoints=None):
+    access_policy = dispatcher.DefaultRPCAccessPolicy
     transport = get_transport()
     if not target:
         target = get_target()
     return oslo_messaging.get_rpc_server(transport, target,
-                                         endpoints, executor='eventlet')
+                                         endpoints, executor='eventlet',
+                                         access_policy=access_policy)
 
 
 def cleanup():
