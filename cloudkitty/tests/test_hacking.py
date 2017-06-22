@@ -84,7 +84,7 @@ class HackingTestCase(tests.TestCase):
             "msg = _('My message')",
             "cloudkitty/tests/other_files.py"))))
         self.assertEqual(0, len(list(checks.check_explicit_underscore_import(
-            "from cloudkitty.i18n import _LE, _, _LW",
+            "from cloudkitty.i18n import _",
             "cloudkitty/tests/other_files2.py"))))
         self.assertEqual(0, len(list(checks.check_explicit_underscore_import(
             "msg = _('My message')",
@@ -99,9 +99,6 @@ class HackingTestCase(tests.TestCase):
         self.assertEqual(0, len(list(checks.check_explicit_underscore_import(
             "LOG.info('My info message')",
             "cloudkitty.tests.unit/other_files4.py"))))
-        self.assertEqual(0, len(list(checks.check_explicit_underscore_import(
-            "from cloudkitty.i18n import _LW",
-            "cloudkitty.tests.unit/other_files5.py"))))
         self.assertEqual(1, len(list(checks.check_explicit_underscore_import(
             "msg = _('My message')",
             "cloudkitty.tests.unit/other_files5.py"))))
@@ -235,18 +232,10 @@ class HackingTestCase(tests.TestCase):
 
 
                _ = fake_tran
-               _LI = _
-               _LW = _
-               _LE = _
-               _LC = _
 
 
                def f(a, b):
                    msg = _('test') + 'add me'
-                   msg = _LI('test') + 'add me'
-                   msg = _LW('test') + 'add me'
-                   msg = _LE('test') + 'add me'
-                   msg = _LC('test') + 'add me'
                    msg = 'add to me' + _('test')
                    return msg
                """
@@ -255,11 +244,9 @@ class HackingTestCase(tests.TestCase):
         # parsing. This was reversed in Python 3.4.3, hence the version-based
         # expected value calculation. See #1499743 for more background.
         if sys.version_info < (3, 4, 0) or sys.version_info >= (3, 4, 3):
-            errors = [(13, 10, 'C315'), (14, 10, 'C315'), (15, 10, 'C315'),
-                      (16, 10, 'C315'), (17, 10, 'C315'), (18, 24, 'C315')]
+            errors = [(9, 10, 'C315'), (10, 24, 'C315')]
         else:
-            errors = [(13, 11, 'C315'), (14, 13, 'C315'), (15, 13, 'C315'),
-                      (16, 13, 'C315'), (17, 13, 'C315'), (18, 25, 'C315')]
+            errors = [(9, 11, 'C315'), (10, 25, 'C315')]
         self._assert_has_errors(code, checker, expected_errors=errors)
 
         code = """
