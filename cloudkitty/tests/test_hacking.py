@@ -57,15 +57,13 @@ class HackingTestCase(tests.TestCase):
     should pass.
     """
 
-    def test_no_translate_debug_logs(self):
-        self.assertEqual(1, len(list(checks.no_translate_debug_logs(
-            "LOG.debug(_('foo'))", "cloudkitty/scheduler/foo.py"))))
-
-        self.assertEqual(0, len(list(checks.no_translate_debug_logs(
-            "LOG.debug('foo')", "cloudkitty/scheduler/foo.py"))))
-
-        self.assertEqual(0, len(list(checks.no_translate_debug_logs(
-            "LOG.info(_('foo'))", "cloudkitty/scheduler/foo.py"))))
+    def test_no_log_translations(self):
+        for log in checks._all_log_levels:
+            bad = 'LOG.%s(_("Bad"))' % log
+            self.assertEqual(1, len(list(checks.no_translate_logs(bad, 'f'))))
+            # Catch abuses when used with a variable and not a literal
+            bad = 'LOG.%s(_(msg))' % log
+            self.assertEqual(1, len(list(checks.no_translate_logs(bad, 'f'))))
 
     def test_check_explicit_underscore_import(self):
         self.assertEqual(1, len(list(checks.check_explicit_underscore_import(
