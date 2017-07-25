@@ -1,117 +1,8 @@
-#########################################
-Cloudkitty installation and configuration
-#########################################
+###################
+Configuration Guide
+###################
 
-Many method can be followed to install cloudkitty.
-
-Install from source
-===================
-
-Install the services
---------------------
-
-Retrieve and install cloudkitty::
-
-    git clone https://git.openstack.org/openstack/cloudkitty.git
-    cd cloudkitty
-    python setup.py install
-
-This procedure installs the ``cloudkitty`` python library and the
-following executables:
-
-* ``cloudkitty-api``: API service
-* ``cloudkitty-processor``: Processing service (collecting and rating)
-* ``cloudkitty-dbsync``: Tool to create and upgrade the database schema
-* ``cloudkitty-storage-init``: Tool to initiate the storage backend
-* ``cloudkitty-writer``: Reporting tool
-
-Install sample configuration files::
-
-    mkdir /etc/cloudkitty
-    tox -e genconfig
-    cp etc/cloudkitty/cloudkitty.conf.sample /etc/cloudkitty/cloudkitty.conf
-    cp etc/cloudkitty/policy.json /etc/cloudkitty
-    cp etc/cloudkitty/api_paste.ini /etc/cloudkitty
-
-Create the log directory::
-
-    mkdir /var/log/cloudkitty/
-
-Install the client
-------------------
-
-Retrieve and install cloudkitty client::
-
-    git clone https://git.openstack.org/openstack/python-cloudkittyclient.git
-    cd python-cloudkittyclient
-    python setup.py install
-
-Install the dashboard module
-----------------------------
-
-#. Retrieve and install cloudkitty's dashboard::
-
-    git clone https://git.openstack.org/openstack/cloudkitty-dashboard.git
-    cd cloudkitty-dashboard
-    python setup.py install
-
-#. Find where the python packages are installed::
-
-    PY_PACKAGES_PATH=`pip --version | cut -d' ' -f4`
-
-#. Add the enabled file to the horizon settings or installation.
-   Depending on your setup, you might need to add it to ``/usr/share`` or
-   directly in the horizon python package::
-
-    # If horizon is installed by packages:
-    ln -sf $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
-    /usr/share/openstack-dashboard/openstack_dashboard/enabled/
-
-    # Directly from sources:
-    ln -sf $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
-    $PY_PACKAGES_PATH/openstack_dashboard/enabled/
-
-#. Restart the web server hosting Horizon.
-
-
-Install from packages
-=====================
-
-For RHEL/CentOS 7
------------------
-
-Packages for RHEL/CentOS 7 are available starting from the Mitaka release.
-
-#. Install the RDO repositories for your release::
-
-    yum install centos-release-openstack-RELEASE # RELEASE can be mitaka, newton or ocata
-
-#. Install the packages::
-
-    yum install openstack-cloudkitty-api openstack-cloudkitty-processor openstack-cloudkitty-ui
-
-
-For Ubuntu 16.04
-----------------
-
-Packages for Ubuntu 16.04 are available starting from the Newton release.
-
-#. Enable the OpenStack repository for the Newton or Ocata release::
-
-    apt install software-properties-common
-    add-apt-repository ppa:objectif-libre/cloudkitty # Newton
-    add-apt-repository ppa:objectif-libre/cloudkitty-ocata # Ocata
-
-#. Upgrade the packages on your host::
-
-    apt update && apt dist-upgrade
-
-#. Install the packages::
-
-    apt-get install cloudkitty-api cloudkitty-processor cloudkitty-dashboard
-
-
-Configure cloudkitty
+Configure Cloudkitty
 ====================
 
 Edit :file:`/etc/cloudkitty/cloudkitty.conf` to configure cloudkitty.
@@ -261,7 +152,7 @@ documentation), and Gnocchi.
     auth_section = ks_auth
 
 Setup the database and storage backend
-======================================
+--------------------------------------
 
 MySQL/MariaDB is the recommended database engine. To setup the database, use
 the ``mysql`` client::
@@ -284,8 +175,8 @@ Init the storage backend::
     cloudkitty-storage-init
 
 
-Setup Keystone
-==============
+Integration with Keystone
+-------------------------
 
 cloudkitty uses Keystone for authentication, and provides a ``rating`` service.
 
@@ -345,7 +236,7 @@ Choose and start the API server
    used to run the API server. For smaller or proof-of-concept
    installations this is a reasonable choice. For larger installations it
    is strongly recommended to install the API server in a WSGI host
-   such as mod_wsgi (see :doc:`mod_wsgi`). Doing so will provide better
+   such as mod_wsgi (see :ref:`mod_wsgi`). Doing so will provide better
    performance and more options for making adjustments specific to the
    installation environment.
 
@@ -353,4 +244,3 @@ Choose and start the API server
    as::
 
     $ cloudkitty-api -p 8889
-

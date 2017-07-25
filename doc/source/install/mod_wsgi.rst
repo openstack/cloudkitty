@@ -13,9 +13,11 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-===================================
- Installing the API behind mod_wsgi
-===================================
+.. _mod_wsgi:
+
+==================================
+Installing the API behind mod_wsgi
+==================================
 
 Cloudkitty comes with a few example files for configuring the API
 service to run behind Apache with ``mod_wsgi``.
@@ -24,7 +26,7 @@ app.wsgi
 ========
 
 The file ``cloudkitty/api/app.wsgi`` sets up the V1 API WSGI
-application. The file needs to be copied to /var/www/cloudkitty/,
+application. The file needs to be copied to ``/var/www/cloudkitty/``,
 and should not need to be modified.
 
 etc/apache2/cloudkitty
@@ -33,7 +35,7 @@ etc/apache2/cloudkitty
 The ``etc/apache2/cloudkitty`` file contains example settings that
 work with a copy of cloudkitty installed via devstack.
 
-.. literalinclude:: ../../etc/apache2/cloudkitty
+.. literalinclude:: ../../../etc/apache2/cloudkitty
 
 1. On deb-based systems copy or symlink the file to
    ``/etc/apache2/sites-available``. For rpm-based systems the file will go in
@@ -45,9 +47,9 @@ work with a copy of cloudkitty installed via devstack.
 
 3. Enable the cloudkitty site. On deb-based systems::
 
-      $ a2ensite cloudkitty
-      $ service apache2 reload
+      # a2ensite cloudkitty
+      # service apache2 reload
 
    On rpm-based systems::
 
-      $ service httpd reload
+      # service httpd reload

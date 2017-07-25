@@ -40,9 +40,7 @@ class Service(wtypes.Base):
 
 
 class ServiceCollection(wtypes.Base):
-    """Type describing a list of services.
-
-    """
+    """Type describing a list of services."""
 
     services = [Service]
     """List of services."""
