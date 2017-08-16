@@ -2,7 +2,7 @@ Cloudkitty Style Commandments
 ============================
 
 - Step 1: Read the OpenStack Style Commandments
-  http://docs.openstack.org/developer/hacking/
+  https://docs.openstack.org/hacking/latest
 - Step 2: Read on
 
 
@@ -46,7 +46,7 @@ must be used because the message is going to appear in an exception that
 may be presented to the user.
 
 For more details about translations, see
-http://docs.openstack.org/developer/oslo.i18n/guidelines.html
+https://docs.openstack.org/oslo.i18n/latest/
 
 Creating Unit Tests
 -------------------
