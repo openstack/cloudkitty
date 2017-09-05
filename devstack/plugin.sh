@@ -132,7 +132,11 @@ function configure_cloudkitty {
 
     touch $CLOUDKITTY_CONF
 
-    cp $CLOUDKITTY_DIR$CLOUDKITTY_CONF_DIR/policy.json $CLOUDKITTY_CONF_DIR
+    # generate policy sample file
+    oslopolicy-sample-generator --config-file $CLOUDKITTY_DIR/etc/oslo-policy-generator/cloudkitty.conf --output-file $CLOUDKITTY_DIR/etc/cloudkitty/policy.yaml.sample
+    cp $CLOUDKITTY_DIR/etc/cloudkitty/policy.yaml.sample "$CLOUDKITTY_CONF_DIR/policy.yaml"
+    iniset $CLOUDKITTY_CONF oslo_policy policy_file 'policy.yaml'
+
     cp $CLOUDKITTY_DIR$CLOUDKITTY_CONF_DIR/api_paste.ini $CLOUDKITTY_CONF_DIR
     cp $CLOUDKITTY_DIR$CLOUDKITTY_CONF_DIR/metrics.yml $CLOUDKITTY_CONF_DIR
     iniset_rpc_backend cloudkitty $CLOUDKITTY_CONF DEFAULT

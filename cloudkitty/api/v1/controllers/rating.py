@@ -63,7 +63,7 @@ class ModulesController(rest.RestController, RatingModulesMixin):
     def route(self, *args):
         route = args[0]
         if route.startswith('/v1/module_config'):
-            policy.enforce(pecan.request.context, 'rating:module_config', {})
+            policy.authorize(pecan.request.context, 'rating:module_config', {})
 
         super(ModulesController, self).route(*args)
 
@@ -73,7 +73,7 @@ class ModulesController(rest.RestController, RatingModulesMixin):
 
         :return: name of every loaded modules.
         """
-        policy.enforce(pecan.request.context, 'rating:list_modules', {})
+        policy.authorize(pecan.request.context, 'rating:list_modules', {})
 
         modules_list = []
         lock = lockutils.lock('rating-modules')
@@ -92,7 +92,7 @@ class ModulesController(rest.RestController, RatingModulesMixin):
 
         :return: CloudKittyModule
         """
-        policy.enforce(pecan.request.context, 'rating:get_module', {})
+        policy.authorize(pecan.request.context, 'rating:get_module', {})
 
         try:
             lock = lockutils.lock('rating-modules')
@@ -114,7 +114,7 @@ class ModulesController(rest.RestController, RatingModulesMixin):
         :param module_id: name of the module to modify
         :param module: CloudKittyModule object describing the new desired state
         """
-        policy.enforce(pecan.request.context, 'rating:update_module', {})
+        policy.authorize(pecan.request.context, 'rating:update_module', {})
 
         try:
             lock = lockutils.lock('rating-modules')
@@ -194,7 +194,7 @@ class RatingController(rest.RestController):
         :param res_data: List of resource descriptions.
         :return: Total price for these descriptions.
         """
-        policy.enforce(pecan.request.context, 'rating:quote', {})
+        policy.authorize(pecan.request.context, 'rating:quote', {})
 
         client = pecan.request.rpc_client.prepare(namespace='rating')
         res_dict = {}
@@ -212,7 +212,7 @@ class RatingController(rest.RestController):
         """Trigger a rating module list reload.
 
         """
-        policy.enforce(pecan.request.context, 'rating:module_config', {})
+        policy.authorize(pecan.request.context, 'rating:module_config', {})
         self.modules.reload_extensions()
         self.module_config.reload_extensions()
         self.module_config.expose_modules()

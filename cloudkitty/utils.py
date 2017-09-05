@@ -22,12 +22,17 @@ We're mostly using oslo_utils for time calculations but we're encapsulating it
 to ease maintenance in case of library modifications.
 """
 import calendar
+import contextlib
 import datetime
+import shutil
+import six
 import sys
+import tempfile
 import yaml
 
 from oslo_config import cfg
 from oslo_log import log as logging
+
 from oslo_utils import timeutils
 from six import moves
 from stevedore import extension
@@ -257,3 +262,16 @@ def get_metrics_conf(conf_path):
             LOG.error(exc)
 
     return res
+
+
+@contextlib.contextmanager
+def tempdir(**kwargs):
+    tmpdir = tempfile.mkdtemp(**kwargs)
+    try:
+        yield tmpdir
+    finally:
+        try:
+            shutil.rmtree(tmpdir)
+        except OSError as e:
+            LOG.debug('Could not remove tmpdir: %s',
+                      six.text_type(e))

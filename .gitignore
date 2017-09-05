@@ -25,6 +25,7 @@ cloudkitty.egg-info
 
 # Configuration file
 etc/cloudkitty/cloudkitty.conf.sample
+etc/cloudkitty/policy.yaml.sample
 
 # Installer logs
 pip-log.txt
