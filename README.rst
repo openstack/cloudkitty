@@ -2,8 +2,8 @@
 Team and repository tags
 ========================
 
-.. image:: http://governance.openstack.org/badges/cloudkitty.svg
-    :target: http://governance.openstack.org/reference/tags/index.html
+.. image:: https://governance.openstack.org/tc/badges/cloudkitty.svg
+    :target: https://governance.openstack.org/tc/reference/tags/index.html
 
 .. Change things from this point on
 
@@ -87,11 +87,11 @@ want to install it on an older system, use a virtualenv.
 
 .. |doc-status|
    image:: https://readthedocs.org/projects/cloudkitty/badge/?version=latest
-   :target: http://cloudkitty.readthedocs.org
+   :target: http://cloudkitty.readthedocs.io/en/latest/
    :alt: Documentation Status
 
 
-.. _readthedocs: http://cloudkitty.readthedocs.org
+.. _readthedocs: http://cloudkitty.readthedocs.io/en/latest/
 
 
 .. _storyboard: https://storyboard.openstack.org/#!/project/890
@@ -103,10 +103,10 @@ want to install it on an older system, use a virtualenv.
 .. _cloudkitty-dashboard: https://github.com/openstack/cloudkitty-dashboard
 
 
-.. _architecture section: https://cloudkitty.readthedocs.org/en/latest/arch.html
+.. _architecture section: https://cloudkitty.readthedocs.io/en/latest/arch.html
 
 
-.. _devstack section: https://cloudkitty.readthedocs.org/en/latest/devstack.html
+.. _devstack section: https://cloudkitty.readthedocs.io/en/latest/devstack.html
 
 
-.. _installation section: https://cloudkitty.readthedocs.org/en/latest/installation.html
+.. _installation section: https://cloudkitty.readthedocs.io/en/latest/installation.html

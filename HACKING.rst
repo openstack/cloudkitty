@@ -62,7 +62,7 @@ The testing system is based on a combination of tox and testr. If you just
 want to run the whole suite, run `tox` and all will be fine. However, if
 you'd like to dig in a bit more, you might want to learn some things about
 testr itself. A basic walkthrough for OpenStack can be found at
-http://wiki.openstack.org/testr
+https://wiki.openstack.org/wiki/Testr
 
 OpenStack Trademark
 -------------------
@@ -98,4 +98,4 @@ For further information on constructing high quality commit messages,
 and how to split up commits into a series of changes, consult the
 project wiki:
 
-   http://wiki.openstack.org/GitCommitMessages
+   https://wiki.openstack.org/wiki/GitCommitMessages
