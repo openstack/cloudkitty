@@ -36,11 +36,12 @@ Guidelines for writing new hacking checks
 
 UNDERSCORE_IMPORT_FILES = []
 
-log_translation = re.compile(
-    r"(.)*LOG\.(audit|error|info|critical|exception)\(\s*('|\")")
-translated_log = re.compile(
-    r"(.)*LOG\.(audit|error|info|warn|warning|critical|exception)"
-    "\(\s*_\(\s*('|\")")
+_all_log_levels = {'debug', 'error', 'info', 'warning',
+                   'critical', 'exception'}
+# Since _Lx have been removed, we just need to check _()
+translated_logs = re.compile(
+    r"(.)*LOG\.(%(level)s)\(\s*_\(" % {'level': '|'.join(_all_log_levels)})
+
 string_translation = re.compile(r"[^_]*_\(\s*('|\")")
 underscore_import_check = re.compile(r"(.)*import _$")
 underscore_import_check_multi = re.compile(r"(.)*import (.)*_, (.)*")
@@ -99,12 +100,11 @@ class BaseASTChecker(ast.NodeVisitor):
         return False
 
 
-def no_translate_debug_logs(logical_line, filename):
-    """Check for 'LOG.debug(_('
+def no_translate_logs(logical_line, filename):
+    """Check for 'LOG.*(_('
 
-    As per our translation policy,
-    https://wiki.openstack.org/wiki/LoggingStandards#Log_Translation
-    we shouldn't translate debug level logs.
+    Starting with the Pike series, OpenStack no longer supports log
+    translation.
 
     * This check assumes that 'LOG' is a logger.
     * Use filename so we can start enforcing this in specific folders instead
@@ -112,8 +112,8 @@ def no_translate_debug_logs(logical_line, filename):
 
     C313
     """
-    if logical_line.startswith("LOG.debug(_("):
-        yield(0, "C313 Don't translate debug level logs")
+    if translated_logs.match(logical_line):
+        yield(0, "C313 Don't translate logs")
 
 
 class CheckLoggingFormatArgs(BaseASTChecker):
@@ -198,8 +198,7 @@ def check_explicit_underscore_import(logical_line, filename):
           underscore_import_check_multi.match(logical_line) or
           custom_underscore_check.match(logical_line)):
         UNDERSCORE_IMPORT_FILES.append(filename)
-    elif (translated_log.match(logical_line) or
-          string_translation.match(logical_line)):
+    elif string_translation.match(logical_line):
         yield(0, "C321: Found use of _() without explicit import of _ !")
 
 
@@ -341,7 +340,7 @@ def no_log_warn_check(logical_line):
 
 def factory(register):
     register(check_explicit_underscore_import)
-    register(no_translate_debug_logs)
+    register(no_translate_logs)
     register(CheckForStrUnicodeExc)
     register(CheckLoggingFormatArgs)
     register(CheckForTransAdd)

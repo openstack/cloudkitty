@@ -1,5 +1,5 @@
 Cloudkitty Style Commandments
-============================
+=============================
 
 - Step 1: Read the OpenStack Style Commandments
   https://docs.openstack.org/hacking/latest
@@ -7,12 +7,12 @@ Cloudkitty Style Commandments
 
 
 Cloudkitty Specific Commandments
--------------------------------
+--------------------------------
 
 - [C310] Check for improper use of logging format arguments.
 - [C311] Use assertIsNone(...) instead of assertEqual(None, ...).
 - [C312] Use assertTrue(...) rather than assertEqual(True, ...).
-- [C313] Validate that debug level logs are not translated.
+- [C313] Validate that logs are not translated.
 - [C314] str() and unicode() cannot be used on an exception. Remove or use six.text_type().
 - [C315] Translated messages cannot be concatenated.  String should be
   included in translated message.
