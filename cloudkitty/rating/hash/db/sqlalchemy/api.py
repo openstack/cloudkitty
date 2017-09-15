@@ -432,6 +432,14 @@ class HashMap(api.HashMap):
                 else:
                     raise api.ClientHashMapError('No attribute to update.')
                 return mapping_db
+        except exception.DBDuplicateEntry:
+            puuid = uuid
+            ptype = 'Mapping_id'
+            raise api.MappingAlreadyExists(
+                value,
+                puuid,
+                ptype,
+                tenant_id=kwargs.get('tenant_id'))
         except sqlalchemy.orm.exc.NoResultFound:
             raise api.NoSuchMapping(uuid)
 
@@ -465,6 +473,14 @@ class HashMap(api.HashMap):
                 else:
                     raise api.ClientHashMapError('No attribute to update.')
                 return threshold_db
+        except exception.DBDuplicateEntry:
+            puuid = uuid
+            ptype = 'Threshold_id'
+            raise api.ThresholdAlreadyExists(
+                value,
+                puuid,
+                ptype,
+                tenant_id=kwargs.get('tenant_id'))
         except sqlalchemy.orm.exc.NoResultFound:
             raise api.NoSuchThreshold(uuid)
 

@@ -158,6 +158,8 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
                 group_id=mapping.group_id,
                 tenant_id=mapping.tenant_id)
             pecan.response.headers['Location'] = pecan.request.path
+        except db_api.MappingAlreadyExists as e:
+            pecan.abort(409, six.text_type(e))
         except db_api.NoSuchMapping as e:
             pecan.abort(404, six.text_type(e))
         except db_api.ClientHashMapError as e:

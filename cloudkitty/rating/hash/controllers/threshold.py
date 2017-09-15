@@ -158,6 +158,8 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
                 group_id=threshold.group_id,
                 tenant_id=threshold.tenant_id)
             pecan.response.headers['Location'] = pecan.request.path
+        except db_api.ThresholdAlreadyExists as e:
+            pecan.abort(409, six.text_type(e))
         except db_api.NoSuchThreshold as e:
             pecan.abort(404, six.text_type(e))
         except db_api.ClientHashMapError as e:
