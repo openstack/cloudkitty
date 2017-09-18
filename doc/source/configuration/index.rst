@@ -10,6 +10,31 @@ Edit :file:`/etc/cloudkitty/cloudkitty.conf` to configure cloudkitty.
 Then you need to know which keystone API version you use (which can be
 determined using `openstack endpoint list`)
 
+
+The first thing to set is the authentification method wished to reach Cloudkitty API endpoints.
+
+
+Without authentification
+------------------------
+
+If wanted, you can choose to not set any authentification method.
+This should be set in de DEFAULT block of the configuration file owing to the auth_strategy field:
+
+.. code-block:: ini
+
+    [DEFAULT]
+    verbose = True
+    log_dir = /var/log/cloudkitty
+    # oslo_messaging_rabbit is deprecated
+    transport_url = rabbit://openstack:RABBIT_PASSWORD@RABBIT_HOST
+    auth_strategy = noauth
+
+
+Otherwise, the only other officially implemented authentification method is keystone.
+More methods will be implemented soon.
+It should be set in the DEFAULT configuration block too, with the auth_stategy field.
+
+
 For keystone (identity) API v2 (deprecated)
 -------------------------------------------
 
@@ -20,6 +45,7 @@ For keystone (identity) API v2 (deprecated)
     log_dir = /var/log/cloudkitty
     # oslo_messaging_rabbit is deprecated
     transport_url = rabbit://openstack:RABBIT_PASSWORD@RABBIT_HOST/
+    auth_strategy = keystone
 
     [auth]
     username = cloudkitty
@@ -80,6 +106,7 @@ The following shows the basic configuration items:
     log_dir = /var/log/cloudkitty
     # oslo_messaging_rabbit is deprecated
     transport_url = rabbit://openstack:RABBIT_PASSWORD@RABBIT_HOST/
+    auth_strategy = keystone
 
     [ks_auth]
     auth_type = v3password

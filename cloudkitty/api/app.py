@@ -98,7 +98,10 @@ def load_app():
     if not cfg_file:
         raise cfg.ConfigFilesNotFoundError([cfg.CONF.api_paste_config])
     LOG.info("Full WSGI config used: %s", cfg_file)
-    return deploy.loadapp("config:" + cfg_file)
+    appname = "cloudkitty+{}".format(cfg.CONF.auth_strategy)
+    LOG.info("Cloudkitty api with '%s' auth type will be loaded.",
+             cfg.CONF.auth_strategy)
+    return deploy.loadapp("config:" + cfg_file, name=appname)
 
 
 def build_wsgi_app(argv=None):

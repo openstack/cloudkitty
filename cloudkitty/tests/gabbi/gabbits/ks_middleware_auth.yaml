@@ -1,0 +1,21 @@
+fixtures:
+    - ConfigFixtureKeystoneAuth
+    - StorageDataFixture
+    - NowStorageDataFixture
+
+tests:
+    - name: Can't query api without token
+      GET: /v1/storage/dataframes
+      status: 401
+
+    - name: Can't query api with non valid token
+      GET: /v1/storage/dataframes
+      status: 401
+      request_headers:
+          X-Auth-Token: bf08a02dbd52406b94fcc2447bb3e266
+
+    - name: Can query api with valid token
+      GET: /v1/storage/dataframes
+      status: 200
+      request_headers:
+          X-Auth-Token: c93e3e31342e4e32ba201fd3d70878b5

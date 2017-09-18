@@ -30,10 +30,12 @@ from oslo_policy import opts as policy_opts
 import six
 from stevedore import driver
 from stevedore import extension
+import webob.dec
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api import app
+from cloudkitty.api import middleware
 from cloudkitty import db
 from cloudkitty.db import api as ck_db_api
 from cloudkitty import messaging
@@ -42,6 +44,7 @@ from cloudkitty import storage
 from cloudkitty.storage.sqlalchemy import models
 from cloudkitty import tests
 from cloudkitty import utils as ck_utils
+
 
 INITIAL_TIMESTAMP = 1420070400
 
@@ -179,6 +182,8 @@ class RatingModulesFixture(BaseExtensionFixture):
 
 
 class ConfigFixture(fixture.GabbiFixture):
+    auth_strategy = 'noauth'
+
     def start_fixture(self):
         self.conf = None
         conf = conf_fixture.Config().conf
@@ -186,7 +191,7 @@ class ConfigFixture(fixture.GabbiFixture):
         msg_conf = conffixture.ConfFixture(conf)
         msg_conf.transport_driver = 'fake'
         conf.import_group('api', 'cloudkitty.api.app')
-        conf.set_override('auth_strategy', 'noauth')
+        conf.set_override('auth_strategy', self.auth_strategy)
         conf.set_override('connection', 'sqlite:///', 'database')
         conf.set_override('policy_file',
                           os.path.abspath('etc/cloudkitty/policy.json'),
@@ -206,6 +211,35 @@ class ConfigFixture(fixture.GabbiFixture):
         if self.conf:
             self.conf.reset()
         db.get_engine().dispose()
+
+
+class ConfigFixtureKeystoneAuth(ConfigFixture):
+    auth_strategy = 'keystone'
+
+    def start_fixture(self):
+        # Mocking the middleware process_request which check for credentials
+        # here, the only check done is that the hardcoded token is the one
+        # send by the query. If not, 401, else 200.
+        def _mock_proc_request(self, request):
+            token = 'c93e3e31342e4e32ba201fd3d70878b5'
+            http_code = 401
+            if 'X-Auth-Token' in request.headers and \
+               request.headers['X-Auth-Token'] == token:
+                http_code = 200
+
+            return webob.Response(
+                status_code=http_code,
+                content_type='application/json'
+            )
+
+        self._orig_func = middleware.auth_token.AuthProtocol.process_request
+        middleware.auth_token.AuthProtocol.process_request = _mock_proc_request
+
+        super(ConfigFixtureKeystoneAuth, self).start_fixture()
+
+    def stop_fixture(self):
+        super(ConfigFixtureKeystoneAuth, self).stop_fixture()
+        middleware.auth_token.AuthProtocol.process_request = self._orig_func
 
 
 class BaseFakeRPC(fixture.GabbiFixture):

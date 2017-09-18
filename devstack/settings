@@ -14,6 +14,7 @@ CLOUDKITTY_WSGI_DIR=${CLOUDKITTY_WSGI_DIR:-/var/www/cloudkitty}
 CLOUDKITTY_AUTH_CACHE_DIR=${CLOUDKITTY_AUTH_CACHE_DIR:-/var/cache/cloudkitty}
 CLOUDKITTY_DATA_DIR=${CLOUDKITTY_DATA_DIR:-/var/lib/cloudkitty}
 CLOUDKITTY_REPORTS_DIR=${DATA_DIR}/cloudkitty/reports
+CLOUDKITTY_AUTH_STRATEGY=keystone
 
 # Horizon enabled file
 CLOUDKITTY_DASHBOARD=$DEST/cloudkitty-dashboard/cloudkittydashboard

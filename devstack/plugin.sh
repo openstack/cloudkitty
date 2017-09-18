@@ -138,6 +138,7 @@ function configure_cloudkitty {
 
     iniset $CLOUDKITTY_CONF DEFAULT notification_topics 'notifications'
     iniset $CLOUDKITTY_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
+    iniset $CLOUDKITTY_CONF DEFAULT auth_strategy $CLOUDKITTY_AUTH_STRATEGY
 
     # auth
     iniset $CLOUDKITTY_CONF authinfos auth_type v3password
