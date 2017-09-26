@@ -22,32 +22,12 @@ import six
 from stevedore import driver
 
 from cloudkitty import transformer
-import cloudkitty.utils as ck_utils
+from cloudkitty import utils as ck_utils
 
-collect_opts = [
-    cfg.StrOpt('collector',
-               default='ceilometer',
-               help='Data collector.'),
-    cfg.IntOpt('window',
-               default=1800,
-               help='Number of samples to collect per call.'),
-    cfg.IntOpt('period',
-               default=3600,
-               help='Rating period in seconds.'),
-    cfg.IntOpt('wait_periods',
-               default=2,
-               help='Wait for N periods before collecting new data.'),
-    cfg.ListOpt('services',
-                default=['compute',
-                         'image',
-                         'volume',
-                         'network.bw.in',
-                         'network.bw.out',
-                         'network.floating'],
-                help='Services to monitor.'), ]
 
 CONF = cfg.CONF
-CONF.register_opts(collect_opts, 'collect')
+
+METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
 COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 
@@ -56,11 +36,11 @@ def get_collector(transformers=None):
     if not transformers:
         transformers = transformer.get_transformers()
     collector_args = {
-        'period': CONF.collect.period,
+        'period': METRICS_CONF['period'],
         'transformers': transformers}
     collector = driver.DriverManager(
         COLLECTORS_NAMESPACE,
-        CONF.collect.collector,
+        METRICS_CONF['collector'],
         invoke_on_load=True,
         invoke_kwds=collector_args).driver
     return collector
@@ -73,10 +53,10 @@ def get_collector_metadata():
     """
     transformers = transformer.get_transformers()
     collector = driver.DriverManager(
-        COLLECTORS_NAMESPACE, CONF.collect.collector,
+        COLLECTORS_NAMESPACE, METRICS_CONF['collector'],
         invoke_on_load=False).driver
     metadata = {}
-    for service in CONF.collect.services:
+    for service in METRICS_CONF['services']:
         metadata[service] = collector.get_metadata(service, transformers)
     return metadata
 

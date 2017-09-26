@@ -167,17 +167,82 @@ Three collectors are available: Ceilometer (deprecated, see the Telemetry
 documentation), Gnocchi and Monasca. The Monasca collector collects metrics
 published by the Ceilometer agent to Monasca using Ceilosca_.
 
+The collect information, is separated from the Cloudkitty configuration file, in a yaml one.
+
+This allows Cloudkitty users to change metrology configuration,
+without modifying source code or Cloudkitty configuration file.
+
 .. code-block:: ini
 
     [collect]
-    collector = gnocchi
-    # Metrics are collected every 3600 seconds
-    period = 3600
-    # By default, only the compute service is enabled
-    services = compute, volume, network.bw.in, network.bw.out, network.floating, image
+    metrics_conf = /etc/cloudkitty/metrics.yml
 
     [gnocchi_collector]
     auth_section = ks_auth
+
+The ``/etc/cloudkitty/metrics.yml`` file looks like this:
+
+.. code-block:: yaml
+
+    - name: OpenStack
+
+      collector: gnocchi
+      period: 3600
+      wait_period: 2
+      window: 1800
+
+      services:
+        - compute
+        - volume
+        - network.bw.in
+        - network.bw.out
+        - network.floating
+        - image
+
+      services_objects:
+        compute: instance
+        volume: volume
+        network.bw.in: instance_network_interface
+        network.bw.out: instance_network_interface
+        network.floating: network
+        image: image
+
+      services_metrics:
+        compute:
+          - vcpus: max
+          - memory: max
+          - cpu: max
+          - disk.root.size: max
+          - disk.ephemeral.size: max
+        volume:
+          - volume.size: max
+        network.bw.in:
+          - network.incoming.bytes: max
+        network.bw.out:
+          - network.outgoing.bytes: max
+        network.floating:
+          - ip.floating: max
+        image:
+          - image.size: max
+          - image.download: max
+          - image.serve: max
+
+      services_units:
+        compute:
+          1: instance
+        volume:
+          volume.size: GB
+        network.bw.in:
+          network.incoming.bytes: MB
+        network.bw.out:
+          network.outgoing.bytes: MB
+        network.floating:
+          1: ip
+        image:
+          image.size: MB
+        default_unit:
+          1: unknown
+
 
 Setup the database and storage backend
 --------------------------------------

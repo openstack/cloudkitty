@@ -18,10 +18,14 @@ import decimal
 from gnocchiclient import client as gclient
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_utils import units
 
 from cloudkitty import collector
 from cloudkitty import utils as ck_utils
+
+
+LOG = logging.getLogger(__name__)
 
 GNOCCHI_COLLECTOR_OPTS = 'gnocchi_collector'
 gnocchi_collector_opts = ks_loading.get_auth_common_conf_options()
@@ -34,6 +38,8 @@ ks_loading.register_auth_conf_options(
     cfg.CONF,
     GNOCCHI_COLLECTOR_OPTS)
 CONF = cfg.CONF
+
+METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
 
 class GnocchiCollector(collector.BaseCollector):
@@ -102,7 +108,15 @@ class GnocchiCollector(collector.BaseCollector):
         try:
             info["metadata"].extend(transformers['GnocchiTransformer']
                                     .get_metadata(resource_name))
-            info["unit"] = cls.units_mappings[resource_name][1]
+
+            try:
+                info["unit"] = METRICS_CONF['services_units'][resource_name][1]
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated oslo config method.')
+                info["unit"] = cls.units_mappings[resource_name][1]
+
         except KeyError:
             pass
         return info
@@ -155,26 +169,50 @@ class GnocchiCollector(collector.BaseCollector):
             self.gen_filter(cop="<=", started_at=end))
         return time_filter
 
+    def _expand(self, metrics, resource, name, aggregate, start, end):
+        try:
+            values = self._conn.metric.get_measures(
+                metric=metrics[name],
+                start=ck_utils.ts2dt(start),
+                stop=ck_utils.ts2dt(end),
+                aggregation=aggregate)
+            # NOTE(sheeprine): Get the list of values for the current
+            # metric and get the first result value.
+            # [point_date, granularity, value]
+            # ["2015-11-24T00:00:00+00:00", 86400.0, 64.0]
+            resource[name] = values[0][2]
+        except IndexError:
+            resource[name] = 0
+        except KeyError:
+            # Skip metrics not found
+            pass
+
     def _expand_metrics(self, resources, mappings, start, end):
         for resource in resources:
             metrics = resource.get('metrics', {})
-            for name, aggregate in mappings:
-                try:
-                    values = self._conn.metric.get_measures(
-                        metric=metrics[name],
-                        start=ck_utils.ts2dt(start),
-                        stop=ck_utils.ts2dt(end),
-                        aggregation=aggregate)
-                    # NOTE(sheeprine): Get the list of values for the current
-                    # metric and get the first result value.
-                    # [point_date, granularity, value]
-                    # ["2015-11-24T00:00:00+00:00", 86400.0, 64.0]
-                    resource[name] = values[0][2]
-                except IndexError:
-                    resource[name] = 0
-                except KeyError:
-                    # Skip metrics not found
-                    pass
+            try:
+                for mapping in mappings:
+                    self._expand(
+                        metrics,
+                        resource,
+                        mapping.keys()[0],
+                        mapping.values()[0],
+                        start,
+                        end,
+                    )
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except AttributeError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated oslo config method.')
+                for name, aggregate in mappings:
+                    self._expand(
+                        metrics,
+                        resource,
+                        name,
+                        aggregate,
+                        start,
+                        end,
+                    )
 
     def get_resources(self, resource_name, start, end,
                       project_id, q_filter=None):
@@ -196,7 +234,15 @@ class GnocchiCollector(collector.BaseCollector):
 
         # Translating the resource name if needed
         query_parameters = self._generate_time_filter(start, end)
-        resource_type = self.retrieve_mappings.get(resource_name)
+
+        try:
+            resource_type = METRICS_CONF['services_objects'].get(resource_name)
+        # NOTE(mc): deprecated except part kept for backward compatibility.
+        except KeyError:
+            LOG.warning('Error when trying to use yaml metrology conf.')
+            LOG.warning('Fallback on the deprecated oslo config method.')
+            resource_type = self.retrieve_mappings.get(resource_name)
+
         query_parameters.append(
             self.gen_filter(cop="=", type=resource_type))
         query_parameters.append(
@@ -210,7 +256,18 @@ class GnocchiCollector(collector.BaseCollector):
 
     def resource_info(self, resource_name, start, end, project_id,
                       q_filter=None):
-        qty, unit = self.units_mappings.get(resource_name, self.default_unit)
+        try:
+            qty = METRICS_CONF['services_units'][resource_name].keys()[0]
+            unit = METRICS_CONF['services_units'][resource_name].values()[0]
+        # NOTE(mc): deprecated except part kept for backward compatibility.
+        except KeyError:
+            LOG.warning('Error when trying to use yaml metrology conf.')
+            LOG.warning('Fallback on the deprecated oslo config method.')
+            qty, unit = self.units_mappings.get(
+                resource_name,
+                self.default_unit,
+            )
+
         resources = self.get_resources(resource_name, start, end,
                                        project_id=project_id,
                                        q_filter=q_filter)
@@ -218,7 +275,15 @@ class GnocchiCollector(collector.BaseCollector):
         for resource in resources:
             resource_data = self.t_gnocchi.strip_resource_data(
                 resource_name, resource)
-            mappings = self.metrics_mappings[resource_name]
+
+            try:
+                mappings = METRICS_CONF['services_metrics'][resource_name]
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated oslo config method.')
+                mappings = self.metrics_mappings[resource_name]
+
             self._expand_metrics([resource_data], mappings, start, end)
             resource_data.pop('metrics', None)
             # Convert network.bw.in, network.bw.out and image unit to MB

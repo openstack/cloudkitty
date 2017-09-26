@@ -26,8 +26,12 @@ from cloudkitty.api.v1.datamodels import info as info_models
 from cloudkitty.api.v1 import types as ck_types
 from cloudkitty import collector
 from cloudkitty.common import policy
+from cloudkitty import utils as ck_utils
 
 CONF = cfg.CONF
+
+METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+
 METADATA = collector.get_collector_metadata()
 
 
@@ -79,5 +83,5 @@ class InfoController(rest.RestController):
         """Return current configuration."""
         policy.enforce(pecan.request.context, 'info:get_config', {})
         info = {}
-        info["collect"] = {key: value for key, value in CONF.collect.items()}
+        info["collect"] = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
         return info

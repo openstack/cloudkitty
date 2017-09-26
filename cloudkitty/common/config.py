@@ -17,7 +17,6 @@ import copy
 import itertools
 
 import cloudkitty.api.app
-import cloudkitty.collector
 import cloudkitty.collector.ceilometer
 import cloudkitty.collector.gnocchi
 import cloudkitty.collector.monasca
@@ -28,6 +27,7 @@ import cloudkitty.storage
 import cloudkitty.storage.gnocchi
 import cloudkitty.tenant_fetcher
 import cloudkitty.tenant_fetcher.keystone
+import cloudkitty.utils
 
 __all__ = ['list_opts']
 
@@ -35,7 +35,7 @@ _opts = [
     ('api', list(itertools.chain(
         cloudkitty.api.app.api_opts,))),
     ('collect', list(itertools.chain(
-        cloudkitty.collector.collect_opts))),
+        cloudkitty.utils.collect_opts))),
     ('ceilometer_collector', list(itertools.chain(
         cloudkitty.collector.ceilometer.ceilometer_collector_opts))),
     ('collector_monasca', list(itertools.chain(

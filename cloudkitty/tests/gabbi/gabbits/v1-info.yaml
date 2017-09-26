@@ -8,12 +8,12 @@ tests:
     response_json_paths:
       $.collect.services.`len`: 6
       $.collect.services[0]: compute
-      $.collect.services[1]: image
-      $.collect.services[2]: volume
-      $.collect.services[3]: network.bw.in
-      $.collect.services[4]: network.bw.out
-      $.collect.services[5]: network.floating
-      $.collect.collector: ceilometer
+      $.collect.services[1]: volume
+      $.collect.services[2]: network.bw.in
+      $.collect.services[3]: network.bw.out
+      $.collect.services[4]: network.floating
+      $.collect.services[5]: image
+      $.collect.collector: gnocchi
       $.collect.window: 1800
       $.collect.wait_periods: 2
       $.collect.period: 3600
@@ -42,4 +42,4 @@ tests:
     response_json_paths:
       $.service_id: compute
       $.unit: instance
-      $.metadata.`len`: 10
+      $.metadata.`len`: 8

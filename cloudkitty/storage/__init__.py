@@ -33,12 +33,14 @@ storage_opts = [
 CONF = cfg.CONF
 CONF.register_opts(storage_opts, group='storage')
 
+METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
 def get_storage(collector=None):
     storage_args = {
-        'period': CONF.collect.period,
+        'period': METRICS_CONF['period'],
         'collector': collector if collector else ck_collector.get_collector()}
     backend = driver.DriverManager(
         STORAGES_NAMESPACE,
@@ -63,7 +65,7 @@ class BaseStorage(object):
         Handle incoming data from the global orchestrator, and store them.
     """
     def __init__(self, **kwargs):
-        self._period = kwargs.get('period', CONF.collect.period)
+        self._period = kwargs.get('period', METRICS_CONF['period'])
         self._collector = kwargs.get('collector')
 
         # State vars

@@ -1,0 +1,58 @@
+- name: OpenStack
+
+  collector: gnocchi
+  period: 3600
+  wait_periods: 2
+  window: 1800
+
+  services:
+    - compute
+    - volume
+    - network.bw.in
+    - network.bw.out
+    - network.floating
+    - image
+
+  services_objects:
+    compute: instance
+    volume: volume
+    network.bw.out: instance_network_interface
+    network.bw.in: instance_network_interface
+    network.floating: network
+    image: image
+
+  services_metrics:
+    compute:
+      - vcpus: max
+      - memory: max
+      - cpu: max
+      - disk.root.size: max
+      - disk.ephemeral.size: max
+    volume:
+      - volume.size: max
+    network.bw.in:
+      - network.incoming: max
+    network.bw.out:
+      - network.outgoing.bytes: max
+    network.floating:
+      - ip.floating: max
+    image:
+      - image.size: max
+      - image.download: max
+      - image.serve: max
+
+  services_units:
+    compute:
+      1: instance
+    volume:
+      volume.size: GB
+    network.bw.in:
+      network.incoming.bytes: MB
+    network.bw.out:
+      network.outgoing.bytes: MB
+    network.floating:
+      1: ip
+    image:
+      image.size: MB
+    default_unit:
+      1: unknown

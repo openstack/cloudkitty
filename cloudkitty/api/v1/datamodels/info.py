@@ -18,10 +18,14 @@
 from oslo_config import cfg
 from wsme import types as wtypes
 
+from cloudkitty import utils as ck_utils
+
 CONF = cfg.CONF
-CONF.import_opt('services', 'cloudkitty.collector', 'collect')
+
+METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+
 CLOUDKITTY_SERVICES = wtypes.Enum(wtypes.text,
-                                  *CONF.collect.services)
+                                  *METRICS_CONF['services'])
 
 
 class CloudkittyServiceInfo(wtypes.Base):

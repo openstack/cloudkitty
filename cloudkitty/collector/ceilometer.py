@@ -20,11 +20,14 @@ import decimal
 from ceilometerclient import client as cclient
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_utils import units
 
 from cloudkitty import collector
 from cloudkitty import utils as ck_utils
 
+
+LOG = logging.getLogger(__name__)
 
 CEILOMETER_COLLECTOR_OPTS = 'ceilometer_collector'
 ceilometer_collector_opts = ks_loading.get_auth_common_conf_options()
@@ -37,6 +40,8 @@ ks_loading.register_auth_conf_options(
     cfg.CONF,
     CEILOMETER_COLLECTOR_OPTS)
 CONF = cfg.CONF
+
+METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
 
 class ResourceNotFound(Exception):
@@ -113,7 +118,15 @@ class CeilometerCollector(collector.BaseCollector):
         try:
             info["metadata"].extend(transformers['CeilometerTransformer']
                                     .get_metadata(resource_name))
-            info["unit"] = cls.units_mappings[resource_name]
+
+            try:
+                info["unit"] = METRICS_CONF['services_units'][resource_name][1]
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated oslo config method.')
+                info["unit"] = cls.units_mappings[resource_name]
+
         except KeyError:
             pass
         return info
@@ -201,9 +214,22 @@ class CeilometerCollector(collector.BaseCollector):
                                                  instance)
             instance = self._cacher.get_resource_detail('compute',
                                                         instance_id)
-            compute_data.append(
-                self.t_cloudkitty.format_item(instance, self.units_mappings[
-                    "compute"], 1))
+
+            try:
+                compute_data.append(self.t_cloudkitty.format_item(
+                    instance,
+                    METRICS_CONF['services_units']['compute'],
+                    1,
+                ))
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated oslo config method.')
+                compute_data.append(self.t_cloudkitty.format_item(
+                    instance,
+                    self.units_mappings['compute'],
+                    1,
+                ))
         if not compute_data:
             raise collector.NoDataCollected(self.collector_name, 'compute')
         return self.t_cloudkitty.format_service('compute', compute_data)
@@ -228,9 +254,22 @@ class CeilometerCollector(collector.BaseCollector):
                                                      image_id)
 
             image_size_mb = decimal.Decimal(image_stats.max) / units.Mi
-            image_data.append(
-                self.t_cloudkitty.format_item(image, self.units_mappings[
-                    "image"], image_size_mb))
+
+            try:
+                image_data.append(self.t_cloudkitty.format_item(
+                    image,
+                    METRICS_CONF['services_units']['image'],
+                    image_size_mb,
+                ))
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated oslo config method.')
+                image_data.append(self.t_cloudkitty.format_item(
+                    image,
+                    self.units_mappings['image'],
+                    image_size_mb,
+                ))
 
         if not image_data:
             raise collector.NoDataCollected(self.collector_name, 'image')
@@ -255,9 +294,23 @@ class CeilometerCollector(collector.BaseCollector):
                                                  volume)
             volume = self._cacher.get_resource_detail('volume',
                                                       volume_id)
-            volume_data.append(
-                self.t_cloudkitty.format_item(volume, self.units_mappings[
-                    "volume"], volume_stats.max))
+
+            try:
+                volume_data.append(self.t_cloudkitty.format_item(
+                    volume,
+                    METRICS_CONF['services_units']['volume'],
+                    volume_stats.max,
+                ))
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated oslo config method.')
+                volume_data.append(self.t_cloudkitty.format_item(
+                    volume,
+                    self.units_mappings['volume'],
+                    volume_stats.max,
+                ))
+
         if not volume_data:
             raise collector.NoDataCollected(self.collector_name, 'volume')
         return self.t_cloudkitty.format_service('volume', volume_data)
@@ -294,9 +347,22 @@ class CeilometerCollector(collector.BaseCollector):
                                                    tap_id)
 
             tap_bw_mb = decimal.Decimal(tap_stat.max) / units.M
-            bw_data.append(
-                self.t_cloudkitty.format_item(tap, self.units_mappings[
-                    "network.bw." + direction], tap_bw_mb))
+
+            try:
+                bw_data.append(self.t_cloudkitty.format_item(
+                    tap,
+                    METRICS_CONF['services_units']['network.bw.' + direction],
+                    tap_bw_mb,
+                ))
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated oslo config method.')
+                bw_data.append(self.t_cloudkitty.format_item(
+                    tap,
+                    self.units_mappings['network.bw.' + direction],
+                    tap_bw_mb,
+                ))
 
         ck_res_name = 'network.bw.{}'.format(direction)
         if not bw_data:
@@ -342,9 +408,23 @@ class CeilometerCollector(collector.BaseCollector):
                                                  floating)
             floating = self._cacher.get_resource_detail('network.floating',
                                                         floating_id)
-            floating_data.append(
-                self.t_cloudkitty.format_item(floating, self.units_mappings[
-                    "network.floating"], 1))
+
+            try:
+                floating_data.append(self.t_cloudkitty.format_item(
+                    floating,
+                    METRICS_CONF['services_units']['network.floating'],
+                    1,
+                ))
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated oslo config method.')
+                floating_data.append(self.t_cloudkitty.format_item(
+                    floating,
+                    self.units_mappings['network.floating'],
+                    1,
+                ))
+
         if not floating_data:
             raise collector.NoDataCollected(self.collector_name,
                                             'network.floating')

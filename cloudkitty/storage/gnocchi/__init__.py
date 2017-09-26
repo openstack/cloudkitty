@@ -34,7 +34,7 @@ from cloudkitty import utils as ck_utils
 LOG = log.getLogger(__name__)
 CONF = cfg.CONF
 
-CONF.import_opt('period', 'cloudkitty.collector', 'collect')
+METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
 GNOCCHI_STORAGE_OPTS = 'storage_gnocchi'
 gnocchi_storage_opts = [
@@ -44,7 +44,7 @@ gnocchi_storage_opts = [
     # The archive policy definition MUST include the collect period granularity
     cfg.StrOpt('archive_policy_definition',
                default='[{"granularity": '
-                       + six.text_type(CONF.collect.period) +
+                       + six.text_type(METRICS_CONF['period']) +
                        ', "timespan": "90 days"}, '
                        '{"granularity": 86400, "timespan": "360 days"}, '
                        '{"granularity": 2592000, "timespan": "1800 days"}]',
@@ -84,7 +84,7 @@ class GnocchiStorage(storage.BaseStorage):
             CONF.storage_gnocchi.archive_policy_name)
         self._archive_policy_definition = json.loads(
             CONF.storage_gnocchi.archive_policy_definition)
-        self._period = CONF.collect.period
+        self._period = METRICS_CONF['period']
         if "period" in kwargs:
             self._period = kwargs["period"]
 

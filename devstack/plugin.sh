@@ -134,6 +134,7 @@ function configure_cloudkitty {
 
     cp $CLOUDKITTY_DIR$CLOUDKITTY_CONF_DIR/policy.json $CLOUDKITTY_CONF_DIR
     cp $CLOUDKITTY_DIR$CLOUDKITTY_CONF_DIR/api_paste.ini $CLOUDKITTY_CONF_DIR
+    cp $CLOUDKITTY_DIR$CLOUDKITTY_CONF_DIR/metrics.yml $CLOUDKITTY_CONF_DIR
     iniset_rpc_backend cloudkitty $CLOUDKITTY_CONF DEFAULT
 
     iniset $CLOUDKITTY_CONF DEFAULT notification_topics 'notifications'
@@ -161,6 +162,7 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF collect collector $CLOUDKITTY_COLLECTOR
     iniset $CLOUDKITTY_CONF ${CLOUDKITTY_COLLECTOR}_collector auth_section authinfos
     iniset $CLOUDKITTY_CONF collect services $CLOUDKITTY_SERVICES
+    iniset $CLOUDKITTY_CONF collect metrics_conf $CLOUDKITTY_CONF_DIR/$CLOUDKITTY_METRICS_CONF
 
     # output
     iniset $CLOUDKITTY_CONF output backend $CLOUDKITTY_OUTPUT_BACKEND

@@ -24,7 +24,10 @@ to ease maintenance in case of library modifications.
 import calendar
 import datetime
 import sys
+import yaml
 
+from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_utils import timeutils
 from six import moves
 from stevedore import extension
@@ -32,6 +35,43 @@ from stevedore import extension
 
 _ISO8601_TIME_FORMAT_SUBSECOND = '%Y-%m-%dT%H:%M:%S.%f'
 _ISO8601_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
+
+LOG = logging.getLogger(__name__)
+
+collect_opts = [
+    cfg.StrOpt('collector',
+               default='gnocchi',
+               deprecated_for_removal=True,
+               help='Data collector.'),
+    cfg.IntOpt('window',
+               default=1800,
+               deprecated_for_removal=True,
+               help='Number of samples to collect per call.'),
+    cfg.IntOpt('period',
+               default=3600,
+               deprecated_for_removal=True,
+               help='Rating period in seconds.'),
+    cfg.IntOpt('wait_periods',
+               default=2,
+               deprecated_for_removal=True,
+               help='Wait for N periods before collecting new data.'),
+    cfg.ListOpt('services',
+                default=[
+                    'compute',
+                    'volume',
+                    'network.bw.in',
+                    'network.bw.out',
+                    'network.floating',
+                    'image',
+                ],
+                deprecated_for_removal=True,
+                help='Services to monitor.'),
+    cfg.StrOpt('metrics_conf',
+               default='/etc/cloudkitty/metrics.yml',
+               help='Metrology configuration file.'),
+]
+CONF = cfg.CONF
+CONF.register_opts(collect_opts, 'collect')
 
 
 def isotime(at=None, subsecond=False):
@@ -190,3 +230,30 @@ def check_time_state(timestamp=None, period=0, wait_time=0):
     if next_timestamp + wait_time < now:
         return next_timestamp
     return 0
+
+
+def get_metrics_conf(conf_path):
+    """Return loaded yaml metrology configuration.
+
+    In case of empty /etc/cloudkitty folder,
+    a fallback is done on the former deprecated oslo config method.
+    """
+    res = None
+    try:
+        with open(conf_path) as conf:
+            res = yaml.load(conf)
+            res = res[0]
+    except Exception as exc:
+        LOG.warning('Error when trying to retrieve yaml metrology conf file.')
+        LOG.warning(exc)
+        LOG.warning('Fallback on the deprecated oslo config method.')
+
+        try:
+            res = {key: val for key, val in CONF.collect.items()}
+        except Exception as exc:
+            err_msg = 'Error when trying to retrieve ' \
+                      'deprecated oslo config method.'
+            LOG.error(err_msg)
+            LOG.error(exc)
+
+    return res

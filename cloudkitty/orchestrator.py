@@ -51,6 +51,8 @@ orchestrator_opts = [
 ]
 CONF.register_opts(orchestrator_opts, group='orchestrator')
 
+METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+
 FETCHERS_NAMESPACE = 'cloudkitty.tenant.fetchers'
 PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
 
@@ -152,8 +154,8 @@ class Worker(BaseWorker):
     def __init__(self, collector, storage, tenant_id=None):
         self._collector = collector
         self._storage = storage
-        self._period = CONF.collect.period
-        self._wait_time = CONF.collect.wait_periods * self._period
+        self._period = METRICS_CONF['period']
+        self._wait_time = METRICS_CONF['wait_periods'] * self._period
 
         super(Worker, self).__init__(tenant_id)
 
@@ -180,7 +182,7 @@ class Worker(BaseWorker):
             if not timestamp:
                 break
 
-            for service in CONF.collect.services:
+            for service in METRICS_CONF['services']:
                 try:
                     try:
                         data = self._collect(service, timestamp)
@@ -232,8 +234,8 @@ class Orchestrator(object):
             uuidutils.generate_uuid().encode('ascii'))
         self.coord.start()
 
-        self._period = CONF.collect.period
-        self._wait_time = CONF.collect.wait_periods * self._period
+        self._period = METRICS_CONF['period']
+        self._wait_time = METRICS_CONF['wait_periods'] * self._period
 
     def _lock(self, tenant_id):
         lock_name = b"cloudkitty-" + str(tenant_id).encode('ascii')
