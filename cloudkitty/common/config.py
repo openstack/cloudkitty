@@ -20,6 +20,7 @@ import cloudkitty.api.app
 import cloudkitty.collector
 import cloudkitty.collector.ceilometer
 import cloudkitty.collector.gnocchi
+import cloudkitty.collector.monasca
 import cloudkitty.config
 import cloudkitty.orchestrator
 import cloudkitty.service
@@ -37,6 +38,8 @@ _opts = [
         cloudkitty.collector.collect_opts))),
     ('ceilometer_collector', list(itertools.chain(
         cloudkitty.collector.ceilometer.ceilometer_collector_opts))),
+    ('collector_monasca', list(itertools.chain(
+        cloudkitty.collector.monasca.collector_monasca_opts))),
     ('gnocchi_collector', list(itertools.chain(
         cloudkitty.collector.gnocchi.gnocchi_collector_opts))),
     ('keystone_fetcher', list(itertools.chain(

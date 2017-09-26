@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    A collector for Monasca has been added. It works with telemetry metrics
+    published to Monasca by Ceilometer agent through Ceilosca.

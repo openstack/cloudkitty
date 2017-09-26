@@ -1,0 +1,273 @@
+# -*- coding: utf-8 -*-
+# Copyright 2017 Objectif Libre
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+#
+# @author: Luka Peschke
+#
+import decimal
+
+from keystoneauth1 import loading as ks_loading
+from keystoneclient.v3 import client as ks_client
+from monascaclient import client as mclient
+from oslo_config import cfg
+from oslo_utils import units
+
+from cloudkitty import collector
+from cloudkitty import transformer
+from cloudkitty import utils as ck_utils
+
+MONASCA_API_VERSION = '2_0'
+COLLECTOR_MONASCA_OPTS = 'collector_monasca'
+collector_monasca_opts = ks_loading.get_auth_common_conf_options()
+
+cfg.CONF.register_opts(collector_monasca_opts, COLLECTOR_MONASCA_OPTS)
+ks_loading.register_session_conf_options(
+    cfg.CONF,
+    COLLECTOR_MONASCA_OPTS)
+ks_loading.register_auth_conf_options(
+    cfg.CONF,
+    COLLECTOR_MONASCA_OPTS)
+CONF = cfg.CONF
+
+
+class EndpointNotFound(Exception):
+    """Exception raised if the Monasca endpoint is not found"""
+    pass
+
+
+class MonascaCollector(collector.BaseCollector):
+    collector_name = 'monasca'
+    dependencies = ['CloudKittyFormatTransformer']
+    retrieve_mappings = {
+        'compute': 'cpu',
+        'image': 'image.size',
+        'volume': 'volume.size',
+        'network.floating': 'ip.floating',
+        'network.bw.in': 'network.incoming.bytes',
+        'network.bw.out': 'network.outgoing.bytes',
+    }
+    metric_mappings = {
+        'compute': [
+            ('cpu', 'max'),
+            ('vpcus', 'max'),
+            ('memory', 'max')],
+        'image': [
+            ('image.size', 'max'),
+            ('image.download', 'max'),
+            ('image.serve', 'max')],
+        'volume': [
+            ('volume.size', 'max')],
+        'network.bw.in': [
+            ('network.incoming.bytes', 'max')],
+        'network.bw.out': [
+            ('network.outgoing.bytes', 'max')],
+        'network.floating': [
+            ('ip.floating', 'max')],
+    }
+    # (qty, unit). qty must be either a metric name, an integer
+    # or a decimal.Decimal object
+    unit_mappings = {
+        'compute': (1, 'instance'),
+        'image': ('image.size', 'MB'),
+        'volume': ('volume.size', 'GB'),
+        'network.bw.out': ('network.outgoing.bytes', 'MB'),
+        'network.bw.in': ('network.incoming.bytes', 'MB'),
+        'network.floating': (1, 'ip'),
+    }
+    default_unit = (1, 'unknown')
+
+    def __init__(self, transformers, **kwargs):
+        super(MonascaCollector, self).__init__(transformers, **kwargs)
+
+        self.t_cloudkitty = self.transformers['CloudKittyFormatTransformer']
+
+        self.auth = ks_loading.load_auth_from_conf_options(
+            CONF,
+            COLLECTOR_MONASCA_OPTS)
+        self.session = ks_loading.load_session_from_conf_options(
+            CONF,
+            COLLECTOR_MONASCA_OPTS,
+            auth=self.auth)
+        self.ks_client = ks_client.Client(session=self.session)
+        self.mon_endpoint = self._get_monasca_endpoint()
+        if not self.mon_endpoint:
+            raise EndpointNotFound()
+        # NOTE (lukapeschke) session authentication should be possible starting
+        # with OpenStack Q release.
+        self._conn = mclient.Client(
+            api_version=MONASCA_API_VERSION,
+            session=self.session,
+            endpoint=self.mon_endpoint)
+
+    # NOTE(lukapeschke) This function should be removed as soon as the endpoint
+    # it no longer required by monascaclient
+    def _get_monasca_endpoint(self, service_name='monasca',
+                              endpoint_interface_type='public'):
+        service_list = self.ks_client.services.list(name=service_name)
+        if not service_list:
+            return None
+        mon_service = service_list[0]
+        endpoints = self.ks_client.endpoints.list(mon_service.id)
+        for endpoint in endpoints:
+            if endpoint.interface == endpoint_interface_type:
+                return endpoint.url
+        return None
+
+    def _get_metadata(self, resource_type, transformers):
+        info = {}
+        try:
+            info['unit'] = self.unit_mappings[resource_type][1]
+        except (KeyError, IndexError):
+            info['unit'] = self.default_unit[1]
+        start = ck_utils.dt2ts(ck_utils.get_month_start())
+        end = ck_utils.dt2ts(ck_utils.get_month_end())
+        try:
+            resource_id = self.active_resources(resource_type, start,
+                                                end, None)[0]
+        except IndexError:
+            resource_id = ''
+        metadata = self._get_resource_metadata(resource_type, start,
+                                               end, resource_id)
+        info['metadata'] = metadata.keys()
+        try:
+            for metric, statistics in self.metric_mappings[resource_type]:
+                info['metadata'].append(metric)
+        except (KeyError, IndexError):
+            pass
+        return info
+
+    # NOTE(lukapeschke) if anyone sees a better way to do this,
+    # please make a patch
+    @classmethod
+    def get_metadata(cls, resource_type, transformers):
+        args = {
+            'transformers': transformer.get_transformers(),
+            'period': CONF.collect.period}
+        tmp = cls(**args)
+        return tmp._get_metadata(resource_type, transformers)
+
+    def _get_resource_metadata(self, resource_type, start, end, resource_id):
+        meter = self.retrieve_mappings.get(resource_type)
+        if not meter:
+            return {}
+        measurements = self._conn.metrics.list_measurements(
+            name=meter,
+            start_time=ck_utils.ts2dt(start),
+            end_time=ck_utils.ts2dt(end),
+            merge_metrics=True,
+            dimensions={'resource_id': resource_id},
+        )
+        try:
+            # Getting the last measurement of given period
+            metadata = measurements[-1]['measurements'][-1][2]
+        except (KeyError, IndexError):
+            metadata = {}
+        return metadata
+
+    def _get_resource_qty(self, meter, start, end, resource_id, statistics):
+        # NOTE(lukapeschke) the period trick is used to aggregate
+        # the measurements
+        period = end - start
+        statistics = self._conn.metrics.list_statistics(
+            name=meter,
+            start_time=ck_utils.ts2dt(start),
+            end_time=ck_utils.ts2dt(end),
+            dimensions={'resource_id': resource_id},
+            statistics=statistics,
+            period=period,
+            merge_metrics=True,
+        )
+        try:
+            # If several statistics are returned (should not happen),
+            # use the latest
+            qty = decimal.Decimal(statistics[-1]['statistics'][-1][1])
+        except (KeyError, IndexError):
+            qty = decimal.Decimal(0)
+        return qty
+
+    def _is_resource_active(self, meter, resource_id, start, end):
+        measurements = self._conn.metrics.list_measurements(
+            name=meter,
+            start_time=ck_utils.ts2dt(start),
+            end_time=ck_utils.ts2dt(end),
+            group_by='resource_id',
+            merge_metrics=True,
+            dimensions={'resource_id': resource_id},
+        )
+        return len(measurements) > 0
+
+    def active_resources(self, resource_type, start,
+                         end, project_id, **kwargs):
+        meter = self.retrieve_mappings.get(resource_type)
+        if not meter:
+            return {}
+        dimensions = {}
+        dimensions.update(kwargs)
+        if project_id:
+            resources = self._conn.metrics.list(name=meter,
+                                                tenant_id=project_id,
+                                                **dimensions)
+        else:
+            resources = self._conn.metrics.list(name=meter,
+                                                **dimensions)
+        resource_ids = []
+        for resource in resources:
+            try:
+                resource_id = resource['dimensions']['resource_id']
+                if (resource_id not in resource_ids
+                        and self._is_resource_active(meter, resource_id,
+                                                     start, end)):
+                    resource_ids.append(resource_id)
+            except KeyError:
+                continue
+        return resource_ids
+
+    def _expand_metrics(self, resource, resource_id, mappings, start, end):
+        for name, statistics in mappings:
+            qty = self._get_resource_qty(name, start,
+                                         end, resource_id, statistics)
+            if name in ['network.outgoing.bytes', 'network.incoming.bytes']:
+                qty = qty / units.M
+            elif 'image.' in name:
+                qty = qty / units.Mi
+            resource[name] = qty
+
+    def resource_info(self, resource_type, start, end,
+                      project_id, q_filter=None):
+        qty, unit = self.unit_mappings.get(resource_type, self.default_unit)
+        active_resource_ids = self.active_resources(
+            resource_type, start, end, project_id
+        )
+        resource_data = []
+        for resource_id in active_resource_ids:
+            data = self._get_resource_metadata(resource_type, start,
+                                               end, resource_id)
+            mappings = self.metric_mappings[resource_type]
+            self._expand_metrics(data, resource_id, mappings, start, end)
+            resource_qty = qty
+            if not (isinstance(qty, int) or isinstance(qty, decimal.Decimal)):
+                resource_qty = data[self.retrieve_mappings[resource_type]]
+            resource = self.t_cloudkitty.format_item(data, unit, resource_qty)
+            resource['desc']['resource_id'] = resource_id
+            resource['resource_id'] = resource_id
+            resource_data.append(resource)
+        return resource_data
+
+    def retrieve(self, resource_type, start, end, project_id, q_filter=None):
+        resources = self.resource_info(resource_type, start, end,
+                                       project_id=project_id,
+                                       q_filter=q_filter)
+        if not resources:
+            raise collector.NoDataCollected(self.collector_name, resource_type)
+        return self.t_cloudkitty.format_service(resource_type, resources)
