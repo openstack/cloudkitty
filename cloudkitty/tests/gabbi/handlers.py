@@ -17,10 +17,10 @@
 #
 import os
 
-from gabbi import handlers
+from gabbi.handlers import base
 
 
-class EnvironStoreHandler(handlers.ResponseHandler):
+class EnvironStoreHandler(base.ResponseHandler):
     """Hackish response handler used to store data in environment.
 
     Store data into an environment variable to implement some kind of variable
@@ -30,5 +30,6 @@ class EnvironStoreHandler(handlers.ResponseHandler):
     test_key_value = {}
 
     def action(self, test, key, value=None):
-        data = test.extract_json_path_value(test.json_data, value)
+        data = test.content_handlers[0].extract_json_path_value(
+            test.response_data, value)
         os.environ[key] = test.replace_template(data)
