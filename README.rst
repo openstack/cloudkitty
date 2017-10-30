@@ -55,7 +55,7 @@ to contribute contact us.
 You can reach us thought IRC (#cloudkitty @freenode.net), or on the official
 OpenStack mailing list openstack-dev@lists.openstack.org.
 
-A launchpad_ is available if you need to report bugs.
+A storyboard_ is available if you need to report bugs.
 
 
 Additional components
@@ -94,7 +94,7 @@ want to install it on an older system, use a virtualenv.
 .. _readthedocs: http://cloudkitty.readthedocs.org
 
 
-.. _launchpad: https://launchpad.net/cloudkitty
+.. _storyboard: https://storyboard.openstack.org/#!/project/890
 
 
 .. _python-cloudkittyclient: https://github.com/openstack/python-cloudkittyclient
