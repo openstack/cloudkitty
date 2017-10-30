@@ -163,8 +163,9 @@ If you want to use the pure gnocchi storage, add the following entry:
    [storage_gnocchi]
    auth_section = ks_auth
 
-Two collectors are available: Ceilometer (deprecated, see the Telemetry
-documentation), and Gnocchi.
+Three collectors are available: Ceilometer (deprecated, see the Telemetry
+documentation), Gnocchi and Monasca. The Monasca collector collects metrics
+published by the Ceilometer agent to Monasca using Ceilosca_.
 
 .. code-block:: ini
 
@@ -271,3 +272,6 @@ Choose and start the API server
    as::
 
     $ cloudkitty-api -p 8889
+
+
+.. _Ceilosca: https://github.com/openstack/monasca-ceilometer
