@@ -239,6 +239,8 @@ function start_cloudkitty {
         run_process ck-api "$CLOUDKITTY_BIN_DIR/cloudkitty-api --config-file=$CLOUDKITTY_CONF"
     elif is_service_enabled ck-api; then
         enable_apache_site cloudkitty
+        echo_summary "Waiting 15s for cloudkitty-processor to authenticate against keystone before apache is restarted."
+        sleep 15s
         restart_apache_server
         tail_log cloudkitty /var/log/$APACHE_NAME/cloudkitty.log
         tail_log cloudkitty-api /var/log/$APACHE_NAME/cloudkitty_access.log
