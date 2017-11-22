@@ -11,12 +11,9 @@ the ceilometer collector:
     # ceilometer
     enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer.git master
 
-    # horizon
-    enable_service horizon
-
     # cloudkitty
     enable_plugin cloudkitty https://git.openstack.org/openstack/cloudkitty.git master
-    enable_service ck-api ck-proc
+    enable_service ck-api,ck-proc
     CLOUDKITTY_COLLECTOR=ceilometer
 
 
@@ -26,18 +23,15 @@ To enable the gnocchi collector, use the following instead:
 
     [[local|localrc]]
     # gnocchi
-    enable_plugin gnocchi https://github.com/openstack/gnocchi master
+    enable_plugin gnocchi https://github.com/gnocchixyz/gnocchi.git master
     enable_service gnocchi-api,gnocchi-metricd
 
     # ceilometer
     enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer.git master
 
-    # horizon
-    enable_service horizon
-
     # cloudkitty
     enable_plugin cloudkitty https://git.openstack.org/openstack/cloudkitty.git master
-    enable_service ck-api ck-proc
+    enable_service ck-api,ck-proc
     CLOUDKITTY_COLLECTOR=gnocchi
 
 
