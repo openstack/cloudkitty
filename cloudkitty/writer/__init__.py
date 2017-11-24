@@ -144,7 +144,6 @@ class BaseReportWriter(object):
     def append(self, data, start, end):
         # FIXME we should use the real time values
         if self.usage_end is not None and start >= self.usage_end:
-            self._commit()
             self.usage_start = None
 
         if self.usage_start is None:
