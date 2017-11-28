@@ -1,0 +1,22 @@
+- job:
+    name: cloudkitty-tempest-full
+    run: playbooks/cloudkitty-tempest-full/run.yaml
+    post-run: playbooks/cloudkitty-tempest-full/post.yaml
+    timeout: 5400
+    parent: legacy-dsvm-base
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/cloudkitty
+      - openstack/cloudkitty-tempest-plugin
+      - openstack/python-cloudkittyclient
+
+- project:
+    name: openstack/cloudkitty
+    check:
+      jobs:
+        - cloudkitty-tempest-full:
+            voting: false
+    gate:
+      jobs:
+        - cloudkitty-tempest-full:
+            voting: false
