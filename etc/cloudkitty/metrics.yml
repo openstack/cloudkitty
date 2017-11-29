@@ -31,7 +31,7 @@
     volume:
       - volume.size: max
     network.bw.in:
-      - network.incoming: max
+      - network.incoming.bytes: max
     network.bw.out:
       - network.outgoing.bytes: max
     network.floating:
