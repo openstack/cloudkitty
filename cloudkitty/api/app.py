@@ -105,7 +105,7 @@ def load_app():
 
 
 def build_wsgi_app(argv=None):
-    service.prepare_service([])
+    service.prepare_service()
     return load_app()
 
 
