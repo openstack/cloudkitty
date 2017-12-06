@@ -38,3 +38,8 @@ Configure DevStack to run CloudKitty
 Run devstack as usual::
 
     $ ./stack.sh
+
+See the documentation_ if you want more details about how to configure the
+devstack plugin.
+
+.. _documentation: https://docs.openstack.org/cloudkitty/latest/devstack.html

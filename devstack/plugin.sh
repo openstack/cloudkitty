@@ -173,6 +173,12 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF output basepath $CLOUDKITTY_OUTPUT_BASEPATH
     iniset $CLOUDKITTY_CONF output pipeline $CLOUDKITTY_OUTPUT_PIPELINE
 
+    # storage
+    iniset $CLOUDKITTY_CONF storage backend $CLOUDKITTY_STORAGE_BACKEND
+    if [ "$CLOUDKITTY_STORAGE_BACKEND" != "sqlalchemy" ]; then
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} auth_section authinfos
+    fi
+
     # database
     local dburl=`database_connection_url cloudkitty`
     iniset $CLOUDKITTY_CONF database connection $dburl
@@ -182,6 +188,13 @@ function configure_cloudkitty {
 
     if is_service_enabled ck-api && [ "$CLOUDKITTY_USE_MOD_WSGI" == "True" ]; then
         _cloudkitty_config_apache_wsgi
+    fi
+}
+
+function wait_for_gnocchi() {
+    local gnocchi_url=$(openstack --os-cloud devstack-admin endpoint list --service metric --interface public -c URL -f value)
+    if ! wait_for_service $SERVICE_TIMEOUT $gnocchi_url; then
+       die $LINENO "Waited for gnocchi too long."
     fi
 }
 
@@ -226,6 +239,9 @@ function init_cloudkitty {
     $CLOUDKITTY_BIN_DIR/cloudkitty-dbsync upgrade
 
     # Init the storage backend
+    if [ $CLOUDKITTY_STORAGE_BACKEND == 'hybrid' ]; then
+        wait_for_gnocchi
+    fi
     $CLOUDKITTY_BIN_DIR/cloudkitty-storage-init
 
     create_cloudkitty_cache_dir
