@@ -359,7 +359,10 @@ class GnocchiStorage(storage.BaseStorage):
         else:
             # NOTE(sheeprine): Dummy filter to comply with gnocchi
             query['!='] = {'project_id': None}
-        res_map = self._collector.retrieve_mappings
+        try:
+            res_map = METRICS_CONF['services_objects']
+        except KeyError:
+            res_map = self._collector.retrieve_mappings
         res_type = filters.get('res_type')
         resources = [res_type] if res_type else res_map.keys()
         ck_res = []
