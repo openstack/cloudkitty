@@ -39,7 +39,7 @@ class MappingController(rest.RestController):
 
         :param service: Name of the service to filter on.
         """
-        policy.enforce(pecan.request.context, 'collector:get_mapping', {})
+        policy.authorize(pecan.request.context, 'collector:get_mapping', {})
         try:
             mapping = self._db.get_mapping(service)
             return collector_models.ServiceToCollectorMapping(
@@ -55,7 +55,7 @@ class MappingController(rest.RestController):
         :param collector: Filter on the collector name.
         :return: Service to collector mappings collection.
         """
-        policy.enforce(pecan.request.context, 'collector:list_mappings', {})
+        policy.authorize(pecan.request.context, 'collector:list_mappings', {})
         mappings = [collector_models.ServiceToCollectorMapping(
             **mapping.as_dict())
             for mapping in self._db.list_mappings(collector)]
@@ -71,7 +71,7 @@ class MappingController(rest.RestController):
         :param collector: Name of the collector to apply mapping on.
         :param service: Name of the service to apply mapping on.
         """
-        policy.enforce(pecan.request.context, 'collector:manage_mapping', {})
+        policy.authorize(pecan.request.context, 'collector:manage_mapping', {})
         new_mapping = self._db.set_mapping(service, collector)
         return collector_models.ServiceToCollectorMapping(
             service=new_mapping.service,
@@ -85,7 +85,7 @@ class MappingController(rest.RestController):
 
         :param service: Name of the service to filter on.
         """
-        policy.enforce(pecan.request.context, 'collector:manage_mapping', {})
+        policy.authorize(pecan.request.context, 'collector:manage_mapping', {})
         try:
             self._db.delete_mapping(service)
         except db_api.NoSuchMapping as e:
@@ -105,7 +105,7 @@ class CollectorStateController(rest.RestController):
         :param name: Name of the collector.
         :return: State of the collector.
         """
-        policy.enforce(pecan.request.context, 'collector:get_state', {})
+        policy.authorize(pecan.request.context, 'collector:get_state', {})
         enabled = self._db.get_state('collector_{}'.format(name))
         collector = collector_models.CollectorInfos(name=name,
                                                     enabled=enabled)
@@ -121,7 +121,7 @@ class CollectorStateController(rest.RestController):
         :param infos: New state informations of the collector.
         :return: State of the collector.
         """
-        policy.enforce(pecan.request.context, 'collector:update_state', {})
+        policy.authorize(pecan.request.context, 'collector:update_state', {})
         enabled = self._db.set_state('collector_{}'.format(name),
                                      infos.enabled)
         collector = collector_models.CollectorInfos(name=name,

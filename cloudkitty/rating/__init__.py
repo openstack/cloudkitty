@@ -142,7 +142,7 @@ class RatingRestControllerBase(rest.RestController):
     @pecan.expose()
     def _route(self, args, request):
         try:
-            policy.enforce(request.context, 'rating:module_config', {})
+            policy.authorize(request.context, 'rating:module_config', {})
         except policy.PolicyNotAuthorized as e:
             pecan.abort(403, six.text_type(e))
 

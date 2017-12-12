@@ -44,7 +44,7 @@ class ServiceInfoController(rest.RestController):
 
         :return: List of every services.
         """
-        policy.enforce(pecan.request.context, 'info:list_services_info', {})
+        policy.authorize(pecan.request.context, 'info:list_services_info', {})
         services_info_list = []
         for service, metadata in METADATA.items():
             info = metadata.copy()
@@ -60,7 +60,7 @@ class ServiceInfoController(rest.RestController):
 
         :param service_name: name of the service.
         """
-        policy.enforce(pecan.request.context, 'info:get_service_info', {})
+        policy.authorize(pecan.request.context, 'info:get_service_info', {})
         try:
             info = METADATA[service_name].copy()
             info['service_id'] = service_name
@@ -81,7 +81,7 @@ class InfoController(rest.RestController):
     })
     def config(self):
         """Return current configuration."""
-        policy.enforce(pecan.request.context, 'info:get_config', {})
+        policy.authorize(pecan.request.context, 'info:get_config', {})
         info = {}
         info["collect"] = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
         return info

@@ -57,6 +57,8 @@ extensions = ['sphinx.ext.coverage',
               'sphinxcontrib.pecanwsme.rest',
               'sphinxcontrib.httpdomain',
               'openstackdocstheme',
+              'oslo_policy.sphinxext',
+              'oslo_policy.sphinxpolicygen',
               ]
 
 # openstackdocstheme options
@@ -64,6 +66,9 @@ repository_name = 'openstack/cloudkitty'
 bug_project = 'cloudkitty'
 bug_tag = ''
 html_last_updated_fmt = '%Y-%m-%d %H:%M'
+
+policy_generator_config_file = '../../etc/oslo-policy-generator/cloudkitty.conf'
+sample_policy_basename = '_static/cloudkitty'
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = []

@@ -48,7 +48,7 @@ class DataFramesController(rest.RestController):
         :return: Collection of DataFrame objects.
         """
 
-        policy.enforce(pecan.request.context, 'storage:list_data_frames', {})
+        policy.authorize(pecan.request.context, 'storage:list_data_frames', {})
 
         if not begin:
             begin = ck_utils.get_month_start()
