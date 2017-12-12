@@ -42,7 +42,7 @@ class MetaCollector(collector.BaseCollector):
             self._mappings[db_mapping.service] = db_mapping.collector
 
     def _check_enabled(self, name):
-        enable_state = db_api.get_instance().get_module_enable_state()
+        enable_state = db_api.get_instance().get_module_info()
         return enable_state.get_state('collector_{}'.format(name))
 
     def _load_collectors(self):
