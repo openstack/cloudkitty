@@ -254,9 +254,15 @@ class GnocchiStorage(storage.BaseStorage):
         except gexceptions.MetricNotFound:
             return
         if len(r) > 0:
-            # (aolwas) According http://gnocchi.xyz/rest.html#metrics,
-            # gnocchi always returns measures ordered by timestamp
-            return ck_utils.dt2ts(dateutil.parser.parse(r[-1][0]))
+            # NOTE(lukapeschke) Since version 5.0.0, gnocchiclient returns a
+            # datetime object instead of a timestamp. This fixture is made
+            # to ensure compatibility with all versions
+            try:
+                # (aolwas) According http://gnocchi.xyz/rest.html#metrics,
+                # gnocchi always returns measures ordered by timestamp
+                return ck_utils.dt2ts(dateutil.parser.parse(r[-1][0]))
+            except TypeError:
+                return ck_utils.dt2ts(r[-1][0])
 
     def get_total(self, begin=None, end=None, tenant_id=None,
                   service=None, groupby=None):
@@ -316,9 +322,16 @@ class GnocchiStorage(storage.BaseStorage):
             project_id=None)
 
     def _to_cloudkitty(self, res_type, resource_data, measure):
-        begin = dateutil.parser.parse(measure[0])
-        end = (dateutil.parser.parse(measure[0]) +
-               datetime.timedelta(seconds=self._period))
+        # NOTE(lukapeschke) Since version 5.0.0, gnocchiclient returns a
+        # datetime object instead of a timestamp. This fixture is made
+        # to ensure compatibility with all versions
+        try:
+            begin = dateutil.parser.parse(measure[0])
+            end = (dateutil.parser.parse(measure[0]) +
+                   datetime.timedelta(seconds=self._period))
+        except TypeError:
+            begin = measure[0]
+            end = begin + datetime.timedelta(seconds=self._period)
         cost = decimal.Decimal(measure[2])
         # Rating informations
         rating_dict = {}
