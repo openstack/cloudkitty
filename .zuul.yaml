@@ -16,7 +16,3 @@
       jobs:
         - cloudkitty-tempest-full:
             voting: false
-    gate:
-      jobs:
-        - cloudkitty-tempest-full:
-            voting: false
