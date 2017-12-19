@@ -85,12 +85,12 @@ class CeilometerCollector(collector.BaseCollector):
 
     units_mappings = {
         'compute': 'instance',
-        'image': 'MB',
-        'volume': 'GB',
+        'image': 'MiB',
+        'volume': 'GiB',
         'network.bw.out': 'MB',
         'network.bw.in': 'MB',
         'network.floating': 'ip',
-        'radosgw.usage': 'GB'
+        'radosgw.usage': 'GiB'
     }
 
     def __init__(self, transformers, **kwargs):
@@ -121,12 +121,13 @@ class CeilometerCollector(collector.BaseCollector):
                                     .get_metadata(resource_name))
 
             try:
-                info["unit"] = METRICS_CONF['services_units'][resource_name][1]
+                tmp = METRICS_CONF['metrics_units'][resource_name]
+                info['unit'] = list(tmp.values())[0]['unit']
             # NOTE(mc): deprecated except part kept for backward compatibility.
             except KeyError:
                 LOG.warning('Error when trying to use yaml metrology conf.')
                 LOG.warning('Fallback on the deprecated oslo config method.')
-                info["unit"] = cls.units_mappings[resource_name]
+                info['unit'] = cls.units_mappings[resource_name]
 
         except KeyError:
             pass
@@ -217,9 +218,10 @@ class CeilometerCollector(collector.BaseCollector):
                                                         instance_id)
 
             try:
+                met = list(METRICS_CONF['metrics_units']['compute'].values())
                 compute_data.append(self.t_cloudkitty.format_item(
                     instance,
-                    METRICS_CONF['services_units']['compute'],
+                    met[0]['unit'],
                     1,
                 ))
             # NOTE(mc): deprecated except part kept for backward compatibility.
@@ -254,12 +256,24 @@ class CeilometerCollector(collector.BaseCollector):
             image = self._cacher.get_resource_detail('image',
                                                      image_id)
 
-            image_size_mb = decimal.Decimal(image_stats.max) / units.Mi
+            # Unit conversion
+            try:
+                conv_data = METRICS_CONF['metrics_units']['image']
+                image_size_mb = ck_utils.convert_unit(
+                    decimal.Decimal(image_stats.max),
+                    conv_data['image.size'].get('factor', '1'),
+                    conv_data['image.size'].get('offset', '0'),
+                )
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated hardcoded method.')
+                image_size_mb = decimal.Decimal(image_stats.max) / units.Mi
 
             try:
+                met = list(METRICS_CONF['metrics_units']['image'].values())
                 image_data.append(self.t_cloudkitty.format_item(
                     image,
-                    METRICS_CONF['services_units']['image'],
+                    met[0]['unit'],
                     image_size_mb,
                 ))
             # NOTE(mc): deprecated except part kept for backward compatibility.
@@ -296,10 +310,18 @@ class CeilometerCollector(collector.BaseCollector):
             volume = self._cacher.get_resource_detail('volume',
                                                       volume_id)
 
+            # Unit conversion
             try:
+                conv_data = METRICS_CONF['metrics_units']['volume']
+                volume_stats.max = ck_utils.convert_unit(
+                    decimal.Decimal(volume_stats.max),
+                    conv_data['volume.size'].get('factor', '1'),
+                    conv_data['volume.size'].get('offset', '0'),
+                )
+
                 volume_data.append(self.t_cloudkitty.format_item(
                     volume,
-                    METRICS_CONF['services_units']['volume'],
+                    conv_data['volume.size']['unit'],
                     volume_stats.max,
                 ))
             # NOTE(mc): deprecated except part kept for backward compatibility.
@@ -347,12 +369,24 @@ class CeilometerCollector(collector.BaseCollector):
             tap = self._cacher.get_resource_detail('network.tap',
                                                    tap_id)
 
-            tap_bw_mb = decimal.Decimal(tap_stat.max) / units.M
+            # Unit conversion
+            try:
+                conv = METRICS_CONF['metrics_units']['network.bw.' + direction]
+                tap_bw_mb = ck_utils.convert_unit(
+                    decimal.Decimal(tap_stat.max),
+                    conv[resource_type].get('factor', '1'),
+                    conv[resource_type].get('offset', '0'),
+                )
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated hardcoded method.')
+                tap_bw_mb = decimal.Decimal(tap_stat.max) / units.M
 
             try:
+                met = METRICS_CONF['metrics_units']['network.bw.' + direction]
                 bw_data.append(self.t_cloudkitty.format_item(
                     tap,
-                    METRICS_CONF['services_units']['network.bw.' + direction],
+                    list(met.values())[0]['unit'],
                     tap_bw_mb,
                 ))
             # NOTE(mc): deprecated except part kept for backward compatibility.
@@ -411,9 +445,10 @@ class CeilometerCollector(collector.BaseCollector):
                                                         floating_id)
 
             try:
+                metric = METRICS_CONF['metrics_units']['network.floating']
                 floating_data.append(self.t_cloudkitty.format_item(
                     floating,
-                    METRICS_CONF['services_units']['network.floating'],
+                    list(metric.values())[0]['unit'],
                     1,
                 ))
             # NOTE(mc): deprecated except part kept for backward compatibility.
@@ -448,9 +483,35 @@ class CeilometerCollector(collector.BaseCollector):
                                                             raw_resource)
                 self._cacher.add_resource_detail('radosgw.usage', rgw_id, rgw)
             rgw = self._cacher.get_resource_detail('radosgw.usage', rgw_id)
-            rgw_size = decimal.Decimal(rgw_stats.max) / units.Gi
-            rgw_data.append(self.t_cloudkitty.format_item(
-                rgw, self.units_mappings["radosgw.usage"], rgw_size))
+
+            # Unit conversion
+            try:
+                conv_data = METRICS_CONF['metrics_units']['radosgw.usage']
+                rgw_size = ck_utils.convert_unit(
+                    decimal.Decimal(rgw_stats.max),
+                    conv_data['radosgw.object.size'].get('factor', '1'),
+                    conv_data['radosgw.object.size'].get('offset', '0'),
+                )
+
+                rgw_data.append(
+                    self.t_cloudkitty.format_item(
+                        rgw,
+                        conv_data['rados.objects.size']['unit'],
+                        rgw_size,
+                    )
+                )
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated hardcoded method.')
+                rgw_size = decimal.Decimal(rgw_stats.max) / units.Gi
+                rgw_data.append(
+                    self.t_cloudkitty.format_item(
+                        rgw,
+                        self.units_mappings['radosgw.usage'],
+                        rgw_size,
+                    )
+                )
+
         if not rgw_data:
             raise collector.NoDataCollected(self.collector_name,
                                             'radosgw.usage')

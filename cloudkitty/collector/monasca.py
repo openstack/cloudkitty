@@ -85,8 +85,8 @@ class MonascaCollector(collector.BaseCollector):
     # or a decimal.Decimal object
     units_mappings = {
         'compute': (1, 'instance'),
-        'image': ('image.size', 'MB'),
-        'volume': ('volume.size', 'GB'),
+        'image': ('image.size', 'MiB'),
+        'volume': ('volume.size', 'GiB'),
         'network.bw.out': ('network.outgoing.bytes', 'MB'),
         'network.bw.in': ('network.incoming.bytes', 'MB'),
         'network.floating': (1, 'ip'),
@@ -133,7 +133,8 @@ class MonascaCollector(collector.BaseCollector):
     def _get_metadata(self, resource_type, transformers):
         info = {}
         try:
-            info['unit'] = METRICS_CONF['services_units']
+            met = list(METRICS_CONF['metrics_units'][resource_type].values())
+            info['unit'] = met[0]['unit']
         # NOTE(mc): deprecated second try kept for backward compatibility.
         except KeyError:
             LOG.warning('Error when trying to use yaml metrology conf.')
@@ -268,24 +269,52 @@ class MonascaCollector(collector.BaseCollector):
                 continue
         return resource_ids
 
-    def _expand_metrics(self, resource, resource_id, mappings, start, end):
-        for name, statistics in mappings:
-            qty = self._get_resource_qty(name, start,
-                                         end, resource_id, statistics)
-            if name in ['network.outgoing.bytes', 'network.incoming.bytes']:
-                qty = qty / units.M
-            elif 'image.' in name:
-                qty = qty / units.Mi
-            resource[name] = qty
+    def _expand_metrics(self, resource, resource_id,
+                        mappings, start, end, resource_type):
+        try:
+            for name, statistics in mappings.items():
+                qty = self._get_resource_qty(
+                    name,
+                    start,
+                    end,
+                    resource_id,
+                    statistics,
+                )
+
+                conv_data = METRICS_CONF['metrics_units'][resource_type][name]
+                resource[name] = ck_utils.convert_unit(
+                    qty,
+                    conv_data.get('factor', 1),
+                    conv_data.get('offset', 0),
+                )
+        # NOTE(mc): deprecated except part kept for backward compatibility.
+        except KeyError:
+            LOG.warning('Error when trying to use yaml metrology conf.')
+            LOG.warning('Fallback on the deprecated hardcoded dict method.')
+
+            for name, statistics in mappings:
+                qty = self._get_resource_qty(
+                    name,
+                    start,
+                    end,
+                    resource_id,
+                    statistics,
+                )
+
+                names = ['network.outgoing.bytes', 'network.incoming.bytes']
+                if name in names:
+                    qty = qty / units.M
+                elif 'image.' in name:
+                    qty = qty / units.Mi
+                resource[name] = qty
 
     def resource_info(self, resource_type, start, end,
                       project_id, q_filter=None):
 
         try:
-            qty, unit = METRICS_CONF['services_units'].get(
-                resource_type,
-                self.default_unit
-            )
+            tmp = METRICS_CONF['metrics_units'][resource_type]
+            qty = list(tmp.keys())[0]
+            unit = list(tmp.values())[0]['unit']
         # NOTE(mc): deprecated except part kept for backward compatibility.
         except KeyError:
             LOG.warning('Error when trying to use yaml metrology conf.')
@@ -311,7 +340,14 @@ class MonascaCollector(collector.BaseCollector):
                 LOG.warning('Fallback on the deprecated oslo config method.')
                 mappings = self.metrics_mappings[resource_type]
 
-            self._expand_metrics(data, resource_id, mappings, start, end)
+            self._expand_metrics(
+                data,
+                resource_id,
+                mappings,
+                start,
+                end,
+                resource_type,
+            )
             resource_qty = qty
             if not (isinstance(qty, int) or isinstance(qty, decimal.Decimal)):
                 try:

@@ -188,6 +188,19 @@ The ``/etc/cloudkitty/metrics.yml`` file looks like this:
 .. literalinclude:: ../../../etc/cloudkitty/metrics.yml
    :language: yaml
 
+Conversion information is included in the yaml file.
+It allows operators to change metrics units for rating
+and so to not stay stuck with the original unit.
+
+The conversion information must be set for each metric.
+It includes optionals factor and offset,
+plus a mandatory final unit (used once the conversion is done).
+By default, factor and offset are 1 and 0 respectively.
+All type of linear conversions are so covered.
+The complete formula looks like:
+
+``new_value = (value * factor) + offset``
+
 
 Setup the database and storage backend
 --------------------------------------

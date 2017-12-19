@@ -79,12 +79,12 @@ class GnocchiCollector(collector.BaseCollector):
     }
     units_mappings = {
         'compute': (1, 'instance'),
-        'image': ('image.size', 'MB'),
-        'volume': ('volume.size', 'GB'),
+        'image': ('image.size', 'MiB'),
+        'volume': ('volume.size', 'GiB'),
         'network.bw.out': ('network.outgoing.bytes', 'MB'),
         'network.bw.in': ('network.incoming.bytes', 'MB'),
         'network.floating': (1, 'ip'),
-        'radosgw.usage': ('radosgw.objects.size', 'GB')
+        'radosgw.usage': ('radosgw.objects.size', 'GiB')
     }
     default_unit = (1, 'unknown')
 
@@ -114,12 +114,13 @@ class GnocchiCollector(collector.BaseCollector):
                                     .get_metadata(resource_name))
 
             try:
-                info["unit"] = METRICS_CONF['services_units'][resource_name][1]
+                tmp = METRICS_CONF['metrics_units'][resource_name]
+                info['unit'] = list(tmp.values())[0]['unit']
             # NOTE(mc): deprecated except part kept for backward compatibility.
             except KeyError:
                 LOG.warning('Error when trying to use yaml metrology conf.')
                 LOG.warning('Fallback on the deprecated oslo config method.')
-                info["unit"] = cls.units_mappings[resource_name][1]
+                info['unit'] = cls.units_mappings[resource_name][1]
 
         except KeyError:
             pass
@@ -261,8 +262,9 @@ class GnocchiCollector(collector.BaseCollector):
     def resource_info(self, resource_name, start, end, project_id,
                       q_filter=None):
         try:
-            qty = METRICS_CONF['services_units'][resource_name].keys()[0]
-            unit = METRICS_CONF['services_units'][resource_name].values()[0]
+            tmp = METRICS_CONF['metrics_units'][resource_name]
+            qty = list(tmp.keys())[0]
+            unit = list(tmp.values())[0]['unit']
         # NOTE(mc): deprecated except part kept for backward compatibility.
         except KeyError:
             LOG.warning('Error when trying to use yaml metrology conf.')
@@ -290,20 +292,41 @@ class GnocchiCollector(collector.BaseCollector):
 
             self._expand_metrics([resource_data], mappings, start, end)
             resource_data.pop('metrics', None)
-            # Convert network.bw.in, network.bw.out and image unit to MB
-            if resource.get('type') == 'instance_network_interface':
-                resource_data[qty] = (
-                    decimal.Decimal(resource_data[qty]) / units.M)
-            elif resource.get('type') == 'image':
-                resource_data[qty] = (
-                    decimal.Decimal(resource_data[qty]) / units.Mi)
-            elif resource.get('type') == 'ceph_account':
-                resource_data[qty] = (
-                    decimal.Decimal(resource_data[qty]) / units.Gi)
+
+            # Unit conversion
+            try:
+                conv_data = METRICS_CONF['metrics_units'][resource_name][qty]
+                if isinstance(qty, str):
+                    resource_data[qty] = ck_utils.convert_unit(
+                        resource_data[qty],
+                        conv_data.get('factor', '1'),
+                        conv_data.get('offset', '0'),
+                    )
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except KeyError:
+                LOG.warning('Error when trying to use yaml metrology conf.')
+                LOG.warning('Fallback on the deprecated hardcoded method.')
+
+                if resource.get('type') == 'instance_network_interface':
+                    resource_data[qty] = (
+                        decimal.Decimal(resource_data[qty]) / units.M
+                    )
+                elif resource.get('type') == 'image':
+                    resource_data[qty] = (
+                        decimal.Decimal(resource_data[qty]) / units.Mi
+                    )
+                elif resource.get('type') == 'ceph_account':
+                    resource_data[qty] = (
+                        decimal.Decimal(resource_data[qty]) / units.Gi)
+
             data = self.t_cloudkitty.format_item(
-                resource_data, unit,
+                resource_data,
+                unit,
                 decimal.Decimal(
-                    qty if isinstance(qty, int) else resource_data[qty]))
+                    qty if isinstance(qty, int) else resource_data[qty]
+                )
+            )
+
             # NOTE(sheeprine): Reference to gnocchi resource used by storage
             data['resource_id'] = data['desc']['resource_id']
             formated_resources.append(data)

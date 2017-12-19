@@ -24,6 +24,8 @@ to ease maintenance in case of library modifications.
 import calendar
 import contextlib
 import datetime
+import decimal
+import fractions
 import shutil
 import six
 import sys
@@ -275,3 +277,17 @@ def tempdir(**kwargs):
         except OSError as e:
             LOG.debug('Could not remove tmpdir: %s',
                       six.text_type(e))
+
+
+def convert_unit(value, factor, offset=0):
+    """Return converted value depending on the provided factor and offset."""
+    # Check if factor is a fraction
+    if '/' in factor:
+        tmp = fractions.Fraction(factor)
+        numerator = decimal.Decimal(tmp.numerator)
+        denominator = decimal.Decimal(tmp.denominator)
+        factor = numerator / denominator
+    else:
+        factor = decimal.Decimal(factor)
+
+    return (decimal.Decimal(value) * factor) + decimal.Decimal(offset)

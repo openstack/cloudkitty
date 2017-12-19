@@ -26,7 +26,7 @@ tests:
       $.services[/service_id][0].service_id: compute
       $.services[/service_id][0].unit: instance
       $.services[/service_id][1].service_id: image
-      $.services[/service_id][1].unit: MB
+      $.services[/service_id][1].unit: MiB
       $.services[/service_id][2].service_id: network.bw.in
       $.services[/service_id][2].unit: MB
       $.services[/service_id][3].service_id: network.bw.out
@@ -34,7 +34,7 @@ tests:
       $.services[/service_id][4].service_id: network.floating
       $.services[/service_id][4].unit: ip
       $.services[/service_id][5].service_id: volume
-      $.services[/service_id][5].unit: GB
+      $.services[/service_id][5].unit: GiB
 
   - name: get compute service info
     url: /v1/info/services/compute

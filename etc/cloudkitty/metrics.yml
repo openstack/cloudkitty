@@ -44,20 +44,32 @@
     radosgw.usage:
       - radosgw.objects.size: max
 
-  services_units:
+  metrics_units:
     compute:
-      1: instance
+      1:
+        unit: instance
     volume:
-      volume.size: GB
+      volume.size:
+        unit: GiB
     network.bw.in:
-      network.incoming.bytes: MB
+      network.incoming.bytes:
+        unit: MB
+        factor: 1/1000000
     network.bw.out:
-      network.outgoing.bytes: MB
+      network.outgoing.bytes:
+        unit: MB
+        factor: 1/1000000
     network.floating:
-      1: ip
+      1:
+        unit: ip
     image:
-      image.size: MB
+      image.size:
+        unit: MiB
+        factor: 1/1048576
     radosgw.usage:
-      radosgw.objects.size: GB
+      radosgw.objects.size:
+        unit: GiB
+        factor: 1/1073741824
     default_unit:
-      1: unknown
+      1:
+        unit: unknown
