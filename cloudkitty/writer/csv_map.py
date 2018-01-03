@@ -39,12 +39,11 @@ class CSVMapped(csv_base.BaseCSVBackend):
              ('UserId', 'desc:user_id'),
              ('ProjectId', 'desc:project_id'),
              ('ItemName', 'desc:name'),
-             ('ItemFlavor', 'desc:flavor'),
+             ('ItemFlavor', 'desc:flavor_name'),
+             ('ItemFlavorId', 'desc:flavor_id'),
              ('AvailabilityZone', 'desc:availability_zone'),
              ('Service', self._trans_service),
-             ('ItemDescription', 'rating:description'),
              ('UsageQuantity', 'vol:qty'),
-             ('RateId', 'rating:rate_id'),
              ('RateValue', 'rating:price'),
              ('Cost', self._trans_calc_cost),
              ('user:*', 'desc:metadata:*')])
@@ -136,8 +135,7 @@ class CSVMapped(csv_base.BaseCSVBackend):
         """Context dependent resource id transformation function.
 
         """
-        if context == 'compute':
-            return report_data['desc'].get('instance_id')
+        return report_data['desc'].get('resource_id')
 
     def _trans_calc_cost(self, context, report_data):
         """Cost calculation function.
