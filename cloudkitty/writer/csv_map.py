@@ -95,7 +95,8 @@ class CSVMapped(csv_base.BaseCSVBackend):
         """Get the end usage of this period.
 
         """
-        if self.cached_start == self.usage_start and self.cached_end_str:
+        if self.cached_start == self.usage_start and self.cached_end_str \
+           and self.cached_end > self.cached_start:
             return self.cached_end_str
         else:
             usage_end = self.usage_start_dt + datetime.timedelta(
