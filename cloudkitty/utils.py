@@ -291,3 +291,15 @@ def convert_unit(value, factor, offset=0):
         factor = decimal.Decimal(factor)
 
     return (decimal.Decimal(value) * factor) + decimal.Decimal(offset)
+
+
+def flat_dict(item, parent=None):
+    """Returns a flat version of the nested dict item"""
+    if not parent:
+        parent = dict()
+    for k, val in item.items():
+        if isinstance(val, dict):
+            parent = flat_dict(val, parent)
+        else:
+            parent[k] = val
+    return parent

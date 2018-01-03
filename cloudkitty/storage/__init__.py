@@ -18,11 +18,14 @@
 import abc
 
 from oslo_config import cfg
+from oslo_log import log as logging
 import six
 from stevedore import driver
 
 from cloudkitty import collector as ck_collector
 from cloudkitty import utils as ck_utils
+
+LOG = logging.getLogger(__name__)
 
 storage_opts = [
     cfg.StrOpt('backend',
@@ -47,6 +50,9 @@ def get_storage(collector=None):
         cfg.CONF.storage.backend,
         invoke_on_load=True,
         invoke_kwds=storage_args).driver
+    if cfg.CONF.storage.backend not in ['sqlalchemy', 'hybrid']:
+        LOG.warning('{} storage backend is deprecated and will be removed '
+                    'in a future release.'.format(cfg.CONF.storage.backend))
     return backend
 
 

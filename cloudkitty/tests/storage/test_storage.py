@@ -17,10 +17,12 @@
 #
 import copy
 
+import mock
 import sqlalchemy
 import testscenarios
 
 from cloudkitty import storage
+from cloudkitty.storage.hybrid.backends import gnocchi as hgnocchi
 from cloudkitty import tests
 from cloudkitty.tests import samples
 from cloudkitty import utils as ck_utils
@@ -28,7 +30,8 @@ from cloudkitty import utils as ck_utils
 
 class StorageTest(tests.TestCase):
     storage_scenarios = [
-        ('sqlalchemy', dict(storage_backend='sqlalchemy'))]
+        ('sqlalchemy', dict(storage_backend='sqlalchemy')),
+        ('hybrid', dict(storage_backend='hybrid'))]
 
     @classmethod
     def generate_scenarios(cls):
@@ -36,8 +39,10 @@ class StorageTest(tests.TestCase):
             cls.scenarios,
             cls.storage_scenarios)
 
-    def setUp(self):
+    @mock.patch('cloudkitty.storage.hybrid.backends.gnocchi.gclient')
+    def setUp(self, gclient_mock):
         super(StorageTest, self).setUp()
+        hgnocchi.METRICS_CONF = samples.METRICS_CONF
         self._tenant_id = samples.TENANT
         self._other_tenant_id = '8d3ae50089ea4142-9c6e1269db6a0b64'
         self.conf.set_override('backend', self.storage_backend, 'storage')
@@ -76,6 +81,278 @@ class StorageTest(tests.TestCase):
         self.assertEqual(samples.SECOND_PERIOD_BEGIN, usage_start)
         self.assertEqual(samples.RATED_DATA[1]['usage'], data)
         self.assertEqual([], working_data)
+
+    # State
+    def test_get_state_when_nothing_in_storage(self):
+        state = self.storage.get_state()
+        self.assertIsNone(state)
+
+    def test_get_latest_global_state(self):
+        self.insert_different_data_two_tenants()
+        state = self.storage.get_state()
+        self.assertEqual(samples.SECOND_PERIOD_BEGIN, state)
+
+    def test_get_state_on_rated_tenant(self):
+        self.insert_different_data_two_tenants()
+        state = self.storage.get_state(self._tenant_id)
+        self.assertEqual(samples.FIRST_PERIOD_BEGIN, state)
+        state = self.storage.get_state(self._other_tenant_id)
+        self.assertEqual(samples.SECOND_PERIOD_BEGIN, state)
+
+    def test_get_state_on_no_data_frame(self):
+        self.storage.nodata(
+            samples.FIRST_PERIOD_BEGIN,
+            samples.FIRST_PERIOD_END,
+            self._tenant_id)
+        self.storage.commit(self._tenant_id)
+        state = self.storage.get_state(self._tenant_id)
+        self.assertEqual(samples.FIRST_PERIOD_BEGIN, state)
+
+
+class StorageDataframeTest(StorageTest):
+
+    storage_scenarios = [
+        ('sqlalchemy', dict(storage_backend='sqlalchemy'))]
+
+    # Queries
+    # Data
+    def test_get_no_frame_when_nothing_in_storage(self):
+        self.assertRaises(
+            storage.NoTimeFrame,
+            self.storage.get_time_frame,
+            begin=samples.FIRST_PERIOD_BEGIN - 3600,
+            end=samples.FIRST_PERIOD_BEGIN)
+
+    def test_get_frame_filter_outside_data(self):
+        self.insert_different_data_two_tenants()
+        self.assertRaises(
+            storage.NoTimeFrame,
+            self.storage.get_time_frame,
+            begin=samples.FIRST_PERIOD_BEGIN - 3600,
+            end=samples.FIRST_PERIOD_BEGIN)
+
+    def test_get_frame_without_filter_but_timestamp(self):
+        self.insert_different_data_two_tenants()
+        data = self.storage.get_time_frame(
+            begin=samples.FIRST_PERIOD_BEGIN,
+            end=samples.SECOND_PERIOD_END)
+        self.assertEqual(3, len(data))
+
+    def test_get_frame_on_one_period(self):
+        self.insert_different_data_two_tenants()
+        data = self.storage.get_time_frame(
+            begin=samples.FIRST_PERIOD_BEGIN,
+            end=samples.FIRST_PERIOD_END)
+        self.assertEqual(2, len(data))
+
+    def test_get_frame_on_one_period_and_one_tenant(self):
+        self.insert_different_data_two_tenants()
+        data = self.storage.get_time_frame(
+            begin=samples.FIRST_PERIOD_BEGIN,
+            end=samples.FIRST_PERIOD_END,
+            tenant_id=self._tenant_id)
+        self.assertEqual(2, len(data))
+
+    def test_get_frame_on_one_period_and_one_tenant_outside_data(self):
+        self.insert_different_data_two_tenants()
+        self.assertRaises(
+            storage.NoTimeFrame,
+            self.storage.get_time_frame,
+            begin=samples.FIRST_PERIOD_BEGIN,
+            end=samples.FIRST_PERIOD_END,
+            tenant_id=self._other_tenant_id)
+
+    def test_get_frame_on_two_periods(self):
+        self.insert_different_data_two_tenants()
+        data = self.storage.get_time_frame(
+            begin=samples.FIRST_PERIOD_BEGIN,
+            end=samples.SECOND_PERIOD_END)
+        self.assertEqual(3, len(data))
+
+
+class StorageTotalTest(StorageTest):
+
+    storage_scenarios = [
+        ('sqlalchemy', dict(storage_backend='sqlalchemy'))]
+
+    # Total
+    def test_get_empty_total(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN - 3600)
+        end = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end)
+        self.assertEqual(1, len(total))
+        self.assertIsNone(total[0]["rate"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+
+    def test_get_total_without_filter_but_timestamp(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end)
+        # FIXME(sheeprine): floating point error (transition to decimal)
+        self.assertEqual(1, len(total))
+        self.assertEqual(1.9473999999999998, total[0]["rate"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+
+    def test_get_total_filtering_on_one_period(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end)
+        self.assertEqual(1, len(total))
+        self.assertEqual(1.1074, total[0]["rate"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+
+    def test_get_total_filtering_on_one_period_and_one_tenant(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end,
+            tenant_id=self._tenant_id)
+        self.assertEqual(1, len(total))
+        self.assertEqual(0.5537, total[0]["rate"])
+        self.assertEqual(self._tenant_id, total[0]["tenant_id"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+
+    def test_get_total_filtering_on_service(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end,
+            service='compute')
+        self.assertEqual(1, len(total))
+        self.assertEqual(0.84, total[0]["rate"])
+        self.assertEqual('compute', total[0]["res_type"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+
+    def test_get_total_groupby_tenant(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end,
+            groupby="tenant_id")
+        self.assertEqual(2, len(total))
+        self.assertEqual(0.9737, total[0]["rate"])
+        self.assertEqual(self._other_tenant_id, total[0]["tenant_id"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+        self.assertEqual(0.9737, total[1]["rate"])
+        self.assertEqual(self._tenant_id, total[1]["tenant_id"])
+        self.assertEqual(begin, total[1]["begin"])
+        self.assertEqual(end, total[1]["end"])
+
+    def test_get_total_groupby_restype(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end,
+            groupby="res_type")
+        self.assertEqual(2, len(total))
+        self.assertEqual(0.2674, total[0]["rate"])
+        self.assertEqual('image', total[0]["res_type"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+        self.assertEqual(1.68, total[1]["rate"])
+        self.assertEqual('compute', total[1]["res_type"])
+        self.assertEqual(begin, total[1]["begin"])
+        self.assertEqual(end, total[1]["end"])
+
+    def test_get_total_groupby_tenant_and_restype(self):
+        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        self.insert_data()
+        total = self.storage.get_total(
+            begin=begin,
+            end=end,
+            groupby="tenant_id,res_type")
+        self.assertEqual(4, len(total))
+        self.assertEqual(0.1337, total[0]["rate"])
+        self.assertEqual(self._other_tenant_id, total[0]["tenant_id"])
+        self.assertEqual('image', total[0]["res_type"])
+        self.assertEqual(begin, total[0]["begin"])
+        self.assertEqual(end, total[0]["end"])
+        self.assertEqual(0.1337, total[1]["rate"])
+        self.assertEqual(self._tenant_id, total[1]["tenant_id"])
+        self.assertEqual('image', total[1]["res_type"])
+        self.assertEqual(begin, total[1]["begin"])
+        self.assertEqual(end, total[1]["end"])
+        self.assertEqual(0.84, total[2]["rate"])
+        self.assertEqual(self._other_tenant_id, total[2]["tenant_id"])
+        self.assertEqual('compute', total[2]["res_type"])
+        self.assertEqual(begin, total[2]["begin"])
+        self.assertEqual(end, total[2]["end"])
+        self.assertEqual(0.84, total[3]["rate"])
+        self.assertEqual(self._tenant_id, total[3]["tenant_id"])
+        self.assertEqual('compute', total[3]["res_type"])
+        self.assertEqual(begin, total[3]["begin"])
+        self.assertEqual(end, total[3]["end"])
+
+
+class StorageTenantTest(StorageTest):
+
+    storage_scenarios = [
+        ('sqlalchemy', dict(storage_backend='sqlalchemy'))]
+
+    # Tenants
+    def test_get_empty_tenant_with_nothing_in_storage(self):
+        tenants = self.storage.get_tenants(
+            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN),
+            end=ck_utils.ts2dt(samples.SECOND_PERIOD_BEGIN))
+        self.assertEqual([], tenants)
+
+    def test_get_empty_tenant_list(self):
+        self.insert_data()
+        tenants = self.storage.get_tenants(
+            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN - 3600),
+            end=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN))
+        self.assertEqual([], tenants)
+
+    def test_get_tenants_filtering_on_period(self):
+        self.insert_different_data_two_tenants()
+        tenants = self.storage.get_tenants(
+            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN),
+            end=ck_utils.ts2dt(samples.SECOND_PERIOD_END))
+        self.assertListEqual(
+            [self._tenant_id, self._other_tenant_id],
+            tenants)
+        tenants = self.storage.get_tenants(
+            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN),
+            end=ck_utils.ts2dt(samples.FIRST_PERIOD_END))
+        self.assertListEqual(
+            [self._tenant_id],
+            tenants)
+        tenants = self.storage.get_tenants(
+            begin=ck_utils.ts2dt(samples.SECOND_PERIOD_BEGIN),
+            end=ck_utils.ts2dt(samples.SECOND_PERIOD_END))
+        self.assertListEqual(
+            [self._other_tenant_id],
+            tenants)
+
+
+class StorageDataIntegrityTest(StorageTest):
+
+    storage_scenarios = [
+        ('sqlalchemy', dict(storage_backend='sqlalchemy'))]
 
     # Data integrity
     def test_has_data_flag_behaviour(self):
@@ -213,253 +490,9 @@ class StorageTest(tests.TestCase):
         self.assertNotIn(self._tenant_id, self.storage.usage_end)
         self.assertNotIn(self._tenant_id, self.storage.usage_end_dt)
 
-    # Queries
-    # Data
-    def test_get_no_frame_when_nothing_in_storage(self):
-        self.assertRaises(
-            storage.NoTimeFrame,
-            self.storage.get_time_frame,
-            begin=samples.FIRST_PERIOD_BEGIN - 3600,
-            end=samples.FIRST_PERIOD_BEGIN)
-
-    def test_get_frame_filter_outside_data(self):
-        self.insert_different_data_two_tenants()
-        self.assertRaises(
-            storage.NoTimeFrame,
-            self.storage.get_time_frame,
-            begin=samples.FIRST_PERIOD_BEGIN - 3600,
-            end=samples.FIRST_PERIOD_BEGIN)
-
-    def test_get_frame_without_filter_but_timestamp(self):
-        self.insert_different_data_two_tenants()
-        data = self.storage.get_time_frame(
-            begin=samples.FIRST_PERIOD_BEGIN,
-            end=samples.SECOND_PERIOD_END)
-        self.assertEqual(3, len(data))
-
-    def test_get_frame_on_one_period(self):
-        self.insert_different_data_two_tenants()
-        data = self.storage.get_time_frame(
-            begin=samples.FIRST_PERIOD_BEGIN,
-            end=samples.FIRST_PERIOD_END)
-        self.assertEqual(2, len(data))
-
-    def test_get_frame_on_one_period_and_one_tenant(self):
-        self.insert_different_data_two_tenants()
-        data = self.storage.get_time_frame(
-            begin=samples.FIRST_PERIOD_BEGIN,
-            end=samples.FIRST_PERIOD_END,
-            tenant_id=self._tenant_id)
-        self.assertEqual(2, len(data))
-
-    def test_get_frame_on_one_period_and_one_tenant_outside_data(self):
-        self.insert_different_data_two_tenants()
-        self.assertRaises(
-            storage.NoTimeFrame,
-            self.storage.get_time_frame,
-            begin=samples.FIRST_PERIOD_BEGIN,
-            end=samples.FIRST_PERIOD_END,
-            tenant_id=self._other_tenant_id)
-
-    def test_get_frame_on_two_periods(self):
-        self.insert_different_data_two_tenants()
-        data = self.storage.get_time_frame(
-            begin=samples.FIRST_PERIOD_BEGIN,
-            end=samples.SECOND_PERIOD_END)
-        self.assertEqual(3, len(data))
-
-    # State
-    def test_get_state_when_nothing_in_storage(self):
-        state = self.storage.get_state()
-        self.assertIsNone(state)
-
-    def test_get_latest_global_state(self):
-        self.insert_different_data_two_tenants()
-        state = self.storage.get_state()
-        self.assertEqual(samples.SECOND_PERIOD_BEGIN, state)
-
-    def test_get_state_on_rated_tenant(self):
-        self.insert_different_data_two_tenants()
-        state = self.storage.get_state(self._tenant_id)
-        self.assertEqual(samples.FIRST_PERIOD_BEGIN, state)
-        state = self.storage.get_state(self._other_tenant_id)
-        self.assertEqual(samples.SECOND_PERIOD_BEGIN, state)
-
-    def test_get_state_on_no_data_frame(self):
-        self.storage.nodata(
-            samples.FIRST_PERIOD_BEGIN,
-            samples.FIRST_PERIOD_END,
-            self._tenant_id)
-        self.storage.commit(self._tenant_id)
-        state = self.storage.get_state(self._tenant_id)
-        self.assertEqual(samples.FIRST_PERIOD_BEGIN, state)
-
-    # Total
-    def test_get_empty_total(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN - 3600)
-        end = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        self.insert_data()
-        total = self.storage.get_total(
-            begin=begin,
-            end=end)
-        self.assertEqual(1, len(total))
-        self.assertIsNone(total[0]["rate"])
-        self.assertEqual(begin, total[0]["begin"])
-        self.assertEqual(end, total[0]["end"])
-
-    def test_get_total_without_filter_but_timestamp(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
-        self.insert_data()
-        total = self.storage.get_total(
-            begin=begin,
-            end=end)
-        # FIXME(sheeprine): floating point error (transition to decimal)
-        self.assertEqual(1, len(total))
-        self.assertEqual(1.9473999999999998, total[0]["rate"])
-        self.assertEqual(begin, total[0]["begin"])
-        self.assertEqual(end, total[0]["end"])
-
-    def test_get_total_filtering_on_one_period(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
-        self.insert_data()
-        total = self.storage.get_total(
-            begin=begin,
-            end=end)
-        self.assertEqual(1, len(total))
-        self.assertEqual(1.1074, total[0]["rate"])
-        self.assertEqual(begin, total[0]["begin"])
-        self.assertEqual(end, total[0]["end"])
-
-    def test_get_total_filtering_on_one_period_and_one_tenant(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
-        self.insert_data()
-        total = self.storage.get_total(
-            begin=begin,
-            end=end,
-            tenant_id=self._tenant_id)
-        self.assertEqual(1, len(total))
-        self.assertEqual(0.5537, total[0]["rate"])
-        self.assertEqual(self._tenant_id, total[0]["tenant_id"])
-        self.assertEqual(begin, total[0]["begin"])
-        self.assertEqual(end, total[0]["end"])
-
-    def test_get_total_filtering_on_service(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
-        self.insert_data()
-        total = self.storage.get_total(
-            begin=begin,
-            end=end,
-            service='compute')
-        self.assertEqual(1, len(total))
-        self.assertEqual(0.84, total[0]["rate"])
-        self.assertEqual('compute', total[0]["res_type"])
-        self.assertEqual(begin, total[0]["begin"])
-        self.assertEqual(end, total[0]["end"])
-
-    def test_get_total_groupby_tenant(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
-        self.insert_data()
-        total = self.storage.get_total(
-            begin=begin,
-            end=end,
-            groupby="tenant_id")
-        self.assertEqual(2, len(total))
-        self.assertEqual(0.9737, total[0]["rate"])
-        self.assertEqual(self._other_tenant_id, total[0]["tenant_id"])
-        self.assertEqual(begin, total[0]["begin"])
-        self.assertEqual(end, total[0]["end"])
-        self.assertEqual(0.9737, total[1]["rate"])
-        self.assertEqual(self._tenant_id, total[1]["tenant_id"])
-        self.assertEqual(begin, total[1]["begin"])
-        self.assertEqual(end, total[1]["end"])
-
-    def test_get_total_groupby_restype(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
-        self.insert_data()
-        total = self.storage.get_total(
-            begin=begin,
-            end=end,
-            groupby="res_type")
-        self.assertEqual(2, len(total))
-        self.assertEqual(0.2674, total[0]["rate"])
-        self.assertEqual('image', total[0]["res_type"])
-        self.assertEqual(begin, total[0]["begin"])
-        self.assertEqual(end, total[0]["end"])
-        self.assertEqual(1.68, total[1]["rate"])
-        self.assertEqual('compute', total[1]["res_type"])
-        self.assertEqual(begin, total[1]["begin"])
-        self.assertEqual(end, total[1]["end"])
-
-    def test_get_total_groupby_tenant_and_restype(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
-        self.insert_data()
-        total = self.storage.get_total(
-            begin=begin,
-            end=end,
-            groupby="tenant_id,res_type")
-        self.assertEqual(4, len(total))
-        self.assertEqual(0.1337, total[0]["rate"])
-        self.assertEqual(self._other_tenant_id, total[0]["tenant_id"])
-        self.assertEqual('image', total[0]["res_type"])
-        self.assertEqual(begin, total[0]["begin"])
-        self.assertEqual(end, total[0]["end"])
-        self.assertEqual(0.1337, total[1]["rate"])
-        self.assertEqual(self._tenant_id, total[1]["tenant_id"])
-        self.assertEqual('image', total[1]["res_type"])
-        self.assertEqual(begin, total[1]["begin"])
-        self.assertEqual(end, total[1]["end"])
-        self.assertEqual(0.84, total[2]["rate"])
-        self.assertEqual(self._other_tenant_id, total[2]["tenant_id"])
-        self.assertEqual('compute', total[2]["res_type"])
-        self.assertEqual(begin, total[2]["begin"])
-        self.assertEqual(end, total[2]["end"])
-        self.assertEqual(0.84, total[3]["rate"])
-        self.assertEqual(self._tenant_id, total[3]["tenant_id"])
-        self.assertEqual('compute', total[3]["res_type"])
-        self.assertEqual(begin, total[3]["begin"])
-        self.assertEqual(end, total[3]["end"])
-
-    # Tenants
-    def test_get_empty_tenant_with_nothing_in_storage(self):
-        tenants = self.storage.get_tenants(
-            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN),
-            end=ck_utils.ts2dt(samples.SECOND_PERIOD_BEGIN))
-        self.assertEqual([], tenants)
-
-    def test_get_empty_tenant_list(self):
-        self.insert_data()
-        tenants = self.storage.get_tenants(
-            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN - 3600),
-            end=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN))
-        self.assertEqual([], tenants)
-
-    def test_get_tenants_filtering_on_period(self):
-        self.insert_different_data_two_tenants()
-        tenants = self.storage.get_tenants(
-            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN),
-            end=ck_utils.ts2dt(samples.SECOND_PERIOD_END))
-        self.assertListEqual(
-            [self._tenant_id, self._other_tenant_id],
-            tenants)
-        tenants = self.storage.get_tenants(
-            begin=ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN),
-            end=ck_utils.ts2dt(samples.FIRST_PERIOD_END))
-        self.assertListEqual(
-            [self._tenant_id],
-            tenants)
-        tenants = self.storage.get_tenants(
-            begin=ck_utils.ts2dt(samples.SECOND_PERIOD_BEGIN),
-            end=ck_utils.ts2dt(samples.SECOND_PERIOD_END))
-        self.assertListEqual(
-            [self._other_tenant_id],
-            tenants)
-
 
 StorageTest.generate_scenarios()
+StorageTotalTest.generate_scenarios()
+StorageTenantTest.generate_scenarios()
+StorageDataframeTest.generate_scenarios()
+StorageDataIntegrityTest.generate_scenarios()
