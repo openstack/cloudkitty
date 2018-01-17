@@ -28,7 +28,7 @@ the ``auth_strategy`` field:
     verbose = True
     log_dir = /var/log/cloudkitty
     # oslo_messaging_rabbit is deprecated
-    transport_url = rabbit://openstack:RABBIT_PASSWORD@RABBIT_HOST
+    transport_url = rabbit://RABBIT_USER:RABBIT_PASSWORD@RABBIT_HOST
     auth_strategy = noauth
 
 
@@ -46,7 +46,7 @@ For keystone (identity) API v2 (deprecated)
     verbose = True
     log_dir = /var/log/cloudkitty
     # oslo_messaging_rabbit is deprecated
-    transport_url = rabbit://openstack:RABBIT_PASSWORD@RABBIT_HOST/
+    transport_url = rabbit://RABBIT_USER:RABBIT_PASSWORD@RABBIT_HOST/
     auth_strategy = keystone
 
     [auth]
@@ -107,7 +107,7 @@ The following shows the basic configuration items:
     verbose = True
     log_dir = /var/log/cloudkitty
     # oslo_messaging_rabbit is deprecated
-    transport_url = rabbit://openstack:RABBIT_PASSWORD@RABBIT_HOST/
+    transport_url = rabbit://RABBIT_USER:RABBIT_PASSWORD@RABBIT_HOST/
     auth_strategy = keystone
 
     [ks_auth]
