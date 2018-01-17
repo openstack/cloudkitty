@@ -65,7 +65,7 @@ For keystone (identity) API v2 (deprecated)
     auth_plugin = password
 
     [database]
-    connection = mysql://cloudkitty:CK_DBPASSWORD@DB_HOST/cloudkitty
+    connection = mysql://CK_DBUSER:CK_DBPASSWORD@DB_HOST/cloudkitty
 
     [storage]
     backend = sqlalchemy
@@ -126,7 +126,7 @@ The following shows the basic configuration items:
     auth_section = ks_auth
 
     [database]
-    connection = mysql://cloudkitty:CK_DBPASSWORD@DB_HOST/cloudkitty
+    connection = mysql://CK_DBUSER:CK_DBPASSWORD@DB_HOST/cloudkitty
 
     [keystone_fetcher]
     auth_section = ks_auth
@@ -197,11 +197,11 @@ the ``mysql`` client::
 
     mysql -uroot -p << EOF
     CREATE DATABASE cloudkitty;
-    GRANT ALL PRIVILEGES ON cloudkitty.* TO 'cloudkitty'@'localhost' IDENTIFIED BY 'CK_DBPASSWORD';
+    GRANT ALL PRIVILEGES ON cloudkitty.* TO 'CK_DBUSER'@'localhost' IDENTIFIED BY 'CK_DBPASSWORD';
     EOF
 
-If you need to authorize the cloudkitty mysql user from another host you have
-to change the line accordingly.
+If you need to authorize the mysql user associated to cloudkitty from another host you
+have to change the line accordingly.
 
 Run the database synchronisation scripts::
 
