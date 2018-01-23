@@ -59,6 +59,3 @@ GITBRANCH["python-cloudkittyclient"]=${CLOUDKITTYCLIENT_BRANCH:-master}
 GITREPO["cloudkitty-dashboard"]=${CLOUDKITTYDASHBOARD_REPO:-${GIT_BASE}/openstack/cloudkitty-dashboard.git}
 GITDIR["cloudkitty-dashboard"]=$DEST/cloudkitty-dashboard
 GITBRANCH["cloudkitty-dashboard"]=${CLOUDKITTYDASHBOARD_BRANCH:-master}
-
-# Tell Tempest this project is present
-TEMPEST_SERVICES+=,cloudkitty
