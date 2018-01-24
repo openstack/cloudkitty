@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The ceilometer collector has been deprecated. Gnocchi should be used by
+    default. The collector will be removed during the Rocky development cycle.
