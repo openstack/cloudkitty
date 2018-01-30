@@ -1,0 +1,13 @@
+---
+features:
+  - |
+    The storage system is being refactored.
+    A hybrid storage backend has been added. This backend handles states
+    via SQLAlchemy and pure storage via another storage backend. Once
+    this new storage is considered stable, it will become the default storage.
+    This will ease the creation of storage backends (no more state handling).
+
+deprecations:
+  - |
+    All storage backends except sqlalchemy and the new hybrid storage 
+    have been deprecated.

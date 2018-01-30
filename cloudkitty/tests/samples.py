@@ -36,6 +36,7 @@ COMPUTE_METADATA = {
     'flavor': 'm1.nano',
     'image_id': 'f5600101-8fa2-4864-899e-ebcb7ed6b568',
     'instance_id': '26c084e1-b8f1-4cbc-a7ec-e8b356788a17',
+    'resource_id': '1558f911-b55a-4fd2-9173-c8f1f23e5639',
     'memory': '64',
     'metadata': {
         'farm': 'prod'
@@ -47,6 +48,7 @@ COMPUTE_METADATA = {
 
 IMAGE_METADATA = {
     'checksum': '836c69cbcd1dc4f225daedbab6edc7c7',
+    'resource_id': '7b5b73f2-9181-4307-a710-b1aa6472526d',
     'container_format': 'aki',
     'created_at': '2014-06-04T16:26:01',
     'deleted': 'False',
@@ -127,3 +129,62 @@ STORED_DATA[1]['usage']['compute'][0]['rating'] = {
     'price': 0.42}
 
 STORED_DATA = split_storage_data(STORED_DATA)
+
+METRICS_CONF = {
+    'collector': 'gnocchi',
+    'name': 'OpenStack',
+    'period': 3600,
+    'services': [
+        'compute',
+        'volume',
+        'network.bw.in',
+        'network.bw.out',
+        'network.floating',
+        'image'
+    ],
+    'services_metrics': {
+        'compute': [
+            {'vcpus': 'max'},
+            {'memory': 'max'},
+            {'cpu': 'max'},
+            {'disk.root.size': 'max'},
+            {'disk.ephemeral.size': 'max'}
+        ],
+        'image': [
+            {'image.size': 'max'},
+            {'image.download': 'max'},
+            {'image.serve': 'max'}
+        ],
+        'network.bw.in': [{'network.incoming.bytes': 'max'}],
+        'network.bw.out': [{'network.outgoing.bytes': 'max'}],
+        'network.floating': [{'ip.floating': 'max'}],
+        'volume': [{'volume.size': 'max'}],
+        'radosgw.usage': [{'radosgw.objects.size': 'max'}]},
+    'services_objects': {
+        'compute': 'instance',
+        'image': 'image',
+        'network.bw.in': 'instance_network_interface',
+        'network.bw.out': 'instance_network_interface',
+        'network.floating': 'network',
+        'volume': 'volume',
+        'radosgw.usage': 'ceph_account',
+    },
+    'metrics_units': {
+        'compute': {1: {'unit': 'instance'}},
+        'default_unit': {1: {'unit': 'unknown'}},
+        'image': {'image.size': {'unit': 'MiB', 'factor': '1/1048576'}},
+        'network.bw.in': {'network.incoming.bytes': {
+            'unit': 'MB',
+            'factor': '1/1000000'}},
+        'network.bw.out': {'network.outgoing.bytes': {
+            'unit': 'MB',
+            'factor': '1/1000000'}},
+        'network.floating': {1: {'unit': 'ip'}},
+        'volume': {'volume.size': {'unit': 'GiB'}},
+        'radosgw.usage': {'radosgw.objects.size': {
+            'unit': 'GiB',
+            'factor': '1/1073741824'}},
+    },
+    'wait_periods': 2,
+    'window': 1800
+}
