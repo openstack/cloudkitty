@@ -85,7 +85,7 @@ class HybridStorage(storage.BaseStorage):
         r = q.first()
         do_commit = False
         if r:
-            if state >= r.state:
+            if state > r.state:
                 q.update({'state': state})
                 do_commit = True
         else:
@@ -113,6 +113,8 @@ class HybridStorage(storage.BaseStorage):
             service=service, groupby=groupby)
 
     def _dispatch(self, data, tenant_id):
+        if not self.get_state(tenant_id):
+            self._set_state(tenant_id, self.usage_start_dt.get(tenant_id))
         for service in data:
             for frame in data[service]:
                 self._hybrid_backend.append_time_frame(
