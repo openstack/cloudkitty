@@ -30,6 +30,7 @@ from cloudkitty import version
 service_opts = [
     cfg.StrOpt('host',
                default=socket.getfqdn(),
+               sample_default='<server-hostname.example.com>',
                help='Name of this node. This can be an opaque identifier. '
                'It is not necessarily a hostname, FQDN, or IP address. '
                'However, the node name must be valid within an AMQP key, '
