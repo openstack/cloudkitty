@@ -249,14 +249,11 @@ class MonascaCollector(collector.BaseCollector):
         if not meter:
             return {}
         dimensions = {}
-        dimensions.update(kwargs)
         if project_id:
-            resources = self._conn.metrics.list(name=meter,
-                                                tenant_id=project_id,
-                                                **dimensions)
-        else:
-            resources = self._conn.metrics.list(name=meter,
-                                                **dimensions)
+            dimensions['project_id'] = project_id
+        dimensions.update(kwargs)
+        resources = self._conn.metrics.list(name=meter,
+                                            **dimensions)
         resource_ids = []
         for resource in resources:
             try:
