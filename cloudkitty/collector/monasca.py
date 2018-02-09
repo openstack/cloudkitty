@@ -65,21 +65,21 @@ class MonascaCollector(collector.BaseCollector):
     }
     metrics_mappings = {
         'compute': [
-            ('cpu', 'max'),
-            ('vpcus', 'max'),
-            ('memory', 'max')],
+            {'cpu': 'max'},
+            {'vpcus': 'max'},
+            {'memory': 'max'}],
         'image': [
-            ('image.size', 'max'),
-            ('image.download', 'max'),
-            ('image.serve', 'max')],
+            {'image.size': 'max'},
+            {'image.download': 'max'},
+            {'image.serve': 'max'}],
         'volume': [
-            ('volume.size', 'max')],
+            {'volume.size': 'max'}],
         'network.bw.in': [
-            ('network.incoming.bytes', 'max')],
+            {'network.incoming.bytes': 'max'}],
         'network.bw.out': [
-            ('network.outgoing.bytes', 'max')],
+            {'network.outgoing.bytes': 'max'}],
         'network.floating': [
-            ('ip.floating', 'max')],
+            {'ip.floating': 'max'}],
     }
     # (qty, unit). qty must be either a metric name, an integer
     # or a decimal.Decimal object
@@ -156,7 +156,9 @@ class MonascaCollector(collector.BaseCollector):
         info['metadata'] = metadata.keys()
 
         try:
-            for metric, statistics in METRICS_CONF['services_metrics']:
+            service_metrics = METRICS_CONF['services_metrics'][resource_type]
+            for service_metric in service_metrics:
+                metric, statistics = list(service_metric.items())[0]
                 info['metadata'].append(metric)
         # NOTE(mc): deprecated second try kept for backward compatibility.
         except KeyError:
@@ -268,35 +270,30 @@ class MonascaCollector(collector.BaseCollector):
 
     def _expand_metrics(self, resource, resource_id,
                         mappings, start, end, resource_type):
-        try:
-            for name, statistics in mappings.items():
-                qty = self._get_resource_qty(
-                    name,
-                    start,
-                    end,
-                    resource_id,
-                    statistics,
-                )
+        for mapping in mappings:
+            name, statistics = list(mapping.items())[0]
+            qty = self._get_resource_qty(
+                name,
+                start,
+                end,
+                resource_id,
+                statistics,
+            )
 
-                conv_data = METRICS_CONF['metrics_units'][resource_type][name]
-                resource[name] = ck_utils.convert_unit(
-                    qty,
-                    conv_data.get('factor', 1),
-                    conv_data.get('offset', 0),
-                )
-        # NOTE(mc): deprecated except part kept for backward compatibility.
-        except KeyError:
-            LOG.warning('Error when trying to use yaml metrology conf.')
-            LOG.warning('Fallback on the deprecated hardcoded dict method.')
-
-            for name, statistics in mappings:
-                qty = self._get_resource_qty(
-                    name,
-                    start,
-                    end,
-                    resource_id,
-                    statistics,
-                )
+            try:
+                conv_data = METRICS_CONF['metrics_units'][resource_type]
+                conv_data = conv_data.get(name)
+                if conv_data:
+                    resource[name] = ck_utils.convert_unit(
+                        qty,
+                        conv_data.get('factor', 1),
+                        conv_data.get('offset', 0),
+                    )
+            # NOTE(mc): deprecated except part kept for backward compatibility.
+            except KeyError:
+                LOG.warning(
+                    'Error when trying to use yaml metrology conf.\n'
+                    'Fallback on the deprecated hardcoded dict method.')
 
                 names = ['network.outgoing.bytes', 'network.incoming.bytes']
                 if name in names:
@@ -348,7 +345,8 @@ class MonascaCollector(collector.BaseCollector):
             resource_qty = qty
             if not (isinstance(qty, int) or isinstance(qty, decimal.Decimal)):
                 try:
-                    resource_qty = METRICS_CONF['services_objects']
+                    resource_qty \
+                        = METRICS_CONF['services_objects'][resource_type]
                 # NOTE(mc): deprecated except part kept for backward compat.
                 except KeyError:
                     LOG.warning('Error when trying to use yaml metrology conf')
