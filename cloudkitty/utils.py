@@ -269,7 +269,7 @@ def get_metrics_conf(conf_path):
     res = None
     try:
         with open(conf_path) as conf:
-            res = yaml.load(conf)
+            res = yaml.safe_load(conf)
             res = res[0]
     except Exception as exc:
         LOG.warning('Error when trying to retrieve yaml metrology conf file.')
