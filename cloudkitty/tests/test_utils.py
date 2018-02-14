@@ -16,6 +16,9 @@
 # @author: Stéphane Albert
 #
 import datetime
+import decimal
+import fractions
+import itertools
 import unittest
 
 import mock
@@ -136,3 +139,59 @@ class UtilsTimeCalculationsTest(unittest.TestCase):
         calc_dt = ck_utils.iso2dt(self.date_iso)
         check_dt = ck_utils.ts2dt(self.date_ts)
         self.assertEqual(calc_dt, check_dt)
+
+
+class ConvertUnitTest(unittest.TestCase):
+    """Class testing the convert_unit and num2decimal function"""
+    possible_args = [
+        None,  # Use default arg
+        '2/3',
+        decimal.Decimal(1.23),
+        '1.23',
+        2,
+        '2',
+        2.3,
+    ]
+
+    def test_arg_types(self):
+        """Test function with several arg combinations of different types"""
+        for fac, off in itertools.product(self.possible_args, repeat=2):
+            factor = fac if fac else 1
+            offset = off if off else 0
+            ck_utils.convert_unit(10, factor, offset)
+
+    def test_str_str_str(self):
+        result = ck_utils.convert_unit('1/2', '1/2', '1/2')
+        self.assertEqual(result, decimal.Decimal(0.5 * 0.5 + 0.5))
+
+    def test_str_float_float(self):
+        result = ck_utils.convert_unit('1/2', 0.5, 0.5)
+        self.assertEqual(result, decimal.Decimal(0.5 * 0.5 + 0.5))
+
+    def test_convert_str_float(self):
+        result = ck_utils.num2decimal('2.0')
+        self.assertEqual(result, decimal.Decimal(2.0))
+
+    def test_convert_str_int(self):
+        result = ck_utils.num2decimal('2')
+        self.assertEqual(result, decimal.Decimal(2))
+
+    def test_convert_str_fraction(self):
+        result = ck_utils.num2decimal('2/3')
+        self.assertEqual(result, decimal.Decimal(2.0 / 3))
+
+    def test_convert_fraction(self):
+        result = ck_utils.num2decimal(fractions.Fraction(1, 2))
+        self.assertEqual(result, decimal.Decimal(1.0 / 2))
+
+    def test_convert_float(self):
+        result = ck_utils.num2decimal(0.5)
+        self.assertEqual(result, decimal.Decimal(0.5))
+
+    def test_convert_int(self):
+        result = ck_utils.num2decimal(2)
+        self.assertEqual(result, decimal.Decimal(2))
+
+    def test_convert_decimal(self):
+        result = ck_utils.num2decimal(decimal.Decimal(2))
+        self.assertEqual(result, decimal.Decimal(2))

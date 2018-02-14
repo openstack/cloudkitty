@@ -300,18 +300,25 @@ def tempdir(**kwargs):
                       six.text_type(e))
 
 
-def convert_unit(value, factor, offset=0):
-    """Return converted value depending on the provided factor and offset."""
-    # Check if factor is a fraction
-    if '/' in factor:
-        tmp = fractions.Fraction(factor)
-        numerator = decimal.Decimal(tmp.numerator)
-        denominator = decimal.Decimal(tmp.denominator)
-        factor = numerator / denominator
-    else:
-        factor = decimal.Decimal(factor)
+def num2decimal(num):
+    """Converts a number into a decimal.Decimal.
 
-    return (decimal.Decimal(value) * factor) + decimal.Decimal(offset)
+    The number may be an str in float, int or fraction format;
+    a fraction.Fraction, a decimal.Decimal, an int or a float.
+    """
+    if isinstance(num, decimal.Decimal):
+        return num
+    if isinstance(num, str):
+        if '/' in num:
+            num = float(fractions.Fraction(num))
+    if isinstance(num, fractions.Fraction):
+        num = float(num)
+    return decimal.Decimal(num)
+
+
+def convert_unit(value, factor=1, offset=0):
+    """Return converted value depending on the provided factor and offset."""
+    return num2decimal(value) * num2decimal(factor) + num2decimal(offset)
 
 
 def flat_dict(item, parent=None):

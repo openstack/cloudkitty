@@ -299,8 +299,8 @@ class GnocchiCollector(collector.BaseCollector):
                 if isinstance(qty, str):
                     resource_data[qty] = ck_utils.convert_unit(
                         resource_data[qty],
-                        conv_data.get('factor', '1'),
-                        conv_data.get('offset', '0'),
+                        conv_data.get('factor', 1),
+                        conv_data.get('offset', 0),
                     )
             # NOTE(mc): deprecated except part kept for backward compatibility.
             except KeyError:

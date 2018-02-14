@@ -261,8 +261,8 @@ class CeilometerCollector(collector.BaseCollector):
                 conv_data = METRICS_CONF['metrics_units']['image']
                 image_size_mb = ck_utils.convert_unit(
                     decimal.Decimal(image_stats.max),
-                    conv_data['image.size'].get('factor', '1'),
-                    conv_data['image.size'].get('offset', '0'),
+                    conv_data['image.size'].get('factor', 1),
+                    conv_data['image.size'].get('offset', 0),
                 )
             except KeyError:
                 LOG.warning('Error when trying to use yaml metrology conf.')
@@ -315,8 +315,8 @@ class CeilometerCollector(collector.BaseCollector):
                 conv_data = METRICS_CONF['metrics_units']['volume']
                 volume_stats.max = ck_utils.convert_unit(
                     decimal.Decimal(volume_stats.max),
-                    conv_data['volume.size'].get('factor', '1'),
-                    conv_data['volume.size'].get('offset', '0'),
+                    conv_data['volume.size'].get('factor', 1),
+                    conv_data['volume.size'].get('offset', 0),
                 )
 
                 volume_data.append(self.t_cloudkitty.format_item(
@@ -374,8 +374,8 @@ class CeilometerCollector(collector.BaseCollector):
                 conv = METRICS_CONF['metrics_units']['network.bw.' + direction]
                 tap_bw_mb = ck_utils.convert_unit(
                     decimal.Decimal(tap_stat.max),
-                    conv[resource_type].get('factor', '1'),
-                    conv[resource_type].get('offset', '0'),
+                    conv[resource_type].get('factor', 1),
+                    conv[resource_type].get('offset', 0),
                 )
             except KeyError:
                 LOG.warning('Error when trying to use yaml metrology conf.')
@@ -489,8 +489,8 @@ class CeilometerCollector(collector.BaseCollector):
                 conv_data = METRICS_CONF['metrics_units']['radosgw.usage']
                 rgw_size = ck_utils.convert_unit(
                     decimal.Decimal(rgw_stats.max),
-                    conv_data['radosgw.object.size'].get('factor', '1'),
-                    conv_data['radosgw.object.size'].get('offset', '0'),
+                    conv_data['radosgw.object.size'].get('factor', 1),
+                    conv_data['radosgw.object.size'].get('offset', 0),
                 )
 
                 rgw_data.append(
