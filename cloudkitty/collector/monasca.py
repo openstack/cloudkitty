@@ -146,14 +146,13 @@ class MonascaCollector(collector.BaseCollector):
 
         start = ck_utils.dt2ts(ck_utils.get_month_start())
         end = ck_utils.dt2ts(ck_utils.get_month_end())
+
         try:
-            resource_id = self.active_resources(resource_type, start,
-                                                end, None)[0]
+            resource = self.active_resources(resource_type, start,
+                                             end, None)[0]
         except IndexError:
-            resource_id = ''
-        metadata = self._get_resource_metadata(resource_type, start,
-                                               end, resource_id)
-        info['metadata'] = metadata.keys()
+            resource = {}
+        info['metadata'] = resource.get('dimensions', {}).keys()
 
         try:
             service_metrics = METRICS_CONF['services_metrics'][resource_type]
@@ -180,31 +179,6 @@ class MonascaCollector(collector.BaseCollector):
             'period': CONF.collect.period}
         tmp = cls(**args)
         return tmp._get_metadata(resource_type, transformers)
-
-    def _get_resource_metadata(self, resource_type, start, end, resource_id):
-        try:
-            meter = METRICS_CONF['services_objects'].get(resource_type)
-        # NOTE(mc): deprecated except part kept for backward compatibility.
-        except KeyError:
-            LOG.warning('Error when trying to use yaml metrology conf.')
-            LOG.warning('Fallback on the deprecated oslo config method.')
-            meter = self.retrieve_mappings.get(resource_type)
-
-        if not meter:
-            return {}
-        measurements = self._conn.metrics.list_measurements(
-            name=meter,
-            start_time=ck_utils.ts2dt(start),
-            end_time=ck_utils.ts2dt(end),
-            merge_metrics=True,
-            dimensions={'resource_id': resource_id},
-        )
-        try:
-            # Getting the last measurement of given period
-            metadata = measurements[-1]['measurements'][-1][2]
-        except (KeyError, IndexError):
-            metadata = {}
-        return metadata
 
     def _get_resource_qty(self, meter, start, end, resource_id, statistics):
         # NOTE(lukapeschke) the period trick is used to aggregate
@@ -254,19 +228,19 @@ class MonascaCollector(collector.BaseCollector):
         if project_id:
             dimensions['project_id'] = project_id
         dimensions.update(kwargs)
-        resources = self._conn.metrics.list(name=meter,
-                                            **dimensions)
-        resource_ids = []
+        resources = self._conn.metrics.list(name=meter, dimensions=dimensions)
+        output = []
         for resource in resources:
             try:
                 resource_id = resource['dimensions']['resource_id']
-                if (resource_id not in resource_ids
+                if (resource_id not in
+                    [item['dimensions']['resource_id'] for item in output]
                         and self._is_resource_active(meter, resource_id,
                                                      start, end)):
-                    resource_ids.append(resource_id)
+                    output.append(resource)
             except KeyError:
                 continue
-        return resource_ids
+        return output
 
     def _expand_metrics(self, resource, resource_id,
                         mappings, start, end, resource_type):
@@ -318,14 +292,13 @@ class MonascaCollector(collector.BaseCollector):
                 self.default_unit
             )
 
-        active_resource_ids = self.active_resources(
+        active_resources = self.active_resources(
             resource_type, start, end, project_id
         )
         resource_data = []
-        for resource_id in active_resource_ids:
-            data = self._get_resource_metadata(resource_type, start,
-                                               end, resource_id)
-
+        for resource in active_resources:
+            resource_id = resource['dimensions']['resource_id']
+            data = resource['dimensions']
             try:
                 mappings = METRICS_CONF['services_metrics'][resource_type]
             # NOTE(mc): deprecated except part kept for backward compatibility.
@@ -353,6 +326,7 @@ class MonascaCollector(collector.BaseCollector):
                     msg = 'Fallback on the deprecated oslo config method'
                     LOG.warning(msg)
                     resource_qty = data[self.retrieve_mappings[resource_type]]
+                resource_qty = data[resource_qty]
 
             resource = self.t_cloudkitty.format_item(data, unit, resource_qty)
             resource['desc']['resource_id'] = resource_id
