@@ -38,6 +38,9 @@ METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
 GNOCCHI_STORAGE_OPTS = 'storage_gnocchi'
 gnocchi_storage_opts = [
+    cfg.StrOpt('interface',
+               default='internalURL',
+               help='endpoint url type'),
     cfg.StrOpt('archive_policy_name',
                default='rating',
                help='Gnocchi storage archive policy name.'),
@@ -78,7 +81,11 @@ class GnocchiStorage(storage.BaseStorage):
             CONF,
             GNOCCHI_STORAGE_OPTS,
             auth=self.auth)
-        self._conn = gclient.Client('1', session=self.session)
+        self._conn = gclient.Client(
+            '1',
+            session=self.session,
+            adapter_options={'connect_retries': 3,
+                             'interface': CONF.storage_gnocchi.interface})
         self._measures = {}
         self._archive_policy_name = (
             CONF.storage_gnocchi.archive_policy_name)

@@ -41,6 +41,7 @@ _opts = [
     ('collector_monasca', list(itertools.chain(
         cloudkitty.collector.monasca.collector_monasca_opts))),
     ('gnocchi_collector', list(itertools.chain(
+        cloudkitty.collector.gnocchi.end_point_type_opts,
         cloudkitty.collector.gnocchi.gnocchi_collector_opts))),
     ('keystone_fetcher', list(itertools.chain(
         cloudkitty.tenant_fetcher.keystone.keystone_fetcher_opts,
