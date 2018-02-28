@@ -45,13 +45,6 @@ Field
 A field is referring to a metadata field of a resource. For example on an
 instance object (**compute**), you can use the flavor to define specific rules.
 
-With Ceilometer as the collector, the following fields are available for each
-service:
-
-* Compute: flavor, vcpus, memory (MB), image_id, availability_zone
-* Volume: name, volume_type, availability_zone
-* Image: disk_format, container_format, is_public, availability_zone
-
 With Gnocchi as collector, the following fields are available for each service:
 
 * Compute: flavor_id, vcpus, image_id, memory (MB)
