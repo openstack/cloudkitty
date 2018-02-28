@@ -24,7 +24,7 @@ import cloudkitty.config
 import cloudkitty.orchestrator
 import cloudkitty.service
 import cloudkitty.storage
-import cloudkitty.storage.gnocchi
+import cloudkitty.storage.hybrid.backends.gnocchi
 import cloudkitty.tenant_fetcher
 import cloudkitty.tenant_fetcher.keystone
 import cloudkitty.utils
@@ -55,7 +55,7 @@ _opts = [
     ('storage', list(itertools.chain(
         cloudkitty.storage.storage_opts))),
     ('storage_gnocchi', list(itertools.chain(
-        cloudkitty.storage.gnocchi.gnocchi_storage_opts))),
+        cloudkitty.storage.hybrid.backends.gnocchi.gnocchi_storage_opts))),
     ('tenant_fetcher', list(itertools.chain(
         cloudkitty.tenant_fetcher.fetchers_opts))),
     (None, list(itertools.chain(

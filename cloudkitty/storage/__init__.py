@@ -50,9 +50,6 @@ def get_storage(collector=None):
         cfg.CONF.storage.backend,
         invoke_on_load=True,
         invoke_kwds=storage_args).driver
-    if cfg.CONF.storage.backend not in ['sqlalchemy', 'hybrid']:
-        LOG.warning('{} storage backend is deprecated and will be removed '
-                    'in a future release.'.format(cfg.CONF.storage.backend))
     return backend
 
 

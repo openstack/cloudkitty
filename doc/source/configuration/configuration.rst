@@ -139,27 +139,28 @@ The following shows the basic configuration items:
 
    The tenant named ``service`` is also commonly called ``services``
 
-It is now time to configure the storage backend. Four storage backends are
-available: ``sqlalchemy``, ``hybrid``, ``gnocchihybrid``, and ``gnocchi``.
+It is now time to configure the storage backend. Two storage backends are
+available: ``sqlalchemy`` and ``hybrid`` (which will soon become the v2
+storage).
 
 .. code-block:: ini
 
    [storage]
-   backend = gnocchi
+   backend = hybrid
 
 As you will see in the following example, collector and storage backends
 sometimes need additional configuration sections. (The tenant fetcher works the
-same way, but for now, only Keystone is supported). The section's name has the
-following format: ``{backend_name}_{backend_type}`` (``gnocchi_collector`` for
-example), except for ``storage_gnocchi``.
+same way). The section's name has the following format:
+``{backend_name}_{backend_type}`` (``gnocchi_collector`` for example), except
+for ``storage_gnocchi``.
 
 .. note::
 
    The section name format should become ``{backend_type}_{backend_name}`` for
    all sections in the future (``storage_gnocchi`` style).
 
-If you want to use the pure gnocchi storage or the hybrid storage with a
-gnocchi backend, add the following entry:
+If you want to use the hybrid storage with a gnocchi backend, add the following
+entry:
 
 .. code-block:: ini
 
