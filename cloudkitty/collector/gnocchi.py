@@ -29,8 +29,12 @@ LOG = logging.getLogger(__name__)
 
 GNOCCHI_COLLECTOR_OPTS = 'gnocchi_collector'
 gnocchi_collector_opts = ks_loading.get_auth_common_conf_options()
-
+end_point_type_opts = [
+    cfg.StrOpt('interface',
+               default='internalURL',
+               help='endpoint url type'), ]
 cfg.CONF.register_opts(gnocchi_collector_opts, GNOCCHI_COLLECTOR_OPTS)
+cfg.CONF.register_opts(end_point_type_opts, GNOCCHI_COLLECTOR_OPTS)
 ks_loading.register_session_conf_options(
     cfg.CONF,
     GNOCCHI_COLLECTOR_OPTS)
@@ -103,7 +107,9 @@ class GnocchiCollector(collector.BaseCollector):
             auth=self.auth)
         self._conn = gclient.Client(
             '1',
-            session=self.session)
+            session=self.session,
+            adapter_options={'connect_retries': 3,
+                             'interface': CONF.gnocchi_collector.interface})
 
     @classmethod
     def get_metadata(cls, resource_name, transformers):
@@ -299,8 +305,8 @@ class GnocchiCollector(collector.BaseCollector):
                 if isinstance(qty, str):
                     resource_data[qty] = ck_utils.convert_unit(
                         resource_data[qty],
-                        conv_data.get('factor', 1),
-                        conv_data.get('offset', 0),
+                        conv_data.get('factor', '1'),
+                        conv_data.get('offset', '0'),
                     )
             # NOTE(mc): deprecated except part kept for backward compatibility.
             except KeyError:
