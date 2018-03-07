@@ -22,7 +22,8 @@ from keystoneclient import discover
 from keystoneclient import exceptions
 from oslo_config import cfg
 
-from cloudkitty import tenant_fetcher
+from cloudkitty import fetcher
+
 
 KEYSTONE_FETCHER_OPTS = 'keystone_fetcher'
 keystone_common_opts = ks_loading.get_auth_common_conf_options()
@@ -42,8 +43,10 @@ ks_loading.register_auth_conf_options(
 CONF = cfg.CONF
 
 
-class KeystoneFetcher(tenant_fetcher.BaseFetcher):
+class KeystoneFetcher(fetcher.BaseFetcher):
     """Keystone tenants fetcher."""
+
+    name = 'keystone'
 
     def __init__(self):
         self.auth = ks_loading.load_auth_from_conf_options(
@@ -58,18 +61,18 @@ class KeystoneFetcher(tenant_fetcher.BaseFetcher):
             session=self.session,
             auth_url=self.auth.auth_url)
 
-    def get_tenants(self):
+    def get_tenants(self, conf=None):
         keystone_version = discover.normalize_version_number(
             CONF.keystone_fetcher.keystone_version)
         auth_dispatch = {(3,): ('project', 'projects', 'list'),
                          (2,): ('tenant', 'tenants', 'roles_for_user')}
         for auth_version, auth_version_mapping in auth_dispatch.items():
             if discover.version_match(auth_version, keystone_version):
-                return self._do_get_tenants(auth_version_mapping)
+                return self._do_get_tenants(auth_version_mapping, conf)
         msg = "Keystone version you've specified is not supported"
         raise exceptions.VersionNotAvailable(msg)
 
-    def _do_get_tenants(self, auth_version_mapping):
+    def _do_get_tenants(self, auth_version_mapping, conf):
         tenant_attr, tenants_attr, role_func = auth_version_mapping
         tenant_list = getattr(self.admin_ks, tenants_attr).list()
         my_user_id = self.session.get_user_id()
@@ -79,4 +82,8 @@ class KeystoneFetcher(tenant_fetcher.BaseFetcher):
                    tenant_attr: tenant})
             if 'rating' not in [role.name for role in roles]:
                 tenant_list.remove(tenant)
-        return [tenant.id for tenant in tenant_list]
+        if conf:
+            res = [{'tenant_id': tenant.id} for tenant in tenant_list]
+            for tenant in res:
+                tenant.update(conf)
+        return res

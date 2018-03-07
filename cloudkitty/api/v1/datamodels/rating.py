@@ -27,8 +27,21 @@ CONF = cfg.CONF
 
 METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
-CLOUDKITTY_SERVICES = wtypes.Enum(wtypes.text,
-                                  *METRICS_CONF['services'])
+try:
+    services_names = list(METRICS_CONF['services_objects'].keys())
+except Exception:
+    # TODO(mc): remove this hack once rated dataframes are based on metrics.
+    services_names = [
+        'compute',
+        'volume',
+        'image',
+        'network.bw.in',
+        'network.bw.out',
+        'network.floating',
+        'radosgw.usage',
+    ]
+
+CLOUDKITTY_SERVICES = wtypes.Enum(wtypes.text, *services_names)
 
 
 class CloudkittyResource(wtypes.Base):

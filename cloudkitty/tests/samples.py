@@ -18,6 +18,7 @@
 import copy
 import decimal
 
+from cloudkitty.default_metrics_conf import DEFAULT_METRICS_CONF
 from cloudkitty import utils as ck_utils
 
 TENANT = 'f266f30b11f246b589fd266f85eeec39'
@@ -74,12 +75,12 @@ SECOND_PERIOD = {
 COLLECTED_DATA = [{
     'period': FIRST_PERIOD,
     'usage': {
-        'compute': [{
+        'cpu': [{
             'desc': COMPUTE_METADATA,
             'vol': {
                 'qty': decimal.Decimal(1.0),
                 'unit': 'instance'}}],
-        'image': [{
+        'image.size': [{
             'desc': IMAGE_METADATA,
             'vol': {
                 'qty': decimal.Decimal(1.0),
@@ -87,7 +88,7 @@ COLLECTED_DATA = [{
     }}, {
     'period': SECOND_PERIOD,
     'usage': {
-        'compute': [{
+        'cpu': [{
             'desc': COMPUTE_METADATA,
             'vol': {
                 'qty': decimal.Decimal(1.0),
@@ -95,11 +96,11 @@ COLLECTED_DATA = [{
     }}]
 
 RATED_DATA = copy.deepcopy(COLLECTED_DATA)
-RATED_DATA[0]['usage']['compute'][0]['rating'] = {
+RATED_DATA[0]['usage']['cpu'][0]['rating'] = {
     'price': decimal.Decimal('0.42')}
-RATED_DATA[0]['usage']['image'][0]['rating'] = {
+RATED_DATA[0]['usage']['image.size'][0]['rating'] = {
     'price': decimal.Decimal('0.1337')}
-RATED_DATA[1]['usage']['compute'][0]['rating'] = {
+RATED_DATA[1]['usage']['cpu'][0]['rating'] = {
     'price': decimal.Decimal('0.42')}
 
 
@@ -121,70 +122,13 @@ def split_storage_data(raw_data):
 # FIXME(sheeprine): storage is not using decimal for rates, we need to
 # transition to decimal.
 STORED_DATA = copy.deepcopy(COLLECTED_DATA)
-STORED_DATA[0]['usage']['compute'][0]['rating'] = {
+STORED_DATA[0]['usage']['cpu'][0]['rating'] = {
     'price': 0.42}
-STORED_DATA[0]['usage']['image'][0]['rating'] = {
+STORED_DATA[0]['usage']['image.size'][0]['rating'] = {
     'price': 0.1337}
-STORED_DATA[1]['usage']['compute'][0]['rating'] = {
+STORED_DATA[1]['usage']['cpu'][0]['rating'] = {
     'price': 0.42}
 
 STORED_DATA = split_storage_data(STORED_DATA)
 
-METRICS_CONF = {
-    'collector': 'gnocchi',
-    'name': 'OpenStack',
-    'period': 3600,
-    'services': [
-        'compute',
-        'volume',
-        'network.bw.in',
-        'network.bw.out',
-        'network.floating',
-        'image'
-    ],
-    'services_metrics': {
-        'compute': [
-            {'vcpus': 'max'},
-            {'memory': 'max'},
-            {'cpu': 'max'},
-            {'disk.root.size': 'max'},
-            {'disk.ephemeral.size': 'max'}
-        ],
-        'image': [
-            {'image.size': 'max'},
-            {'image.download': 'max'},
-            {'image.serve': 'max'}
-        ],
-        'network.bw.in': [{'network.incoming.bytes': 'max'}],
-        'network.bw.out': [{'network.outgoing.bytes': 'max'}],
-        'network.floating': [{'ip.floating': 'max'}],
-        'volume': [{'volume.size': 'max'}],
-        'radosgw.usage': [{'radosgw.objects.size': 'max'}]},
-    'services_objects': {
-        'compute': 'instance',
-        'image': 'image',
-        'network.bw.in': 'instance_network_interface',
-        'network.bw.out': 'instance_network_interface',
-        'network.floating': 'network',
-        'volume': 'volume',
-        'radosgw.usage': 'ceph_account',
-    },
-    'metrics_units': {
-        'compute': {1: {'unit': 'instance'}},
-        'default_unit': {1: {'unit': 'unknown'}},
-        'image': {'image.size': {'unit': 'MiB', 'factor': '1/1048576'}},
-        'network.bw.in': {'network.incoming.bytes': {
-            'unit': 'MB',
-            'factor': '1/1000000'}},
-        'network.bw.out': {'network.outgoing.bytes': {
-            'unit': 'MB',
-            'factor': '1/1000000'}},
-        'network.floating': {1: {'unit': 'ip'}},
-        'volume': {'volume.size': {'unit': 'GiB'}},
-        'radosgw.usage': {'radosgw.objects.size': {
-            'unit': 'GiB',
-            'factor': '1/1073741824'}},
-    },
-    'wait_periods': 2,
-    'window': 1800
-}
+METRICS_CONF = DEFAULT_METRICS_CONF

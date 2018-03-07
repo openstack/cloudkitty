@@ -28,7 +28,19 @@ info_policies = [
         name='info:get_service_info',
         check_str=base.UNPROTECTED,
         description='Get specified service information.',
-        operations=[{'path': '/v1/info/services/{service_id}',
+        operations=[{'path': '/v1/info/services/{metric_id}',
+                     'method': 'GET'}]),
+    policy.DocumentedRuleDefault(
+        name='info:list_metrics_info',
+        check_str=base.UNPROTECTED,
+        description='List available metrics information in Cloudkitty.',
+        operations=[{'path': '/v1/info/metrics',
+                     'method': 'LIST'}]),
+    policy.DocumentedRuleDefault(
+        name='info:get_metric_info',
+        check_str=base.UNPROTECTED,
+        description='Get specified metric information.',
+        operations=[{'path': '/v1/info/metrics/{metric_id}',
                      'method': 'GET'}]),
     policy.DocumentedRuleDefault(
         name='info:get_config',

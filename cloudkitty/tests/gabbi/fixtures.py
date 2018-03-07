@@ -387,6 +387,20 @@ class CORSConfigFixture(fixture.GabbiFixture):
         cfg.ConfigOpts.GroupAttr.__getattr__ = self._original_call_method
 
 
+class MetricsConfFixture(fixture.GabbiFixture):
+    """Inject Metrics configuration mock to the get_metrics_conf() function"""
+
+    def start_fixture(self):
+        self._original_function = ck_utils.get_metrics_conf
+        ck_utils.get_metrics_conf = mock.Mock(
+            return_value=tests.samples.METRICS_CONF,
+        )
+
+    def stop_fixture(self):
+        """Remove the get_metrics_conf() monkeypatch."""
+        ck_utils.get_metrics_conf = self._original_function
+
+
 def setup_app():
     messaging.setup()
     # FIXME(sheeprine): Extension fixtures are interacting with transformers

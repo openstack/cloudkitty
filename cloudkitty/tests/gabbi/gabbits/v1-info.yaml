@@ -1,45 +1,68 @@
 fixtures:
   - ConfigFixture
+  - MetricsConfFixture
 
 tests:
   - name: get config
     url: /v1/info/config
     status: 200
     response_json_paths:
-      $.collect.services.`len`: 6
-      $.collect.services[0]: compute
-      $.collect.services[1]: volume
-      $.collect.services[2]: network.bw.in
-      $.collect.services[3]: network.bw.out
-      $.collect.services[4]: network.floating
-      $.collect.services[5]: image
-      $.collect.collector: gnocchi
-      $.collect.window: 1800
-      $.collect.wait_periods: 2
-      $.collect.period: 3600
+      $.collector: gnocchi
+      $.window: 1800
+      $.wait_periods: 2
+      $.period: 3600
 
-  - name: get services info
-    url: /v1/info/services
+      $.metrics.`len`: 13
+      $.metrics.vcpus.unit: instance
+      $.metrics.memory.unit: instance
+      $.metrics.cpu.unit: instance
+      $.metrics['disk.root.size'].unit: instance
+      $.metrics['disk.ephemeral.size'].unit: instance
+      $.metrics['image.size'].unit: MiB
+      $.metrics['image.download'].unit: MiB
+      $.metrics['image.serve'].unit: MiB
+      $.metrics['volume.size'].unit: GiB
+      $.metrics['network.incoming.bytes'].unit: MB
+      $.metrics['network.outgoing.bytes'].unit: MB
+      $.metrics['ip.floating'].unit: ip
+      $.metrics['radosgw.objects.size'].unit: GiB
+
+  - name: get metrics info
+    url: /v1/info/metrics
     status: 200
     response_json_paths:
-      $.services.`len`: 6
-      $.services[/service_id][0].service_id: compute
-      $.services[/service_id][0].unit: instance
-      $.services[/service_id][1].service_id: image
-      $.services[/service_id][1].unit: MiB
-      $.services[/service_id][2].service_id: network.bw.in
-      $.services[/service_id][2].unit: MB
-      $.services[/service_id][3].service_id: network.bw.out
-      $.services[/service_id][3].unit: MB
-      $.services[/service_id][4].service_id: network.floating
-      $.services[/service_id][4].unit: ip
-      $.services[/service_id][5].service_id: volume
-      $.services[/service_id][5].unit: GiB
+      $.metrics.`len`: 13
+      $.metrics[/metric_id][0].metric_id: cpu
+      $.metrics[/metric_id][0].unit: instance
+      $.metrics[/metric_id][1].metric_id: disk.ephemeral.size
+      $.metrics[/metric_id][1].unit: instance
+      $.metrics[/metric_id][2].metric_id: disk.root.size
+      $.metrics[/metric_id][2].unit: instance
+      $.metrics[/metric_id][3].metric_id: image.download
+      $.metrics[/metric_id][3].unit: MiB
+      $.metrics[/metric_id][4].metric_id: image.serve
+      $.metrics[/metric_id][4].unit: MiB
+      $.metrics[/metric_id][5].metric_id: image.size
+      $.metrics[/metric_id][5].unit: MiB
+      $.metrics[/metric_id][6].metric_id: ip.floating
+      $.metrics[/metric_id][6].unit: ip
+      $.metrics[/metric_id][7].metric_id: memory
+      $.metrics[/metric_id][7].unit: instance
+      $.metrics[/metric_id][8].metric_id: network.incoming.bytes
+      $.metrics[/metric_id][8].unit: MB
+      $.metrics[/metric_id][9].metric_id: network.outgoing.bytes
+      $.metrics[/metric_id][9].unit: MB
+      $.metrics[/metric_id][10].metric_id: radosgw.objects.size
+      $.metrics[/metric_id][10].unit: GiB
+      $.metrics[/metric_id][11].metric_id: vcpus
+      $.metrics[/metric_id][11].unit: instance
+      $.metrics[/metric_id][12].metric_id: volume.size
+      $.metrics[/metric_id][12].unit: GiB
 
-  - name: get compute service info
-    url: /v1/info/services/compute
+  - name: get cpu metric info
+    url: /v1/info/metrics/cpu
     status: 200
     response_json_paths:
-      $.service_id: compute
+      $.metric_id: cpu
       $.unit: instance
-      $.metadata.`len`: 8
+      $.metadata.`len`: 4

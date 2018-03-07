@@ -36,6 +36,10 @@ LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 
+# NOTE(mc): This hack is possible because only
+# one OpenStack configuration is allowed.
+METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+
 CONF.import_opt('period', 'cloudkitty.collector', 'collect')
 
 GNOCCHI_STORAGE_OPTS = 'storage_gnocchi'
@@ -49,7 +53,7 @@ gnocchi_storage_opts = [
     # The archive policy definition MUST include the collect period granularity
     cfg.StrOpt('archive_policy_definition',
                default='[{"granularity": '
-                       + six.text_type(CONF.collect.period) +
+                       + six.text_type(METRICS_CONF.get('period', 3600)) +
                        ', "timespan": "90 days"}, '
                        '{"granularity": 86400, "timespan": "360 days"}, '
                        '{"granularity": 2592000, "timespan": "1800 days"}]',
@@ -62,8 +66,6 @@ ks_loading.register_session_conf_options(
 ks_loading.register_auth_conf_options(
     CONF,
     GNOCCHI_STORAGE_OPTS)
-
-METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
 RESOURCE_TYPE_NAME_ROOT = 'rating_service_'
 
@@ -100,37 +102,24 @@ class GnocchiStorage(BaseHybridBackend):
         "creator",
     ]
 
-    @staticmethod
-    def _get_service_metrics(service_name):
-        metrics = METRICS_CONF['services_metrics'][service_name]
-        metric_list = ['price']
-        for metric in metrics:
-            metric_list.append(list(metric.keys())[0])
-        return metric_list
-
     def _init_resource_types(self):
         transformer = gtransformer.GnocchiTransformer()
-        services = METRICS_CONF['services']
-        for service in services:
-            service_dict = dict()
-            service_dict['attributes'] = list()
-            for attribute in transformer.get_metadata(service):
+        for metric in list(self.conf['metrics'].keys()):
+            metric_dict = dict()
+            metric_dict['attributes'] = list()
+            for attribute in transformer.get_metadata(metric):
                 if attribute not in self.invalid_attribute_names:
-                    service_dict['attributes'].append(attribute)
-            service_dict['required_attributes'] = [
+                    metric_dict['attributes'].append(attribute)
+            metric_dict['required_attributes'] = [
                 'resource_id',
                 'unit',
             ]
-            try:
-                service_dict['metrics'] = self._get_service_metrics(service)
-            except KeyError:
-                LOG.warning(
-                    'No metrics configured for service {}'.format(service))
-                service_dict['metrics'] = list()
-            service_dict['name'] = RESOURCE_TYPE_NAME_ROOT + service
-            service_dict['qty_metric'] \
-                = list(METRICS_CONF['metrics_units'][service].keys())[0]
-            self._resource_type_data[service] = service_dict
+            metric_dict['name'] = RESOURCE_TYPE_NAME_ROOT + metric
+            metric_dict['qty_metric'] = 1
+            if self.conf['metrics'][metric].get('countable_unit'):
+                resource = self.conf['metrics'][metric]['resource']
+                metric_dict['qty_metric'] = resource
+            self._resource_type_data[metric] = metric_dict
 
     def _get_res_type_dict(self, res_type):
         res_type_data = self._resource_type_data.get(res_type, None)
@@ -175,7 +164,7 @@ class GnocchiStorage(BaseHybridBackend):
                 'name': metric,
                 'archive_policy_name':
                     CONF.storage_gnocchi.archive_policy_name,
-            }) for metric in res_type_data['metrics']
+            }) for metric in ['price', res_type]
         ]
 
         metrics_dict = dict()
@@ -235,6 +224,7 @@ class GnocchiStorage(BaseHybridBackend):
 
     def __init__(self, **kwargs):
         super(GnocchiStorage, self).__init__(**kwargs)
+        self.conf = kwargs['conf'] if 'conf' in kwargs else METRICS_CONF
         self.auth = ks_loading.load_auth_from_conf_options(
             CONF,
             GNOCCHI_STORAGE_OPTS)
@@ -251,7 +241,7 @@ class GnocchiStorage(BaseHybridBackend):
             CONF.storage_gnocchi.archive_policy_name)
         self._archive_policy_definition = json.loads(
             CONF.storage_gnocchi.archive_policy_definition)
-        self._period = CONF.collect.period
+        self._period = self.conf['period']
         if "period" in kwargs:
             self._period = kwargs["period"]
         self._measurements = dict()

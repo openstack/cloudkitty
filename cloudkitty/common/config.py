@@ -20,12 +20,12 @@ import cloudkitty.api.app
 import cloudkitty.collector.gnocchi
 import cloudkitty.collector.monasca
 import cloudkitty.config
+import cloudkitty.fetcher
+import cloudkitty.fetcher.keystone
 import cloudkitty.orchestrator
 import cloudkitty.service
 import cloudkitty.storage
 import cloudkitty.storage.hybrid.backends.gnocchi
-import cloudkitty.tenant_fetcher
-import cloudkitty.tenant_fetcher.keystone
 import cloudkitty.utils
 
 __all__ = ['list_opts']
@@ -41,8 +41,8 @@ _opts = [
         cloudkitty.collector.gnocchi.end_point_type_opts,
         cloudkitty.collector.gnocchi.gnocchi_collector_opts))),
     ('keystone_fetcher', list(itertools.chain(
-        cloudkitty.tenant_fetcher.keystone.keystone_fetcher_opts,
-        cloudkitty.tenant_fetcher.keystone.keystone_common_opts))),
+        cloudkitty.fetcher.keystone.keystone_fetcher_opts,
+        cloudkitty.fetcher.keystone.keystone_common_opts))),
     ('orchestrator', list(itertools.chain(
         cloudkitty.orchestrator.orchestrator_opts))),
     ('output', list(itertools.chain(
@@ -50,14 +50,14 @@ _opts = [
     ('state', list(itertools.chain(
         cloudkitty.config.state_opts))),
     ('storage', list(itertools.chain(
-        cloudkitty.storage.storage_opts))),
+        cloudkitty.utils.storage_opts))),
     ('storage_gnocchi', list(itertools.chain(
         cloudkitty.storage.hybrid.backends.gnocchi.gnocchi_storage_opts))),
-    ('tenant_fetcher', list(itertools.chain(
-        cloudkitty.tenant_fetcher.fetchers_opts))),
+    ('fetcher', list(itertools.chain(
+        cloudkitty.fetcher.fetchers_opts))),
     (None, list(itertools.chain(
         cloudkitty.api.app.auth_opts,
-        cloudkitty.service.service_opts)))
+        cloudkitty.service.service_opts))),
 ]
 
 

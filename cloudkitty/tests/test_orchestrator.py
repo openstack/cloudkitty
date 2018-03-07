@@ -40,7 +40,7 @@ class OrchestratorTest(tests.TestCase):
         messaging_conf.transport_driver = 'fake'
         self.conf.set_override('backend', 'keystone', 'tenant_fetcher')
         self.conf.import_group('keystone_fetcher',
-                               'cloudkitty.tenant_fetcher.keystone')
+                               'cloudkitty.fetcher.keystone')
 
     def setup_fake_modules(self):
         fake_module1 = tests.FakeRatingModule()

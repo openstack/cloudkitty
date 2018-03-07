@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    A Source Fetcher has been added, allowing to add new collectors to scrap
+    metrics from non-OpenStack sources.

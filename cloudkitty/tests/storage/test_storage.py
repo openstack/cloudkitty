@@ -234,10 +234,10 @@ class StorageTotalTest(StorageTest):
         total = self.storage.get_total(
             begin=begin,
             end=end,
-            service='compute')
+            service='cpu')
         self.assertEqual(1, len(total))
         self.assertEqual(0.84, total[0]["rate"])
-        self.assertEqual('compute', total[0]["res_type"])
+        self.assertEqual('cpu', total[0]["res_type"])
         self.assertEqual(begin, total[0]["begin"])
         self.assertEqual(end, total[0]["end"])
 
@@ -269,11 +269,11 @@ class StorageTotalTest(StorageTest):
             groupby="res_type")
         self.assertEqual(2, len(total))
         self.assertEqual(0.2674, total[0]["rate"])
-        self.assertEqual('image', total[0]["res_type"])
+        self.assertEqual('image.size', total[0]["res_type"])
         self.assertEqual(begin, total[0]["begin"])
         self.assertEqual(end, total[0]["end"])
         self.assertEqual(1.68, total[1]["rate"])
-        self.assertEqual('compute', total[1]["res_type"])
+        self.assertEqual('cpu', total[1]["res_type"])
         self.assertEqual(begin, total[1]["begin"])
         self.assertEqual(end, total[1]["end"])
 
@@ -288,22 +288,22 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(4, len(total))
         self.assertEqual(0.1337, total[0]["rate"])
         self.assertEqual(self._other_tenant_id, total[0]["tenant_id"])
-        self.assertEqual('image', total[0]["res_type"])
+        self.assertEqual('image.size', total[0]["res_type"])
         self.assertEqual(begin, total[0]["begin"])
         self.assertEqual(end, total[0]["end"])
         self.assertEqual(0.1337, total[1]["rate"])
         self.assertEqual(self._tenant_id, total[1]["tenant_id"])
-        self.assertEqual('image', total[1]["res_type"])
+        self.assertEqual('image.size', total[1]["res_type"])
         self.assertEqual(begin, total[1]["begin"])
         self.assertEqual(end, total[1]["end"])
         self.assertEqual(0.84, total[2]["rate"])
         self.assertEqual(self._other_tenant_id, total[2]["tenant_id"])
-        self.assertEqual('compute', total[2]["res_type"])
+        self.assertEqual('cpu', total[2]["res_type"])
         self.assertEqual(begin, total[2]["begin"])
         self.assertEqual(end, total[2]["end"])
         self.assertEqual(0.84, total[3]["rate"])
         self.assertEqual(self._tenant_id, total[3]["tenant_id"])
-        self.assertEqual('compute', total[3]["res_type"])
+        self.assertEqual('cpu', total[3]["res_type"])
         self.assertEqual(begin, total[3]["begin"])
         self.assertEqual(end, total[3]["end"])
 
@@ -426,7 +426,7 @@ class StorageDataIntegrityTest(StorageTest):
         del expected_data[2]
         # NOTE(sheeprine): Quick and dirty sort (ensure result consistency,
         # order is not significant to the test result)
-        if 'image' in stored_data[0]['usage']:
+        if 'image.size' in stored_data[0]['usage']:
             stored_data[0]['usage'], stored_data[1]['usage'] = (
                 stored_data[1]['usage'], stored_data[0]['usage'])
         self.assertEqual(

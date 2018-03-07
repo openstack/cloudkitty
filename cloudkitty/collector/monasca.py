@@ -22,7 +22,6 @@ from keystoneclient.v3 import client as ks_client
 from monascaclient import client as mclient
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_utils import units
 
 from cloudkitty import collector
 from cloudkitty import transformer
@@ -130,55 +129,59 @@ class MonascaCollector(collector.BaseCollector):
                 return endpoint.url
         return None
 
-    def _get_metadata(self, resource_type, transformers):
+    def _get_metadata(self, resource_type, transformers, conf):
         info = {}
-        try:
-            met = list(METRICS_CONF['metrics_units'][resource_type].values())
-            info['unit'] = met[0]['unit']
-        # NOTE(mc): deprecated second try kept for backward compatibility.
-        except KeyError:
-            LOG.warning('Error when trying to use yaml metrology conf.')
-            LOG.warning('Fallback on the deprecated oslo config method.')
-            try:
-                info['unit'] = self.units_mappings[resource_type][1]
-            except (KeyError, IndexError):
-                info['unit'] = self.default_unit[1]
+        info['unit'] = conf['metrics'][resource_type]['unit']
 
         start = ck_utils.dt2ts(ck_utils.get_month_start())
         end = ck_utils.dt2ts(ck_utils.get_month_end())
 
         try:
-            resource = self.active_resources(resource_type, start,
-                                             end, None)[0]
+            resource = self.active_resources(
+                resource_type,
+                start,
+                end,
+                None,
+            )[0]
         except IndexError:
             resource = {}
         info['metadata'] = resource.get('dimensions', {}).keys()
 
-        try:
-            service_metrics = METRICS_CONF['services_metrics'][resource_type]
-            for service_metric in service_metrics:
-                metric, statistics = list(service_metric.items())[0]
-                info['metadata'].append(metric)
-        # NOTE(mc): deprecated second try kept for backward compatibility.
-        except KeyError:
-            LOG.warning('Error when trying to use yaml metrology conf.')
-            LOG.warning('Fallback on the deprecated oslo config method.')
-            try:
-                for metric, statistics in self.metrics_mappings[resource_type]:
-                    info['metadata'].append(metric)
-            except (KeyError, IndexError):
-                pass
+        service_metrics = METRICS_CONF['services_metrics'][resource_type]
+        for service_metric in service_metrics:
+            metric, statistics = list(service_metric.items())[0]
+            info['metadata'].append(metric)
         return info
 
     # NOTE(lukapeschke) if anyone sees a better way to do this,
     # please make a patch
     @classmethod
-    def get_metadata(cls, resource_type, transformers):
+    def get_metadata(cls, resource_type, transformers, conf):
         args = {
             'transformers': transformer.get_transformers(),
-            'period': CONF.collect.period}
+            'period': conf['period']}
         tmp = cls(**args)
-        return tmp._get_metadata(resource_type, transformers)
+        return tmp._get_metadata(resource_type, transformers, conf)
+
+    def _get_resource_metadata(self, resource_type, start,
+                               end, resource_id, conf):
+        meter = conf['metrics'][resource_type]['resource']
+
+        if not meter:
+            return {}
+        measurements = self._conn.metrics.list_measurements(
+            name=meter,
+            start_time=ck_utils.ts2dt(start),
+            end_time=ck_utils.ts2dt(end),
+            merge_metrics=True,
+            dimensions={'resource_id': resource_id},
+        )
+        try:
+            # Getting the last measurement of given period
+            metadata = measurements[-1]['measurements'][-1][2]
+        except (KeyError, IndexError):
+            metadata = {}
+        return metadata
 
     def _get_resource_qty(self, meter, start, end, resource_id, statistics):
         # NOTE(lukapeschke) the period trick is used to aggregate
@@ -213,14 +216,8 @@ class MonascaCollector(collector.BaseCollector):
         return len(measurements) > 0
 
     def active_resources(self, resource_type, start,
-                         end, project_id, **kwargs):
-        try:
-            meter = METRICS_CONF['services_objects'].get(resource_type)
-        # NOTE(mc): deprecated except part kept for backward compatibility.
-        except KeyError:
-            LOG.warning('Error when trying to use yaml metrology conf.')
-            LOG.warning('Fallback on the deprecated oslo config method.')
-            meter = self.retrieve_mappings.get(resource_type)
+                         end, project_id, conf, **kwargs):
+        meter = conf['metrics'][resource_type]['resource']
 
         if not meter:
             return {}
@@ -254,58 +251,32 @@ class MonascaCollector(collector.BaseCollector):
                 statistics,
             )
 
-            try:
-                conv_data = METRICS_CONF['metrics_units'][resource_type]
-                conv_data = conv_data.get(name)
-                if conv_data:
-                    resource[name] = ck_utils.convert_unit(
-                        qty,
-                        conv_data.get('factor', 1),
-                        conv_data.get('offset', 0),
-                    )
-            # NOTE(mc): deprecated except part kept for backward compatibility.
-            except KeyError:
-                LOG.warning(
-                    'Error when trying to use yaml metrology conf.\n'
-                    'Fallback on the deprecated hardcoded dict method.')
-
-                names = ['network.outgoing.bytes', 'network.incoming.bytes']
-                if name in names:
-                    qty = qty / units.M
-                elif 'image.' in name:
-                    qty = qty / units.Mi
-                resource[name] = qty
+            conv_data = METRICS_CONF['metrics'][resource_type].get(name)
+            if conv_data:
+                resource[name] = ck_utils.convert_unit(
+                    qty,
+                    conv_data.get('factor', 1),
+                    conv_data.get('offset', 0),
+                )
 
     def resource_info(self, resource_type, start, end,
                       project_id, q_filter=None):
-
-        try:
-            tmp = METRICS_CONF['metrics_units'][resource_type]
-            qty = list(tmp.keys())[0]
-            unit = list(tmp.values())[0]['unit']
-        # NOTE(mc): deprecated except part kept for backward compatibility.
-        except KeyError:
-            LOG.warning('Error when trying to use yaml metrology conf.')
-            LOG.warning('Fallback on the deprecated oslo config method.')
-            qty, unit = self.units_mappings.get(
-                resource_type,
-                self.default_unit
-            )
+        met = self.conf['metrics'][resource_type]
+        unit = met['unit']
+        qty = 1 if met.get('countable_unit') else met['resource']
 
         active_resources = self.active_resources(
             resource_type, start, end, project_id
         )
+
         resource_data = []
         for resource in active_resources:
             resource_id = resource['dimensions']['resource_id']
             data = resource['dimensions']
-            try:
-                mappings = METRICS_CONF['services_metrics'][resource_type]
-            # NOTE(mc): deprecated except part kept for backward compatibility.
-            except KeyError:
-                LOG.warning('Error when trying to use yaml metrology conf.')
-                LOG.warning('Fallback on the deprecated oslo config method.')
-                mappings = self.metrics_mappings[resource_type]
+            mappings = (
+                resource_type,
+                METRICS_CONF['metrics'][resource_type]['aggregation_method'],
+            )
 
             self._expand_metrics(
                 data,
@@ -317,15 +288,7 @@ class MonascaCollector(collector.BaseCollector):
             )
             resource_qty = qty
             if not (isinstance(qty, int) or isinstance(qty, decimal.Decimal)):
-                try:
-                    resource_qty \
-                        = METRICS_CONF['services_objects'][resource_type]
-                # NOTE(mc): deprecated except part kept for backward compat.
-                except KeyError:
-                    LOG.warning('Error when trying to use yaml metrology conf')
-                    msg = 'Fallback on the deprecated oslo config method'
-                    LOG.warning(msg)
-                    resource_qty = data[self.retrieve_mappings[resource_type]]
+                resource_qty = METRICS_CONF['services_objects'][resource_type]
                 resource_qty = data[resource_qty]
 
             resource = self.t_cloudkitty.format_item(data, unit, resource_qty)

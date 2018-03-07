@@ -1,0 +1,8 @@
+---
+deprecations:
+  - |
+    The /v1/info/services and /v1/info/services/<service> endpoints have
+    been deprecated. The /v1/info/metrics and /v1/info/metrics/<metric>
+    endpoints should be used instead.
+    The whole /v1/info API part is currently being reworked, and some
+    endpoints will also be deprecated and deleted in the future.

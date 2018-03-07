@@ -1,0 +1,6 @@
+---
+other:
+  - |
+    Cloudkitty now bases itself on metrics and no more on services for data
+    valorization. The metrics.yml file information has been reorganized
+    accordingly.

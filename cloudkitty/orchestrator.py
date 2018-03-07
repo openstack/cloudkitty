@@ -41,7 +41,7 @@ eventlet.monkey_patch()
 LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
-CONF.import_opt('backend', 'cloudkitty.tenant_fetcher', 'tenant_fetcher')
+CONF.import_opt('backend', 'cloudkitty.fetcher', 'tenant_fetcher')
 
 orchestrator_opts = [
     cfg.StrOpt('coordination_url',
@@ -55,6 +55,8 @@ METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
 FETCHERS_NAMESPACE = 'cloudkitty.tenant.fetchers'
 PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
+COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
+STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
 class RatingEndpoint(object):
@@ -151,20 +153,26 @@ class APIWorker(BaseWorker):
 
 
 class Worker(BaseWorker):
-    def __init__(self, collector, storage, tenant_id=None):
+    def __init__(self, collector, storage, tenant):
         self._collector = collector
         self._storage = storage
-        self._period = METRICS_CONF['period']
-        self._wait_time = METRICS_CONF['wait_periods'] * self._period
+        self._period = tenant['period']
+        self._wait_time = tenant['wait_periods'] * self._period
+        self._tenant_id = tenant['tenant_id']
+        self.conf = tenant
 
-        super(Worker, self).__init__(tenant_id)
+        super(Worker, self).__init__(self._tenant_id)
 
-    def _collect(self, service, start_timestamp):
+    def _collect(self, metric, start_timestamp):
         next_timestamp = start_timestamp + self._period
-        raw_data = self._collector.retrieve(service,
-                                            start_timestamp,
-                                            next_timestamp,
-                                            self._tenant_id)
+
+        raw_data = self._collector.retrieve(
+            metric,
+            start_timestamp,
+            next_timestamp,
+            self._tenant_id,
+        )
+
         if raw_data:
             return [{'period': {'begin': start_timestamp,
                                 'end': next_timestamp},
@@ -182,18 +190,20 @@ class Worker(BaseWorker):
             if not timestamp:
                 break
 
-            for service in METRICS_CONF['services']:
+            metrics = list(self.conf['metrics'].keys())
+
+            for metric in metrics:
                 try:
                     try:
-                        data = self._collect(service, timestamp)
+                        data = self._collect(metric, timestamp)
                     except collector.NoDataCollected:
                         raise
                     except Exception as e:
                         LOG.warning(
-                            'Error while collecting service '
-                            '%(service)s: %(error)s',
-                            {'service': service, 'error': e})
-                        raise collector.NoDataCollected('', service)
+                            'Error while collecting metric '
+                            '%(metric)s: %(error)s',
+                            {'metric': metric, 'error': e})
+                        raise collector.NoDataCollected('', metric)
                 except collector.NoDataCollected:
                     begin = timestamp
                     end = begin + self._period
@@ -213,15 +223,15 @@ class Worker(BaseWorker):
 
 class Orchestrator(object):
     def __init__(self):
-        # Tenant fetcher
         self.fetcher = driver.DriverManager(
             FETCHERS_NAMESPACE,
-            CONF.tenant_fetcher.backend,
-            invoke_on_load=True).driver
+            METRICS_CONF['fetcher'],
+            invoke_on_load=True
+        ).driver
 
-        self.transformers = transformer.get_transformers()
-        self.collector = collector.get_collector(self.transformers)
-        self.storage = storage.get_storage(self.collector)
+        transformers = transformer.get_transformers()
+        self.collector = collector.get_collector(transformers)
+        self.storage = storage.get_storage(collector=self.collector)
 
         # RPC
         self.server = None
@@ -234,16 +244,9 @@ class Orchestrator(object):
             uuidutils.generate_uuid().encode('ascii'))
         self.coord.start()
 
-        self._period = METRICS_CONF['period']
-        self._wait_time = METRICS_CONF['wait_periods'] * self._period
-
     def _lock(self, tenant_id):
         lock_name = b"cloudkitty-" + str(tenant_id).encode('ascii')
         return self.coord.get_lock(lock_name)
-
-    def _load_tenant_list(self):
-        self._tenants = self.fetcher.get_tenants()
-        random.shuffle(self._tenants)
 
     def _init_messaging(self):
         target = oslo_messaging.Target(topic='cloudkitty',
@@ -255,11 +258,11 @@ class Orchestrator(object):
         self.server = messaging.get_server(target, endpoints)
         self.server.start()
 
-    def _check_state(self, tenant_id):
+    def _check_state(self, tenant_id, period, wait_time):
         timestamp = self.storage.get_state(tenant_id)
         return ck_utils.check_time_state(timestamp,
-                                         self._period,
-                                         self._wait_time)
+                                         period,
+                                         wait_time)
 
     def process_messages(self):
         # TODO(sheeprine): Code kept to handle threading and asynchronous
@@ -270,26 +273,36 @@ class Orchestrator(object):
 
     def process(self):
         while True:
-            self.process_messages()
-            self._load_tenant_list()
-            while len(self._tenants):
-                for tenant in self._tenants[:]:
-                    lock = self._lock(tenant)
-                    if lock.acquire(blocking=False):
-                        if not self._check_state(tenant):
-                            self._tenants.remove(tenant)
-                        else:
-                            worker = Worker(self.collector,
-                                            self.storage,
-                                            tenant)
-                            worker.run()
-                        lock.release()
-                    self.coord.heartbeat()
+            self.tenants = self.fetcher.get_tenants(METRICS_CONF)
+            random.shuffle(self.tenants)
+            LOG.info('Tenants loaded for fetcher %s', self.fetcher.name)
+
+            for tenant in self.tenants:
+                lock = self._lock(tenant['tenant_id'])
+                if lock.acquire(blocking=False):
+                    state = self._check_state(
+                        tenant['tenant_id'],
+                        tenant['period'],
+                        tenant['wait_periods'],
+                    )
+                    if not state:
+                        self.tenants.remove(tenant)
+                    else:
+                        worker = Worker(
+                            self.collector,
+                            self.storage,
+                            tenant,
+                        )
+
+                        worker.run()
+                    lock.release()
+                self.coord.heartbeat()
+
                 # NOTE(sheeprine): Slow down looping if all tenants are
                 # being processed
                 eventlet.sleep(1)
             # FIXME(sheeprine): We may cause a drift here
-            eventlet.sleep(self._period)
+            eventlet.sleep(tenant['period'])
 
     def terminate(self):
         self.coord.stop()

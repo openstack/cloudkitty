@@ -40,12 +40,18 @@ from six import moves
 from stevedore import extension
 
 
+COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
+
 _ISO8601_TIME_FORMAT_SUBSECOND = '%Y-%m-%dT%H:%M:%S.%f'
 _ISO8601_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 LOG = logging.getLogger(__name__)
 
 collect_opts = [
+    cfg.StrOpt('fetcher',
+               default='keystone',
+               deprecated_for_removal=True,
+               help='Project fetcher.'),
     cfg.StrOpt('collector',
                default='gnocchi',
                deprecated_for_removal=True,
@@ -77,8 +83,16 @@ collect_opts = [
                default='/etc/cloudkitty/metrics.yml',
                help='Metrology configuration file.'),
 ]
+
+storage_opts = [
+    cfg.StrOpt('backend',
+               default='sqlalchemy',
+               help='Name of the storage backend driver.')
+]
+
 CONF = cfg.CONF
 CONF.register_opts(collect_opts, 'collect')
+CONF.register_opts(storage_opts, 'storage')
 
 
 def isotime(at=None, subsecond=False):
@@ -263,28 +277,20 @@ def check_time_state(timestamp=None, period=0, wait_time=0):
 def get_metrics_conf(conf_path):
     """Return loaded yaml metrology configuration.
 
-    In case of empty /etc/cloudkitty folder,
-    a fallback is done on the former deprecated oslo config method.
+    In case not found metrics.yml file,
+    return an empty dict.
     """
-    res = None
+    # NOTE(mc): We can not raise any exception in this function as it called
+    # at some file imports. Default values should be used instead. This is
+    # done for the docs and tests in gerrit which does not copy yaml conf file.
     try:
         with open(conf_path) as conf:
             res = yaml.safe_load(conf)
-            res = res[0]
-    except Exception as exc:
+            res.update({'storage': CONF.storage.backend})
+        return res or {}
+    except Exception:
         LOG.warning('Error when trying to retrieve yaml metrology conf file.')
-        LOG.warning(exc)
-        LOG.warning('Fallback on the deprecated oslo config method.')
-
-        try:
-            res = {key: val for key, val in CONF.collect.items()}
-        except Exception as exc:
-            err_msg = 'Error when trying to retrieve ' \
-                      'deprecated oslo config method.'
-            LOG.error(err_msg)
-            LOG.error(exc)
-
-    return res
+        return {}
 
 
 @contextlib.contextmanager

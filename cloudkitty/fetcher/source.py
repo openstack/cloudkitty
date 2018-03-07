@@ -14,31 +14,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
+# @author: Martin CAMEY
 #
-import csv
+import hashlib
 
-from oslo_config import cfg
-
-from cloudkitty import tenant_fetcher
-
-fake_fetcher_opts = [
-    cfg.StrOpt('file',
-               default='/var/lib/cloudkitty/tenants.csv',
-               help='Fetcher input file.')]
-
-cfg.CONF.register_opts(fake_fetcher_opts, 'fake_fetcher')
-CONF = cfg.CONF
+from cloudkitty import fetcher
 
 
-class FakeFetcher(tenant_fetcher.BaseFetcher):
-    """Fake tenants fetcher."""
+class SourceFetcher(fetcher.BaseFetcher):
+    """Source projects fetcher."""
 
-    def __init__(self):
-        filename = cfg.CONF.fake_fetcher.file
-        csvfile = open(filename, 'rb')
-        reader = csv.DictReader(csvfile)
-        self._csv = reader
+    name = 'source'
 
-    def get_tenants(self):
-        return [row['id'] for row in self._csv]
+    def get_projects(self, conf=None):
+        if conf:
+            tmp = hashlib.md5()
+            tmp.update(conf['name'])
+            conf['tenant_id'] = tmp.hexdigest()
+        return [conf]
+
+    def get_tenants(self, conf=None):
+        return self.get_projects(conf=conf)

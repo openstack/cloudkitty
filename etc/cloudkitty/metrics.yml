@@ -1,75 +1,102 @@
-- name: OpenStack
+name: OpenStack
 
-  collector: gnocchi
-  period: 3600
-  wait_periods: 2
-  window: 1800
+fetcher: keystone
+collector: gnocchi
 
-  services:
-    - compute
-    - volume
-    - network.bw.in
-    - network.bw.out
-    - network.floating
-    - image
+period: 3600
+wait_periods: 2
+window: 1800
 
-  services_objects:
-    compute: instance
-    volume: volume
-    network.bw.out: instance_network_interface
-    network.bw.in: instance_network_interface
-    network.floating: network
-    image: image
-    radosgw.usage: ceph_account
+services_objects:
+  compute: instance
+  volume: volume
+  network.bw.out: instance_network_interface
+  network.bw.in: instance_network_interface
+  network.floating: network
+  image: image
+  radosgw.usage: ceph_account
 
-  services_metrics:
-    compute:
-      - vcpus: max
-      - memory: max
-      - cpu: max
-      - disk.root.size: max
-      - disk.ephemeral.size: max
-    volume:
-      - volume.size: max
-    network.bw.in:
-      - network.incoming.bytes: max
-    network.bw.out:
-      - network.outgoing.bytes: max
-    network.floating:
-      - ip.floating: max
-    image:
-      - image.size: max
-      - image.download: max
-      - image.serve: max
-    radosgw.usage:
-      - radosgw.objects.size: max
+metrics:
+  vcpus:
+    resource: instance
+    unit: instance
+    factor: 1
+    aggregation_method: max
+    countable_unit: true
 
-  metrics_units:
-    compute:
-      1:
-        unit: instance
-    volume:
-      volume.size:
-        unit: GiB
-    network.bw.in:
-      network.incoming.bytes:
-        unit: MB
-        factor: 1/1000000
-    network.bw.out:
-      network.outgoing.bytes:
-        unit: MB
-        factor: 1/1000000
-    network.floating:
-      1:
-        unit: ip
-    image:
-      image.size:
-        unit: MiB
-        factor: 1/1048576
-    radosgw.usage:
-      radosgw.objects.size:
-        unit: GiB
-        factor: 1/1073741824
-    default_unit:
-      1:
-        unit: unknown
+  memory:
+    resource: instance
+    unit: instance
+    factor: 1
+    aggregation_method: max
+    countable_unit: true
+
+  cpu:
+    resource: instance
+    unit: instance
+    factor: 1
+    aggregation_method: max
+    countable_unit: true
+
+  disk.root.size:
+    resource: instance
+    unit: instance
+    factor: 1
+    aggregation_method: max
+    countable_unit: true
+
+  disk.ephemeral.size:
+    resource: instance
+    unit: instance
+    factor: 1
+    aggregation_method: max
+    countable_unit: true
+
+  image.size:
+    resource: image
+    unit: MiB
+    factor: 1/1048576
+    aggregation_method: max
+
+  image.download:
+    resource: image
+    unit: MiB
+    factor: 1/1048576
+    aggregation_method: max
+
+  image.serve:
+    resource: image
+    unit: MiB
+    factor: 1/1048576
+    aggregation_method: max
+
+  volume.size:
+    resource: volume
+    unit: GiB
+    factor: 1
+    aggregation_method: max
+
+  network.outgoing.bytes:
+    resource: instance_network_interface
+    unit: MB
+    factor: 1/1000000
+    aggregation_method: max
+
+  network.incoming.bytes:
+    resource: instance_network_interface
+    unit: MB
+    factor: 1/1000000
+    aggregation_method: max
+
+  ip.floating:
+    resource: network
+    unit: ip
+    factor: 1
+    aggregation_method: max
+    countable_unit: true
+
+  radosgw.objects.size:
+    resource: ceph_account
+    unit: GiB
+    factor: 1/1073741824
+    aggregation_method: max

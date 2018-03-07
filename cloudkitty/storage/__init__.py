@@ -25,31 +25,31 @@ from stevedore import driver
 from cloudkitty import collector as ck_collector
 from cloudkitty import utils as ck_utils
 
+
 LOG = logging.getLogger(__name__)
 
-storage_opts = [
-    cfg.StrOpt('backend',
-               default='sqlalchemy',
-               help='Name of the storage backend driver.')
-]
-
 CONF = cfg.CONF
-CONF.register_opts(storage_opts, group='storage')
 
+# NOTE(mc): This hack is possible because only
+# one OpenStack configuration is allowed.
 METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
 def get_storage(collector=None):
+    if not collector:
+        collector = ck_collector.get_collector()
     storage_args = {
-        'period': METRICS_CONF['period'],
-        'collector': collector if collector else ck_collector.get_collector()}
+        'period': METRICS_CONF.get('period', 3600),
+        'collector': collector,
+    }
     backend = driver.DriverManager(
         STORAGES_NAMESPACE,
         cfg.CONF.storage.backend,
         invoke_on_load=True,
-        invoke_kwds=storage_args).driver
+        invoke_kwds=storage_args
+    ).driver
     return backend
 
 
@@ -68,7 +68,7 @@ class BaseStorage(object):
         Handle incoming data from the global orchestrator, and store them.
     """
     def __init__(self, **kwargs):
-        self._period = kwargs.get('period', METRICS_CONF['period'])
+        self._period = kwargs.get('period')
         self._collector = kwargs.get('collector')
 
         # State vars

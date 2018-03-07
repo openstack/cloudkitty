@@ -27,37 +27,51 @@ from cloudkitty import utils as ck_utils
 
 CONF = cfg.CONF
 
-METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
-
 COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 
 
 def get_collector(transformers=None):
+    metrics_conf = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
     if not transformers:
         transformers = transformer.get_transformers()
     collector_args = {
-        'period': METRICS_CONF['period'],
-        'transformers': transformers}
-    collector = driver.DriverManager(
+        'period': metrics_conf.get('period', 3600),
+        'transformers': transformers,
+    }
+    collector_args.update({'conf': metrics_conf})
+    return driver.DriverManager(
         COLLECTORS_NAMESPACE,
-        METRICS_CONF['collector'],
+        metrics_conf.get('collector', 'gnocchi'),
         invoke_on_load=True,
         invoke_kwds=collector_args).driver
-    return collector
 
 
-def get_collector_metadata():
+def get_collector_without_invoke():
+    """Return the collector without invoke it."""
+    metrics_conf = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+    return driver.DriverManager(
+        COLLECTORS_NAMESPACE,
+        metrics_conf.get('collector', 'gnocchi'),
+        invoke_on_load=False
+    ).driver
+
+
+def get_metrics_based_collector_metadata():
     """Return dict of metadata.
 
-    Results are based on enabled collector and services in CONF.
+    Results are based on enabled collector and metrics in CONF.
     """
+    metrics_conf = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
     transformers = transformer.get_transformers()
-    collector = driver.DriverManager(
-        COLLECTORS_NAMESPACE, METRICS_CONF['collector'],
-        invoke_on_load=False).driver
+    collector = get_collector_without_invoke()
     metadata = {}
-    for service in METRICS_CONF['services']:
-        metadata[service] = collector.get_metadata(service, transformers)
+    if 'metrics' in metrics_conf:
+        for metric in metrics_conf.get('metrics', {}):
+            metadata[metric] = collector.get_metadata(
+                metric,
+                transformers,
+                metrics_conf,
+            )
     return metadata
 
 
@@ -94,6 +108,7 @@ class BaseCollector(object):
         try:
             self.transformers = transformers
             self.period = kwargs['period']
+            self.conf = kwargs['conf']
         except IndexError as e:
             raise ValueError("Missing argument (%s)" % e)
 
@@ -149,4 +164,4 @@ class BaseCollector(object):
                 "No method found in collector '%s' for resource '%s'."
                 % (self.collector_name, resource))
         func = getattr(self, trans_resource)
-        return func(start, end, project_id, q_filter)
+        return func(resource, start, end, project_id, q_filter)
