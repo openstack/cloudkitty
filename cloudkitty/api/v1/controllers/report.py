@@ -18,6 +18,7 @@
 import datetime
 import decimal
 
+from oslo_log import log as logging
 import pecan
 from pecan import rest
 from wsme import types as wtypes
@@ -26,6 +27,9 @@ import wsmeext.pecan as wsme_pecan
 from cloudkitty.api.v1.datamodels import report as report_models
 from cloudkitty.common import policy
 from cloudkitty import utils as ck_utils
+
+
+LOG = logging.getLogger(__name__)
 
 
 class ReportController(rest.RestController):
@@ -68,6 +72,8 @@ class ReportController(rest.RestController):
         """Return the amount to pay for a given period.
 
         """
+        LOG.warning('/v1/report/total is deprecated, please use '
+                    '/v1/report/summary instead.')
         if not begin:
             begin = ck_utils.get_month_start()
         if not end:
