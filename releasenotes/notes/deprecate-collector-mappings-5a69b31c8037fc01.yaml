@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    Collector mappings have been deprecated and should not be used anymore. They
+    will be removed during OpenStack's S cycle.
