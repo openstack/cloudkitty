@@ -65,7 +65,7 @@ For keystone (identity) API v2 (deprecated)
     auth_plugin = password
 
     [database]
-    connection = mysql://CK_DBUSER:CK_DBPASSWORD@DB_HOST/cloudkitty
+    connection = mysql+pymysql://CK_DBUSER:CK_DBPASSWORD@DB_HOST/cloudkitty
 
     [storage]
     backend = sqlalchemy
@@ -126,7 +126,7 @@ The following shows the basic configuration items:
     auth_section = ks_auth
 
     [database]
-    connection = mysql://CK_DBUSER:CK_DBPASSWORD@DB_HOST/cloudkitty
+    connection = mysql+pymysql://CK_DBUSER:CK_DBPASSWORD@DB_HOST/cloudkitty
 
     [keystone_fetcher]
     auth_section = ks_auth
