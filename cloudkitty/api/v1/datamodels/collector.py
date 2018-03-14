@@ -36,7 +36,7 @@ class CollectorInfos(wtypes.Base):
 
     @classmethod
     def sample(cls):
-        sample = cls(name='ceilometer',
+        sample = cls(name='gnocchi',
                      enabled=True)
         return sample
 
@@ -60,7 +60,7 @@ class ServiceToCollectorMapping(wtypes.Base):
     @classmethod
     def sample(cls):
         sample = cls(service='compute',
-                     collector='ceilometer')
+                     collector='gnocchi')
         return sample
 
 
@@ -79,6 +79,6 @@ class ServiceToCollectorMappingCollection(wtypes.Base):
     @classmethod
     def sample(cls):
         mapping = ServiceToCollectorMapping(service='compute',
-                                            collector='ceilometer')
+                                            collector='gnocchi')
         sample = cls(mappings=[mapping])
         return sample

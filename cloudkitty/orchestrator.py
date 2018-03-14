@@ -153,10 +153,6 @@ class APIWorker(BaseWorker):
 class Worker(BaseWorker):
     def __init__(self, collector, storage, tenant_id=None):
         self._collector = collector
-        if getattr(self._collector, 'collector_name') == 'ceilometer':
-            LOG.warning('Ceilometer collector is deprecated and will be '
-                        'removed during R cycle. This collector only works '
-                        'with versions prior to Ocata')
         self._storage = storage
         self._period = METRICS_CONF['period']
         self._wait_time = METRICS_CONF['wait_periods'] * self._period

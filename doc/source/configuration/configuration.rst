@@ -167,9 +167,8 @@ entry:
    [storage_gnocchi]
    auth_section = ks_auth
 
-Three collectors are available: Ceilometer (deprecated, see the Telemetry
-documentation), Gnocchi and Monasca. The Monasca collector collects metrics
-published by the Ceilometer agent to Monasca using Ceilosca_.
+Two collectors are available: Gnocchi and Monasca. The Monasca collector
+collects metrics published by the Ceilometer agent to Monasca using Ceilosca_.
 
 The collect information, is separated from the Cloudkitty configuration file,
 in a yaml one.

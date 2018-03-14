@@ -4,7 +4,6 @@
 pbr<2.0,>=1.6
 eventlet>=0.17.4
 keystonemiddleware>=2.0.0
-python-ceilometerclient>=1.0.13
 python-keystoneclient>=1.6.0
 PasteDeploy>=1.5.0
 pecan>=1.0.0
