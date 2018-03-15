@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The /v1/report/total route has been deprecated. /v1/report/summary should
+    be used instead.
