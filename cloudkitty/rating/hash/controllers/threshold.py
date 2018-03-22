@@ -84,6 +84,7 @@ class HashMapThresholdsController(rating.RatingRestControllerBase):
             service_uuid=service_id,
             field_uuid=field_id,
             group_uuid=group_id,
+            no_group=no_group,
             **search_opts)
         for threshold_uuid in thresholds_uuid_list:
             threshold_db = hashmap.get_threshold(uuid=threshold_uuid)

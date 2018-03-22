@@ -84,6 +84,7 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
             service_uuid=service_id,
             field_uuid=field_id,
             group_uuid=group_id,
+            no_group=no_group,
             **search_opts)
         for mapping_uuid in mappings_uuid_list:
             mapping_db = hashmap.get_mapping(uuid=mapping_uuid)
