@@ -46,7 +46,7 @@ class ContextHook(hooks.PecanHook):
         is_admin = policy.check_is_admin(roles)
 
         creds = {
-            'user': headers.get('X-User-Id', ''),
+            'user_id': headers.get('X-User-Id', ''),
             'tenant': headers.get('X-Tenant-Id', ''),
             'auth_token': headers.get('X-Auth-Token', ''),
             'is_admin': is_admin,
