@@ -32,7 +32,7 @@ class BaseHybridBackend(object):
     def commit(self, tenant_id, state):
         """Push data to the storage backend.
 
-        :param tenant_id: id of the tenant which information must be commited.
+        :param tenant_id: id of the tenant which information must be committed.
         """
         pass
 
