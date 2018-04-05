@@ -82,7 +82,7 @@ class ReportController(rest.RestController):
         if all_tenants:
             tenant_id = None
         else:
-            tenant_context = pecan.request.context.tenant
+            tenant_context = pecan.request.context.project_id
             tenant_id = tenant_context if not tenant_id else tenant_id
         policy.authorize(pecan.request.context, 'report:get_total',
                          {"tenant_id": tenant_id})
@@ -118,7 +118,7 @@ class ReportController(rest.RestController):
         if all_tenants:
             tenant_id = None
         else:
-            tenant_context = pecan.request.context.tenant
+            tenant_context = pecan.request.context.project_id
             tenant_id = tenant_context if not tenant_id else tenant_id
         policy.authorize(pecan.request.context, 'report:get_summary',
                          {"tenant_id": tenant_id})
