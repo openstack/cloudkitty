@@ -18,30 +18,26 @@
 import decimal
 
 from oslo_config import cfg
+from oslo_log import log
 from wsme import types as wtypes
 
 from cloudkitty.api.v1 import types as cktypes
 from cloudkitty import utils as ck_utils
+
+LOG = log.getLogger(__name__)
 
 CONF = cfg.CONF
 
 METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
 try:
-    services_names = list(METRICS_CONF['services_objects'].keys())
-except Exception:
-    # TODO(mc): remove this hack once rated dataframes are based on metrics.
-    services_names = [
-        'compute',
-        'volume',
-        'image',
-        'network.bw.in',
-        'network.bw.out',
-        'network.floating',
-        'radosgw.usage',
-    ]
+    SERVICE_NAMES = list(METRICS_CONF['metrics'].keys())
+except KeyError:
+    LOG.error("No metrics specified in YAML configuration, "
+              "CloudKitty won't work as expected")
+    SERVICE_NAMES = ['compute', 'image']
 
-CLOUDKITTY_SERVICES = wtypes.Enum(wtypes.text, *services_names)
+CLOUDKITTY_SERVICES = wtypes.Enum(wtypes.text, *SERVICE_NAMES)
 
 
 class CloudkittyResource(wtypes.Base):
