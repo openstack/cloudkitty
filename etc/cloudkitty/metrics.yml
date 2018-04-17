@@ -1,102 +1,85 @@
-name: OpenStack
-
-fetcher: keystone
-collector: gnocchi
-
-period: 3600
-wait_periods: 2
-window: 1800
-
-services_objects:
-  compute: instance
-  volume: volume
-  network.bw.out: instance_network_interface
-  network.bw.in: instance_network_interface
-  network.floating: network
-  image: image
-  radosgw.usage: ceph_account
-
 metrics:
-  vcpus:
-    resource: instance
-    unit: instance
-    factor: 1
-    aggregation_method: max
-    countable_unit: true
-
-  memory:
-    resource: instance
-    unit: instance
-    factor: 1
-    aggregation_method: max
-    countable_unit: true
-
   cpu:
-    resource: instance
     unit: instance
-    factor: 1
-    aggregation_method: max
-    countable_unit: true
-
-  disk.root.size:
-    resource: instance
-    unit: instance
-    factor: 1
-    aggregation_method: max
-    countable_unit: true
-
-  disk.ephemeral.size:
-    resource: instance
-    unit: instance
-    factor: 1
-    aggregation_method: max
-    countable_unit: true
+    alt_name: instance
+    groupby:
+      - id
+      - project_id
+    metadata:
+      - flavor
+      - flavor_id
+      - vcpus
+    mutate: NUMBOOL
+    extra_args:
+      aggregation_method: max
+      resource_type: instance
 
   image.size:
-    resource: image
     unit: MiB
     factor: 1/1048576
-    aggregation_method: max
-
-  image.download:
-    resource: image
-    unit: MiB
-    factor: 1/1048576
-    aggregation_method: max
-
-  image.serve:
-    resource: image
-    unit: MiB
-    factor: 1/1048576
-    aggregation_method: max
+    groupby:
+      - id
+      - project_id
+    metadata:
+      - container_format
+      - disk_format
+    extra_args:
+      aggregation_method: max
+      resource_type: image
 
   volume.size:
-    resource: volume
     unit: GiB
-    factor: 1
-    aggregation_method: max
+    groupby:
+      - id
+      - project_id
+    metadata:
+      - volume_type
+    extra_args:
+      aggregation_method: max
+      resource_type: volume
 
   network.outgoing.bytes:
-    resource: instance_network_interface
     unit: MB
+    groupby:
+      - id
+      - project_id
     factor: 1/1000000
-    aggregation_method: max
+    metadata:
+      - instance_id
+    extra_args:
+      aggregation_method: max
+      resource_type: instance_network_interface
 
   network.incoming.bytes:
-    resource: instance_network_interface
     unit: MB
+    groupby:
+      - id
+      - project_id
     factor: 1/1000000
-    aggregation_method: max
+    metadata:
+      - instance_id
+    extra_args:
+      aggregation_method: max
+      resource_type: instance_network_interface
 
   ip.floating:
-    resource: network
     unit: ip
-    factor: 1
-    aggregation_method: max
-    countable_unit: true
+    groupby:
+      - id
+      - project_id
+    metadata:
+      - state
+    mutate: NUMBOOL
+    extra_args:
+      aggregation_method: max
+      resource_type: network
 
   radosgw.objects.size:
-    resource: ceph_account
     unit: GiB
+    groupby:
+      - id
+      - project_id
     factor: 1/1073741824
-    aggregation_method: max
+    extra_args:
+      aggregation_method: max
+      resource_type: ceph_account

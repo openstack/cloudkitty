@@ -25,21 +25,28 @@ from stevedore import driver
 from cloudkitty import utils as ck_utils
 
 
+storage_opts = [
+    cfg.StrOpt('backend',
+               default='sqlalchemy',
+               help='Name of the storage backend driver.')
+]
+
 LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 
-# NOTE(mc): This hack is possible because only
-# one OpenStack configuration is allowed.
-METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+CONF.import_opt('period', 'cloudkitty.collector', 'collect')
+
+CONF.register_opts(storage_opts, 'storage')
 
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
-def get_storage():
+def get_storage(**kwargs):
     storage_args = {
-        'period': METRICS_CONF.get('period', 3600),
+        'period': CONF.collect.period,
     }
+    storage_args.update(kwargs)
     backend = driver.DriverManager(
         STORAGES_NAMESPACE,
         cfg.CONF.storage.backend,

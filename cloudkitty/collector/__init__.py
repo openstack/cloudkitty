@@ -16,42 +16,105 @@
 # @author: Stéphane Albert
 #
 import abc
+import fractions
 
 from oslo_config import cfg
 import six
 from stevedore import driver
+from voluptuous import All
+from voluptuous import Any
+from voluptuous import Coerce
+from voluptuous import In
+from voluptuous import Invalid
+from voluptuous import Length
+from voluptuous import Optional
+from voluptuous import Required
+from voluptuous import Schema
 
 from cloudkitty import transformer
 from cloudkitty import utils as ck_utils
 
+collect_opts = [
+    cfg.StrOpt('collector',
+               default='gnocchi',
+               help='Data collector.'),
+    cfg.IntOpt('period',
+               default=3600,
+               help='Rating period in seconds.'),
+    cfg.IntOpt('wait_periods',
+               default=2,
+               help='Wait for N periods before collecting new data.'),
+    cfg.StrOpt('metrics_conf',
+               default='/etc/cloudkitty/metrics.yml',
+               help='Metrology configuration file.'),
+]
 
 CONF = cfg.CONF
+CONF.register_opts(collect_opts, 'collect')
 
 COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 
 
+def MetricDict(value):
+    if isinstance(value, dict) and len(value.keys()) > 0:
+        return value
+    raise Invalid("Not a dict with at least one key")
+
+
+CONF_BASE_SCHEMA = {Required('metrics'): MetricDict}
+
+METRIC_BASE_SCHEMA = {
+    # Display unit
+    Required('unit'): All(str, Length(min=1)),
+    # Factor for unit converion
+    Required('factor', default=1):
+        Any(int, float, Coerce(fractions.Fraction)),
+    # Offset for unit conversion
+    Required('offset', default=0):
+        # [int, float, fractions.Fraction],
+        Any(int, float, Coerce(fractions.Fraction)),
+    # Name to be used in dataframes, and used for service creation in hashmap
+    # module. Defaults to the name of the metric
+    Optional('alt_name'): All(str, Length(min=1)),
+    # This is what metrics are grouped by on collection.
+    Required('groupby', default=list): [
+        All(str, Length(min=1))
+    ],
+    # Available in HashMap
+    Required('metadata', default=list): [
+        All(str, Length(min=1))
+    ],
+    # Mutate collected value. May be any of (NONE, NUMBOOL, FLOOR, CEIL).
+    # Defaults to NONE
+    Required('mutate', default='NONE'):
+        In(['NONE', 'NUMBOOL', 'FLOOR', 'CEIL']),
+    # Collector-specific args. Should be overriden by schema provided for
+    # the given collector
+    Optional('extra_args'): dict,
+}
+
+
 def get_collector(transformers=None):
-    metrics_conf = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+    metrics_conf = ck_utils.load_conf(CONF.collect.metrics_conf)
     if not transformers:
         transformers = transformer.get_transformers()
     collector_args = {
-        'period': metrics_conf.get('period', 3600),
+        'period': CONF.collect.period,
         'transformers': transformers,
     }
     collector_args.update({'conf': metrics_conf})
     return driver.DriverManager(
         COLLECTORS_NAMESPACE,
-        metrics_conf.get('collector', 'gnocchi'),
+        CONF.collect.collector,
         invoke_on_load=True,
         invoke_kwds=collector_args).driver
 
 
 def get_collector_without_invoke():
     """Return the collector without invoke it."""
-    metrics_conf = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
     return driver.DriverManager(
         COLLECTORS_NAMESPACE,
-        metrics_conf.get('collector', 'gnocchi'),
+        CONF.collect.collector,
         invoke_on_load=False
     ).driver
 
@@ -61,14 +124,15 @@ def get_metrics_based_collector_metadata():
 
     Results are based on enabled collector and metrics in CONF.
     """
-    metrics_conf = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+    metrics_conf = ck_utils.load_conf(CONF.collect.metrics_conf)
     transformers = transformer.get_transformers()
     collector = get_collector_without_invoke()
     metadata = {}
     if 'metrics' in metrics_conf:
-        for metric in metrics_conf.get('metrics', {}):
-            metadata[metric] = collector.get_metadata(
-                metric,
+        for metric_name, metric in metrics_conf.get('metrics', {}).items():
+            alt_name = metric.get('alt_name', metric_name)
+            metadata[alt_name] = collector.get_metadata(
+                metric_name,
                 transformers,
                 metrics_conf,
             )
@@ -102,17 +166,18 @@ class NoDataCollected(Exception):
 @six.add_metaclass(abc.ABCMeta)
 class BaseCollector(object):
     collector_name = None
-    dependencies = []
+    dependencies = ['CloudKittyFormatTransformer']
 
     def __init__(self, transformers, **kwargs):
         try:
             self.transformers = transformers
             self.period = kwargs['period']
-            self.conf = kwargs['conf']
-        except IndexError as e:
+            self.conf = self.check_configuration(kwargs['conf'])
+        except KeyError as e:
             raise ValueError("Missing argument (%s)" % e)
 
         self._check_transformers()
+        self.t_cloudkitty = self.transformers['CloudKittyFormatTransformer']
 
     def _check_transformers(self):
         """Check for transformer prerequisites
@@ -122,6 +187,13 @@ class BaseCollector(object):
             if dependency not in self.transformers:
                 raise TransformerDependencyError(self.collector_name,
                                                  dependency)
+
+    @staticmethod
+    def check_configuration(self, conf):
+        """Check metrics configuration
+
+        """
+        return Schema(METRIC_BASE_SCHEMA)(conf)
 
     @staticmethod
     def last_month():
@@ -152,16 +224,35 @@ class BaseCollector(object):
         """
         return {"metadata": [], "unit": "undefined"}
 
-    def retrieve(self,
-                 resource,
-                 start,
-                 end=None,
-                 project_id=None,
-                 q_filter=None):
-        trans_resource = self._res_to_func(resource)
-        if not hasattr(self, trans_resource):
-            raise NotImplementedError(
-                "No method found in collector '%s' for resource '%s'."
-                % (self.collector_name, resource))
-        func = getattr(self, trans_resource)
-        return func(resource, start, end, project_id, q_filter)
+    @abc.abstractmethod
+    def fetch_all(self, metric_name, start, end,
+                  project_id=None, q_filter=None):
+        pass
+
+    def retrieve(self, metric_name, start, end,
+                 project_id=None, q_filter=None):
+
+        data = self.fetch_all(
+            metric_name,
+            start,
+            end,
+            project_id,
+            q_filter=q_filter,
+        )
+
+        name = self.conf[metric_name].get('alt_name', metric_name)
+        if data:
+            data = self.t_cloudkitty.format_service(name, data)
+        if not data:
+            raise NoDataCollected(self.collector_name, name)
+        return data
+
+
+def validate_conf(conf):
+    """Validates the provided configuration."""
+    collector = get_collector_without_invoke()
+    output = collector.check_configuration(conf)
+    for metric_name, metric in output.items():
+        if 'alt_name' not in metric.keys():
+            metric['alt_name'] = metric_name
+    return output

@@ -11,11 +11,11 @@ tests:
         content-type: application/json
         x-roles: admin
     data:
-      name: "compute"
+      name: "cpu"
     status: 201
     response_json_paths:
       $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
-      $.name: "compute"
+      $.name: "cpu"
     response_headers:
       location: $SCHEME://$NETLOC/v1/rating/module_config/hashmap/services/6c1b8a30-797f-4b7e-ad66-9879b79059fb
 

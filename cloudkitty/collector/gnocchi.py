@@ -13,13 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-import decimal
-
 from gnocchiclient import auth as gauth
 from gnocchiclient import client as gclient
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_log import log as logging
+from voluptuous import All
+from voluptuous import In
+from voluptuous import Length
+from voluptuous import Required
+from voluptuous import Schema
 
 from cloudkitty import collector
 from cloudkitty import utils as ck_utils
@@ -65,10 +68,25 @@ ks_loading.register_auth_conf_options(
 CONF = cfg.CONF
 
 
+GNOCCHI_EXTRA_SCHEMA = {
+    Required('extra_args'): {
+        Required('resource_type'): All(str, Length(min=1)),
+        # Due to Gnocchi model, metric are grouped by resource.
+        # This parameter permits to adapt the key of the resource identifier
+        Required('resource_key', default='id'): All(str, Length(min=1)),
+        # This is needed to allow filtering on the project for the Openstack
+        # usecase.
+        # NOTE(MCO): maybe be removed in following releases
+        Required('scope_key', default='project_id'): All(str, Length(min=1)),
+        Required('aggregation_method', default='max'):
+            In(['max', 'mean', 'min']),
+    },
+}
+
+
 class GnocchiCollector(collector.BaseCollector):
+
     collector_name = 'gnocchi'
-    dependencies = ('GnocchiTransformer',
-                    'CloudKittyFormatTransformer')
 
     def __init__(self, transformers, **kwargs):
         super(GnocchiCollector, self).__init__(transformers, **kwargs)
@@ -94,14 +112,34 @@ class GnocchiCollector(collector.BaseCollector):
             adapter_options=adapter_options,
         )
 
+    @staticmethod
+    def check_configuration(conf):
+        """Check metrics configuration
+
+        """
+        conf = Schema(collector.CONF_BASE_SCHEMA)(conf)
+        metric_schema = Schema(collector.METRIC_BASE_SCHEMA).extend(
+            GNOCCHI_EXTRA_SCHEMA)
+
+        output = dict()
+        for metric_name, metric in conf['metrics'].items():
+            output[metric_name] = metric_schema(metric)
+            output[metric_name]['groupby'].append(
+                output[metric_name]['extra_args']['resource_key']
+            )
+        return output
+
     @classmethod
     def get_metadata(cls, resource_name, transformers, conf):
         info = super(GnocchiCollector, cls).get_metadata(resource_name,
                                                          transformers)
         try:
-            info["metadata"].extend(transformers['GnocchiTransformer']
-                                    .get_metadata(resource_name))
-            info['unit'] = conf['metrics'][resource_name]['unit']
+            info["metadata"].extend(
+                conf[resource_name]['groupby']
+            ).extend(
+                conf[resource_name]['metadata']
+            )
+            info['unit'] = conf[resource_name]['unit']
         except KeyError:
             pass
         return info
@@ -154,38 +192,43 @@ class GnocchiCollector(collector.BaseCollector):
             self.gen_filter(cop="<=", started_at=end))
         return time_filter
 
-    def _expand(self, metrics, resource, name, aggregate, start, end):
-        try:
-            values = self._conn.metric.get_measures(
-                metric=metrics[name],
-                start=ck_utils.ts2dt(start),
-                stop=ck_utils.ts2dt(end),
-                aggregation=aggregate)
-            # NOTE(sheeprine): Get the list of values for the current
-            # metric and get the first result value.
-            # [point_date, granularity, value]
-            # ["2015-11-24T00:00:00+00:00", 86400.0, 64.0]
-            resource[name] = values[0][2]
-        except (IndexError, KeyError):
-            resource[name] = 0
-
-    def _expand_metrics(self, resources, mappings, start, end, resource_name):
-        for resource in resources:
-            metrics = resource.get('metrics', {})
-            self._expand(
-                metrics,
-                resource,
-                resource_name,
-                mappings,
-                start,
-                end,
-            )
-
-    def get_resources(self, resource_name, start, end,
-                      project_id, q_filter=None):
+    def _fetch_resources(self, metric_name, start, end,
+                         project_id=None, q_filter=None):
         """Get resources during the timeframe.
 
-        :param resource_name: Resource name to filter on.
+        :type metric_name: str
+        :param start: Start of the timeframe.
+        :param end: End of the timeframe if needed.
+        :param project_id: Filter on a specific tenant/project.
+        :type project_id: str
+        :param q_filter: Append a custom filter.
+        :type q_filter: list
+        """
+
+        # Get gnocchi specific conf
+        extra_args = self.conf[metric_name]['extra_args']
+        # Build query
+        query_parameters = self._generate_time_filter(start, end)
+
+        resource_type = extra_args['resource_type']
+
+        query_parameters.append(
+            self.gen_filter(cop="=", type=resource_type))
+        if project_id:
+            kwargs = {extra_args['scope_key']: project_id}
+            query_parameters.append(self.gen_filter(**kwargs))
+        if q_filter:
+            query_parameters.append(q_filter)
+        resources = self._conn.resource.search(
+            resource_type=resource_type,
+            query=self.extend_filter(*query_parameters))
+        return {res[extra_args['resource_key']]: res for res in resources}
+
+    def _fetch_metric(self, metric_name, start, end,
+                      project_id=None, q_filter=None):
+        """Get metric during the timeframe.
+
+        :param metric_name: metric name to filter on.
         :type resource_name: str
         :param start: Start of the timeframe.
         :param end: End of the timeframe if needed.
@@ -194,89 +237,94 @@ class GnocchiCollector(collector.BaseCollector):
         :param q_filter: Append a custom filter.
         :type q_filter: list
         """
-        # NOTE(sheeprine): We first get the list of every resource running
-        # without any details or history.
-        # Then we get information about the resource getting details and
-        # history.
 
-        # Translating the resource name if needed
-        query_parameters = self._generate_time_filter(start, end)
+        # Get gnocchi specific conf
+        extra_args = self.conf[metric_name]['extra_args']
 
-        resource_type = self.conf['metrics'][resource_name]['resource']
+        # get ressource type
+        resource_type = extra_args['resource_type']
 
+        # build search query using ressource type and project_id if provided
+        query_parameters = list()
         query_parameters.append(
             self.gen_filter(cop="=", type=resource_type))
-        query_parameters.append(
-            self.gen_filter(project_id=project_id))
+        if project_id:
+            kwargs = {extra_args['scope_key']: project_id}
+            query_parameters.append(self.gen_filter(**kwargs))
         if q_filter:
             query_parameters.append(q_filter)
-        resources = self._conn.resource.search(
+
+        # build aggregration operation
+        op = ["aggregate", extra_args['aggregation_method'],
+              ["metric", metric_name, extra_args['aggregation_method']]]
+
+        # get groupby
+        groupby = self.conf[metric_name]['groupby']
+
+        return self._conn.aggregates.fetch(
+            op,
             resource_type=resource_type,
-            query=self.extend_filter(*query_parameters))
-        return resources
+            start=ck_utils.ts2dt(start),
+            stop=ck_utils.ts2dt(end),
+            groupby=groupby,
+            search=self.extend_filter(*query_parameters))
 
-    def resource_info(self, resource_name, start, end,
-                      project_id, q_filter=None):
-        met = self.conf['metrics'][resource_name]
-        unit = met['unit']
-        qty = 1 if met.get('countable_unit') else met['resource']
+    def _format_data(self, metconf, data, resources_info=None):
+        """Formats gnocchi data to CK data.
 
-        resources = self.get_resources(
-            resource_name,
+        Returns metadata, groupby and qty
+
+        """
+        groupby = data['group']
+        # if resource info is provided, add additional
+        # metadata as defined in the conf
+        metadata = dict()
+        if resources_info:
+            resource = resources_info[
+                groupby[metconf['extra_args']['resource_key']]]
+            for i in metconf['metadata']:
+                metadata[i] = resource.get(i, '')
+
+        qty = data['measures']['measures']['aggregated'][0][2]
+        converted_qty = ck_utils.convert_unit(
+            qty, metconf['factor'], metconf['offset'])
+        mutated_qty = ck_utils.mutate(converted_qty, metconf['mutate'])
+        return metadata, groupby, mutated_qty
+
+    def fetch_all(self, metric_name, start, end,
+                  project_id=None, q_filter=None):
+
+        met = self.conf[metric_name]
+
+        data = self._fetch_metric(
+            metric_name,
             start,
             end,
             project_id=project_id,
             q_filter=q_filter,
         )
 
-        formated_resources = list()
-        for resource in resources:
-            resource_data = self.t_gnocchi.strip_resource_data(
-                resource_name, resource)
-
-            mapp = self.conf['metrics'][resource_name]['aggregation_method']
-
-            self._expand_metrics(
-                [resource_data],
-                mapp,
+        resources_info = None
+        if met['metadata']:
+            resources_info = self._fetch_resources(
+                metric_name,
                 start,
                 end,
-                resource_name,
+                project_id=project_id,
+                q_filter=q_filter
             )
 
-            resource_data.pop('metrics', None)
-
-            # Unit conversion
-            if isinstance(qty, str):
-                resource_data[resource_name] = ck_utils.convert_unit(
-                    resource_data[resource_name],
-                    self.conf['metrics'][resource_name].get('factor', 1),
-                    self.conf['metrics'][resource_name].get('offset', 0),
+        formated_resources = list()
+        for d in data:
+            # Only if aggregates have been found
+            if d['measures']['measures']['aggregated']:
+                metadata, groupby, qty = self._format_data(
+                    met, d, resources_info)
+                data = self.t_cloudkitty.format_item(
+                    groupby,
+                    metadata,
+                    met['unit'],
+                    qty=qty,
                 )
-
-            val = qty if isinstance(qty, int) else resource_data[resource_name]
-            data = self.t_cloudkitty.format_item(
-                resource_data,
-                unit,
-                decimal.Decimal(val)
-            )
-
-            # NOTE(sheeprine): Reference to gnocchi resource used by storage
-            data['resource_id'] = data['desc']['resource_id']
-            formated_resources.append(data)
+                formated_resources.append(data)
         return formated_resources
-
-    def retrieve(self, resource_name, start, end,
-                 project_id, q_filter=None):
-
-        resources = self.resource_info(
-            resource_name,
-            start,
-            end,
-            project_id,
-            q_filter=q_filter,
-        )
-
-        if not resources:
-            raise collector.NoDataCollected(self.collector_name, resource_name)
-        return self.t_cloudkitty.format_service(resource_name, resources)

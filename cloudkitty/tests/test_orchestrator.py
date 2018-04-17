@@ -38,7 +38,6 @@ class OrchestratorTest(tests.TestCase):
         super(OrchestratorTest, self).setUp()
         messaging_conf = self.useFixture(conffixture.ConfFixture(self.conf))
         messaging_conf.transport_url = 'fake:/'
-        self.conf.set_override('backend', 'keystone', 'tenant_fetcher')
         self.conf.import_group('keystone_fetcher',
                                'cloudkitty.fetcher.keystone')
 

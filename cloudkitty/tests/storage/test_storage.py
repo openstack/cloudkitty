@@ -22,9 +22,9 @@ import sqlalchemy
 import testscenarios
 
 from cloudkitty import storage
-from cloudkitty.storage.hybrid.backends import gnocchi as hgnocchi
 from cloudkitty import tests
 from cloudkitty.tests import samples
+from cloudkitty.tests import test_utils
 from cloudkitty import utils as ck_utils
 
 
@@ -40,13 +40,13 @@ class StorageTest(tests.TestCase):
             cls.storage_scenarios)
 
     @mock.patch('cloudkitty.storage.hybrid.backends.gnocchi.gclient')
+    @mock.patch('cloudkitty.utils.load_conf', new=test_utils.load_conf)
     def setUp(self, gclient_mock):
         super(StorageTest, self).setUp()
-        hgnocchi.METRICS_CONF = samples.METRICS_CONF
         self._tenant_id = samples.TENANT
         self._other_tenant_id = '8d3ae50089ea4142-9c6e1269db6a0b64'
         self.conf.set_override('backend', self.storage_backend, 'storage')
-        self.storage = storage.get_storage()
+        self.storage = storage.get_storage(conf=test_utils.load_conf())
         self.storage.init()
 
     def insert_data(self):
@@ -234,10 +234,10 @@ class StorageTotalTest(StorageTest):
         total = self.storage.get_total(
             begin=begin,
             end=end,
-            service='cpu')
+            service='instance')
         self.assertEqual(1, len(total))
         self.assertEqual(0.84, total[0]["rate"])
-        self.assertEqual('cpu', total[0]["res_type"])
+        self.assertEqual('instance', total[0]["res_type"])
         self.assertEqual(begin, total[0]["begin"])
         self.assertEqual(end, total[0]["end"])
 
@@ -273,7 +273,7 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(begin, total[0]["begin"])
         self.assertEqual(end, total[0]["end"])
         self.assertEqual(1.68, total[1]["rate"])
-        self.assertEqual('cpu', total[1]["res_type"])
+        self.assertEqual('instance', total[1]["res_type"])
         self.assertEqual(begin, total[1]["begin"])
         self.assertEqual(end, total[1]["end"])
 
@@ -298,12 +298,12 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[1]["end"])
         self.assertEqual(0.84, total[2]["rate"])
         self.assertEqual(self._other_tenant_id, total[2]["tenant_id"])
-        self.assertEqual('cpu', total[2]["res_type"])
+        self.assertEqual('instance', total[2]["res_type"])
         self.assertEqual(begin, total[2]["begin"])
         self.assertEqual(end, total[2]["end"])
         self.assertEqual(0.84, total[3]["rate"])
         self.assertEqual(self._tenant_id, total[3]["tenant_id"])
-        self.assertEqual('cpu', total[3]["res_type"])
+        self.assertEqual('instance', total[3]["res_type"])
         self.assertEqual(begin, total[3]["begin"])
         self.assertEqual(end, total[3]["end"])
 
@@ -429,6 +429,9 @@ class StorageDataIntegrityTest(StorageTest):
         if 'image.size' in stored_data[0]['usage']:
             stored_data[0]['usage'], stored_data[1]['usage'] = (
                 stored_data[1]['usage'], stored_data[0]['usage'])
+        if 'image.size' in expected_data[0]['usage']:
+            expected_data[0]['usage'], expected_data[1]['usage'] = (
+                expected_data[1]['usage'], expected_data[0]['usage'])
         self.assertEqual(
             expected_data,
             stored_data)

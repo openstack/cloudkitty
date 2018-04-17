@@ -15,13 +15,23 @@
 #
 # @author: Stéphane Albert
 #
+
+from oslo_log import log
+
 from cloudkitty import transformer
 
 
+LOG = log.getLogger(__name__)
+
+
 class CloudKittyFormatTransformer(transformer.BaseTransformer):
-    def format_item(self, desc, unit, qty=1.0):
+    def format_item(self, groupby, metadata, unit, qty=1.0):
         data = {}
-        data['desc'] = desc
+        data['groupby'] = groupby
+        data['metadata'] = metadata
+        # For backward compatibility.
+        data['desc'] = data['groupby'].copy()
+        data['desc'].update(data['metadata'])
         data['vol'] = {'unit': unit, 'qty': qty}
 
         return data

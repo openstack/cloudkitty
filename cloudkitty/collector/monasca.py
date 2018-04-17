@@ -15,13 +15,16 @@
 #
 # @author: Luka Peschke
 #
-import decimal
-
 from keystoneauth1 import loading as ks_loading
 from keystoneclient.v3 import client as ks_client
 from monascaclient import client as mclient
 from oslo_config import cfg
 from oslo_log import log as logging
+from voluptuous import All
+from voluptuous import In
+from voluptuous import Length
+from voluptuous import Required
+from voluptuous import Schema
 
 from cloudkitty import collector
 from cloudkitty import transformer
@@ -43,7 +46,22 @@ ks_loading.register_auth_conf_options(
     COLLECTOR_MONASCA_OPTS)
 CONF = cfg.CONF
 
-METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+METRICS_CONF = ck_utils.load_conf(CONF.collect.metrics_conf)
+
+MONASCA_EXTRA_SCHEMA = {
+    Required('extra_args'): {
+        # Key corresponding to the resource id in a metric's dimensions
+        # Allows to adapt the resource identifier. Should not need to be
+        # modified in a standard OpenStack installation
+        Required('resource_key', default='resource_id'):
+            All(str, Length(min=1)),
+        # This is needed to allow filtering on the project for the Openstack
+        # usecase. May be removed in following releases
+        Required('scope_key', default='project_id'): All(str, Length(min=1)),
+        Required('aggregation_method', default='max'):
+            In(['max', 'mean', 'min']),
+    },
+}
 
 
 class EndpointNotFound(Exception):
@@ -53,12 +71,23 @@ class EndpointNotFound(Exception):
 
 class MonascaCollector(collector.BaseCollector):
     collector_name = 'monasca'
-    dependencies = ['CloudKittyFormatTransformer']
+
+    @staticmethod
+    def check_configuration(conf):
+        """Check metrics configuration
+
+        """
+        conf = Schema(collector.CONF_BASE_SCHEMA)(conf)
+        metric_schema = Schema(collector.METRIC_BASE_SCHEMA).extend(
+            MONASCA_EXTRA_SCHEMA)
+
+        output = dict()
+        for metric_name, metric in conf['metrics'].items():
+            output[metric_name] = metric_schema(metric)
+        return output
 
     def __init__(self, transformers, **kwargs):
         super(MonascaCollector, self).__init__(transformers, **kwargs)
-
-        self.t_cloudkitty = self.transformers['CloudKittyFormatTransformer']
 
         self.auth = ks_loading.load_auth_from_conf_options(
             CONF,
@@ -90,28 +119,13 @@ class MonascaCollector(collector.BaseCollector):
                 return endpoint.url
         return None
 
-    def _get_metadata(self, resource_type, transformers, conf):
+    def _get_metadata(self, metric_name, transformers, conf):
         info = {}
-        info['unit'] = conf['metrics'][resource_type]['unit']
+        info['unit'] = conf['metrics'][metric_name]['unit']
 
-        start = ck_utils.dt2ts(ck_utils.get_month_start())
-        end = ck_utils.dt2ts(ck_utils.get_month_end())
-
-        try:
-            resource = self.active_resources(
-                resource_type,
-                start,
-                end,
-                None,
-            )[0]
-        except IndexError:
-            resource = {}
-        info['metadata'] = resource.get('dimensions', {}).keys()
-
-        service_metrics = METRICS_CONF['services_metrics'][resource_type]
-        for service_metric in service_metrics:
-            metric, statistics = list(service_metric.items())[0]
-            info['metadata'].append(metric)
+        dimension_names = self._conn.metric.list_dimension_names(
+            metric_name=metric_name)
+        info['metadata'] = [d['dimension_name'] for d in dimension_names]
         return info
 
     # NOTE(lukapeschke) if anyone sees a better way to do this,
@@ -124,144 +138,124 @@ class MonascaCollector(collector.BaseCollector):
         tmp = cls(**args)
         return tmp._get_metadata(resource_type, transformers, conf)
 
-    def _get_resource_metadata(self, resource_type, start,
-                               end, resource_id, conf):
-        meter = conf['metrics'][resource_type]['resource']
-
-        if not meter:
-            return {}
-        measurements = self._conn.metrics.list_measurements(
-            name=meter,
-            start_time=ck_utils.ts2dt(start),
-            end_time=ck_utils.ts2dt(end),
-            merge_metrics=True,
-            dimensions={'resource_id': resource_id},
-        )
-        try:
-            # Getting the last measurement of given period
-            metadata = measurements[-1]['measurements'][-1][2]
-        except (KeyError, IndexError):
-            metadata = {}
-        return metadata
-
-    def _get_resource_qty(self, meter, start, end, resource_id, statistics):
-        # NOTE(lukapeschke) the period trick is used to aggregate
-        # the measurements
-        period = end - start
-        statistics = self._conn.metrics.list_statistics(
-            name=meter,
-            start_time=ck_utils.ts2dt(start),
-            end_time=ck_utils.ts2dt(end),
-            dimensions={'resource_id': resource_id},
-            statistics=statistics,
-            period=period,
-            merge_metrics=True,
-        )
-        try:
-            # If several statistics are returned (should not happen),
-            # use the latest
-            qty = decimal.Decimal(statistics[-1]['statistics'][-1][1])
-        except (KeyError, IndexError):
-            qty = decimal.Decimal(0)
-        return qty
-
-    def _is_resource_active(self, meter, resource_id, start, end):
-        measurements = self._conn.metrics.list_measurements(
-            name=meter,
-            start_time=ck_utils.ts2dt(start),
-            end_time=ck_utils.ts2dt(end),
-            group_by='resource_id',
-            merge_metrics=True,
-            dimensions={'resource_id': resource_id},
-        )
-        return len(measurements) > 0
-
-    def active_resources(self, resource_type, start,
-                         end, project_id, conf, **kwargs):
-        meter = conf['metrics'][resource_type]['resource']
-
-        if not meter:
-            return {}
+    def _get_dimensions(self, metric_name, project_id, q_filter):
+        extra_args = self.conf[metric_name]['extra_args']
         dimensions = {}
         if project_id:
-            dimensions['project_id'] = project_id
-        dimensions.update(kwargs)
-        resources = self._conn.metrics.list(name=meter, dimensions=dimensions)
-        output = []
-        for resource in resources:
-            try:
-                resource_id = resource['dimensions']['resource_id']
-                if (resource_id not in
-                    [item['dimensions']['resource_id'] for item in output]
-                        and self._is_resource_active(meter, resource_id,
-                                                     start, end)):
-                    output.append(resource)
-            except KeyError:
-                continue
-        return output
+            dimensions[extra_args['scope_key']] = project_id
+        if q_filter:
+            dimensions.update(q_filter)
+        return dimensions
 
-    def _expand_metrics(self, resource, resource_id,
-                        mappings, start, end, resource_type):
-        for mapping in mappings:
-            name, statistics = list(mapping.items())[0]
-            qty = self._get_resource_qty(
-                name,
-                start,
-                end,
-                resource_id,
-                statistics,
-            )
+    def _fetch_measures(self, metric_name, start, end,
+                        project_id=None, q_filter=None):
+        """Get measures for given metric during the timeframe.
 
-            conv_data = METRICS_CONF['metrics'][resource_type].get(name)
-            if conv_data:
-                resource[name] = ck_utils.convert_unit(
-                    qty,
-                    conv_data.get('factor', 1),
-                    conv_data.get('offset', 0),
-                )
+        :param metric_name: metric name to filter on.
+        :type metric_name: str
+        :param start: Start of the timeframe.
+        :param end: End of the timeframe if needed.
+        :param project_id: Filter on a specific tenant/project.
+        :type project_id: str
+        :param q_filter: Append a custom filter.
+        :type q_filter: list
+        """
 
-    def resource_info(self, resource_type, start, end,
-                      project_id, q_filter=None):
-        met = self.conf['metrics'][resource_type]
-        unit = met['unit']
-        qty = 1 if met.get('countable_unit') else met['resource']
+        dimensions = self._get_dimensions(metric_name, project_id, q_filter)
+        group_by = self.conf[metric_name]['groupby']
+        # NOTE(lpeschke): One aggregated measure per collect period
+        period = end - start
 
-        active_resources = self.active_resources(
-            resource_type, start, end, project_id
+        extra_args = self.conf[metric_name]['extra_args']
+        return self._conn.metrics.list_statistics(
+            name=metric_name,
+            merge_metrics=True,
+            dimensions=dimensions,
+            start_time=ck_utils.ts2dt(start),
+            end_time=ck_utils.ts2dt(end),
+            period=period,
+            statistics=extra_args['aggregation_method'],
+            group_by=group_by)
+
+    def _fetch_metrics(self, metric_name, start, end,
+                       project_id=None, q_filter=None):
+        """List active metrics during the timeframe.
+
+        :param metric_name: metric name to filter on.
+        :type metric_name: str
+        :param start: Start of the timeframe.
+        :param end: End of the timeframe if needed.
+        :param project_id: Filter on a specific tenant/project.
+        :type project_id: str
+        :param q_filter: Append a custom filter.
+        :type q_filter: list
+        """
+        dimensions = self._get_dimensions(metric_name, project_id, q_filter)
+        metrics = self._conn.metrics.list(
+            name=metric_name,
+            dimensions=dimensions,
+            start_time=ck_utils.ts2dt(start),
+            end_time=ck_utils.ts2dt(end),
         )
 
-        resource_data = []
-        for resource in active_resources:
-            resource_id = resource['dimensions']['resource_id']
-            data = resource['dimensions']
-            mappings = (
-                resource_type,
-                METRICS_CONF['metrics'][resource_type]['aggregation_method'],
-            )
+        resource_key = self.conf[metric_name]['extra_args']['resource_key']
 
-            self._expand_metrics(
-                data,
-                resource_id,
-                mappings,
+        return {metric['dimensions'][resource_key]:
+                metric['dimensions'] for metric in metrics}
+
+    def _format_data(self, metconf, data, resources_info=None):
+        """Formats Monasca data to CK data.
+
+        Returns metadata, groupby and qty
+
+        """
+        groupby = data['dimensions']
+
+        resource_key = metconf['extra_args']['resource_key']
+        metadata = dict()
+        if resources_info:
+            resource = resources_info[groupby[resource_key]]
+            for i in metconf['metadata']:
+                metadata[i] = resource.get(i, '')
+
+        qty = data['statistics'][0][1]
+        converted_qty = ck_utils.convert_unit(
+            qty, metconf['factor'], metconf['offset'])
+        mutated_qty = ck_utils.mutate(converted_qty, metconf['mutate'])
+        return metadata, groupby, mutated_qty
+
+    def fetch_all(self, metric_name, start, end,
+                  project_id=None, q_filter=None):
+        met = self.conf[metric_name]
+
+        data = self._fetch_measures(
+            metric_name,
+            start,
+            end,
+            project_id=project_id,
+            q_filter=q_filter,
+        )
+
+        resources_info = None
+        if met['metadata']:
+            resources_info = self._fetch_metrics(
+                metric_name,
                 start,
                 end,
-                resource_type,
+                project_id=project_id,
+                q_filter=q_filter,
             )
-            resource_qty = qty
-            if not (isinstance(qty, int) or isinstance(qty, decimal.Decimal)):
-                resource_qty = METRICS_CONF['services_objects'][resource_type]
-                resource_qty = data[resource_qty]
 
-            resource = self.t_cloudkitty.format_item(data, unit, resource_qty)
-            resource['desc']['resource_id'] = resource_id
-            resource['resource_id'] = resource_id
-            resource_data.append(resource)
-        return resource_data
-
-    def retrieve(self, resource_type, start, end, project_id, q_filter=None):
-        resources = self.resource_info(resource_type, start, end,
-                                       project_id=project_id,
-                                       q_filter=q_filter)
-        if not resources:
-            raise collector.NoDataCollected(self.collector_name, resource_type)
-        return self.t_cloudkitty.format_service(resource_type, resources)
+        formated_resources = list()
+        for d in data:
+            if len(d['statistics']):
+                metadata, groupby, qty = self._format_data(
+                    met, d, resources_info)
+                data = self.t_cloudkitty.format_item(
+                    groupby,
+                    metadata,
+                    met['unit'],
+                    qty=qty,
+                )
+                formated_resources.append(data)
+        return formated_resources

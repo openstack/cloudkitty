@@ -26,73 +26,23 @@ import contextlib
 import datetime
 import decimal
 import fractions
+import math
 import shutil
 import six
 import sys
 import tempfile
 import yaml
 
-from oslo_config import cfg
 from oslo_log import log as logging
-
 from oslo_utils import timeutils
 from six import moves
 from stevedore import extension
 
 
-COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
-
 _ISO8601_TIME_FORMAT_SUBSECOND = '%Y-%m-%dT%H:%M:%S.%f'
 _ISO8601_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 LOG = logging.getLogger(__name__)
-
-collect_opts = [
-    cfg.StrOpt('fetcher',
-               default='keystone',
-               deprecated_for_removal=True,
-               help='Project fetcher.'),
-    cfg.StrOpt('collector',
-               default='gnocchi',
-               deprecated_for_removal=True,
-               help='Data collector.'),
-    cfg.IntOpt('window',
-               default=1800,
-               deprecated_for_removal=True,
-               help='Number of samples to collect per call.'),
-    cfg.IntOpt('period',
-               default=3600,
-               deprecated_for_removal=True,
-               help='Rating period in seconds.'),
-    cfg.IntOpt('wait_periods',
-               default=2,
-               deprecated_for_removal=True,
-               help='Wait for N periods before collecting new data.'),
-    cfg.ListOpt('services',
-                default=[
-                    'compute',
-                    'volume',
-                    'network.bw.in',
-                    'network.bw.out',
-                    'network.floating',
-                    'image',
-                ],
-                deprecated_for_removal=True,
-                help='Services to monitor.'),
-    cfg.StrOpt('metrics_conf',
-               default='/etc/cloudkitty/metrics.yml',
-               help='Metrology configuration file.'),
-]
-
-storage_opts = [
-    cfg.StrOpt('backend',
-               default='sqlalchemy',
-               help='Name of the storage backend driver.')
-]
-
-CONF = cfg.CONF
-CONF.register_opts(collect_opts, 'collect')
-CONF.register_opts(storage_opts, 'storage')
 
 
 def isotime(at=None, subsecond=False):
@@ -263,21 +213,22 @@ def refresh_stevedore(namespace=None):
         cache.clear()
 
 
-def check_time_state(timestamp=None, period=0, wait_time=0):
+def check_time_state(timestamp=None, period=0, wait_periods=0):
     if not timestamp:
         return get_month_start_timestamp()
 
     now = utcnow_ts()
     next_timestamp = timestamp + period
+    wait_time = wait_periods * period
     if next_timestamp + wait_time < now:
         return next_timestamp
     return 0
 
 
-def get_metrics_conf(conf_path):
-    """Return loaded yaml metrology configuration.
+def load_conf(conf_path):
+    """Return loaded yaml configuration.
 
-    In case not found metrics.yml file,
+    In case not found yaml file,
     return an empty dict.
     """
     # NOTE(mc): We can not raise any exception in this function as it called
@@ -286,10 +237,9 @@ def get_metrics_conf(conf_path):
     try:
         with open(conf_path) as conf:
             res = yaml.safe_load(conf)
-            res.update({'storage': CONF.storage.backend})
         return res or {}
     except Exception:
-        LOG.warning('Error when trying to retrieve yaml metrology conf file.')
+        LOG.warning("Error when trying to retrieve {} file.".format(conf_path))
         return {}
 
 
@@ -304,6 +254,21 @@ def tempdir(**kwargs):
         except OSError as e:
             LOG.debug('Could not remove tmpdir: %s',
                       six.text_type(e))
+
+
+def mutate(value, mode='NONE'):
+    """Mutate value according provided mode."""
+
+    if mode == 'NUMBOOL':
+        return float(value != 0.0)
+
+    if mode == 'FLOOR':
+        return math.floor(value)
+
+    if mode == 'CEIL':
+        return math.ceil(value)
+
+    return value
 
 
 def num2decimal(num):
@@ -322,7 +287,7 @@ def num2decimal(num):
     return decimal.Decimal(num)
 
 
-def convert_unit(value, factor=1, offset=0):
+def convert_unit(value, factor, offset):
     """Return converted value depending on the provided factor and offset."""
     return num2decimal(value) * num2decimal(factor) + num2decimal(offset)
 

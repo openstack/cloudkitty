@@ -40,10 +40,10 @@ tests:
         content-type: application/json
         x-roles: admin
     data:
-      name: "compute"
+      name: "cpu"
     status: 201
     response_json_paths:
-      $.name: "compute"
+      $.name: "cpu"
     response_store_environ:
       hash_error_service_id: $.service_id
 
@@ -54,10 +54,10 @@ tests:
       content-type: application/json
       x-roles: admin
     data:
-      name: "compute"
+      name: "cpu"
     status: 409
     response_strings:
-      - "Service compute already exists (UUID: $RESPONSE['$.service_id'])"
+      - "Service cpu already exists (UUID: $RESPONSE['$.service_id'])"
 
   - name: create a service mapping with an invalid type
     url: /v1/rating/module_config/hashmap/mappings

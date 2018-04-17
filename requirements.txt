@@ -27,3 +27,4 @@ SQLAlchemy<1.1.0,>=1.0.10 # MIT
 six>=1.9.0 # MIT
 stevedore>=1.5.0 # Apache-2.0
 tooz>=1.28.0 # Apache-2.0
+voluptuous>=0.11.1,<1.0.0 # BSD-3

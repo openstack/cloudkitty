@@ -43,6 +43,7 @@ from cloudkitty import rating
 from cloudkitty import storage
 from cloudkitty.storage.sqlalchemy import models
 from cloudkitty import tests
+from cloudkitty.tests import test_utils
 from cloudkitty import utils as ck_utils
 
 
@@ -278,7 +279,7 @@ class BaseStorageDataFixture(fixture.GabbiFixture):
                 "begin": begin,
                 "end": end},
             "usage": {
-                "compute": [
+                "cpu": [
                     {
                         "desc": {
                             "dummy": True,
@@ -292,7 +293,7 @@ class BaseStorageDataFixture(fixture.GabbiFixture):
                 "begin": begin,
                 "end": end},
             "usage": {
-                "image": [
+                "image.size": [
                     {
                         "desc": {
                             "dummy": True,
@@ -313,7 +314,7 @@ class BaseStorageDataFixture(fixture.GabbiFixture):
             return_value=dict())
         with auth:
             with session:
-                self.storage = storage.get_storage()
+                self.storage = storage.get_storage(conf=test_utils.load_conf())
         self.storage.init()
         self.initialize_data()
 
@@ -391,14 +392,14 @@ class MetricsConfFixture(fixture.GabbiFixture):
     """Inject Metrics configuration mock to the get_metrics_conf() function"""
 
     def start_fixture(self):
-        self._original_function = ck_utils.get_metrics_conf
-        ck_utils.get_metrics_conf = mock.Mock(
+        self._original_function = ck_utils.load_conf
+        ck_utils.load_conf = mock.Mock(
             return_value=tests.samples.METRICS_CONF,
         )
 
     def stop_fixture(self):
         """Remove the get_metrics_conf() monkeypatch."""
-        ck_utils.get_metrics_conf = self._original_function
+        ck_utils.load_conf = self._original_function
 
 
 def setup_app():

@@ -27,18 +27,14 @@ from oslo_log import log as logging
 from oslo_utils import uuidutils
 import six
 
+from cloudkitty.collector import validate_conf
 from cloudkitty.storage.hybrid.backends import BaseHybridBackend
-from cloudkitty.transformer import gnocchi as gtransformer
 import cloudkitty.utils as ck_utils
 
 
 LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
-
-# NOTE(mc): This hack is possible because only
-# one OpenStack configuration is allowed.
-METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 
 CONF.import_opt('period', 'cloudkitty.collector', 'collect')
 
@@ -53,7 +49,7 @@ gnocchi_storage_opts = [
     # The archive policy definition MUST include the collect period granularity
     cfg.StrOpt('archive_policy_definition',
                default='[{"granularity": '
-                       + six.text_type(METRICS_CONF.get('period', 3600)) +
+                       + six.text_type(CONF.collect.period) +
                        ', "timespan": "90 days"}, '
                        '{"granularity": 86400, "timespan": "360 days"}, '
                        '{"granularity": 2592000, "timespan": "1800 days"}]',
@@ -68,6 +64,7 @@ ks_loading.register_auth_conf_options(
     GNOCCHI_STORAGE_OPTS)
 
 RESOURCE_TYPE_NAME_ROOT = 'rating_service_'
+METADATA_NAME_ROOT = 'ckmeta_'
 
 
 class DecimalJSONEncoder(json.JSONEncoder):
@@ -92,34 +89,27 @@ class GnocchiStorage(BaseHybridBackend):
 
     """
 
-    # NOTE(lukapeschke): List taken directly from gnocchi code
-    invalid_attribute_names = [
-        "id", "type", "metrics",
-        "revision", "revision_start", "revision_end",
-        "started_at", "ended_at",
-        "user_id", "project_id",
-        "created_by_user_id", "created_by_project_id", "get_metric",
-        "creator",
-    ]
+    groupby_keys = ['res_type', 'tenant_id']
+    groupby_values = ['type', 'project_id']
 
     def _init_resource_types(self):
-        transformer = gtransformer.GnocchiTransformer()
-        for metric in list(self.conf['metrics'].keys()):
+        for metric_name, metric in self.conf.items():
             metric_dict = dict()
             metric_dict['attributes'] = list()
-            for attribute in transformer.get_metadata(metric):
-                if attribute not in self.invalid_attribute_names:
-                    metric_dict['attributes'].append(attribute)
-            metric_dict['required_attributes'] = [
-                'resource_id',
-                'unit',
-            ]
-            metric_dict['name'] = RESOURCE_TYPE_NAME_ROOT + metric
-            metric_dict['qty_metric'] = 1
-            if self.conf['metrics'][metric].get('countable_unit'):
-                resource = self.conf['metrics'][metric]['resource']
-                metric_dict['qty_metric'] = resource
-            self._resource_type_data[metric] = metric_dict
+            for attribute in metric.get('metadata', {}):
+                metric_dict['attributes'].append(
+                    METADATA_NAME_ROOT + attribute)
+            metric_dict['required_attributes'] = ['unit', 'resource_id']
+            for attribute in metric['groupby']:
+                metric_dict['required_attributes'].append(
+                    METADATA_NAME_ROOT + attribute)
+
+            metric_dict['name'] = RESOURCE_TYPE_NAME_ROOT + metric['alt_name']
+            if metric['mutate'] == 'NUMBOOL':
+                metric_dict['qty_metric'] = 1
+            else:
+                metric_dict['qty_metric'] = metric_name
+            self._resource_type_data[metric['alt_name']] = metric_dict
 
     def _get_res_type_dict(self, res_type):
         res_type_data = self._resource_type_data.get(res_type, None)
@@ -148,16 +138,19 @@ class GnocchiStorage(BaseHybridBackend):
                 "Unknown resource type '{}'".format(res_type))
 
         res_dict = {
-            'id': data['resource_id'],
-            'resource_id': data['resource_id'],
+            'id': data['id'],
+            'resource_id': data['id'],
             'project_id': tenant_id,
-            'user_id': data['user_id'],
+            'user_id': 'cloudkitty',
             'unit': data['unit'],
         }
-        for attr in res_type_data['attributes']:
-            res_dict[attr] = data.get(attr, None) or 'None'
-            if isinstance(res_dict[attr], decimal.Decimal):
-                res_dict[attr] = float(res_dict[attr])
+        for key in ['attributes', 'required_attributes']:
+            for attr in res_type_data[key]:
+                if METADATA_NAME_ROOT in attr:
+                    res_dict[attr] = data.get(
+                        attr.replace(METADATA_NAME_ROOT, ''), None) or ''
+                    if isinstance(res_dict[attr], decimal.Decimal):
+                        res_dict[attr] = float(res_dict[attr])
 
         created_metrics = [
             self._conn.metric.create({
@@ -224,7 +217,9 @@ class GnocchiStorage(BaseHybridBackend):
 
     def __init__(self, **kwargs):
         super(GnocchiStorage, self).__init__(**kwargs)
-        self.conf = kwargs['conf'] if 'conf' in kwargs else METRICS_CONF
+        conf = kwargs.get('conf') or ck_utils.load_conf(
+            CONF.collect.metrics_conf)
+        self.conf = validate_conf(conf)
         self.auth = ks_loading.load_auth_from_conf_options(
             CONF,
             GNOCCHI_STORAGE_OPTS)
@@ -241,9 +236,7 @@ class GnocchiStorage(BaseHybridBackend):
             CONF.storage_gnocchi.archive_policy_name)
         self._archive_policy_definition = json.loads(
             CONF.storage_gnocchi.archive_policy_definition)
-        self._period = self.conf['period']
-        if "period" in kwargs:
-            self._period = kwargs["period"]
+        self._period = kwargs.get('period') or CONF.collect.period
         self._measurements = dict()
         self._resource_type_data = dict()
         self._init_resource_types()
@@ -288,21 +281,57 @@ class GnocchiStorage(BaseHybridBackend):
     def get_total(self, begin=None, end=None, tenant_id=None,
                   service=None, groupby=None):
         # Query can't be None if we don't specify a resource_id
-        query = {}
+        query = {'and': [{
+            'like': {'type': RESOURCE_TYPE_NAME_ROOT + '%'},
+        }]}
         if tenant_id:
-            query['='] = {"project_id": tenant_id}
-        measures = self._conn.metric.aggregation(
-            metrics='price', query=query,
-            start=begin, stop=end,
-            aggregation='sum',
-            granularity=self._period,
-            needed_overlap=0)
-        rate = sum(measure[2] for measure in measures) if len(measures) else 0
-        return [{
-            'begin': begin,
-            'end': end,
-            'rate': rate,
-        }]
+            query['and'].append({'=': {'project_id': tenant_id}})
+
+        gb = []
+        if groupby:
+            for elem in groupby.split(','):
+                if elem in self.groupby_keys:
+                    gb.append(self.groupby_values[
+                        self.groupby_keys.index(elem)])
+        # Setting gb to None instead of an empty list
+        gb = gb if len(gb) > 0 else None
+
+        # build aggregration operation
+        op = ['aggregate', 'sum', ['metric', 'price', 'sum']]
+
+        try:
+            aggregates = self._conn.aggregates.fetch(
+                op,
+                start=begin,
+                stop=end,
+                groupby=gb,
+                search=query)
+        # No 'price' metric found
+        except gexceptions.BadRequest:
+            return [dict(begin=begin, end=end, rate=0)]
+
+        # In case no group_by was specified
+        if not isinstance(aggregates, list):
+            aggregates = [aggregates]
+        total_list = list()
+        for aggregate in aggregates:
+            if groupby:
+                measures = aggregate['measures']['measures']['aggregated']
+            else:
+                measures = aggregate['measures']['aggregated']
+            if len(measures) > 0:
+                rate = sum(measure[2] for measure in measures
+                           if (measure[1] == self._period))
+                total = dict(begin=begin, end=end, rate=rate)
+                if gb:
+                    for value in gb:
+                        key = self.groupby_keys[
+                            self.groupby_values.index(value)]
+                        total[key] = aggregate['group'][value].replace(
+                            RESOURCE_TYPE_NAME_ROOT, '')
+                total_list.append(total)
+
+        return total_list
 
     def _append_measurements(self, resource, data, tenant_id):
         if not self._measurements.get(tenant_id, None):
@@ -322,7 +351,7 @@ class GnocchiStorage(BaseHybridBackend):
 
     def append_time_frame(self, res_type, frame, tenant_id):
         flat_frame = ck_utils.flat_dict(frame)
-        resource = self._find_resource(res_type, flat_frame['resource_id'])
+        resource = self._find_resource(res_type, flat_frame['id'])
         if not resource:
             resource = self._create_resource(res_type, tenant_id, flat_frame)
         self._append_measurements(resource, flat_frame, tenant_id)
@@ -441,7 +470,8 @@ class GnocchiStorage(BaseHybridBackend):
                         resource_type, resource_measures['group']['id'])
                     if not resource:
                         continue
-                    desc = {a: resource.get(a, None) for a in attributes}
+                    desc = {attr.replace(METADATA_NAME_ROOT, ''):
+                            resource.get(attr, None) for attr in attributes}
                 formatted_frame = self._format_frame(
                     resource_type, resource, desc, measure, tenant_id)
                 output.append(formatted_frame)

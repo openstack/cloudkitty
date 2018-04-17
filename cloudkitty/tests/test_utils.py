@@ -24,6 +24,7 @@ import unittest
 import mock
 from oslo_utils import timeutils
 
+from cloudkitty.tests.samples import DEFAULT_METRICS_CONF
 from cloudkitty import utils as ck_utils
 
 
@@ -195,3 +196,7 @@ class ConvertUnitTest(unittest.TestCase):
     def test_convert_decimal(self):
         result = ck_utils.num2decimal(decimal.Decimal(2))
         self.assertEqual(result, decimal.Decimal(2))
+
+
+def load_conf(*args):
+    return DEFAULT_METRICS_CONF

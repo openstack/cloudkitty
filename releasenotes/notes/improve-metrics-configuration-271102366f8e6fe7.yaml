@@ -1,0 +1,4 @@
+features:
+  - |
+    The format of the 'metrics.yml' configuration file has been improved,
+    and will be stable.
