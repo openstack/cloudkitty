@@ -22,7 +22,6 @@ from oslo_log import log as logging
 import six
 from stevedore import driver
 
-from cloudkitty import collector as ck_collector
 from cloudkitty import utils as ck_utils
 
 
@@ -37,12 +36,9 @@ METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
-def get_storage(collector=None):
-    if not collector:
-        collector = ck_collector.get_collector()
+def get_storage():
     storage_args = {
         'period': METRICS_CONF.get('period', 3600),
-        'collector': collector,
     }
     backend = driver.DriverManager(
         STORAGES_NAMESPACE,

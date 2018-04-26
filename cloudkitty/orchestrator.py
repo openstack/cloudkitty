@@ -231,7 +231,7 @@ class Orchestrator(object):
 
         transformers = transformer.get_transformers()
         self.collector = collector.get_collector(transformers)
-        self.storage = storage.get_storage(collector=self.collector)
+        self.storage = storage.get_storage()
 
         # RPC
         self.server = None
