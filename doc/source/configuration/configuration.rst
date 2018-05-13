@@ -37,65 +37,6 @@ keystone. More methods will be implemented soon. It should be set in the
 ``DEFAULT`` configuration block too, with the ``auth_stategy`` field.
 
 
-For keystone (identity) API v2 (deprecated)
--------------------------------------------
-
-.. code-block:: ini
-
-    [DEFAULT]
-    verbose = True
-    log_dir = /var/log/cloudkitty
-    # oslo_messaging_rabbit is deprecated
-    transport_url = rabbit://RABBIT_USER:RABBIT_PASSWORD@RABBIT_HOST/
-    auth_strategy = keystone
-
-    [auth]
-    username = cloudkitty
-    password = CK_PASSWORD
-    tenant = service
-    region = RegionOne
-    url = http://KEYSTONE_HOST:5000/v2.0
-
-    [keystone_authtoken]
-    username = cloudkitty
-    password = CK_PASSWORD
-    project_name = service
-    region = RegionOne
-    auth_url = http://KEYSTONE_HOST:5000/v2.0
-    auth_plugin = password
-
-    [database]
-    connection = mysql+pymysql://CK_DBUSER:CK_DBPASSWORD@DB_HOST/cloudkitty
-
-    [storage]
-    backend = sqlalchemy
-
-    [keystone_fetcher]
-    username = cloudkitty
-    password = CK_PASSWORD
-    tenant = service
-    region = RegionOne
-    url = http://KEYSTONE_HOST:5000/v2.0
-
-    [collect]
-    collector = ceilometer
-    period = 3600
-    services = compute, volume, network.bw.in, network.bw.out, network.floating, image
-
-    [ceilometer_collector]
-    username = cloudkitty
-    password = CK_PASSWORD
-    tenant = service
-    region = RegionOne
-    url = http://KEYSTONE_HOST:5000/v2.0
-
-.. note::
-
-   * ``http://KEYSTONE_HOST:5000/v2.0`` and ``http://KEYSTONE_HOST:35357/v2.0`` are your
-     identity endpoints.
-
-   * the tenant named ``service`` is also commonly called ``services``
-
 For keystone (identity) API v3
 ------------------------------
 
@@ -114,7 +55,7 @@ The following shows the basic configuration items:
     auth_type = v3password
     auth_protocol = http
     auth_url = http://KEYSTONE_HOST:5000/
-    identity_uri = http://KEYSTONE_HOST:35357/
+    identity_uri = http://KEYSTONE_HOST:5000/
     username = cloudkitty
     password = CK_PASSWORD
     project_name = service
