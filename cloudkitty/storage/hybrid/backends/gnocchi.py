@@ -379,7 +379,7 @@ class GnocchiStorage(BaseHybridBackend):
         price_dict = {'price': float(price)}
 
         # Getting vol
-        if isinstance(res_type_info['qty_metric'], (str, unicode)):
+        if isinstance(res_type_info['qty_metric'], six.text_type):
             try:
                 qty = self._conn.metric.get_measures(
                     resource['metrics'][res_type_info['qty_metric']],
