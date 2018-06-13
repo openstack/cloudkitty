@@ -189,7 +189,7 @@ class ConfigFixture(fixture.GabbiFixture):
         conf = conf_fixture.Config().conf
         policy_opts.set_defaults(conf)
         msg_conf = conffixture.ConfFixture(conf)
-        msg_conf.transport_driver = 'fake'
+        msg_conf.transport_url = 'fake:/'
         conf.import_group('api', 'cloudkitty.api.app')
         conf.set_override('auth_strategy', self.auth_strategy)
         conf.set_override('connection', 'sqlite:///', 'database')
