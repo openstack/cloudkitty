@@ -54,43 +54,6 @@ class EndpointNotFound(Exception):
 class MonascaCollector(collector.BaseCollector):
     collector_name = 'monasca'
     dependencies = ['CloudKittyFormatTransformer']
-    retrieve_mappings = {
-        'compute': 'cpu',
-        'image': 'image.size',
-        'volume': 'volume.size',
-        'network.floating': 'ip.floating',
-        'network.bw.in': 'network.incoming.bytes',
-        'network.bw.out': 'network.outgoing.bytes',
-    }
-    metrics_mappings = {
-        'compute': [
-            {'cpu': 'max'},
-            {'vpcus': 'max'},
-            {'memory': 'max'}],
-        'image': [
-            {'image.size': 'max'},
-            {'image.download': 'max'},
-            {'image.serve': 'max'}],
-        'volume': [
-            {'volume.size': 'max'}],
-        'network.bw.in': [
-            {'network.incoming.bytes': 'max'}],
-        'network.bw.out': [
-            {'network.outgoing.bytes': 'max'}],
-        'network.floating': [
-            {'ip.floating': 'max'}],
-    }
-    # (qty, unit). qty must be either a metric name, an integer
-    # or a decimal.Decimal object
-    units_mappings = {
-        'compute': (1, 'instance'),
-        'image': ('image.size', 'MiB'),
-        'volume': ('volume.size', 'GiB'),
-        'network.bw.out': ('network.outgoing.bytes', 'MB'),
-        'network.bw.in': ('network.incoming.bytes', 'MB'),
-        'network.floating': (1, 'ip'),
-    }
-    default_unit = (1, 'unknown')
 
     def __init__(self, transformers, **kwargs):
         super(MonascaCollector, self).__init__(transformers, **kwargs)
@@ -108,8 +71,6 @@ class MonascaCollector(collector.BaseCollector):
         self.mon_endpoint = self._get_monasca_endpoint()
         if not self.mon_endpoint:
             raise EndpointNotFound()
-        # NOTE (lukapeschke) session authentication should be possible starting
-        # with OpenStack Q release.
         self._conn = mclient.Client(
             api_version=MONASCA_API_VERSION,
             session=self.session,

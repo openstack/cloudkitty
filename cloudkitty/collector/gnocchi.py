@@ -47,47 +47,6 @@ class GnocchiCollector(collector.BaseCollector):
     collector_name = 'gnocchi'
     dependencies = ('GnocchiTransformer',
                     'CloudKittyFormatTransformer')
-    retrieve_mappings = {
-        'compute': 'instance',
-        'image': 'image',
-        'volume': 'volume',
-        'network.bw.out': 'instance_network_interface',
-        'network.bw.in': 'instance_network_interface',
-        'network.floating': 'network',
-        'radosgw.usage': 'ceph_account',
-    }
-    metrics_mappings = {
-        'compute': [
-            ('vcpus', 'max'),
-            ('memory', 'max'),
-            ('cpu', 'max'),
-            ('disk.root.size', 'max'),
-            ('disk.ephemeral.size', 'max')],
-        'image': [
-            ('image.size', 'max'),
-            ('image.download', 'max'),
-            ('image.serve', 'max')],
-        'volume': [
-            ('volume.size', 'max')],
-        'network.bw.out': [
-            ('network.outgoing.bytes', 'max')],
-        'network.bw.in': [
-            ('network.incoming.bytes', 'max')],
-        'network.floating': [
-            ('ip.floating', 'max')],
-        'radosgw.usage': [
-            ('radosgw.objects.size', 'max')],
-    }
-    units_mappings = {
-        'compute': (1, 'instance'),
-        'image': ('image.size', 'MiB'),
-        'volume': ('volume.size', 'GiB'),
-        'network.bw.out': ('network.outgoing.bytes', 'MB'),
-        'network.bw.in': ('network.incoming.bytes', 'MB'),
-        'network.floating': (1, 'ip'),
-        'radosgw.usage': ('radosgw.objects.size', 'GiB')
-    }
-    default_unit = (1, 'unknown')
 
     def __init__(self, transformers, **kwargs):
         super(GnocchiCollector, self).__init__(transformers, **kwargs)
