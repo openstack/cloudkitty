@@ -15,6 +15,7 @@
 #
 import decimal
 
+from gnocchiclient import auth as gauth
 from gnocchiclient import client as gclient
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
@@ -28,12 +29,33 @@ LOG = logging.getLogger(__name__)
 
 GNOCCHI_COLLECTOR_OPTS = 'gnocchi_collector'
 gnocchi_collector_opts = ks_loading.get_auth_common_conf_options()
-end_point_type_opts = [
-    cfg.StrOpt('interface',
-               default='internalURL',
-               help='endpoint url type'), ]
+gcollector_opts = [
+    cfg.StrOpt(
+        'gnocchi_auth_type',
+        default='keystone',
+        choices=['keystone', 'basic'],
+        help='Gnocchi auth type (keystone or basic). Keystone credentials '
+        'can be specified through the "auth_section" parameter',
+    ),
+    cfg.StrOpt(
+        'gnocchi_user',
+        default='',
+        help='Gnocchi user (for basic auth only)',
+    ),
+    cfg.StrOpt(
+        'gnocchi_endpoint',
+        default='',
+        help='Gnocchi endpoint (for basic auth only)',
+    ),
+    cfg.StrOpt(
+        'interface',
+        default='internalURL',
+        help='Endpoint URL type (for keystone auth only)',
+    ),
+]
+
 cfg.CONF.register_opts(gnocchi_collector_opts, GNOCCHI_COLLECTOR_OPTS)
-cfg.CONF.register_opts(end_point_type_opts, GNOCCHI_COLLECTOR_OPTS)
+cfg.CONF.register_opts(gcollector_opts, GNOCCHI_COLLECTOR_OPTS)
 ks_loading.register_session_conf_options(
     cfg.CONF,
     GNOCCHI_COLLECTOR_OPTS)
@@ -54,18 +76,23 @@ class GnocchiCollector(collector.BaseCollector):
         self.t_gnocchi = self.transformers['GnocchiTransformer']
         self.t_cloudkitty = self.transformers['CloudKittyFormatTransformer']
 
-        self.auth = ks_loading.load_auth_from_conf_options(
-            CONF,
-            GNOCCHI_COLLECTOR_OPTS)
-        self.session = ks_loading.load_session_from_conf_options(
-            CONF,
-            GNOCCHI_COLLECTOR_OPTS,
-            auth=self.auth)
+        adapter_options = {'connect_retries': 3}
+        if CONF.gnocchi_collector.gnocchi_auth_type == 'keystone':
+            auth_plugin = ks_loading.load_auth_from_conf_options(
+                CONF,
+                'gnocchi_collector',
+            )
+            adapter_options['interface'] = CONF.gnocchi_collector.interface
+        else:
+            auth_plugin = gauth.GnocchiBasicPlugin(
+                user=CONF.gnocchi_collector.gnocchi_user,
+                endpoint=CONF.gnocchi_collector.gnocchi_endpoint,
+            )
         self._conn = gclient.Client(
             '1',
-            session=self.session,
-            adapter_options={'connect_retries': 3,
-                             'interface': CONF.gnocchi_collector.interface})
+            session_options={'auth': auth_plugin},
+            adapter_options=adapter_options,
+        )
 
     @classmethod
     def get_metadata(cls, resource_name, transformers, conf):
