@@ -82,6 +82,11 @@ more information check the `installation section`_ of the documentation. Due to
 oslo libraries new namespace backward compatibility is not possible. If you
 want to install it on an older system, use a virtualenv.
 
+Getting release notes
+---------------------
+
+Release notes can be found in the `release notes section`_ of the documentation.
+
 
 .. Global references and images
 
@@ -110,3 +115,5 @@ want to install it on an older system, use a virtualenv.
 
 
 .. _installation section: https://cloudkitty.readthedocs.io/en/latest/installation.html
+
+.. _release notes section: https://docs.openstack.org/releasenotes/cloudkitty/
