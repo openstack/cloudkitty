@@ -20,6 +20,7 @@ from oslo_log import log as logging
 import pecan
 from pecan import rest
 import six
+import voluptuous
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
@@ -36,37 +37,45 @@ CONF = cfg.CONF
 
 
 def get_all_metrics():
-    METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
-    METADATA = collector.get_metrics_based_collector_metadata()
-    if 'metrics' not in METRICS_CONF:
+    try:
+        metrics_conf = collector.validate_conf(
+            ck_utils.load_conf(CONF.collect.metrics_conf))
+    except (voluptuous.Invalid, voluptuous.MultipleInvalid):
         msg = 'Invalid endpoint: no metrics in current configuration.'
         pecan.abort(405, msg)
 
     policy.authorize(pecan.request.context, 'info:list_metrics_info', {})
     metrics_info_list = []
-    for metric, metadata in METADATA.items():
-        info = metadata.copy()
-        info['metric_id'] = metric
+    for metric_name, metric in metrics_conf.items():
+        info = metric.copy()
+        info['metric_id'] = info['alt_name']
         metrics_info_list.append(
             info_models.CloudkittyMetricInfo(**info))
     return info_models.CloudkittyMetricInfoCollection(
         metrics=metrics_info_list)
 
 
+def _find_metric(name, conf):
+    for metric_name, metric in conf.items():
+        if metric['alt_name'] == name:
+            return metric
+
+
 def get_one_metric(metric_name):
-    METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
-    METADATA = collector.get_metrics_based_collector_metadata()
-    if 'metrics' not in METRICS_CONF:
+    try:
+        metrics_conf = collector.validate_conf(
+            ck_utils.load_conf(CONF.collect.metrics_conf))
+    except (voluptuous.Invalid, voluptuous.MultipleInvalid):
         msg = 'Invalid endpoint: no metrics in current configuration.'
         pecan.abort(405, msg)
 
     policy.authorize(pecan.request.context, 'info:get_metric_info', {})
-    try:
-        info = METADATA[metric_name].copy()
-        info['metric_id'] = metric_name
-        return info_models.CloudkittyMetricInfo(**info)
-    except KeyError:
+    metric = _find_metric(metric_name, metrics_conf)
+    if not metric:
         pecan.abort(404, six.text_type(metric_name))
+    info = metric.copy()
+    info['metric_id'] = info['alt_name']
+    return info_models.CloudkittyMetricInfo(**info)
 
 
 class MetricInfoController(rest.RestController):
@@ -131,4 +140,4 @@ class InfoController(rest.RestController):
     def config(self):
         """Return current configuration."""
         policy.authorize(pecan.request.context, 'info:get_config', {})
-        return ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+        return ck_utils.load_conf(CONF.collect.metrics_conf)

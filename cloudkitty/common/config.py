@@ -22,6 +22,7 @@ import cloudkitty.collector.monasca
 import cloudkitty.config
 import cloudkitty.fetcher
 import cloudkitty.fetcher.keystone
+import cloudkitty.fetcher.source
 import cloudkitty.orchestrator
 import cloudkitty.service
 import cloudkitty.storage
@@ -34,7 +35,7 @@ _opts = [
     ('api', list(itertools.chain(
         cloudkitty.api.app.api_opts,))),
     ('collect', list(itertools.chain(
-        cloudkitty.utils.collect_opts))),
+        cloudkitty.collector.collect_opts))),
     ('collector_monasca', list(itertools.chain(
         cloudkitty.collector.monasca.collector_monasca_opts))),
     ('gnocchi_collector', list(itertools.chain(
@@ -43,6 +44,8 @@ _opts = [
     ('keystone_fetcher', list(itertools.chain(
         cloudkitty.fetcher.keystone.keystone_fetcher_opts,
         cloudkitty.fetcher.keystone.keystone_common_opts))),
+    ('source_fetcher', list(itertools.chain(
+        cloudkitty.fetcher.source.source_fetcher_opts))),
     ('orchestrator', list(itertools.chain(
         cloudkitty.orchestrator.orchestrator_opts))),
     ('output', list(itertools.chain(
@@ -50,7 +53,7 @@ _opts = [
     ('state', list(itertools.chain(
         cloudkitty.config.state_opts))),
     ('storage', list(itertools.chain(
-        cloudkitty.utils.storage_opts))),
+        cloudkitty.storage.storage_opts))),
     ('storage_gnocchi', list(itertools.chain(
         cloudkitty.storage.hybrid.backends.gnocchi.gnocchi_storage_opts))),
     ('fetcher', list(itertools.chain(

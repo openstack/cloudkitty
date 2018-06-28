@@ -61,18 +61,18 @@ class KeystoneFetcher(fetcher.BaseFetcher):
             session=self.session,
             auth_url=self.auth.auth_url)
 
-    def get_tenants(self, conf=None):
+    def get_tenants(self):
         keystone_version = discover.normalize_version_number(
             CONF.keystone_fetcher.keystone_version)
         auth_dispatch = {(3,): ('project', 'projects', 'list'),
                          (2,): ('tenant', 'tenants', 'roles_for_user')}
         for auth_version, auth_version_mapping in auth_dispatch.items():
             if discover.version_match(auth_version, keystone_version):
-                return self._do_get_tenants(auth_version_mapping, conf)
+                return self._do_get_tenants(auth_version_mapping)
         msg = "Keystone version you've specified is not supported"
         raise exceptions.VersionNotAvailable(msg)
 
-    def _do_get_tenants(self, auth_version_mapping, conf):
+    def _do_get_tenants(self, auth_version_mapping):
         tenant_attr, tenants_attr, role_func = auth_version_mapping
         tenant_list = getattr(self.admin_ks, tenants_attr).list()
         my_user_id = self.session.get_user_id()
@@ -82,8 +82,4 @@ class KeystoneFetcher(fetcher.BaseFetcher):
                    tenant_attr: tenant})
             if 'rating' not in [role.name for role in roles]:
                 tenant_list.remove(tenant)
-        if conf:
-            res = [{'tenant_id': tenant.id} for tenant in tenant_list]
-            for tenant in res:
-                tenant.update(conf)
-        return res
+        return [tenant.id for tenant in tenant_list]

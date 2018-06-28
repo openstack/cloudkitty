@@ -18,29 +18,14 @@
 from oslo_config import cfg
 from wsme import types as wtypes
 
-from cloudkitty.default_metrics_conf import DEFAULT_METRICS_CONF
-from cloudkitty import utils as ck_utils
-
 
 CONF = cfg.CONF
-
-
-def get_metrics_list():
-    metrics_conf = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
-    try:
-        metrics = list(metrics_conf['metrics'].keys())
-        cloudkitty_metrics = wtypes.Enum(wtypes.text, *metrics)
-    except KeyError:
-        metrics = list(DEFAULT_METRICS_CONF['metrics'].keys())
-        cloudkitty_metrics = wtypes.Enum(wtypes.text, *metrics)
-
-    return cloudkitty_metrics
 
 
 class CloudkittyMetricInfo(wtypes.Base):
     """Type describing a metric info in CloudKitty."""
 
-    metric_id = get_metrics_list()
+    metric_id = wtypes.text
     """Name of the metric."""
 
     metadata = [wtypes.text]

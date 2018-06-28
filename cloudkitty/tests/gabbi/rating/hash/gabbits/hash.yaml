@@ -20,10 +20,10 @@ tests:
         content-type: application/json
         x-roles: admin
     data:
-      name: "compute"
+      name: "cpu"
     status: 201
     response_json_paths:
-      $.name: "compute"
+      $.name: "cpu"
     response_store_environ:
       hash_service_id: $.service_id
 
@@ -32,7 +32,7 @@ tests:
     status: 200
     response_json_paths:
       $.service_id: $RESPONSE['$.service_id']
-      $.name: "compute"
+      $.name: "cpu"
 
   - name: create a flat service mapping
     url: /v1/rating/module_config/hashmap/mappings
@@ -60,7 +60,7 @@ tests:
     status: 200
     response_json_paths:
       $.services.`len`: 1
-      $.services[0].name: "compute"
+      $.services[0].name: "cpu"
 
   - name: create a rate service mapping
     url: /v1/rating/module_config/hashmap/mappings

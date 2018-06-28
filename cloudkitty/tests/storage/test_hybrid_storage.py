@@ -21,18 +21,17 @@ import mock
 from gnocchiclient import exceptions as gexc
 
 from cloudkitty import storage
-from cloudkitty.storage.hybrid.backends import gnocchi as hgnocchi
 from cloudkitty import tests
-from cloudkitty.tests import samples
+from cloudkitty.tests import test_utils
 
 
 class BaseHybridStorageTest(tests.TestCase):
 
+    @mock.patch('cloudkitty.utils.load_conf', new=test_utils.load_conf)
     def setUp(self):
         super(BaseHybridStorageTest, self).setUp()
         self.conf.set_override('backend', 'hybrid', 'storage')
-        hgnocchi.METRICS_CONF = samples.METRICS_CONF
-        self.storage = storage.get_storage()
+        self.storage = storage.get_storage(conf=test_utils.load_conf())
         with mock.patch.object(
                 self.storage._hybrid_backend, 'init'):
             self.storage.init()

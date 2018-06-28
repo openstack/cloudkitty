@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# !/usr/bin/env python
 # Copyright 2015 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,9 +15,19 @@
 #
 # @author: Martin CAMEY
 #
-import hashlib
+from oslo_config import cfg
 
 from cloudkitty import fetcher
+
+
+SOURCE_FETCHER_OPTS = 'source_fetcher'
+source_fetcher_opts = [
+    cfg.ListOpt('sources',
+                default=list(),
+                help='list of source identifiers'), ]
+
+cfg.CONF.register_opts(source_fetcher_opts, SOURCE_FETCHER_OPTS)
+CONF = cfg.CONF
 
 
 class SourceFetcher(fetcher.BaseFetcher):
@@ -26,12 +35,5 @@ class SourceFetcher(fetcher.BaseFetcher):
 
     name = 'source'
 
-    def get_projects(self, conf=None):
-        if conf:
-            tmp = hashlib.md5()
-            tmp.update(conf['name'])
-            conf['tenant_id'] = tmp.hexdigest()
-        return [conf]
-
-    def get_tenants(self, conf=None):
-        return self.get_projects(conf=conf)
+    def get_tenants(self):
+        return CONF.source_fetcher.sources

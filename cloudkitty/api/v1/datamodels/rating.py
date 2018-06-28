@@ -28,16 +28,7 @@ LOG = log.getLogger(__name__)
 
 CONF = cfg.CONF
 
-METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
-
-try:
-    SERVICE_NAMES = list(METRICS_CONF['metrics'].keys())
-except KeyError:
-    LOG.error("No metrics specified in YAML configuration, "
-              "CloudKitty won't work as expected")
-    SERVICE_NAMES = ['compute', 'image']
-
-CLOUDKITTY_SERVICES = wtypes.Enum(wtypes.text, *SERVICE_NAMES)
+METRICS_CONF = ck_utils.load_conf(CONF.collect.metrics_conf)
 
 
 class CloudkittyResource(wtypes.Base):
@@ -45,7 +36,7 @@ class CloudkittyResource(wtypes.Base):
 
     """
 
-    service = CLOUDKITTY_SERVICES
+    service = wtypes.text
     """Name of the service."""
 
     # FIXME(sheeprine): values should be dynamic

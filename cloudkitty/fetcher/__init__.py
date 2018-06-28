@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# !/usr/bin/env python
 # Copyright 2015 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -21,13 +20,15 @@ import abc
 from oslo_config import cfg
 import six
 
+FETCHER_OPTS = 'fetcher'
+DEPRECATED_FETCHER_OPTS = 'tenant_fetcher'
 fetchers_opts = [
     cfg.StrOpt('backend',
                default='keystone',
-               help='Driver used to fetch tenant list.')
+               help='Driver used to fetch tenant list.',
+               deprecated_group=DEPRECATED_FETCHER_OPTS)
 ]
-
-cfg.CONF.register_opts(fetchers_opts, 'tenant_fetcher')
+cfg.CONF.register_opts(fetchers_opts, 'fetcher')
 
 
 @six.add_metaclass(abc.ABCMeta)

@@ -18,7 +18,6 @@
 import copy
 import decimal
 
-from cloudkitty.default_metrics_conf import DEFAULT_METRICS_CONF
 from cloudkitty import utils as ck_utils
 
 TENANT = 'f266f30b11f246b589fd266f85eeec39'
@@ -37,6 +36,7 @@ COMPUTE_METADATA = {
     'flavor': 'm1.nano',
     'image_id': 'f5600101-8fa2-4864-899e-ebcb7ed6b568',
     'instance_id': '26c084e1-b8f1-4cbc-a7ec-e8b356788a17',
+    'id': '1558f911-b55a-4fd2-9173-c8f1f23e5639',
     'resource_id': '1558f911-b55a-4fd2-9173-c8f1f23e5639',
     'memory': '64',
     'metadata': {
@@ -50,6 +50,7 @@ COMPUTE_METADATA = {
 IMAGE_METADATA = {
     'checksum': '836c69cbcd1dc4f225daedbab6edc7c7',
     'resource_id': '7b5b73f2-9181-4307-a710-b1aa6472526d',
+    'id': '7b5b73f2-9181-4307-a710-b1aa6472526d',
     'container_format': 'aki',
     'created_at': '2014-06-04T16:26:01',
     'deleted': 'False',
@@ -75,7 +76,7 @@ SECOND_PERIOD = {
 COLLECTED_DATA = [{
     'period': FIRST_PERIOD,
     'usage': {
-        'cpu': [{
+        'instance': [{
             'desc': COMPUTE_METADATA,
             'vol': {
                 'qty': decimal.Decimal(1.0),
@@ -88,20 +89,132 @@ COLLECTED_DATA = [{
     }}, {
     'period': SECOND_PERIOD,
     'usage': {
-        'cpu': [{
+        'instance': [{
             'desc': COMPUTE_METADATA,
             'vol': {
                 'qty': decimal.Decimal(1.0),
                 'unit': 'instance'}}]
-    }}]
+    },
+}]
 
 RATED_DATA = copy.deepcopy(COLLECTED_DATA)
-RATED_DATA[0]['usage']['cpu'][0]['rating'] = {
+RATED_DATA[0]['usage']['instance'][0]['rating'] = {
     'price': decimal.Decimal('0.42')}
 RATED_DATA[0]['usage']['image.size'][0]['rating'] = {
     'price': decimal.Decimal('0.1337')}
-RATED_DATA[1]['usage']['cpu'][0]['rating'] = {
+RATED_DATA[1]['usage']['instance'][0]['rating'] = {
     'price': decimal.Decimal('0.42')}
+
+
+DEFAULT_METRICS_CONF = {
+    "metrics": {
+        "cpu": {
+            "unit": "instance",
+            "alt_name": "instance",
+            "groupby": [
+                "id",
+                "project_id"
+            ],
+            "metadata": [
+                "flavor",
+                "flavor_id",
+                "vcpus"
+            ],
+            "mutate": "NUMBOOL",
+            "extra_args": {
+                "aggregation_method": "max",
+                "resource_type": "instance"
+            }
+        },
+        "image.size": {
+            "unit": "MiB",
+            "factor": "1/1048576",
+            "groupby": [
+                "id",
+                "project_id"
+            ],
+            "metadata": [
+                "container_format",
+                "disk_format"
+            ],
+            "extra_args": {
+                "aggregation_method": "max",
+                "resource_type": "image"
+            }
+        },
+        "volume.size": {
+            "unit": "GiB",
+            "groupby": [
+                "id",
+                "project_id"
+            ],
+            "metadata": [
+                "volume_type"
+            ],
+            "extra_args": {
+                "aggregation_method": "max",
+                "resource_type": "volume"
+            }
+        },
+        "network.outgoing.bytes": {
+            "unit": "MB",
+            "groupby": [
+                "id",
+                "project_id"
+            ],
+            "factor": "1/1000000",
+            "metadata": [
+                "instance_id"
+            ],
+            "extra_args": {
+                "aggregation_method": "max",
+                "resource_type": "instance_network_interface"
+            }
+        },
+        "network.incoming.bytes": {
+            "unit": "MB",
+            "groupby": [
+                "id",
+                "project_id"
+            ],
+            "factor": "1/1000000",
+            "metadata": [
+                "instance_id"
+            ],
+            "extra_args": {
+                "aggregation_method": "max",
+                "resource_type": "instance_network_interface"
+            }
+        },
+        "ip.floating": {
+            "unit": "ip",
+            "groupby": [
+                "id",
+                "project_id"
+            ],
+            "metadata": [
+                "state"
+            ],
+            "mutate": "NUMBOOL",
+            "extra_args": {
+                "aggregation_method": "max",
+                "resource_type": "network"
+            }
+        },
+        "radosgw.objects.size": {
+            "unit": "GiB",
+            "groupby": [
+                "id",
+                "project_id"
+            ],
+            "factor": "1/1073741824",
+            "extra_args": {
+                "aggregation_method": "max",
+                "resource_type": "ceph_account"
+            }
+        }
+    }
+}
 
 
 def split_storage_data(raw_data):
@@ -122,11 +235,11 @@ def split_storage_data(raw_data):
 # FIXME(sheeprine): storage is not using decimal for rates, we need to
 # transition to decimal.
 STORED_DATA = copy.deepcopy(COLLECTED_DATA)
-STORED_DATA[0]['usage']['cpu'][0]['rating'] = {
+STORED_DATA[0]['usage']['instance'][0]['rating'] = {
     'price': 0.42}
 STORED_DATA[0]['usage']['image.size'][0]['rating'] = {
     'price': 0.1337}
-STORED_DATA[1]['usage']['cpu'][0]['rating'] = {
+STORED_DATA[1]['usage']['instance'][0]['rating'] = {
     'price': 0.42}
 
 STORED_DATA = split_storage_data(STORED_DATA)

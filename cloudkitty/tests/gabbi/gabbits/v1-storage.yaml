@@ -74,7 +74,7 @@ tests:
       $.dataframes[0].resources.`len`: 1
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "1.337"
-      $.dataframes[0].resources[0].service: "compute"
+      $.dataframes[0].resources[0].service: "cpu"
       $.dataframes[0].resources[0].desc.dummy: true
       $.dataframes[0].resources[0].desc.fake_meta: 1.0
       $.dataframes[1].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
@@ -83,7 +83,7 @@ tests:
       $.dataframes[1].resources.`len`: 1
       $.dataframes[1].resources[0].volume: "1"
       $.dataframes[1].resources[0].rating: "0.121"
-      $.dataframes[1].resources[0].service: "image"
+      $.dataframes[1].resources[0].service: "image.size"
       $.dataframes[1].resources[0].desc.dummy: true
       $.dataframes[1].resources[0].desc.fake_meta: 1.0
 
@@ -102,7 +102,7 @@ tests:
       $.dataframes[0].resources.`len`: 1
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "1.337"
-      $.dataframes[0].resources[0].service: "compute"
+      $.dataframes[0].resources[0].service: "cpu"
       $.dataframes[0].resources[0].desc.dummy: true
       $.dataframes[0].resources[0].desc.fake_meta: 1.0
       $.dataframes[1].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
@@ -111,7 +111,7 @@ tests:
       $.dataframes[1].resources.`len`: 1
       $.dataframes[1].resources[0].volume: "1"
       $.dataframes[1].resources[0].rating: "0.121"
-      $.dataframes[1].resources[0].service: "image"
+      $.dataframes[1].resources[0].service: "image.size"
       $.dataframes[1].resources[0].desc.dummy: true
       $.dataframes[1].resources[0].desc.fake_meta: 1.0
 
@@ -129,7 +129,7 @@ tests:
       $.dataframes[0].resources.`len`: 1
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "1.337"
-      $.dataframes[0].resources[0].service: "compute"
+      $.dataframes[0].resources[0].service: "cpu"
       $.dataframes[0].resources[0].desc.dummy: true
       $.dataframes[0].resources[0].desc.fake_meta: 1.0
       $.dataframes[1].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
@@ -138,7 +138,7 @@ tests:
       $.dataframes[1].resources.`len`: 1
       $.dataframes[1].resources[0].volume: "1"
       $.dataframes[1].resources[0].rating: "0.121"
-      $.dataframes[1].resources[0].service: "image"
+      $.dataframes[1].resources[0].service: "image.size"
       $.dataframes[1].resources[0].desc.dummy: true
       $.dataframes[1].resources[0].desc.fake_meta: 1.0
       $.dataframes[2].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
@@ -147,7 +147,7 @@ tests:
       $.dataframes[2].resources.`len`: 1
       $.dataframes[2].resources[0].volume: "1"
       $.dataframes[2].resources[0].rating: "1.337"
-      $.dataframes[2].resources[0].service: "compute"
+      $.dataframes[2].resources[0].service: "cpu"
       $.dataframes[2].resources[0].desc.dummy: true
       $.dataframes[2].resources[0].desc.fake_meta: 1.0
       $.dataframes[3].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
@@ -156,16 +156,16 @@ tests:
       $.dataframes[3].resources.`len`: 1
       $.dataframes[3].resources[0].volume: "1"
       $.dataframes[3].resources[0].rating: "0.121"
-      $.dataframes[3].resources[0].service: "image"
+      $.dataframes[3].resources[0].service: "image.size"
       $.dataframes[3].resources[0].desc.dummy: true
       $.dataframes[3].resources[0].desc.fake_meta: 1.0
 
-  - name: fetch data filtering on compute service and tenant
+  - name: fetch data filtering on cpu service and tenant
     url: /v1/storage/dataframes
     query_parameters:
       begin: "2015-01-04T13:00:00"
       end: "2015-01-04T14:00:00"
-      resource_type: "compute"
+      resource_type: "cpu"
       tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
     status: 200
     response_json_paths:
@@ -176,7 +176,7 @@ tests:
       $.dataframes[0].resources.`len`: 1
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "1.337"
-      $.dataframes[0].resources[0].service: "compute"
+      $.dataframes[0].resources[0].service: "cpu"
       $.dataframes[0].resources[0].desc.dummy: true
       $.dataframes[0].resources[0].desc.fake_meta: 1.0
 
@@ -185,7 +185,7 @@ tests:
     query_parameters:
       begin: "2015-01-04T13:00:00"
       end: "2015-01-04T14:00:00"
-      resource_type: "image"
+      resource_type: "image.size"
       tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
     status: 200
     response_json_paths:
@@ -196,7 +196,7 @@ tests:
       $.dataframes[0].resources.`len`: 1
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "0.121"
-      $.dataframes[0].resources[0].service: "image"
+      $.dataframes[0].resources[0].service: "image.size"
       $.dataframes[0].resources[0].desc.dummy: true
       $.dataframes[0].resources[0].desc.fake_meta: 1.0
 

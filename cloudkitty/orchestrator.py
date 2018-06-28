@@ -41,7 +41,6 @@ eventlet.monkey_patch()
 LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
-CONF.import_opt('backend', 'cloudkitty.fetcher', 'tenant_fetcher')
 
 orchestrator_opts = [
     cfg.StrOpt('coordination_url',
@@ -51,9 +50,9 @@ orchestrator_opts = [
 ]
 CONF.register_opts(orchestrator_opts, group='orchestrator')
 
-METRICS_CONF = ck_utils.get_metrics_conf(CONF.collect.metrics_conf)
+CONF.import_opt('backend', 'cloudkitty.fetcher', 'fetcher')
 
-FETCHERS_NAMESPACE = 'cloudkitty.tenant.fetchers'
+FETCHERS_NAMESPACE = 'cloudkitty.fetchers'
 PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
 COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
@@ -153,13 +152,13 @@ class APIWorker(BaseWorker):
 
 
 class Worker(BaseWorker):
-    def __init__(self, collector, storage, tenant):
+    def __init__(self, collector, storage, tenant_id):
         self._collector = collector
         self._storage = storage
-        self._period = tenant['period']
-        self._wait_time = tenant['wait_periods'] * self._period
-        self._tenant_id = tenant['tenant_id']
-        self.conf = tenant
+        self._period = CONF.collect.period
+        self._wait_time = CONF.collect.wait_periods * self._period
+        self._tenant_id = tenant_id
+        self._conf = ck_utils.load_conf(CONF.collect.metrics_conf)
 
         super(Worker, self).__init__(self._tenant_id)
 
@@ -182,7 +181,7 @@ class Worker(BaseWorker):
         timestamp = self._storage.get_state(self._tenant_id)
         return ck_utils.check_time_state(timestamp,
                                          self._period,
-                                         self._wait_time)
+                                         CONF.collect.wait_periods)
 
     def run(self):
         while True:
@@ -190,7 +189,7 @@ class Worker(BaseWorker):
             if not timestamp:
                 break
 
-            metrics = list(self.conf['metrics'].keys())
+            metrics = list(self._conf['metrics'].keys())
 
             for metric in metrics:
                 try:
@@ -225,8 +224,8 @@ class Orchestrator(object):
     def __init__(self):
         self.fetcher = driver.DriverManager(
             FETCHERS_NAMESPACE,
-            METRICS_CONF['fetcher'],
-            invoke_on_load=True
+            CONF.fetcher.backend,
+            invoke_on_load=True,
         ).driver
 
         transformers = transformer.get_transformers()
@@ -258,11 +257,11 @@ class Orchestrator(object):
         self.server = messaging.get_server(target, endpoints)
         self.server.start()
 
-    def _check_state(self, tenant_id, period, wait_time):
+    def _check_state(self, tenant_id):
         timestamp = self.storage.get_state(tenant_id)
         return ck_utils.check_time_state(timestamp,
-                                         period,
-                                         wait_time)
+                                         CONF.collect.period,
+                                         CONF.collect.wait_periods)
 
     def process_messages(self):
         # TODO(sheeprine): Code kept to handle threading and asynchronous
@@ -273,36 +272,31 @@ class Orchestrator(object):
 
     def process(self):
         while True:
-            self.tenants = self.fetcher.get_tenants(METRICS_CONF)
+            self.tenants = self.fetcher.get_tenants()
             random.shuffle(self.tenants)
             LOG.info('Tenants loaded for fetcher %s', self.fetcher.name)
 
-            for tenant in self.tenants:
-                lock = self._lock(tenant['tenant_id'])
+            for tenant_id in self.tenants:
+
+                lock = self._lock(tenant_id)
                 if lock.acquire(blocking=False):
-                    state = self._check_state(
-                        tenant['tenant_id'],
-                        tenant['period'],
-                        tenant['wait_periods'],
-                    )
-                    if not state:
-                        self.tenants.remove(tenant)
-                    else:
+                    state = self._check_state(tenant_id)
+                    if state:
                         worker = Worker(
                             self.collector,
                             self.storage,
-                            tenant,
+                            tenant_id,
                         )
-
                         worker.run()
                     lock.release()
+
                 self.coord.heartbeat()
 
                 # NOTE(sheeprine): Slow down looping if all tenants are
                 # being processed
                 eventlet.sleep(1)
             # FIXME(sheeprine): We may cause a drift here
-            eventlet.sleep(tenant['period'])
+            eventlet.sleep(CONF.collect.period)
 
     def terminate(self):
         self.coord.stop()

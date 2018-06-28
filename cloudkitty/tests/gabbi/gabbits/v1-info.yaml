@@ -7,20 +7,9 @@ tests:
     url: /v1/info/config
     status: 200
     response_json_paths:
-      $.collector: gnocchi
-      $.window: 1800
-      $.wait_periods: 2
-      $.period: 3600
-
-      $.metrics.`len`: 13
-      $.metrics.vcpus.unit: instance
-      $.metrics.memory.unit: instance
-      $.metrics.cpu.unit: instance
-      $.metrics['disk.root.size'].unit: instance
-      $.metrics['disk.ephemeral.size'].unit: instance
+      $.metrics.`len`: 7
+      $.metrics['cpu'].unit: instance
       $.metrics['image.size'].unit: MiB
-      $.metrics['image.download'].unit: MiB
-      $.metrics['image.serve'].unit: MiB
       $.metrics['volume.size'].unit: GiB
       $.metrics['network.incoming.bytes'].unit: MB
       $.metrics['network.outgoing.bytes'].unit: MB
@@ -31,38 +20,25 @@ tests:
     url: /v1/info/metrics
     status: 200
     response_json_paths:
-      $.metrics.`len`: 13
-      $.metrics[/metric_id][0].metric_id: cpu
-      $.metrics[/metric_id][0].unit: instance
-      $.metrics[/metric_id][1].metric_id: disk.ephemeral.size
+      $.metrics.`len`: 7
+      $.metrics[/metric_id][0].metric_id: image.size
+      $.metrics[/metric_id][0].unit: MiB
+      $.metrics[/metric_id][1].metric_id: instance
       $.metrics[/metric_id][1].unit: instance
-      $.metrics[/metric_id][2].metric_id: disk.root.size
-      $.metrics[/metric_id][2].unit: instance
-      $.metrics[/metric_id][3].metric_id: image.download
-      $.metrics[/metric_id][3].unit: MiB
-      $.metrics[/metric_id][4].metric_id: image.serve
-      $.metrics[/metric_id][4].unit: MiB
-      $.metrics[/metric_id][5].metric_id: image.size
-      $.metrics[/metric_id][5].unit: MiB
-      $.metrics[/metric_id][6].metric_id: ip.floating
-      $.metrics[/metric_id][6].unit: ip
-      $.metrics[/metric_id][7].metric_id: memory
-      $.metrics[/metric_id][7].unit: instance
-      $.metrics[/metric_id][8].metric_id: network.incoming.bytes
-      $.metrics[/metric_id][8].unit: MB
-      $.metrics[/metric_id][9].metric_id: network.outgoing.bytes
-      $.metrics[/metric_id][9].unit: MB
-      $.metrics[/metric_id][10].metric_id: radosgw.objects.size
-      $.metrics[/metric_id][10].unit: GiB
-      $.metrics[/metric_id][11].metric_id: vcpus
-      $.metrics[/metric_id][11].unit: instance
-      $.metrics[/metric_id][12].metric_id: volume.size
-      $.metrics[/metric_id][12].unit: GiB
+      $.metrics[/metric_id][2].metric_id: ip.floating
+      $.metrics[/metric_id][2].unit: ip
+      $.metrics[/metric_id][3].metric_id: network.incoming.bytes
+      $.metrics[/metric_id][3].unit: MB
+      $.metrics[/metric_id][4].metric_id: network.outgoing.bytes
+      $.metrics[/metric_id][4].unit: MB
+      $.metrics[/metric_id][5].metric_id: radosgw.objects.size
+      $.metrics[/metric_id][5].unit: GiB
+      $.metrics[/metric_id][6].metric_id: volume.size
+      $.metrics[/metric_id][6].unit: GiB
 
   - name: get cpu metric info
-    url: /v1/info/metrics/cpu
+    url: /v1/info/metrics/instance
     status: 200
     response_json_paths:
-      $.metric_id: cpu
+      $.metric_id: instance
       $.unit: instance
-      $.metadata.`len`: 4
