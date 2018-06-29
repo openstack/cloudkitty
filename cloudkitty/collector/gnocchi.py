@@ -55,6 +55,10 @@ gcollector_opts = [
         default='internalURL',
         help='Endpoint URL type (for keystone auth only)',
     ),
+    cfg.StrOpt(
+        'region_name',
+        default='RegionOne',
+        help='Region Name'),
 ]
 
 cfg.CONF.register_opts(gnocchi_collector_opts, GNOCCHI_COLLECTOR_OPTS)
@@ -66,7 +70,6 @@ ks_loading.register_auth_conf_options(
     cfg.CONF,
     GNOCCHI_COLLECTOR_OPTS)
 CONF = cfg.CONF
-
 
 GNOCCHI_EXTRA_SCHEMA = {
     Required('extra_args'): {
@@ -106,6 +109,7 @@ class GnocchiCollector(collector.BaseCollector):
                 user=CONF.gnocchi_collector.gnocchi_user,
                 endpoint=CONF.gnocchi_collector.gnocchi_endpoint,
             )
+        adapter_options['region_name'] = CONF.gnocchi_collector.region_name
         self._conn = gclient.Client(
             '1',
             session_options={'auth': auth_plugin},
