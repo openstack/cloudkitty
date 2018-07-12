@@ -153,8 +153,8 @@ the ``mysql`` client::
     GRANT ALL PRIVILEGES ON cloudkitty.* TO 'CK_DBUSER'@'localhost' IDENTIFIED BY 'CK_DBPASSWORD';
     EOF
 
-If you need to authorize the mysql user associated to cloudkitty from another host you
-have to change the line accordingly.
+If you need to authorize the mysql user associated to cloudkitty from another
+host you have to change the line accordingly.
 
 Run the database synchronisation scripts::
 
@@ -174,9 +174,9 @@ cloudkitty uses Keystone for authentication, and provides a ``rating`` service.
 To integrate cloudkitty to Keystone, run the following commands (as OpenStack
 administrator)::
 
-    openstack user create cloudkitty --password CK_PASSWORD --email cloudkitty@localhost
+    openstack user create cloudkitty --password CK_PASSWORD \
+        --email cloudkitty@localhost
     openstack role add --project service --user cloudkitty admin
-
 
 Give the ``rating`` role to ``cloudkitty`` for each project that should be
 handled by cloudkitty::

@@ -8,34 +8,44 @@ with DevStack.
 Configure DevStack to run CloudKitty
 ====================================
 
+.. code-block:: bash
+
     $ DEVSTACK_DIR=/path/to/devstack
 
-1. Enable Ceilometer::
+1. Enable Ceilometer:
 
-    $ cd ${DEVSTACK_DIR}
-    $ cat >> local.conf << EOF
-    [[local|localrc]]
-    # ceilometer
-    enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer.git master
-    EOF
+   .. code-block:: bash
 
-2. Enable CloudKitty::
+      $ cd ${DEVSTACK_DIR}
+      $ cat >> local.conf << EOF
+      [[local|localrc]]
+      # ceilometer
+      enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer.git master
+      EOF
 
-    $ cd ${DEVSTACK_DIR}
-    cat >> local.conf << EOF
-    # cloudkitty
-    enable_plugin cloudkitty https://git.openstack.org/openstack/cloudkitty master
-    enable_service ck-api, ck-proc
-    EOF
+2. Enable CloudKitty:
 
-3. Set CloudKitty collector to gnocchi::
+   .. code-block:: bash
 
-    $ cd ${DEVSTACK_DIR}
-    cat >> local.conf << EOF
-    CLOUDKITTY_COLLECTOR=gnocchi
-    EOF
+      $ cd ${DEVSTACK_DIR}
+      cat >> local.conf << EOF
+      # cloudkitty
+      enable_plugin cloudkitty https://git.openstack.org/openstack/cloudkitty master
+      enable_service ck-api, ck-proc
+      EOF
 
-Run devstack as usual::
+3. Set CloudKitty collector to gnocchi:
+
+   .. code-block:: bash
+
+      $ cd ${DEVSTACK_DIR}
+      cat >> local.conf << EOF
+      CLOUDKITTY_COLLECTOR=gnocchi
+      EOF
+
+Run devstack as usual:
+
+.. code-block:: bash
 
      $ ./stack.sh
 

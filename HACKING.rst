@@ -13,15 +13,17 @@ Cloudkitty Specific Commandments
 - [C311] Use assertIsNone(...) instead of assertEqual(None, ...).
 - [C312] Use assertTrue(...) rather than assertEqual(True, ...).
 - [C313] Validate that logs are not translated.
-- [C314] str() and unicode() cannot be used on an exception. Remove or use six.text_type().
+- [C314] str() and unicode() cannot be used on an exception.
+  Remove or use six.text_type().
 - [C315] Translated messages cannot be concatenated.  String should be
   included in translated message.
-- [C317] 'oslo_' should be used instead of 'oslo.'
+- [C317] `oslo_` should be used instead of `oslo.`
 - [C318] Must use a dict comprehension instead of a dict constructor
   with a sequence of key-value pairs.
 - [C319] Ensure to not use xrange().
 - [C320] Do not use LOG.warn as it's deprecated.
-- [C321] Ensure that the _() function is explicitly imported to ensure proper translations.
+- [C321] Ensure that the _() function is explicitly imported to ensure
+  proper translations.
 
 LOG Translations
 ----------------

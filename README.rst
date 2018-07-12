@@ -85,7 +85,8 @@ want to install it on an older system, use a virtualenv.
 Getting release notes
 ---------------------
 
-Release notes can be found in the `release notes section`_ of the documentation.
+Release notes can be found in the `release notes section`_ of the
+documentation.
 
 
 .. Global references and images
