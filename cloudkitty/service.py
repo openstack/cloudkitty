@@ -33,8 +33,7 @@ service_opts = [
                sample_default='<server-hostname.example.com>',
                help='Name of this node. This can be an opaque identifier. '
                'It is not necessarily a hostname, FQDN, or IP address. '
-               'However, the node name must be valid within an AMQP key, '
-               'and if using ZeroMQ, a valid hostname, FQDN, or IP address.')
+               'However, the node name must be valid within an AMQP key.')
 ]
 
 cfg.CONF.register_opts(service_opts)
