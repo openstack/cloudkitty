@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2014 Objectif Libre
+# Copyright 2018 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,47 +13,31 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
-import abc
-
 from oslo_config import cfg
 from oslo_log import log as logging
-import six
 from stevedore import driver
 
-from cloudkitty import utils as ck_utils
+from cloudkitty.storage import v2 as storage_v2
+
+
+LOG = logging.getLogger(__name__)
 
 
 storage_opts = [
     cfg.StrOpt('backend',
                default='sqlalchemy',
-               help='Name of the storage backend driver.')
+               help='Name of the storage backend driver.'),
+    cfg.IntOpt('version',
+               min=1, max=2,
+               default=1,
+               help='Storage version to use.'),
 ]
-
-LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 
 CONF.import_opt('period', 'cloudkitty.collector', 'collect')
 
 CONF.register_opts(storage_opts, 'storage')
-
-STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
-
-
-def get_storage(**kwargs):
-    storage_args = {
-        'period': CONF.collect.period,
-    }
-    storage_args.update(kwargs)
-    backend = driver.DriverManager(
-        STORAGES_NAMESPACE,
-        cfg.CONF.storage.backend,
-        invoke_on_load=True,
-        invoke_kwds=storage_args
-    ).driver
-    return backend
 
 
 class NoTimeFrame(Exception):
@@ -64,193 +48,113 @@ class NoTimeFrame(Exception):
             "No time frame available")
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseStorage(object):
-    """Base Storage class:
+def _get_storage_instance(storage_args, storage_namespace, backend=None):
+    backend = backend or cfg.CONF.storage.backend
+    return driver.DriverManager(
+        storage_namespace,
+        backend,
+        invoke_on_load=True,
+        invoke_kwds=storage_args
+    ).driver
 
-        Handle incoming data from the global orchestrator, and store them.
-    """
-    def __init__(self, **kwargs):
-        self._period = kwargs.get('period')
-        self._collector = kwargs.get('collector')
 
-        # State vars
-        self.usage_start = {}
-        self.usage_start_dt = {}
-        self.usage_end = {}
-        self.usage_end_dt = {}
-        self._has_data = {}
+class V1StorageAdapter(storage_v2.BaseStorage):
+
+    def __init__(self, storage_args, storage_namespace, backend=None):
+        self.storage = _get_storage_instance(
+            storage_args, storage_namespace, backend=backend)
+
+    def init(self):
+        return self.storage.init()
+
+    def push(self, dataframes, scope_id):
+        if dataframes:
+            self.storage.append(dataframes, scope_id)
+            self.storage.commit(scope_id)
 
     @staticmethod
-    def init():
-        """Initialize storage backend.
+    def _check_metric_types(metric_types):
+        if isinstance(metric_types, list):
+            return metric_types[0]
+        return metric_types
 
-        Can be used to create DB schema on first start.
-        """
-        pass
+    def retrieve(self, begin=None, end=None,
+                 filters=None, group_filters=None,
+                 metric_types=None,
+                 offset=0, limit=100, paginate=True):
+        tenant_id = group_filters.get('project_id') if group_filters else None
+        metric_types = self._check_metric_types(metric_types)
+        frames = self.storage.get_time_frame(
+            begin, end,
+            res_type=metric_types,
+            tenant_id=tenant_id)
 
-    def _filter_period(self, json_data):
-        """Detect the best usage period to extract.
+        for frame in frames:
+            for _, data_list in frame['usage'].items():
+                for data in data_list:
+                    data['scope_id'] = (data.get('project_id')
+                                        or data.get('tenant_id'))
 
-        Removes the usage from the json data and returns it.
-        :param json_data: Data to filter.
-        """
-        candidate_ts = None
-        candidate_idx = 0
+        return {
+            'total': len(frames),
+            'dataframes': frames,
+        }
 
-        for idx, usage in enumerate(json_data):
-            usage_ts = usage['period']['begin']
-            if candidate_ts is None or usage_ts < candidate_ts:
-                candidate_ts = usage_ts
-                candidate_idx = idx
+    def total(self, groupby=None,
+              begin=None, end=None,
+              metric_types=None,
+              filters=None, group_filters=None):
+        tenant_id = group_filters.get('project_id') if group_filters else None
 
-        if candidate_ts:
-            return candidate_ts, json_data.pop(candidate_idx)['usage']
+        storage_gby = []
+        if groupby:
+            for elem in set(groupby):
+                if elem == 'type':
+                    storage_gby.append('res_type')
+                elif elem == 'project_id':
+                    storage_gby.append('tenant_id')
+        storage_gby = ','.join(storage_gby) if storage_gby else None
+        metric_types = self._check_metric_types(metric_types)
+        total = self.storage.get_total(
+            begin, end,
+            tenant_id=tenant_id,
+            service=metric_types,
+            groupby=storage_gby)
 
-    def _pre_commit(self, tenant_id):
-        """Called before every commit.
+        for t in total:
+            if t.get('tenant_id') is None:
+                t['tenant_id'] = tenant_id
+            if t.get('rate') is None:
+                t['rate'] = float(0)
+            if groupby and 'type' in groupby:
+                t['type'] = t.get('res_type')
+            else:
+                t['type'] = None
+        return total
 
-        :param tenant_id: tenant_id which information must be committed.
-        """
-
-    @abc.abstractmethod
-    def _commit(self, tenant_id):
-        """Push data to the storage backend.
-
-        :param tenant_id: tenant_id which information must be committed.
-        """
-
-    def _post_commit(self, tenant_id):
-        """Called after every commit.
-
-        :param tenant_id: tenant_id which information must be committed.
-        """
-        if tenant_id in self._has_data:
-            del self._has_data[tenant_id]
-        self._clear_usage_info(tenant_id)
-
-    @abc.abstractmethod
-    def _dispatch(self, data, tenant_id):
-        """Process rated data.
-
-        :param data: The rated data frames.
-        :param tenant_id: tenant_id which data must be dispatched to.
-        """
-
-    def _update_start(self, begin, tenant_id):
-        """Update usage_start with a new timestamp.
-
-        :param begin: New usage beginning timestamp.
-        :param tenant_id: tenant_id to update.
-        """
-        self.usage_start[tenant_id] = begin
-        self.usage_start_dt[tenant_id] = ck_utils.ts2dt(begin)
-
-    def _update_end(self, end, tenant_id):
-        """Update usage_end with a new timestamp.
-
-        :param end: New usage end timestamp.
-        :param tenant_id: tenant_id to update.
-        """
-        self.usage_end[tenant_id] = end
-        self.usage_end_dt[tenant_id] = ck_utils.ts2dt(end)
-
-    def _clear_usage_info(self, tenant_id):
-        """Clear usage information timestamps.
-
-        :param tenant_id: tenant_id which information needs to be removed.
-        """
-        self.usage_start.pop(tenant_id, None)
-        self.usage_start_dt.pop(tenant_id, None)
-        self.usage_end.pop(tenant_id, None)
-        self.usage_end_dt.pop(tenant_id, None)
-
-    def _check_commit(self, usage_start, tenant_id):
-        """Check if the period for a given tenant must be committed.
-
-        :param usage_start: Start of the period.
-        :param tenant_id: tenant_id to check for.
-        """
-        usage_end = self.usage_end.get(tenant_id)
-        if usage_end is not None and usage_start >= usage_end:
-            self.commit(tenant_id)
-        if self.usage_start.get(tenant_id) is None:
-            self._update_start(usage_start, tenant_id)
-            self._update_end(usage_start + self._period, tenant_id)
-
-    @abc.abstractmethod
-    def get_state(self, tenant_id=None):
-        """Return the last written frame's timestamp.
-
-        :param tenant_id: tenant_id to filter on.
-        """
-
-    @abc.abstractmethod
-    def get_total(self, begin=None, end=None, tenant_id=None,
-                  service=None, groupby=None):
-        """Return the current total.
-
-        :param begin: When to start filtering.
-        :type begin: datetime.datetime
-        :param end: When to stop filtering.
-        :type end: datetime.datetime
-        :param tenant_id: Filter on the tenant_id.
-        :type res_type: str
-        :param service: Filter on the resource type.
-        :type service: str
-        :param groupby: Fields to group by, separated by commas if multiple.
-        :type groupby: str
-        """
-
-    @abc.abstractmethod
     def get_tenants(self, begin, end):
-        """Return the list of rated tenants.
+        tenants = self.storage.get_tenants(begin, end)
+        return tenants
 
-        :param begin: When to start filtering.
-        :type begin: datetime.datetime
-        :param end: When to stop filtering.
-        :type end: datetime.datetime
-        """
+    def get_state(self, tenant_id=None):
+        return self.storage.get_state(tenant_id)
 
-    @abc.abstractmethod
-    def get_time_frame(self, begin, end, **filters):
-        """Request a time frame from the storage backend.
 
-        :param begin: When to start filtering.
-        :type begin: datetime.datetime
-        :param end: When to stop filtering.
-        :type end: datetime.datetime
-        :param res_type: (Optional) Filter on the resource type.
-        :type res_type: str
-        :param tenant_id: (Optional) Filter on the tenant_id.
-        :type res_type: str
-        """
+def get_storage(**kwargs):
+    storage_args = {
+        'period': CONF.collect.period,
+    }
+    backend = kwargs.pop('backend', None)
+    storage_args.update(kwargs)
 
-    def append(self, raw_data, tenant_id):
-        """Append rated data before committing them to the backend.
+    version = kwargs.pop('version', None) or cfg.CONF.storage.version
+    if int(version) > 1:
+        LOG.warning('V2 Storage is not considered stable and should not be '
+                    'used in production')
+    storage_namespace = 'cloudkitty.storage.v{}.backends'.format(version)
 
-        :param raw_data: The rated data frames.
-        :param tenant_id: Tenant the frame is belonging to.
-        """
-        while raw_data:
-            usage_start, data = self._filter_period(raw_data)
-            self._check_commit(usage_start, tenant_id)
-            self._dispatch(data, tenant_id)
-
-    def nodata(self, begin, end, tenant_id):
-        """Append a no data frame to the storage backend.
-
-        :param begin: Begin of the period with no data.
-        :param end: End of the period with no data.
-        :param tenant_id: Tenant to update with no data marker for the period.
-        """
-        self._check_commit(begin, tenant_id)
-
-    def commit(self, tenant_id):
-        """Commit the changes to the backend.
-
-        :param tenant_id: Tenant the changes belong to.
-        """
-        self._pre_commit(tenant_id)
-        self._commit(tenant_id)
-        self._post_commit(tenant_id)
+    if version == 1:
+        return V1StorageAdapter(
+            storage_args, storage_namespace, backend=backend)
+    return _get_storage_instance(
+        storage_args, storage_namespace, backend=backend)

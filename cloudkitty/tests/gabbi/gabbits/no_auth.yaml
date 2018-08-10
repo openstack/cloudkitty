@@ -2,6 +2,7 @@ fixtures:
     - ConfigFixture
     - StorageDataFixture
     - NowStorageDataFixture
+    - SkipIfFunctional
 
 tests:
     - name: Can query api without auth

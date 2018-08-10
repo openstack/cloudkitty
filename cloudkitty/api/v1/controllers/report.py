@@ -28,8 +28,11 @@ from cloudkitty.api.v1.datamodels import report as report_models
 from cloudkitty.common import policy
 from cloudkitty import utils as ck_utils
 
-
 LOG = logging.getLogger(__name__)
+
+
+class InvalidFilter(Exception):
+    """Exception raised when a storage filter is invalid"""
 
 
 class ReportController(rest.RestController):
@@ -91,11 +94,17 @@ class ReportController(rest.RestController):
         # FIXME(sheeprine): We should filter on user id.
         # Use keystone token information by default but make it overridable and
         # enforce it by policy engine
-        total = storage.get_total(begin, end, tenant_id, service)
+        groupby = ['project_id']
+        group_filters = {'project_id': tenant_id} if tenant_id else None
+        total_resources = storage.total(
+            groupby=groupby,
+            begin=begin, end=end,
+            metric_types=service,
+            group_filters=group_filters)
 
         # TODO(Aaron): `get_total` return a list of dict,
         # Get value of rate from index[0]
-        total = total[0].get('rate', decimal.Decimal('0'))
+        total = sum(total['rate'] for total in total_resources)
         return total if total else decimal.Decimal('0')
 
     @wsme_pecan.wsexpose(report_models.SummaryCollectionModel,
@@ -124,11 +133,28 @@ class ReportController(rest.RestController):
                          {"tenant_id": tenant_id})
         storage = pecan.request.storage_backend
 
+        storage_groupby = []
+        if groupby is not None and 'tenant_id' in groupby:
+            storage_groupby.append('project_id')
+        if groupby is not None and 'res_type' in groupby:
+            storage_groupby.append('type')
+        group_filters = {'project_id': tenant_id} if tenant_id else None
+        results = storage.total(
+            groupby=storage_groupby,
+            begin=begin, end=end,
+            metric_types=service,
+            group_filters=group_filters)
+
         summarymodels = []
-        results = storage.get_total(begin, end, tenant_id, service,
-                                    groupby=groupby)
-        for result in results:
-            summarymodel = report_models.SummaryModel(**result)
+        for res in results:
+            kwargs = {
+                'res_type': res.get('type') or res.get('res_type'),
+                'tenant_id': res.get('project_id') or res.get('tenant_id'),
+                'begin': res['begin'],
+                'end': res['end'],
+                'rate': res['rate'],
+            }
+            summarymodel = report_models.SummaryModel(**kwargs)
             summarymodels.append(summarymodel)
 
         return report_models.SummaryCollectionModel(summary=summarymodels)

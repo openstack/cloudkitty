@@ -2,6 +2,7 @@ fixtures:
   - ConfigFixture
   - StorageDataFixture
   - NowStorageDataFixture
+  - SkipIfFunctional
 
 tests:
   - name: fetch period with no data
@@ -39,7 +40,7 @@ tests:
       tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
     status: 200
     response_json_paths:
-      $.dataframes.`len`: 110
+      $.dataframes.`len`: 112
 
   - name: fetch data for the first tenant without begin and end time
     url: /v1/storage/dataframes
@@ -47,7 +48,7 @@ tests:
       tenant_id: "3d9a1b33-482f-42fd-aef9-b575a3da9369"
     status: 200
     response_json_paths:
-      $.dataframes.`len`: 22
+      $.dataframes.`len`: 24
 
   - name: fetch data for the first tenant when begin time bigger than end time
     url: /v1/storage/dataframes

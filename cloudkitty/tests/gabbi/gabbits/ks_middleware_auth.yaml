@@ -2,6 +2,7 @@ fixtures:
     - ConfigFixtureKeystoneAuth
     - StorageDataFixture
     - NowStorageDataFixture
+    - SkipIfFunctional
 
 tests:
     - name: Can't query api without token

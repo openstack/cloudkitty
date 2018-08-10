@@ -175,6 +175,7 @@ function configure_cloudkitty {
 
     # storage
     iniset $CLOUDKITTY_CONF storage backend $CLOUDKITTY_STORAGE_BACKEND
+    iniset $CLOUDKITTY_CONF storage version $CLOUDKITTY_STORAGE_VERSION
     if [ "$CLOUDKITTY_STORAGE_BACKEND" != "sqlalchemy" ]; then
         iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} auth_section authinfos
     fi

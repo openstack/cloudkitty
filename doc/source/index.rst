@@ -16,6 +16,7 @@ to prices.
    install/index
    configuration/index
    admin/index
+   developer/index
    devstack
    arch
    api

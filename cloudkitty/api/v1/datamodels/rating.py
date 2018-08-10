@@ -22,13 +22,10 @@ from oslo_log import log
 from wsme import types as wtypes
 
 from cloudkitty.api.v1 import types as cktypes
-from cloudkitty import utils as ck_utils
 
 LOG = log.getLogger(__name__)
 
 CONF = cfg.CONF
-
-METRICS_CONF = ck_utils.load_conf(CONF.collect.metrics_conf)
 
 
 class CloudkittyResource(wtypes.Base):

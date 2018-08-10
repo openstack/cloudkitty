@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2017 Objectif Libre
+# Copyright 2018 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -15,11 +15,8 @@
 #
 # @author: Luka Peschke
 #
-from cloudkitty.common.db.alembic import env  # noqa
-from cloudkitty.storage.hybrid import models
-
-target_metadata = models.Base.metadata
-version_table = 'storage_hybrid_alembic'
+from os import getenv
 
 
-env.run_migrations_online(target_metadata, version_table)
+def is_functional_test():
+    return getenv('TEST_FUNCTIONAL', False)

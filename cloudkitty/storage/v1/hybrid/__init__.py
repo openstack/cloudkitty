@@ -20,9 +20,9 @@ from oslo_db.sqlalchemy import utils
 from stevedore import driver
 
 from cloudkitty import db
-from cloudkitty import storage
-from cloudkitty.storage.hybrid import migration
-from cloudkitty.storage.hybrid import models
+from cloudkitty.storage.v1 import BaseStorage
+from cloudkitty.storage.v1.hybrid import migration
+from cloudkitty.storage.v1.hybrid import models
 from cloudkitty import utils as ck_utils
 
 
@@ -40,7 +40,7 @@ CONF.register_opts(storage_opts, group='hybrid_storage')
 HYBRID_BACKENDS_NAMESPACE = 'cloudkitty.storage.hybrid.backends'
 
 
-class HybridStorage(storage.BaseStorage):
+class HybridStorage(BaseStorage):
     """Hybrid Storage Backend.
 
     Stores dataframes in one of the available backends and other informations

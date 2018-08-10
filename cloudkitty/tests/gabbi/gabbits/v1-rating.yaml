@@ -2,6 +2,7 @@ fixtures:
   - ConfigFixture
   - RatingModulesFixture
   - QuoteFakeRPC
+  - SkipIfFunctional
 
 tests:
   - name: reload list of modules available

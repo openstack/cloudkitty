@@ -18,6 +18,7 @@
 import abc
 import decimal
 import os
+from unittest.case import SkipTest
 
 from gabbi import fixture
 import mock
@@ -41,9 +42,10 @@ from cloudkitty.db import api as ck_db_api
 from cloudkitty import messaging
 from cloudkitty import rating
 from cloudkitty import storage
-from cloudkitty.storage.sqlalchemy import models
+from cloudkitty.storage.v1.sqlalchemy import models
 from cloudkitty import tests
 from cloudkitty.tests import test_utils
+from cloudkitty.tests.utils import is_functional_test
 from cloudkitty import utils as ck_utils
 
 
@@ -84,9 +86,10 @@ class BaseExtensionFixture(fixture.GabbiFixture):
         self.patch.return_value = fake_mgr
 
     def stop_fixture(self):
-        self.patch.assert_called_with(
-            self.namespace,
-            **self.assert_args)
+        if not is_functional_test():
+            self.patch.assert_called_with(
+                self.namespace,
+                **self.assert_args)
         self.mock.stop()
 
 
@@ -203,6 +206,7 @@ class ConfigFixture(fixture.GabbiFixture):
                           )
         conf.import_group('storage', 'cloudkitty.storage')
         conf.set_override('backend', 'sqlalchemy', 'storage')
+        conf.set_override('version', '1', 'storage')
         self.conf = conf
         self.conn = ck_db_api.get_instance()
         migration = self.conn.get_migration()
@@ -332,28 +336,19 @@ class StorageDataFixture(BaseStorageDataFixture):
         nodata_duration = (24 * 3 + 12) * 3600
         tenant_list = ['8f82cc70-e50c-466e-8624-24bdea811375',
                        '7606a24a-b8ad-4ae0-be6c-3d7a41334a2e']
-        for tenant in tenant_list:
-            for i in range(INITIAL_TIMESTAMP,
-                           INITIAL_TIMESTAMP + nodata_duration,
-                           3600):
-                self.storage.nodata(i, i + 3600, tenant)
         data_ts = INITIAL_TIMESTAMP + nodata_duration + 3600
         data_duration = (24 * 2 + 8) * 3600
         for i in range(data_ts,
                        data_ts + data_duration,
                        3600):
             data = self.create_fake_data(i, i + 3600)
-            self.storage.append(data, tenant_list[0])
+            self.storage.push(data, tenant_list[0])
         half_duration = int(data_duration / 2)
         for i in range(data_ts,
                        data_ts + half_duration,
                        3600):
             data = self.create_fake_data(i, i + 3600)
-            self.storage.append(data, tenant_list[1])
-        for i in range(data_ts + half_duration + 3600,
-                       data_ts + data_duration,
-                       3600):
-            self.storage.nodata(i, i + 3600, tenant_list[1])
+            self.storage.push(data, tenant_list[1])
 
 
 class NowStorageDataFixture(BaseStorageDataFixture):
@@ -363,8 +358,8 @@ class NowStorageDataFixture(BaseStorageDataFixture):
                        begin + 3600 * 12,
                        3600):
             data = self.create_fake_data(i, i + 3600)
-            self.storage.append(data,
-                                '3d9a1b33-482f-42fd-aef9-b575a3da9369')
+            self.storage.push(data,
+                              '3d9a1b33-482f-42fd-aef9-b575a3da9369')
 
 
 class CORSConfigFixture(fixture.GabbiFixture):
@@ -400,6 +395,13 @@ class MetricsConfFixture(fixture.GabbiFixture):
     def stop_fixture(self):
         """Remove the get_metrics_conf() monkeypatch."""
         ck_utils.load_conf = self._original_function
+
+
+class SkipIfFunctional(fixture.GabbiFixture):
+
+    def start_fixture(self):
+        if is_functional_test():
+            raise SkipTest
 
 
 def setup_app():

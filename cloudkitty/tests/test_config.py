@@ -13,11 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import testtools
 
 from cloudkitty.common import config as ck_config
 from cloudkitty import tests
+from cloudkitty.tests.utils import is_functional_test
 
 
+@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class ConfigTest(tests.TestCase):
     def test_config(self):
         ck_config.list_opts()

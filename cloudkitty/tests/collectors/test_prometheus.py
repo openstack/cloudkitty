@@ -17,14 +17,17 @@
 #
 from decimal import Decimal
 import mock
+import testtools
 
 from cloudkitty import collector
 from cloudkitty.collector import prometheus
 from cloudkitty import tests
 from cloudkitty.tests import samples
+from cloudkitty.tests.utils import is_functional_test
 from cloudkitty import transformer
 
 
+@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class PrometheusCollectorTest(tests.TestCase):
     def setUp(self):
         super(PrometheusCollectorTest, self).setUp()
@@ -130,6 +133,7 @@ class PrometheusCollectorTest(tests.TestCase):
             )
 
 
+@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class PrometheusClientTest(tests.TestCase):
     def setUp(self):
         super(PrometheusClientTest, self).setUp()

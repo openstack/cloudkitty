@@ -22,9 +22,10 @@ from oslo_db.sqlalchemy import utils
 import sqlalchemy
 
 from cloudkitty import db
-from cloudkitty import storage
-from cloudkitty.storage.sqlalchemy import migration
-from cloudkitty.storage.sqlalchemy import models
+from cloudkitty.storage import NoTimeFrame
+from cloudkitty.storage import v1 as storage
+from cloudkitty.storage.v1.sqlalchemy import migration
+from cloudkitty.storage.v1.sqlalchemy import models
 from cloudkitty import utils as ck_utils
 
 
@@ -98,11 +99,11 @@ class SQLAlchemyStorage(storage.BaseStorage):
             sqlalchemy.func.sum(self.frame_model.rate).label('rate')
         ]
 
-        # Boundary calculation
         if not begin:
-            begin = ck_utils.get_month_start()
+            begin = ck_utils.get_month_start_timestamp()
         if not end:
-            end = ck_utils.get_next_month()
+            end = ck_utils.get_next_month_timestamp()
+        # Boundary calculation
         if tenant_id:
             querymodels.append(self.frame_model.tenant_id)
         if service:
@@ -137,6 +138,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
             total["begin"] = begin
             total["end"] = end
             totallist.append(total)
+
         return totallist
 
     def get_tenants(self, begin, end):
@@ -152,6 +154,10 @@ class SQLAlchemyStorage(storage.BaseStorage):
         return [tenant.tenant_id for tenant in tenants]
 
     def get_time_frame(self, begin, end, **filters):
+        if not begin:
+            begin = ck_utils.get_month_start_timestamp()
+        if not end:
+            end = ck_utils.get_next_month_timestamp()
         session = db.get_session()
         q = utils.model_query(
             self.frame_model,
@@ -167,7 +173,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
             q = q.filter(self.frame_model.res_type != '_NO_DATA_')
         count = q.count()
         if not count:
-            raise storage.NoTimeFrame()
+            raise NoTimeFrame()
         r = q.all()
         return [entry.to_cloudkitty(self._collector) for entry in r]
 

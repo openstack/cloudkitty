@@ -1,6 +1,7 @@
 fixtures:
   - PyScriptsConfigFixture
   - UUIDFixture
+  - SkipIfFunctional
 
 tests:
 

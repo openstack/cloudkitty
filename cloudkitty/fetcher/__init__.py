@@ -16,9 +16,9 @@
 # @author: Stéphane Albert
 #
 import abc
+import six
 
 from oslo_config import cfg
-import six
 
 FETCHER_OPTS = 'fetcher'
 DEPRECATED_FETCHER_OPTS = 'tenant_fetcher'

@@ -119,7 +119,7 @@ class CSVMapped(csv_base.BaseCSVBackend):
         """Context dependent product name translation.
 
         """
-        if context == 'compute':
+        if context == 'compute' or context == 'instance':
             return 'Nova Computing'
         else:
             return context
@@ -128,7 +128,7 @@ class CSVMapped(csv_base.BaseCSVBackend):
         """Context dependent operation translation.
 
         """
-        if context == 'compute':
+        if context == 'compute' or context == 'instance':
             return 'RunInstances'
 
     def _trans_res_id(self, context, report_data):

@@ -94,9 +94,6 @@ class GnocchiCollector(collector.BaseCollector):
     def __init__(self, transformers, **kwargs):
         super(GnocchiCollector, self).__init__(transformers, **kwargs)
 
-        self.t_gnocchi = self.transformers['GnocchiTransformer']
-        self.t_cloudkitty = self.transformers['CloudKittyFormatTransformer']
-
         adapter_options = {'connect_retries': 3}
         if CONF.gnocchi_collector.gnocchi_auth_type == 'keystone':
             auth_plugin = ks_loading.load_auth_from_conf_options(
@@ -110,6 +107,7 @@ class GnocchiCollector(collector.BaseCollector):
                 endpoint=CONF.gnocchi_collector.gnocchi_endpoint,
             )
         adapter_options['region_name'] = CONF.gnocchi_collector.region_name
+
         self._conn = gclient.Client(
             '1',
             session_options={'auth': auth_plugin},
@@ -216,8 +214,6 @@ class GnocchiCollector(collector.BaseCollector):
 
         resource_type = extra_args['resource_type']
 
-        query_parameters.append(
-            self.gen_filter(cop="=", type=resource_type))
         if project_id:
             kwargs = {extra_args['scope_key']: project_id}
             query_parameters.append(self.gen_filter(**kwargs))
@@ -294,12 +290,11 @@ class GnocchiCollector(collector.BaseCollector):
         # if resource info is provided, add additional
         # metadata as defined in the conf
         metadata = dict()
-        if resources_info:
+        if resources_info is not None:
             resource = resources_info[
                 groupby[metconf['extra_args']['resource_key']]]
             for i in metconf['metadata']:
                 metadata[i] = resource.get(i, '')
-
         qty = data['measures']['measures']['aggregated'][0][2]
         converted_qty = ck_utils.convert_unit(
             qty, metconf['factor'], metconf['offset'])
@@ -328,7 +323,6 @@ class GnocchiCollector(collector.BaseCollector):
                 project_id=project_id,
                 q_filter=q_filter
             )
-
         formated_resources = list()
         for d in data:
             # Only if aggregates have been found

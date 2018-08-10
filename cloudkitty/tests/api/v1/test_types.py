@@ -15,12 +15,16 @@
 #
 """Test cloudkitty/api/v1/types."""
 
+import testtools
+
 from oslotest import base
 from wsme import types as wtypes
 
 from cloudkitty.api.v1 import types
+from cloudkitty.tests.utils import is_functional_test
 
 
+@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class TestTypes(base.BaseTestCase):
 
     def setUp(self):

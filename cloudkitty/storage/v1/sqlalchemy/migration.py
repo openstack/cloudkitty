@@ -15,11 +15,28 @@
 #
 # @author: Stéphane Albert
 #
-from cloudkitty.common.db.alembic import env  # noqa
-from cloudkitty.storage.sqlalchemy import models
+import os
 
-target_metadata = models.Base.metadata
-version_table = 'storage_sqlalchemy_alembic'
+from cloudkitty.common.db.alembic import migration
+
+ALEMBIC_REPO = os.path.join(os.path.dirname(__file__), 'alembic')
 
 
-env.run_migrations_online(target_metadata, version_table)
+def upgrade(revision):
+    config = migration.load_alembic_config(ALEMBIC_REPO)
+    return migration.upgrade(config, revision)
+
+
+def version():
+    config = migration.load_alembic_config(ALEMBIC_REPO)
+    return migration.version(config)
+
+
+def revision(message, autogenerate):
+    config = migration.load_alembic_config(ALEMBIC_REPO)
+    return migration.revision(config, message, autogenerate)
+
+
+def stamp(revision):
+    config = migration.load_alembic_config(ALEMBIC_REPO)
+    return migration.stamp(config, revision)

@@ -17,11 +17,14 @@
 #
 from cloudkitty import service
 from cloudkitty import storage
+from cloudkitty import storage_state
 
 
 def init_storage_backend():
     backend = storage.get_storage()
     backend.init()
+    state_manager = storage_state.StateManager()
+    state_manager.init()
 
 
 def main():

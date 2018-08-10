@@ -16,11 +16,14 @@
 # @author: Gauvain Pocentek
 #
 import datetime
+import testtools
 
 from cloudkitty import state
 from cloudkitty import tests
+from cloudkitty.tests.utils import is_functional_test
 
 
+@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class DBStateManagerTest(tests.TestCase):
     def setUp(self):
         super(DBStateManagerTest, self).setUp()

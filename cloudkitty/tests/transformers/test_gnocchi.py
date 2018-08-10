@@ -16,9 +16,12 @@
 # @author: Stéphane Albert
 #
 import copy
+import testtools
 
 from cloudkitty import tests
+from cloudkitty.tests.utils import is_functional_test
 from cloudkitty.transformer import gnocchi
+
 
 GNOCCHI_COMPUTE = {
     'id': '2f58a438-3169-11e6-b36c-bfe1fa3241fe',
@@ -86,6 +89,7 @@ TRANS_NETWORK = {
     'metrics': {}}
 
 
+@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class GnocchiTransformerTest(tests.TestCase):
     def test_strip_gnocchi_compute(self):
         resource = copy.deepcopy(GNOCCHI_COMPUTE)

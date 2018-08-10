@@ -1,0 +1,86 @@
+#
+#"context_is_admin": "role:admin"
+
+#
+#"admin_or_owner": "is_admin:True or tenant:%(tenant_id)s"
+
+#
+#"default": ""
+
+# Return the list of every services mapped to a collector.
+# LIST  /v1/collector/mappings
+#"collector:list_mappings": "role:admin"
+
+# Return a service to collector mapping.
+# GET  /v1/collector/mappings/{service_id}
+#"collector:get_mapping": "role:admin"
+
+# Manage a service to collector mapping.
+# POST  /v1/collector/mappings
+# DELETE  /v1/collector/mappings/{service_id}
+#"collector:manage_mapping": "role:admin"
+
+# Query the enable state of a collector.
+# GET  /v1/collector/states/{collector_id}
+#"collector:get_state": "role:admin"
+
+# Set the enable state of a collector.
+# PUT  /v1/collector/states/{collector_id}
+#"collector:update_state": "role:admin"
+
+# List available services information in Cloudkitty.
+# LIST  /v1/info/services
+#"info:list_services_info": ""
+
+# Get specified service information.
+# GET  /v1/info/services/{metric_id}
+#"info:get_service_info": ""
+
+# List available metrics information in Cloudkitty.
+# LIST  /v1/info/metrics
+#"info:list_metrics_info": ""
+
+# Get specified metric information.
+# GET  /v1/info/metrics/{metric_id}
+#"info:get_metric_info": ""
+
+# Get current configuration in Cloudkitty.
+# GET  /v1/info/config
+#"info:get_config": ""
+
+# Reture the list of loaded modules in Cloudkitty.
+# LIST  /v1/rating/modules
+#"rating:list_modules": "role:admin"
+
+# Get specified module.
+# GET  /v1/rating/modules/{module_id}
+#"rating:get_module": "role:admin"
+
+# Change the state and priority of a module.
+# PUT  /v1/rating/modules/{module_id}
+#"rating:update_module": "role:admin"
+
+# Get an instant quote based on multiple resource descriptions.
+# POST  /v1/rating/quote
+#"rating:quote": ""
+
+# Trigger a rating module list reload.
+# GET  /v1/rating/reload_modules
+#"rating:module_config": "role:admin"
+
+# Return the list of rated tenants.
+# GET  /v1/report/tenants
+#"report:list_tenants": "role:admin"
+
+# Return the summary to pay for a given period.
+# GET  /v1/report/summary
+#"report:get_summary": "rule:admin_or_owner"
+
+# Return the amount to pay for a given period.
+# GET  /v1/report/total
+#"report:get_total": "rule:admin_or_owner"
+
+# Return a list of rated resources for a time period and a tenant.
+# GET  /v1/storage/dataframes
+#"storage:list_data_frames": ""
+

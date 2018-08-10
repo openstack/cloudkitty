@@ -16,10 +16,12 @@
 # @author: Stéphane Albert
 #
 import copy
+import testtools
 
 from cloudkitty import tests
 from cloudkitty.tests import samples
 from cloudkitty.tests import transformers as t_transformers
+from cloudkitty.tests.utils import is_functional_test
 
 TRANS_METADATA = {
     'availability_zone': 'nova',
@@ -30,6 +32,7 @@ TRANS_METADATA = {
     'vcpus': '1'}
 
 
+@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class TransformerBaseTest(tests.TestCase):
     def test_strip_resource_on_dict(self):
         metadata = copy.deepcopy(samples.COMPUTE_METADATA)

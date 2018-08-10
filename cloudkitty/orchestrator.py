@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# !/usr/bin/env python
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -33,6 +32,7 @@ from cloudkitty import config  # noqa
 from cloudkitty import extension_manager
 from cloudkitty import messaging
 from cloudkitty import storage
+from cloudkitty import storage_state as state
 from cloudkitty import transformer
 from cloudkitty import utils as ck_utils
 
@@ -159,6 +159,7 @@ class Worker(BaseWorker):
         self._wait_time = CONF.collect.wait_periods * self._period
         self._tenant_id = tenant_id
         self._conf = ck_utils.load_conf(CONF.collect.metrics_conf)
+        self._state = state.StateManager()
 
         super(Worker, self).__init__(self._tenant_id)
 
@@ -178,7 +179,7 @@ class Worker(BaseWorker):
                      'usage': raw_data}]
 
     def check_state(self):
-        timestamp = self._storage.get_state(self._tenant_id)
+        timestamp = self._state.get_state(self._tenant_id)
         return ck_utils.check_time_state(timestamp,
                                          self._period,
                                          CONF.collect.wait_periods)
@@ -191,6 +192,7 @@ class Worker(BaseWorker):
 
             metrics = list(self._conf['metrics'].keys())
 
+            storage_data = []
             for metric in metrics:
                 try:
                     try:
@@ -204,20 +206,24 @@ class Worker(BaseWorker):
                             {'metric': metric, 'error': e})
                         raise collector.NoDataCollected('', metric)
                 except collector.NoDataCollected:
-                    begin = timestamp
-                    end = begin + self._period
-                    for processor in self._processors:
-                        processor.obj.nodata(begin, end)
-                    self._storage.nodata(begin, end, self._tenant_id)
+                    LOG.info(
+                        'No data collected for metric {} '
+                        'at timestamp {}'.format(
+                            metric, ck_utils.ts2dt(timestamp))
+                    )
                 else:
                     # Rating
                     for processor in self._processors:
                         processor.obj.process(data)
                     # Writing
-                    self._storage.append(data, self._tenant_id)
+                    if isinstance(data, list):
+                        storage_data += data
+                    else:
+                        storage_data.append(data)
 
             # We're getting a full period so we directly commit
-            self._storage.commit(self._tenant_id)
+            self._storage.push(storage_data, self._tenant_id)
+            self._state.set_state(self._tenant_id, timestamp)
 
 
 class Orchestrator(object):
@@ -231,6 +237,7 @@ class Orchestrator(object):
         transformers = transformer.get_transformers()
         self.collector = collector.get_collector(transformers)
         self.storage = storage.get_storage()
+        self._state = state.StateManager()
 
         # RPC
         self.server = None
@@ -258,7 +265,7 @@ class Orchestrator(object):
         self.server.start()
 
     def _check_state(self, tenant_id):
-        timestamp = self.storage.get_state(tenant_id)
+        timestamp = self._state.get_state(tenant_id)
         return ck_utils.check_time_state(timestamp,
                                          CONF.collect.period,
                                          CONF.collect.wait_periods)
@@ -288,10 +295,10 @@ class Orchestrator(object):
                             tenant_id,
                         )
                         worker.run()
+
                     lock.release()
 
                 self.coord.heartbeat()
-
                 # NOTE(sheeprine): Slow down looping if all tenants are
                 # being processed
                 eventlet.sleep(1)

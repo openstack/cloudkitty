@@ -28,7 +28,7 @@ from oslo_utils import uuidutils
 import six
 
 from cloudkitty.collector import validate_conf
-from cloudkitty.storage.hybrid.backends import BaseHybridBackend
+from cloudkitty.storage.v1.hybrid.backends import BaseHybridBackend
 import cloudkitty.utils as ck_utils
 
 

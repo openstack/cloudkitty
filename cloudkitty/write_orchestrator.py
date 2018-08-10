@@ -15,12 +15,15 @@
 #
 # @author: Stéphane Albert
 #
+import copy
+
 from oslo_config import cfg
 from oslo_utils import fileutils
 from stevedore import named
 
 from cloudkitty import state
 from cloudkitty import storage
+from cloudkitty import storage_state
 from cloudkitty import utils as ck_utils
 
 CONF = cfg.CONF
@@ -42,6 +45,7 @@ class WriteOrchestrator(object):
         self._backend = backend
         self._tenant_id = tenant_id
         self._storage = storage
+        self._storage_state = storage_state.StateManager()
         self._basepath = basepath
         if self._basepath:
             fileutils.ensure_tree(self._basepath)
@@ -99,9 +103,16 @@ class WriteOrchestrator(object):
         if not timeframe_end:
             timeframe_end = timeframe + self._period
         try:
-            data = self._storage.get_time_frame(timeframe,
-                                                timeframe_end,
-                                                tenant_id=self._tenant_id)
+            group_filters = {'project_id': self._tenant_id}
+            data = self._storage.retrieve(begin=timeframe,
+                                          end=timeframe_end,
+                                          group_filters=group_filters,
+                                          paginate=False)
+            for df in data['dataframes']:
+                for service, resources in df['usage'].items():
+                    for resource in resources:
+                        resource['desc'] = copy.deepcopy(resource['metadata'])
+                        resource['desc'].update(resource['groupby'])
         except storage.NoTimeFrame:
             return None
         return data
@@ -112,8 +123,8 @@ class WriteOrchestrator(object):
 
     def _push_data(self):
         data = self.get_timeframe(self.usage_start, self.usage_end)
-        if data:
-            for timeframe in data:
+        if data and data['total'] > 0:
+            for timeframe in data['dataframes']:
                 self._dispatch(timeframe['usage'])
             return True
         else:
@@ -125,7 +136,7 @@ class WriteOrchestrator(object):
 
     def reset_state(self):
         self._load_state_manager_data()
-        self.usage_end = self._storage.get_state()
+        self.usage_end = self._storage_state.get_state()
         self._update_state_manager_data()
 
     def restart_month(self):
@@ -136,7 +147,7 @@ class WriteOrchestrator(object):
 
     def process(self):
         self._load_state_manager_data()
-        storage_state = self._storage.get_state()
+        storage_state = self._storage_state.get_state(self._tenant_id)
         if not self.usage_start:
             self.usage_start = storage_state
             self.usage_end = self.usage_start + self._period
@@ -145,5 +156,5 @@ class WriteOrchestrator(object):
                 self._commit_data()
             self._update_state_manager_data()
             self._load_state_manager_data()
-            storage_state = self._storage.get_state()
+            storage_state = self._storage_state.get_state(self._tenant_id)
         self.close()

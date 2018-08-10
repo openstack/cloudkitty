@@ -18,6 +18,7 @@
 import copy
 import decimal
 import hashlib
+import testtools
 import zlib
 
 import mock
@@ -27,6 +28,8 @@ import six
 from cloudkitty.rating import pyscripts
 from cloudkitty.rating.pyscripts.db import api
 from cloudkitty import tests
+from cloudkitty.tests.utils import is_functional_test
+
 
 FAKE_UUID = '6c1b8a30-797f-4b7e-ad66-9879b79059fb'
 CK_RESOURCES_DATA = [{
@@ -103,6 +106,7 @@ for period in data:
 """.encode('utf-8')
 
 
+@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class PyScriptsRatingTest(tests.TestCase):
     def setUp(self):
         super(PyScriptsRatingTest, self).setUp()

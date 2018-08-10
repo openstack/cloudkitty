@@ -26,7 +26,8 @@ import cloudkitty.fetcher.source
 import cloudkitty.orchestrator
 import cloudkitty.service
 import cloudkitty.storage
-import cloudkitty.storage.hybrid.backends.gnocchi
+import cloudkitty.storage.v1.hybrid.backends.gnocchi
+import cloudkitty.storage.v2.gnocchi
 import cloudkitty.utils
 
 __all__ = ['list_opts']
@@ -56,9 +57,9 @@ _opts = [
     ('storage', list(itertools.chain(
         cloudkitty.storage.storage_opts))),
     ('storage_gnocchi', list(itertools.chain(
-        cloudkitty.storage.hybrid.backends.gnocchi.gnocchi_storage_opts))),
-    ('fetcher', list(itertools.chain(
-        cloudkitty.fetcher.fetchers_opts))),
+        cloudkitty.storage.v1.hybrid.backends.gnocchi.gnocchi_storage_opts))),
+    ('storage_gnocchi', list(itertools.chain(
+        cloudkitty.storage.v2.gnocchi.gnocchi_storage_opts))),
     (None, list(itertools.chain(
         cloudkitty.api.app.auth_opts,
         cloudkitty.service.service_opts))),

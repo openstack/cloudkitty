@@ -21,6 +21,7 @@ from gabbi import driver
 
 from cloudkitty.tests.gabbi import fixtures
 
+
 TESTS_DIR = 'gabbits'
 
 

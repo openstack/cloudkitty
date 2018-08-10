@@ -15,14 +15,15 @@
 #
 # @author: Luka Peschke
 #
-
 import mock
+import testtools
 
 from gnocchiclient import exceptions as gexc
 
 from cloudkitty import storage
 from cloudkitty import tests
 from cloudkitty.tests import test_utils
+from cloudkitty.tests.utils import is_functional_test
 
 
 class BaseHybridStorageTest(tests.TestCase):
@@ -31,9 +32,10 @@ class BaseHybridStorageTest(tests.TestCase):
     def setUp(self):
         super(BaseHybridStorageTest, self).setUp()
         self.conf.set_override('backend', 'hybrid', 'storage')
+        self.conf.set_override('version', '1', 'storage')
         self.storage = storage.get_storage(conf=test_utils.load_conf())
         with mock.patch.object(
-                self.storage._hybrid_backend, 'init'):
+                self.storage.storage._hybrid_backend, 'init'):
             self.storage.init()
 
 
@@ -54,6 +56,7 @@ class PermissiveDict(object):
         return self.value == other.get(self.key)
 
 
+@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class HybridStorageTestGnocchi(BaseHybridStorageTest):
 
     def setUp(self):
@@ -63,14 +66,14 @@ class HybridStorageTestGnocchi(BaseHybridStorageTest):
         super(HybridStorageTestGnocchi, self).tearDown()
 
     def _init_storage(self, archive_policy=False, res_type=False):
-        with mock.patch.object(self.storage._hybrid_backend._conn,
+        with mock.patch.object(self.storage.storage._hybrid_backend._conn,
                                'archive_policy',
                                spec=['get', 'create']) as pol_mock:
             if not archive_policy:
                 pol_mock.get.side_effect = gexc.ArchivePolicyNotFound
             else:
                 pol_mock.create.side_effect = gexc.ArchivePolicyAlreadyExists
-            with mock.patch.object(self.storage._hybrid_backend._conn,
+            with mock.patch.object(self.storage.storage._hybrid_backend._conn,
                                    'resource_type',
                                    spec=['get', 'create']) as rtype_mock:
                 if not res_type:
@@ -80,7 +83,8 @@ class HybridStorageTestGnocchi(BaseHybridStorageTest):
                         = gexc.ResourceTypeAlreadyExists
 
                 self.storage.init()
-                rtype_data = self.storage._hybrid_backend._resource_type_data
+                rtype_data = (self.storage.storage
+                              ._hybrid_backend._resource_type_data)
                 rtype_calls = list()
                 for val in rtype_data.values():
                     rtype_calls.append(
@@ -91,18 +95,20 @@ class HybridStorageTestGnocchi(BaseHybridStorageTest):
                     rtype_mock.create.assert_has_calls(
                         rtype_calls, any_order=True)
             pol_mock.get.assert_called_once_with(
-                self.storage._hybrid_backend._archive_policy_name)
+                self.storage.storage._hybrid_backend._archive_policy_name)
             if archive_policy:
                 pol_mock.create.assert_not_called()
             else:
                 apolicy = {
-                    'name': self.storage._hybrid_backend._archive_policy_name,
+                    'name': (self.storage.storage
+                             ._hybrid_backend._archive_policy_name),
                     'back_window': 0,
                     'aggregation_methods':
                         ['std', 'count', 'min', 'max', 'sum', 'mean'],
                 }
-                apolicy['definition'] = \
-                    self.storage._hybrid_backend._archive_policy_definition
+                apolicy['definition'] = (self.storage.storage
+                                         ._hybrid_backend
+                                         ._archive_policy_definition)
                 pol_mock.create.assert_called_once_with(apolicy)
 
     def test_init_no_res_type_no_policy(self):

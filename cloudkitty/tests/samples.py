@@ -18,6 +18,8 @@
 import copy
 import decimal
 
+from oslo_utils import uuidutils
+
 from cloudkitty import utils as ck_utils
 
 TENANT = 'f266f30b11f246b589fd266f85eeec39'
@@ -288,5 +290,121 @@ PROMETHEUS_EMPTY_RESP_INSTANT_QUERY = {
     "data": {
         "resultType": "vector",
         "result": [],
+    }
+}
+
+V2_STORAGE_SAMPLE = {
+    "instance": {
+        "vol": {
+            "unit": "instance",
+            "qty": 1.0,
+        },
+        "rating": {
+            "price": decimal.Decimal(2.5),
+        },
+        "groupby": {
+            "id": uuidutils.generate_uuid(),
+            "project_id": COMPUTE_METADATA['project_id'],
+        },
+        "metadata": {
+            "flavor": "m1.nano",
+            "flavor_id": "42",
+        },
+    },
+    "image.size": {
+        "vol": {
+            "unit": "MiB",
+            "qty": 152.0,
+        },
+        "rating": {
+            "price": decimal.Decimal(0.152),
+        },
+        "groupby": {
+            "id": uuidutils.generate_uuid(),
+            "project_id": COMPUTE_METADATA['project_id'],
+        },
+        "metadata": {
+            "disk_format": "qcow2",
+        },
+    },
+    "volume.size": {
+        "vol": {
+            "unit": "GiB",
+            "qty": 20.0,
+        },
+        "rating": {
+            "price": decimal.Decimal(1.2),
+        },
+        "groupby": {
+            "id": uuidutils.generate_uuid(),
+            "project_id": COMPUTE_METADATA['project_id'],
+        },
+        "metadata": {
+            "volume_type": "ceph-region1"
+        },
+    },
+    "network.outgoing.bytes": {
+        "vol": {
+            "unit": "MB",
+            "qty": 12345.6,
+        },
+        "rating": {
+            "price": decimal.Decimal(0.00123456),
+        },
+        "groupby": {
+            "id": uuidutils.generate_uuid(),
+            "project_id": COMPUTE_METADATA['project_id'],
+        },
+        "metadata": {
+            "instance_id": uuidutils.generate_uuid(),
+        },
+    },
+    "network.incoming.bytes": {
+        "vol": {
+            "unit": "MB",
+            "qty": 34567.8,
+        },
+        "rating": {
+            "price": decimal.Decimal(0.00345678),
+        },
+        "groupby": {
+            "id": uuidutils.generate_uuid(),
+            "project_id": COMPUTE_METADATA['project_id'],
+        },
+        "metadata": {
+            "instance_id": uuidutils.generate_uuid(),
+        },
+    },
+    "ip.floating": {
+        "vol": {
+            "unit": "ip",
+            "qty": 1.0,
+        },
+        "rating": {
+            "price": decimal.Decimal(0.01),
+        },
+        "groupby": {
+            "id": uuidutils.generate_uuid(),
+            "project_id": COMPUTE_METADATA['project_id'],
+        },
+        "metadata": {
+            "state": "attached",
+        },
+    },
+    "radosgw.objects.size": {
+        "vol": {
+            "unit": "GiB",
+            "qty": 3.0,
+        },
+        "rating": {
+            "price": decimal.Decimal(0.30),
+        },
+        "groupby": {
+            "id": uuidutils.generate_uuid(),
+            "project_id": COMPUTE_METADATA['project_id'],
+        },
+        "metadata": {
+            "object_id": uuidutils.generate_uuid(),
+        },
     }
 }

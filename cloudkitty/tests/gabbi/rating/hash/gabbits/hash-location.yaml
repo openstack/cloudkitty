@@ -1,6 +1,7 @@
 fixtures:
   - HashMapConfigFixture
   - UUIDFixture
+  - SkipIfFunctional
 
 tests:
 

@@ -1,6 +1,7 @@
 fixtures:
   - ConfigFixture
   - MetricsConfFixture
+  - SkipIfFunctional
 
 tests:
   - name: get config

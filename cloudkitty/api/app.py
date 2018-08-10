@@ -68,6 +68,7 @@ def setup_app(pecan_config=None, extra_hooks=None):
 
     app_conf = get_pecan_config()
     storage_backend = storage.get_storage()
+
     app_hooks = [
         hooks.RPCHook(),
         hooks.StorageHook(storage_backend),

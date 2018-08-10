@@ -1,6 +1,7 @@
 fixtures:
     - ConfigFixture
     - CORSConfigFixture
+    - SkipIfFunctional
 
 tests:
 
