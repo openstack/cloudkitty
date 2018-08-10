@@ -223,9 +223,20 @@ class GnocchiCollector(collector.BaseCollector):
             query_parameters.append(self.gen_filter(**kwargs))
         if q_filter:
             query_parameters.append(q_filter)
-        resources = self._conn.resource.search(
-            resource_type=resource_type,
-            query=self.extend_filter(*query_parameters))
+
+        sorts = [extra_args['resource_key'] + ':asc']
+        resources = []
+        marker = None
+        while True:
+            resources_chunk = self._conn.resource.search(
+                resource_type=resource_type,
+                query=self.extend_filter(*query_parameters),
+                sorts=sorts,
+                marker=marker)
+            if len(resources_chunk) < 1:
+                break
+            resources += resources_chunk
+            marker = resources_chunk[-1][extra_args['resource_key']]
         return {res[extra_args['resource_key']]: res for res in resources}
 
     def _fetch_metric(self, metric_name, start, end,
