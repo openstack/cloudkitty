@@ -264,8 +264,6 @@ function start_cloudkitty {
         echo_summary "Waiting 15s for cloudkitty-processor to authenticate against keystone before apache is restarted."
         sleep 15s
         restart_apache_server
-        tail_log cloudkitty /var/log/$APACHE_NAME/cloudkitty.log
-        tail_log cloudkitty-api /var/log/$APACHE_NAME/cloudkitty_access.log
     fi
     echo "Waiting for ck-api ($CLOUDKITTY_SERVICE_HOST:$CLOUDKITTY_SERVICE_PORT) to start..."
     if ! wait_for_service $SERVICE_TIMEOUT $CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOST:$CLOUDKITTY_SERVICE_PORT; then
