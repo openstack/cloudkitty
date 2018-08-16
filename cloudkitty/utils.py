@@ -29,6 +29,7 @@ import fractions
 import math
 import shutil
 import six
+from string import Template
 import sys
 import tempfile
 import yaml
@@ -302,3 +303,14 @@ def flat_dict(item, parent=None):
         else:
             parent[k] = val
     return parent
+
+
+def template_str_substitute(string, replace_map):
+    """Returns a string with subtituted patterns."""
+    try:
+        tmp = Template(string)
+        return tmp.substitute(replace_map)
+    except (KeyError, ValueError) as e:
+        LOG.error("Error when trying to substitute the string placeholders. \
+                   Please, check your metrics configuration.", e)
+        raise

@@ -245,3 +245,48 @@ STORED_DATA[1]['usage']['instance'][0]['rating'] = {
 STORED_DATA = split_storage_data(STORED_DATA)
 
 METRICS_CONF = DEFAULT_METRICS_CONF
+
+
+PROMETHEUS_RESP_INSTANT_QUERY = {
+    "status": "success",
+    "data": {
+        "resultType": "vector",
+        "result": [
+            {
+                "metric": {
+                    "code": "200",
+                    "method": "get",
+                    "group": "prometheus_group",
+                    "instance": "localhost:9090",
+                    "job": "prometheus",
+                },
+                "value": [
+                    FIRST_PERIOD_END,
+                    "7",
+                ]
+            },
+            {
+                "metric": {
+                    "code": "200",
+                    "method": "post",
+                    "group": "prometheus_group",
+                    "instance": "localhost:9090",
+                    "job": "prometheus",
+                },
+                "value": [
+                    FIRST_PERIOD_END,
+                    "42",
+                ]
+            },
+
+        ]
+    }
+}
+
+PROMETHEUS_EMPTY_RESP_INSTANT_QUERY = {
+    "status": "success",
+    "data": {
+        "resultType": "vector",
+        "result": [],
+    }
+}
