@@ -36,8 +36,21 @@ LOG = logging.getLogger(__name__)
 MONASCA_API_VERSION = '2_0'
 COLLECTOR_MONASCA_OPTS = 'collector_monasca'
 collector_monasca_opts = ks_loading.get_auth_common_conf_options()
+mcollector_opts = [
+    cfg.StrOpt(
+        'interface',
+        default='internal',
+        help='Endpoint URL type (defaults to internal)',
+    ),
+    cfg.StrOpt(
+        'monasca_service_name',
+        default='monasca',
+        help='Name of the Monasca service (defaults to monasca)',
+    ),
+]
 
 cfg.CONF.register_opts(collector_monasca_opts, COLLECTOR_MONASCA_OPTS)
+cfg.CONF.register_opts(mcollector_opts, COLLECTOR_MONASCA_OPTS)
 ks_loading.register_session_conf_options(
     cfg.CONF,
     COLLECTOR_MONASCA_OPTS)
@@ -107,8 +120,10 @@ class MonascaCollector(collector.BaseCollector):
 
     # NOTE(lukapeschke) This function should be removed as soon as the endpoint
     # it no longer required by monascaclient
-    def _get_monasca_endpoint(self, service_name='monasca',
-                              endpoint_interface_type='public'):
+    def _get_monasca_endpoint(self):
+        service_name = cfg.CONF.collector_monasca.monasca_service_name
+        endpoint_interface_type = cfg.CONF.collector_monasca.interface
+
         service_list = self.ks_client.services.list(name=service_name)
         if not service_list:
             return None
