@@ -163,6 +163,13 @@ class MonascaCollector(collector.BaseCollector):
 
         dimensions = self._get_dimensions(metric_name, project_id, q_filter)
         group_by = self.conf[metric_name]['groupby']
+        resource_key = self.conf[metric_name]['extra_args']['resource_key']
+        if resource_key not in group_by:
+            LOG.error('Resource key "{}" is not in group_by keys: "{}". '
+                      'Please adapt your configuration.'.format(
+                          resource_key, group_by))
+            raise collector.NoDataCollected(self.collector_name, metric_name)
+
         # NOTE(lpeschke): One aggregated measure per collect period
         period = end - start
 
