@@ -37,7 +37,8 @@ _opts = [
     ('collect', list(itertools.chain(
         cloudkitty.collector.collect_opts))),
     ('collector_monasca', list(itertools.chain(
-        cloudkitty.collector.monasca.collector_monasca_opts))),
+        cloudkitty.collector.monasca.collector_monasca_opts,
+        cloudkitty.collector.monasca.mcollector_opts))),
     ('gnocchi_collector', list(itertools.chain(
         cloudkitty.collector.gnocchi.gcollector_opts,
         cloudkitty.collector.gnocchi.gnocchi_collector_opts))),
