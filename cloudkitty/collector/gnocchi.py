@@ -30,46 +30,59 @@ from cloudkitty import utils as ck_utils
 
 LOG = logging.getLogger(__name__)
 
-GNOCCHI_COLLECTOR_OPTS = 'gnocchi_collector'
-gnocchi_collector_opts = ks_loading.get_auth_common_conf_options()
-gcollector_opts = [
+# NOTE(mc): The deprecated section should be removed in a future release.
+COLLECTOR_GNOCCHI_OPTS = 'collector_gnocchi'
+DEPRECATED_COLLECTOR_GNOCCHI_OPTS = 'gnocchi_collector'
+
+keystone_opts = ks_loading.get_auth_common_conf_options() + \
+    ks_loading.get_session_conf_options()
+
+keystone_opts = [
+    cfg.Opt(
+        o.name,
+        type=o.type,
+        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
+    ) for o in keystone_opts
+]
+
+collector_gnocchi_opts = [
     cfg.StrOpt(
         'gnocchi_auth_type',
         default='keystone',
         choices=['keystone', 'basic'],
         help='Gnocchi auth type (keystone or basic). Keystone credentials '
         'can be specified through the "auth_section" parameter',
+        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ),
     cfg.StrOpt(
         'gnocchi_user',
         default='',
         help='Gnocchi user (for basic auth only)',
+        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ),
     cfg.StrOpt(
         'gnocchi_endpoint',
         default='',
         help='Gnocchi endpoint (for basic auth only)',
+        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ),
     cfg.StrOpt(
         'interface',
         default='internalURL',
         help='Endpoint URL type (for keystone auth only)',
+        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ),
     cfg.StrOpt(
         'region_name',
         default='RegionOne',
         help='Region Name',
+        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ),
 ]
 
-cfg.CONF.register_opts(gnocchi_collector_opts, GNOCCHI_COLLECTOR_OPTS)
-cfg.CONF.register_opts(gcollector_opts, GNOCCHI_COLLECTOR_OPTS)
-ks_loading.register_session_conf_options(
-    cfg.CONF,
-    GNOCCHI_COLLECTOR_OPTS)
-ks_loading.register_auth_conf_options(
-    cfg.CONF,
-    GNOCCHI_COLLECTOR_OPTS)
+cfg.CONF.register_opts(keystone_opts, COLLECTOR_GNOCCHI_OPTS)
+cfg.CONF.register_opts(collector_gnocchi_opts, COLLECTOR_GNOCCHI_OPTS)
+
 CONF = cfg.CONF
 
 GNOCCHI_EXTRA_SCHEMA = {
@@ -92,23 +105,23 @@ class GnocchiCollector(collector.BaseCollector):
         super(GnocchiCollector, self).__init__(transformers, **kwargs)
 
         adapter_options = {'connect_retries': 3}
-        if CONF.gnocchi_collector.gnocchi_auth_type == 'keystone':
+        if CONF.collector_gnocchi.gnocchi_auth_type == 'keystone':
             auth_plugin = ks_loading.load_auth_from_conf_options(
                 CONF,
-                'gnocchi_collector',
+                COLLECTOR_GNOCCHI_OPTS,
             )
-            adapter_options['interface'] = CONF.gnocchi_collector.interface
+            adapter_options['interface'] = CONF.collector_gnocchi.interface
         else:
             auth_plugin = gauth.GnocchiBasicPlugin(
-                user=CONF.gnocchi_collector.gnocchi_user,
-                endpoint=CONF.gnocchi_collector.gnocchi_endpoint,
+                user=CONF.collector_gnocchi.gnocchi_user,
+                endpoint=CONF.collector_gnocchi.gnocchi_endpoint,
             )
-        adapter_options['region_name'] = CONF.gnocchi_collector.region_name
+        adapter_options['region_name'] = CONF.collector_gnocchi.region_name
 
         verify = True
-        if CONF.gnocchi_collector.cafile:
-            verify = CONF.gnocchi_collector.cafile
-        elif CONF.gnocchi_collector.insecure:
+        if CONF.collector_gnocchi.cafile:
+            verify = CONF.collector_gnocchi.cafile
+        elif CONF.collector_gnocchi.insecure:
             verify = False
 
         self._conn = gclient.Client(

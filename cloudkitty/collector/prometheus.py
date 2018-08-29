@@ -33,7 +33,7 @@ from cloudkitty import utils as ck_utils
 
 LOG = log.getLogger(__name__)
 
-PROMETHEUS_COLLECTOR_OPTS = 'prometheus_collector'
+PROMETHEUS_COLLECTOR_OPTS = 'collector_prometheus'
 pcollector_collector_opts = [
     cfg.StrOpt(
         'prometheus_url',
@@ -137,7 +137,7 @@ class PrometheusCollector(collector.BaseCollector):
         """Returns metrics to be valorized."""
         # NOTE(mc): Remove potential trailing '/' to avoid
         # url building problems
-        url = CONF.prometheus_collector.prometheus_url
+        url = CONF.collector_prometheus.prometheus_url
         if url.endswith('/'):
             url = url[:-1]
 

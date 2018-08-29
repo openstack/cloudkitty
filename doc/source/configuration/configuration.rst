@@ -69,7 +69,7 @@ The following shows the basic configuration items:
     [database]
     connection = mysql+pymysql://CK_DBUSER:CK_DBPASSWORD@DB_HOST/cloudkitty
 
-    [keystone_fetcher]
+    [fetcher_keystone]
     auth_section = ks_auth
     keystone_version = 3
 
@@ -96,13 +96,7 @@ available: ``sqlalchemy`` and ``hybrid`` (SQLalchemy being the recommended one).
 As you will see in the following example, collector and storage backends
 sometimes need additional configuration sections. (The tenant fetcher works the
 same way). The section's name has the following format:
-``{backend_name}_{backend_type}`` (``gnocchi_collector`` for example), except
-for ``storage_gnocchi``.
-
-.. note::
-
-   The section name format should become ``{backend_type}_{backend_name}`` for
-   all sections in the future (``storage_gnocchi`` style).
+``{backend_type}_{backend_name}`` (``collector_gnocchi`` for example).
 
 If you want to use the hybrid storage with a gnocchi backend, add the following
 entry:
@@ -126,7 +120,7 @@ without modifying source code or Cloudkitty configuration file.
     [collect]
     metrics_conf = /etc/cloudkitty/metrics.yml
 
-    [gnocchi_collector]
+    [collector_gnocchi]
     auth_section = ks_auth
 
 The ``/etc/cloudkitty/metrics.yml`` file looks like this:

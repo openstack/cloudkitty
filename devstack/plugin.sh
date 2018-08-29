@@ -159,8 +159,8 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF authinfos project_domain_name default
     iniset $CLOUDKITTY_CONF authinfos debug "$ENABLE_DEBUG_LOG_LEVEL"
 
-    iniset $CLOUDKITTY_CONF keystone_fetcher auth_section authinfos
-    iniset $CLOUDKITTY_CONF keystone_fetcher keystone_version 3
+    iniset $CLOUDKITTY_CONF fetcher_keystone auth_section authinfos
+    iniset $CLOUDKITTY_CONF fetcher_keystone keystone_version 3
 
     # collect
     iniset $CLOUDKITTY_CONF collect collector $CLOUDKITTY_COLLECTOR

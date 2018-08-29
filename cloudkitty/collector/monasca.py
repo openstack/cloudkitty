@@ -35,8 +35,8 @@ LOG = logging.getLogger(__name__)
 
 MONASCA_API_VERSION = '2_0'
 COLLECTOR_MONASCA_OPTS = 'collector_monasca'
-collector_monasca_opts = ks_loading.get_auth_common_conf_options()
-mcollector_opts = [
+
+collector_monasca_opts = [
     cfg.StrOpt(
         'interface',
         default='internal',
@@ -50,7 +50,6 @@ mcollector_opts = [
 ]
 
 cfg.CONF.register_opts(collector_monasca_opts, COLLECTOR_MONASCA_OPTS)
-cfg.CONF.register_opts(mcollector_opts, COLLECTOR_MONASCA_OPTS)
 ks_loading.register_session_conf_options(
     cfg.CONF,
     COLLECTOR_MONASCA_OPTS)

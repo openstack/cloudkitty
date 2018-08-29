@@ -20,13 +20,21 @@ from oslo_config import cfg
 from cloudkitty import fetcher
 
 
-SOURCE_FETCHER_OPTS = 'source_fetcher'
-source_fetcher_opts = [
-    cfg.ListOpt('sources',
-                default=list(),
-                help='list of source identifiers'), ]
+# NOTE(mc): The deprecated section should be removed in a future release.
+FETCHER_SOURCE_OPTS = 'fetcher_source'
+DEPRECATED_FETCHER_SOURCE_OPTS = 'source_fetcher'
 
-cfg.CONF.register_opts(source_fetcher_opts, SOURCE_FETCHER_OPTS)
+fetcher_source_opts = [
+    cfg.ListOpt(
+        'sources',
+        default=list(),
+        help='list of source identifiers',
+        deprecated_group=DEPRECATED_FETCHER_SOURCE_OPTS,
+    ),
+]
+
+cfg.CONF.register_opts(fetcher_source_opts, FETCHER_SOURCE_OPTS)
+
 CONF = cfg.CONF
 
 
@@ -36,4 +44,4 @@ class SourceFetcher(fetcher.BaseFetcher):
     name = 'source'
 
     def get_tenants(self):
-        return CONF.source_fetcher.sources
+        return CONF.fetcher_source.sources

@@ -38,20 +38,19 @@ _opts = [
         cloudkitty.api.app.api_opts,))),
     ('collect', list(itertools.chain(
         cloudkitty.collector.collect_opts))),
+    ('collector_gnocchi', list(itertools.chain(
+        cloudkitty.collector.gnocchi.keystone_opts,
+        cloudkitty.collector.gnocchi.collector_gnocchi_opts))),
     ('collector_monasca', list(itertools.chain(
-        cloudkitty.collector.monasca.collector_monasca_opts,
-        cloudkitty.collector.monasca.mcollector_opts))),
-    ('gnocchi_collector', list(itertools.chain(
-        cloudkitty.collector.gnocchi.gcollector_opts,
-        cloudkitty.collector.gnocchi.gnocchi_collector_opts))),
+        cloudkitty.collector.monasca.collector_monasca_opts))),
     ('fetcher_gnocchi', list(itertools.chain(
         cloudkitty.fetcher.gnocchi.gfetcher_opts,
         cloudkitty.fetcher.gnocchi.fetcher_gnocchi_opts))),
-    ('keystone_fetcher', list(itertools.chain(
-        cloudkitty.fetcher.keystone.keystone_fetcher_opts,
-        cloudkitty.fetcher.keystone.keystone_common_opts))),
-    ('source_fetcher', list(itertools.chain(
-        cloudkitty.fetcher.source.source_fetcher_opts))),
+    ('fetcher_keystone', list(itertools.chain(
+        cloudkitty.fetcher.keystone.keystone_opts,
+        cloudkitty.fetcher.keystone.fetcher_keystone_opts))),
+    ('fetcher_source', list(itertools.chain(
+        cloudkitty.fetcher.source.fetcher_source_opts))),
     ('orchestrator', list(itertools.chain(
         cloudkitty.orchestrator.orchestrator_opts))),
     ('output', list(itertools.chain(
