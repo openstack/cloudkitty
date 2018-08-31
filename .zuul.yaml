@@ -1,0 +1,16 @@
+- project:
+    templates:
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - publish-openstack-sphinx-docs
+      - release-notes-jobs
+    check:
+      jobs:
+        - legacy-cloudkitty-dsvm-install
+    gate:
+      queue: cloudkitty
+      jobs:
+        - legacy-cloudkitty-dsvm-install
+    post:
+      jobs:
+        - openstack-tox-cover
