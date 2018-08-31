@@ -11,7 +11,20 @@
       - openstack/python-cloudkittyclient
 
 - project:
+    templates:
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - publish-openstack-sphinx-docs
+      - release-notes-jobs
     check:
       jobs:
         - cloudkitty-tempest-full:
             voting: false
+        - legacy-cloudkitty-dsvm-install
+    gate:
+      queue: cloudkitty
+      jobs:
+        - legacy-cloudkitty-dsvm-install
+    post:
+      jobs:
+        - openstack-tox-cover
