@@ -10,6 +10,18 @@
       - openstack/cloudkitty-tempest-plugin
       - openstack/python-cloudkittyclient
 
+- job:
+    name: cloudkitty-install
+    parent: legacy-dsvm-base
+    run: playbooks/cloudkitty-install/run.yaml
+    post-run: playbooks//cloudkitty-install/post.yaml
+    timeout: 7200
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/cloudkitty
+      - openstack/cloudkitty-dashboard
+      - openstack/python-cloudkittyclient
+
 - project:
     templates:
       - openstack-python-jobs
@@ -21,11 +33,11 @@
       jobs:
         - cloudkitty-tempest-full:
             voting: false
-        - legacy-cloudkitty-dsvm-install
+        - cloudkitty-install
     gate:
       queue: cloudkitty
       jobs:
-        - legacy-cloudkitty-dsvm-install
+        - cloudkitty-install
     post:
       jobs:
         - openstack-tox-cover
