@@ -5,7 +5,8 @@ Packages for RHEL/CentOS 7 are available starting from the Mitaka release.
 
 #. Install the RDO repositories for your release::
 
-    yum install centos-release-openstack-RELEASE # RELEASE can be mitaka, newton or ocata
+    yum install centos-release-openstack-RELEASE
+    # RELEASE can be any supported release name like rocky
 
 #. Install the packages::
 
