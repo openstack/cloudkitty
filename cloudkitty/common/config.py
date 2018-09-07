@@ -21,6 +21,7 @@ import cloudkitty.collector.gnocchi
 import cloudkitty.collector.monasca
 import cloudkitty.config
 import cloudkitty.fetcher
+import cloudkitty.fetcher.gnocchi
 import cloudkitty.fetcher.keystone
 import cloudkitty.fetcher.source
 import cloudkitty.orchestrator
@@ -43,6 +44,9 @@ _opts = [
     ('gnocchi_collector', list(itertools.chain(
         cloudkitty.collector.gnocchi.gcollector_opts,
         cloudkitty.collector.gnocchi.gnocchi_collector_opts))),
+    ('fetcher_gnocchi', list(itertools.chain(
+        cloudkitty.fetcher.gnocchi.gfetcher_opts,
+        cloudkitty.fetcher.gnocchi.fetcher_gnocchi_opts))),
     ('keystone_fetcher', list(itertools.chain(
         cloudkitty.fetcher.keystone.keystone_fetcher_opts,
         cloudkitty.fetcher.keystone.keystone_common_opts))),

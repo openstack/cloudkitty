@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    A fetcher for gnocchi has been added, allowing dynamic scope/project
+    discovery.
