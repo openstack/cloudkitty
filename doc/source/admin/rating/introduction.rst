@@ -17,7 +17,7 @@ List current rating modules:
 
 .. code:: raw
 
-    $ cloudkitty module-list
+    $ cloudkitty module list
     +-----------+---------+----------+
     | Module    | Enabled | Priority |
     +-----------+---------+----------+
@@ -33,7 +33,7 @@ Enable the hashmap rating module:
 
 .. code:: raw
 
-    $ cloudkitty module-enable -n hashmap
+    $ cloudkitty module enable hashmap
     +---------+---------+----------+
     | Module  | Enabled | Priority |
     +---------+---------+----------+
@@ -44,7 +44,7 @@ Disable the pyscripts rating module:
 
 .. code:: raw
 
-    $ cloudkitty module-disable -n pyscripts
+    $ cloudkitty module disable pyscripts
     +-----------+---------+----------+
     | Module    | Enabled | Priority |
     +-----------+---------+----------+
@@ -58,7 +58,7 @@ Set the hashmap rating module priority to 100:
 
 .. code:: raw
 
-    $ cloudkitty module-set-priority -n hashmap -p 100
+    $ cloudkitty module set priority hashmap 100
     +---------+---------+----------+
     | Module  | Enabled | Priority |
     +---------+---------+----------+
