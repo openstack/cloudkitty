@@ -58,7 +58,8 @@ gcollector_opts = [
     cfg.StrOpt(
         'region_name',
         default='RegionOne',
-        help='Region Name'),
+        help='Region Name',
+    ),
 ]
 
 cfg.CONF.register_opts(gnocchi_collector_opts, GNOCCHI_COLLECTOR_OPTS)
@@ -108,9 +109,15 @@ class GnocchiCollector(collector.BaseCollector):
             )
         adapter_options['region_name'] = CONF.gnocchi_collector.region_name
 
+        verify = True
+        if CONF.gnocchi_collector.cafile:
+            verify = CONF.gnocchi_collector.cafile
+        elif CONF.gnocchi_collector.insecure:
+            verify = False
+
         self._conn = gclient.Client(
             '1',
-            session_options={'auth': auth_plugin},
+            session_options={'auth': auth_plugin, 'verify': verify},
             adapter_options=adapter_options,
         )
 
