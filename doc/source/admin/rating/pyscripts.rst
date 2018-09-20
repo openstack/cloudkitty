@@ -104,12 +104,12 @@ To use you script for rating, you will need to enable the pyscripts module
 
 .. code:: raw
 
-    $ cloudkitty module-enable -n pyscripts
-    +-----------+---------+
-    | Module    | Enabled |
-    +-----------+---------+
-    | pyscripts | True    |
-    +-----------+---------+
+    $ cloudkitty module enable pyscripts
+    +-----------+---------+----------+
+    | Module    | Enabled | Priority |
+    +-----------+---------+----------+
+    | pyscripts | True    |        1 |
+    +-----------+---------+----------+
 
 Adding the script to CloudKitty
 -------------------------------
@@ -118,20 +118,17 @@ Create the script and specify its name.
 
 .. code:: raw
 
-    $ cloudkitty pyscripts-script-create -n my_awesome_script -f script.py
-    +-----------+----------------------------------------------+
-    | Property  | Value                                        |
-    +-----------+----------------------------------------------+
-    | checksum  | 7650349ba3a913cef526dfb953575042ec3332e1     |
-    | data      | from __future__ import print_function        |
-    |           | from cloudkitty import rating                |
-    |           |                                              |
-    |           | import decimal                               |
-    |           |                                              |
-    |           |       {...}                                  |
-    |           |                                              |
-    |           | data = process(data)                         |
-    |           |                                              |
-    | name      | my_awesome_script                            |
-    | script_id | 93de054f-9d6f-40b0-8e4f-9b8fee8cad04         |
-    +-----------+----------------------------------------------+
+    $ cloudkitty pyscript create my_awesome_script script.py
+    +-------------------+--------------------------------------+------------------------------------------+---------------------------------------+
+    | Name              | Script ID                            | Checksum                                 | Data                                  |
+    +-------------------+--------------------------------------+------------------------------------------+---------------------------------------+
+    | my_awesome_script | 78e1955a-4e7e-47e3-843c-524d8e6ad4c4 | 49e889018eb86b2035437ebb69093c0b6379f18c | from __future__ import print_function |
+    |                   |                                      |                                          | from cloudkitty import rating         |
+    |                   |                                      |                                          |                                       |
+    |                   |                                      |                                          | import decimal                        |
+    |                   |                                      |                                          |                                       |
+    |                   |                                      |                                          |         {...}                         |
+    |                   |                                      |                                          |                                       |
+    |                   |                                      |                                          | data = process(data)                  |
+    |                   |                                      |                                          |                                       |
+    +-------------------+--------------------------------------+------------------------------------------+---------------------------------------+

@@ -106,19 +106,18 @@ Create a group *instance_uptime_flavor*:
 
 .. code:: raw
 
-    $ cloudkitty hashmap-group-create -n instance_uptime_flavor
-    +----------+--------------------------------------+
-    | Property | Value                                |
-    +----------+--------------------------------------+
-    | group_id | 26d2d69a-4c42-47f1-9d44-2cdfad167f7d |
-    | name     | instance_uptime_flavor               |
-    +----------+--------------------------------------+
+    $ cloudkitty hashmap group create instance_uptime_flavor
+    +------------------------+--------------------------------------+
+    | Name                   | Group ID                             |
+    +------------------------+--------------------------------------+
+    | instance_uptime_flavor | 9a2ff37d-be86-4642-8b7d-567bace61f06 |
+    +------------------------+--------------------------------------+
 
-    $ cloudkitty hashmap-group-list
+    $ cloudkitty hashmap group list
     +------------------------+--------------------------------------+
-    | Name                   | Group id                             |
+    | Name                   | Group ID                             |
     +------------------------+--------------------------------------+
-    | instance_uptime_flavor | 26d2d69a-4c42-47f1-9d44-2cdfad167f7d |
+    | instance_uptime_flavor | 9a2ff37d-be86-4642-8b7d-567bace61f06 |
     +------------------------+--------------------------------------+
 
 
@@ -126,28 +125,24 @@ Create the service matching rule:
 
 .. code:: raw
 
-    $ cloudkitty hashmap-service-create -n compute
-    +------------+--------------------------------------+
-    | Property   | Value                                |
-    +------------+--------------------------------------+
-    | name       | compute                              |
-    | service_id | 08ab2d27-fe95-400c-9602-e5ad5efdda8b |
-    +------------+--------------------------------------+
+    $ cloudkitty hashmap service create compute
+    +---------+--------------------------------------+
+    | Name    | Service ID                           |
+    +---------+--------------------------------------+
+    | compute | b19d801d-e7d4-46f9-970b-3e6d60fc07b5 |
+    +---------+--------------------------------------+
 
 
 Create a field matching rule:
 
 .. code:: raw
 
-    $ cloudkitty hashmap-field-create \
-     -s 08ab2d27-fe95-400c-9602-e5ad5efdda8b -n flavor
-    +------------+--------------------------------------+
-    | Property   | Value                                |
-    +------------+--------------------------------------+
-    | field_id   | f37364af-6525-40fc-ae08-6d4087429862 |
-    | name       | flavor                               |
-    | service_id | 08ab2d27-fe95-400c-9602-e5ad5efdda8b |
-    +------------+--------------------------------------+
+    $ cloudkitty hashmap field create b19d801d-e7d4-46f9-970b-3e6d60fc07b5 flavor
+    +--------+--------------------------------------+--------------------------------------+
+    | Name   | Field ID                             | Service ID                           |
+    +--------+--------------------------------------+--------------------------------------+
+    | flavor | 18aa50b6-6da8-4c47-8a1f-43236b971625 | b19d801d-e7d4-46f9-970b-3e6d60fc07b5 |
+    +--------+--------------------------------------+--------------------------------------+
 
 
 Create a mapping in the group *instance_uptime_flavor* that will map m1.tiny
@@ -155,21 +150,14 @@ instance to a cost of 0.01:
 
 .. code:: raw
 
-    $ cloudkitty hashmap-mapping-create \
-     -f f37364af-6525-40fc-ae08-6d4087429862 \
-     -v m1.tiny -t flat -c 0.01 -g 26d2d69a-4c42-47f1-9d44-2cdfad167f7d
-    +------------+--------------------------------------+
-    | Property   | Value                                |
-    +------------+--------------------------------------+
-    | cost       | 0.01                                 |
-    | field_id   | f37364af-6525-40fc-ae08-6d4087429862 |
-    | group_id   | 26d2d69a-4c42-47f1-9d44-2cdfad167f7d |
-    | mapping_id | df592a91-a6a5-41fa-ba2e-2f763eaa36e5 |
-    | service_id | None                                 |
-    | tenant_id  | None                                 |
-    | type       | flat                                 |
-    | value      | m1.tiny                              |
-    +------------+--------------------------------------+
+    $ cloudkitty hashmap mapping create 0.01 \
+     --field-id 18aa50b6-6da8-4c47-8a1f-43236b971625 \
+     --value m1.tiny -t flat -g 9a2ff37d-be86-4642-8b7d-567bace61f06
+    +--------------------------------------+---------+------------+------+--------------------------------------+------------+--------------------------------------+------------+
+    | Mapping ID                           | Value   | Cost       | Type | Field ID                             | Service ID | Group ID                             | Project ID |
+    +--------------------------------------+---------+------------+------+--------------------------------------+------------+--------------------------------------+------------+
+    | 9c2418dc-99d3-44b6-8fdf-e9fa02f3ceb5 | m1.tiny | 0.01000000 | flat | 18aa50b6-6da8-4c47-8a1f-43236b971625 | None       | 9a2ff37d-be86-4642-8b7d-567bace61f06 | None       |
+    +--------------------------------------+---------+------------+------+--------------------------------------+------------+--------------------------------------+------------+
 
 
 In this example every machine in any project with the flavor m1.tiny will be
@@ -185,54 +173,45 @@ Create a group *volume_thresholds*:
 
 .. code:: raw
 
-    $ cloudkitty hashmap-group-create -n volume_thresholds
-    +----------+--------------------------------------+
-    | Property | Value                                |
-    +----------+--------------------------------------+
-    | group_id | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
-    | name     | volume_thresholds                    |
-    +----------+--------------------------------------+
+    $ cloudkitty hashmap group create volume_thresholds
+    +-------------------+--------------------------------------+
+    | Name              | Group ID                             |
+    +-------------------+--------------------------------------+
+    | volume_thresholds | 9736bbc0-8888-4700-96fc-58db5fded493 |
+    +-------------------+--------------------------------------+
 
-    $ cloudkitty hashmap-group-list
-    +-------------------+--------------------------------------+
-    | Name              | Group id                             |
-    +-------------------+--------------------------------------+
-    | volume_thresholds | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
-    +-------------------+--------------------------------------+
+    $ cloudkitty hashmap group list
+    +------------------------+--------------------------------------+
+    | Name                   | Group ID                             |
+    +------------------------+--------------------------------------+
+    | volume_thresholds      | 9736bbc0-8888-4700-96fc-58db5fded493 |
+    +------------------------+--------------------------------------+
 
 
 Create the service matching rule:
 
 .. code:: raw
 
-    $ cloudkitty hashmap-service-create -n volume
-    +------------+--------------------------------------+
-    | Property   | Value                                |
-    +------------+--------------------------------------+
-    | name       | volume                               |
-    | service_id | 16a48060-0e64-11e6-8e4e-1b285514a36e |
-    +------------+--------------------------------------+
+    $ cloudkitty hashmap service create volume
+    +--------+--------------------------------------+
+    | Name   | Service ID                           |
+    +--------+--------------------------------------+
+    | volume | 74ad7e4e-9cae-45a8-884b-368a92803afe |
+    +--------+--------------------------------------+
 
 
 Now let's setup the price per gigabyte:
 
 .. code:: raw
 
-    $ cloudkitty hashmap-mapping-create \
-     -s 16a48060-0e64-11e6-8e4e-1b285514a36e \
-     -t flat -c 0.001 -g dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d
-    +------------+--------------------------------------+
-    | Property   | Value                                |
-    +------------+--------------------------------------+
-    | cost       | 0.001                                |
-    | field_id   | None                                 |
-    | group_id   | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
-    | mapping_id | 41669786-240b-11e6-872c-af96ddb6619c |
-    | service_id | 16a48060-0e64-11e6-8e4e-1b285514a36e |
-    | tenant_id  | None                                 |
-    | type       | flat                                 |
-    | value      |                                      |
-    +------------+--------------------------------------+
+    $ cloudkitty hashmap mapping create 0.001 \
+     -s 74ad7e4e-9cae-45a8-884b-368a92803afe \
+     -t flat -g 9736bbc0-8888-4700-96fc-58db5fded493
+    +--------------------------------------+-------+------------+------+----------+--------------------------------------+--------------------------------------+------------+
+    | Mapping ID                           | Value | Cost       | Type | Field ID | Service ID                           | Group ID                             | Project ID |
+    +--------------------------------------+-------+------------+------+----------+--------------------------------------+--------------------------------------+------------+
+    | 09e36b13-ce89-4bd0-bbf1-1b80577031e8 | None  | 0.00100000 | flat | None     | 74ad7e4e-9cae-45a8-884b-368a92803afe | 9736bbc0-8888-4700-96fc-58db5fded493 | None       |
+    +--------------------------------------+-------+------------+------+----------+--------------------------------------+--------------------------------------+------------+
 
 
 We have the basic price per gigabyte be we now want to apply a discount on huge
@@ -243,76 +222,55 @@ Here we set a threshold when going past 50GB, and apply a 2% discount (0.98):
 
 .. code:: raw
 
-    $ cloudkitty hashmap-threshold-create \
-     -s 16a48060-0e64-11e6-8e4e-1b285514a36e \
-     -l 50 -t rate -c 0.98 -g dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d
-    +--------------+--------------------------------------+
-    | Property     | Value                                |
-    +--------------+--------------------------------------+
-    | cost         | 0.98                                 |
-    | field_id     | None                                 |
-    | group_id     | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
-    | level        | 50                                   |
-    | threshold_id | 8eb45bfc-0e64-11e6-ad0e-07a62425f284 |
-    | service_id   | 16a48060-0e64-11e6-8e4e-1b285514a36e |
-    | tenant_id    | None                                 |
-    | type         | rate                                 |
-    +--------------+--------------------------------------+
+    $ cloudkitty hashmap threshold create 50 0.98 \
+     -s 74ad7e4e-9cae-45a8-884b-368a92803afe \
+     -t rate -g 9736bbc0-8888-4700-96fc-58db5fded493
+    +--------------------------------------+-------------+------------+------+----------+--------------------------------------+--------------------------------------+------------+
+    | Threshold ID                         | Level       | Cost       | Type | Field ID | Service ID                           | Group ID                             | Project ID |
+    +--------------------------------------+-------------+------------+------+----------+--------------------------------------+--------------------------------------+------------+
+    | ae02175d-beff-4b01-bb3a-00907b05fe66 | 50.00000000 | 0.98000000 | rate | None     | 74ad7e4e-9cae-45a8-884b-368a92803afe | 9736bbc0-8888-4700-96fc-58db5fded493 | None       |
+    +--------------------------------------+-------------+------------+------+----------+--------------------------------------+--------------------------------------+------------+
 
-Here we set the same threshold for project 8f1e8645a0e7496a95a4fdf4b2795b2c
+Here we set the same threshold for project 2d5b39657dc542d4b2a14b685335304e
 but with a 3% discount (0.97):
 
 .. code:: raw
 
-    $ cloudkitty hashmap-threshold-create \
-     -s 16a48060-0e64-11e6-8e4e-1b285514a36e \
-     -l 50 -t rate -c 0.98 -g dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d \
-     -p 8f1e8645a0e7496a95a4fdf4b2795b2c
-    +--------------+--------------------------------------+
-    | Property     | Value                                |
-    +--------------+--------------------------------------+
-    | cost         | 0.97                                 |
-    | field_id     | None                                 |
-    | group_id     | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
-    | level        | 50                                   |
-    | threshold_id | 8eb45bfc-0e64-11e6-ad0e-07a62425f284 |
-    | service_id   | 16a48060-0e64-11e6-8e4e-1b285514a36e |
-    | tenant_id    | 8f1e8645a0e7496a95a4fdf4b2795b2c     |
-    | type         | rate                                 |
-    +--------------+--------------------------------------+
+    $ cloudkitty hashmap threshold create 50 0.97 \
+     -s 74ad7e4e-9cae-45a8-884b-368a92803afe \
+     -t rate -g 9736bbc0-8888-4700-96fc-58db5fded493 \
+     -p 2d5b39657dc542d4b2a14b685335304e
+    +--------------------------------------+-------------+------------+------+----------+--------------------------------------+--------------------------------------+----------------------------------+
+    | Threshold ID                         | Level       | Cost       | Type | Field ID | Service ID                           | Group ID                             | Project ID                       |
+    +--------------------------------------+-------------+------------+------+----------+--------------------------------------+--------------------------------------+----------------------------------+
+    | b20504bf-da34-434c-909d-46c2168c6166 | 50.00000000 | 0.97000000 | rate | None     | 74ad7e4e-9cae-45a8-884b-368a92803afe | 9736bbc0-8888-4700-96fc-58db5fded493 | 2d5b39657dc542d4b2a14b685335304e |
+    +--------------------------------------+-------------+------------+------+----------+--------------------------------------+--------------------------------------+----------------------------------+
 
 Here we set a threshold when going past 200GB, and apply a 5% discount (0.95):
 
 .. code:: raw
 
-    $ cloudkitty hashmap-threshold-create \
-     -s 16a48060-0e64-11e6-8e4e-1b285514a36e \
-     -l 200 -t rate -c 0.95 -g dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d
-    +--------------+--------------------------------------+
-    | Property     | Value                                |
-    +--------------+--------------------------------------+
-    | cost         | 0.95                                 |
-    | field_id     | None                                 |
-    | group_id     | dd3dc30e-0e63-11e6-9f83-ab4208c1fe2d |
-    | level        | 200                                  |
-    | threshold_id | baf180c8-0e64-11e6-abb3-cbae153a6d44 |
-    | service_id   | 16a48060-0e64-11e6-8e4e-1b285514a36e |
-    | tenant_id    | None                                 |
-    | type         | rate                                 |
-    +--------------+--------------------------------------+
+    $ cloudkitty hashmap threshold create 200 0.95 \
+     -s 74ad7e4e-9cae-45a8-884b-368a92803afe \
+     -t rate -g 9736bbc0-8888-4700-96fc-58db5fded493
+    +--------------------------------------+--------------+------------+------+----------+--------------------------------------+--------------------------------------+------------+
+    | Threshold ID                         | Level        | Cost       | Type | Field ID | Service ID                           | Group ID                             | Project ID |
+    +--------------------------------------+--------------+------------+------+----------+--------------------------------------+--------------------------------------+------------+
+    | ed9fd297-37d4-4d9c-8f65-9919d554617b | 200.00000000 | 0.95000000 | rate | None     | 74ad7e4e-9cae-45a8-884b-368a92803afe | 9736bbc0-8888-4700-96fc-58db5fded493 | None       |
+    +--------------------------------------+--------------+------------+------+----------+--------------------------------------+--------------------------------------+------------+
 
 
-In this example every volume is charged 0.01 per GB but if the size goes past
+In this example every volume is charged 0.001 per GB but if the size goes past
 50GB you'll get a 2% discount, if you even go further you'll get 5% discount
 (only one level apply at a time).
 
-For project 8f1e8645a0e7496a95a4fdf4b2795b2c only, you'll get a 3% discount
+For project 2d5b39657dc542d4b2a14b685335304e only, you'll get a 3% discount
 instead of 2% when the size goes past 50GB and the same %5 discount it it goes
 further.
 
 :20GB: 0.02 per collection period.
 :50GB: 0.049 per collection period
-    (0.0485 for project 8f1e8645a0e7496a95a4fdf4b2795b2c).
+    (0.0485 for project 2d5b39657dc542d4b2a14b685335304e).
 :80GB: 0.0784 per collection period
-    (0.0776 for project 8f1e8645a0e7496a95a4fdf4b2795b2c).
+    (0.0776 for project 2d5b39657dc542d4b2a14b685335304e).
 :250GB: 0.2375 per collection period.
