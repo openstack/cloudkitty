@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    The "scope_key" option is now defained in cloudkitty.conf and has been
+    removed from the cloudkitty and monasca collector's extra_args

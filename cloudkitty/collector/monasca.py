@@ -68,9 +68,6 @@ MONASCA_EXTRA_SCHEMA = {
         # modified in a standard OpenStack installation
         Required('resource_key', default='resource_id'):
             All(str, Length(min=1)),
-        # This is needed to allow filtering on the project for the Openstack
-        # usecase. May be removed in following releases
-        Required('scope_key', default='project_id'): All(str, Length(min=1)),
         Required('aggregation_method', default='max'):
             In(['max', 'mean', 'min']),
     },
@@ -94,9 +91,13 @@ class MonascaCollector(collector.BaseCollector):
         metric_schema = Schema(collector.METRIC_BASE_SCHEMA).extend(
             MONASCA_EXTRA_SCHEMA)
 
+        scope_key = CONF.collect.scope_key
+
         output = dict()
         for metric_name, metric in conf['metrics'].items():
             output[metric_name] = metric_schema(metric)
+            if scope_key not in output[metric_name]['groupby']:
+                output[metric_name]['groupby'].append(scope_key)
         return output
 
     def __init__(self, transformers, **kwargs):
@@ -154,10 +155,10 @@ class MonascaCollector(collector.BaseCollector):
         return tmp._get_metadata(resource_type, transformers, conf)
 
     def _get_dimensions(self, metric_name, project_id, q_filter):
-        extra_args = self.conf[metric_name]['extra_args']
         dimensions = {}
+        scope_key = CONF.collect.scope_key
         if project_id:
-            dimensions[extra_args['scope_key']] = project_id
+            dimensions[scope_key] = project_id
         if q_filter:
             dimensions.update(q_filter)
         return dimensions

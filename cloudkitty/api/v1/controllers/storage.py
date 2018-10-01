@@ -18,6 +18,7 @@
 import datetime
 import decimal
 
+from oslo_config import cfg
 import pecan
 from pecan import rest
 from wsme import types as wtypes
@@ -27,6 +28,11 @@ from cloudkitty.api.v1.datamodels import storage as storage_models
 from cloudkitty.common import policy
 from cloudkitty import storage
 from cloudkitty import utils as ck_utils
+
+
+CONF = cfg.CONF
+
+CONF.import_opt('scope_key', 'cloudkitty.collector', 'collect')
 
 
 class DataFramesController(rest.RestController):
@@ -50,9 +56,10 @@ class DataFramesController(rest.RestController):
 
         policy.authorize(pecan.request.context, 'storage:list_data_frames', {})
 
+        scope_key = CONF.collect.scope_key
         backend = pecan.request.storage_backend
         dataframes = []
-        group_filters = {'project_id': tenant_id} if tenant_id else None
+        group_filters = {scope_key: tenant_id} if tenant_id else None
 
         if begin:
             begin = ck_utils.dt2ts(begin)
@@ -84,7 +91,7 @@ class DataFramesController(rest.RestController):
                         volume=data['vol']['qty'],
                         rating=price)
                     if frame_tenant is None:
-                        frame_tenant = data['scope_id']
+                        frame_tenant = desc[scope_key]
                     resources.append(resource)
                 dataframe = storage_models.DataFrame(
                     begin=ck_utils.iso2dt(frame['period']['begin']),

@@ -277,7 +277,7 @@ class QuoteFakeRPC(BaseFakeRPC):
 
 
 class BaseStorageDataFixture(fixture.GabbiFixture):
-    def create_fake_data(self, begin, end):
+    def create_fake_data(self, begin, end, project_id):
         data = [{
             "period": {
                 "begin": begin,
@@ -287,7 +287,8 @@ class BaseStorageDataFixture(fixture.GabbiFixture):
                     {
                         "desc": {
                             "dummy": True,
-                            "fake_meta": 1.0},
+                            "fake_meta": 1.0,
+                            "project_id": project_id},
                         "vol": {
                             "qty": 1,
                             "unit": "nothing"},
@@ -301,7 +302,8 @@ class BaseStorageDataFixture(fixture.GabbiFixture):
                     {
                         "desc": {
                             "dummy": True,
-                            "fake_meta": 1.0},
+                            "fake_meta": 1.0,
+                            "project_id": project_id},
                         "vol": {
                             "qty": 1,
                             "unit": "nothing"},
@@ -341,13 +343,13 @@ class StorageDataFixture(BaseStorageDataFixture):
         for i in range(data_ts,
                        data_ts + data_duration,
                        3600):
-            data = self.create_fake_data(i, i + 3600)
+            data = self.create_fake_data(i, i + 3600, tenant_list[0])
             self.storage.push(data, tenant_list[0])
         half_duration = int(data_duration / 2)
         for i in range(data_ts,
                        data_ts + half_duration,
                        3600):
-            data = self.create_fake_data(i, i + 3600)
+            data = self.create_fake_data(i, i + 3600, tenant_list[1])
             self.storage.push(data, tenant_list[1])
 
 
@@ -357,9 +359,9 @@ class NowStorageDataFixture(BaseStorageDataFixture):
         for i in range(begin,
                        begin + 3600 * 12,
                        3600):
-            data = self.create_fake_data(i, i + 3600)
-            self.storage.push(data,
-                              '3d9a1b33-482f-42fd-aef9-b575a3da9369')
+            project_id = '3d9a1b33-482f-42fd-aef9-b575a3da9369'
+            data = self.create_fake_data(i, i + 3600, project_id)
+            self.storage.push(data, project_id)
 
 
 class CORSConfigFixture(fixture.GabbiFixture):

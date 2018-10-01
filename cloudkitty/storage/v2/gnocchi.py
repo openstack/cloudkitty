@@ -92,7 +92,7 @@ class GnocchiResource(object):
     It provides utils for resource_type/resource creation and identifying.
     """
 
-    def __init__(self, name, metric, conn, scope_id):
+    def __init__(self, name, metric, conn):
         """Resource_type name, metric, gnocchiclient"""
 
         self.name = name
@@ -100,7 +100,6 @@ class GnocchiResource(object):
         self.unit = metric['vol']['unit']
         self.groupby = {
             k: v if v else '' for k, v in metric['groupby'].items()}
-        self.groupby['ck_scope_id'] = scope_id
         self.metadata = {
             k: v if v else '' for k, v in metric['metadata'].items()}
         self._trans_groupby = {
@@ -369,8 +368,8 @@ class GnocchiStorage(BaseStorage):
     def init(self):
         self._check_archive_policy()
 
-    def _check_resource(self, metric_name, metric, scope_id):
-        resource = GnocchiResource(metric_name, metric, self._conn, scope_id)
+    def _check_resource(self, metric_name, metric):
+        resource = GnocchiResource(metric_name, metric, self._conn)
         if resource in self._cacher:
             return self._cacher.get(resource)
         resource.create()
@@ -389,7 +388,9 @@ class GnocchiStorage(BaseStorage):
                 time.sleep(1)
                 self._conn.metric.batch_metrics_measures(measures)
 
-    def push(self, dataframes, scope_id):
+    # Do not use scope_id, as it is deprecated and will be
+    # removed together with the v1 storage
+    def push(self, dataframes, scope_id=None):
         if not isinstance(dataframes, list):
             dataframes = [dataframes]
         measures = {}
@@ -398,8 +399,7 @@ class GnocchiStorage(BaseStorage):
             timestamp = dataframe['period']['begin']
             for metric_name, metrics in dataframe['usage'].items():
                 for metric in metrics:
-                    resource = self._check_resource(
-                        metric_name, metric, scope_id)
+                    resource = self._check_resource(metric_name, metric)
                     if resource.needs_update:
                         resource.update(metric)
                     if not resource.qty or not resource.cost:
@@ -465,8 +465,7 @@ class GnocchiStorage(BaseStorage):
     def _get_resource_frame(self,
                             cost_measure,
                             qty_measure,
-                            resource,
-                            scope_id):
+                            resource):
         # Getting price
         price = decimal.Decimal(cost_measure[2])
         price_dict = {'price': float(price)}
@@ -491,11 +490,9 @@ class GnocchiStorage(BaseStorage):
             'metadata': metadata,
             'vol': vol_dict,
             'rating': price_dict,
-            'scope_id': scope_id,
         }
 
     def _to_cloudkitty(self,
-                       scope_id,
                        res_type,
                        resource,
                        cost_measure,
@@ -512,8 +509,7 @@ class GnocchiStorage(BaseStorage):
 
         return {
             'usage': {res_type: [
-                self._get_resource_frame(
-                    cost_measure, qty_measure, resource, scope_id)]
+                self._get_resource_frame(cost_measure, qty_measure, resource)],
             },
             'period': period_dict,
         }
@@ -559,14 +555,12 @@ class GnocchiStorage(BaseStorage):
 
             # Raw metrics do not contain all required attributes
             resource = resource_info[resource_id]
-            scope_id = resource[GROUPBY_NAME_ROOT + 'ck_scope_id']
 
             dataframe = dataframes.get(measure['cost'][0])
             ck_resource_type_name = resource_type.replace(
                 RESOURCE_TYPE_NAME_ROOT, '')
             if dataframe is None:
                 dataframes[measure['cost'][0]] = self._to_cloudkitty(
-                    scope_id,
                     ck_resource_type_name,
                     resource,
                     measure['cost'],
@@ -574,11 +568,11 @@ class GnocchiStorage(BaseStorage):
             elif dataframe['usage'].get(ck_resource_type_name) is None:
                 dataframe['usage'][ck_resource_type_name] = [
                     self._get_resource_frame(
-                        measure['cost'], measure['qty'], resource, scope_id)]
+                        measure['cost'], measure['qty'], resource)]
             else:
                 dataframe['usage'][ck_resource_type_name].append(
                     self._get_resource_frame(
-                        measure['cost'], measure['qty'], resource, scope_id))
+                        measure['cost'], measure['qty'], resource))
         return self._dataframes_to_list(dataframes)
 
     @staticmethod

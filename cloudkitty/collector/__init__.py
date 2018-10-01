@@ -47,6 +47,10 @@ collect_opts = [
     cfg.StrOpt('metrics_conf',
                default='/etc/cloudkitty/metrics.yml',
                help='Metrology configuration file.'),
+    cfg.StrOpt('scope_key',
+               default='project_id',
+               help='Key defining a scope. project_id or domain_id for '
+               'OpenStack, but can be anything.'),
 ]
 
 CONF = cfg.CONF

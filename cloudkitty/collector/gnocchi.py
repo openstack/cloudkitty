@@ -78,10 +78,6 @@ GNOCCHI_EXTRA_SCHEMA = {
         # Due to Gnocchi model, metric are grouped by resource.
         # This parameter permits to adapt the key of the resource identifier
         Required('resource_key', default='id'): All(str, Length(min=1)),
-        # This is needed to allow filtering on the project for the Openstack
-        # usecase.
-        # NOTE(MCO): maybe be removed in following releases
-        Required('scope_key', default='project_id'): All(str, Length(min=1)),
         Required('aggregation_method', default='max'):
             In(['max', 'mean', 'min']),
     },
@@ -130,12 +126,16 @@ class GnocchiCollector(collector.BaseCollector):
         metric_schema = Schema(collector.METRIC_BASE_SCHEMA).extend(
             GNOCCHI_EXTRA_SCHEMA)
 
+        scope_key = CONF.collect.scope_key
+
         output = dict()
         for metric_name, metric in conf['metrics'].items():
             output[metric_name] = metric_schema(metric)
             output[metric_name]['groupby'].append(
                 output[metric_name]['extra_args']['resource_key']
             )
+            if scope_key not in output[metric_name]['groupby']:
+                output[metric_name]['groupby'].append(scope_key)
         return output
 
     @classmethod
@@ -220,9 +220,10 @@ class GnocchiCollector(collector.BaseCollector):
         query_parameters = self._generate_time_filter(start, end)
 
         resource_type = extra_args['resource_type']
+        scope_key = CONF.collect.scope_key
 
         if project_id:
-            kwargs = {extra_args['scope_key']: project_id}
+            kwargs = {scope_key: project_id}
             query_parameters.append(self.gen_filter(**kwargs))
         if q_filter:
             query_parameters.append(q_filter)
@@ -261,13 +262,15 @@ class GnocchiCollector(collector.BaseCollector):
 
         # get ressource type
         resource_type = extra_args['resource_type']
+        scope_key = CONF.collect.scope_key
 
         # build search query using ressource type and project_id if provided
         query_parameters = list()
         query_parameters.append(
             self.gen_filter(cop="=", type=resource_type))
+
         if project_id:
-            kwargs = {extra_args['scope_key']: project_id}
+            kwargs = {scope_key: project_id}
             query_parameters.append(self.gen_filter(**kwargs))
         if q_filter:
             query_parameters.append(q_filter)

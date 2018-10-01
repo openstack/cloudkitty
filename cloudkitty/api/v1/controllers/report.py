@@ -18,6 +18,7 @@
 import datetime
 import decimal
 
+from oslo_config import cfg
 from oslo_log import log as logging
 import pecan
 from pecan import rest
@@ -29,6 +30,10 @@ from cloudkitty.common import policy
 from cloudkitty import utils as ck_utils
 
 LOG = logging.getLogger(__name__)
+
+CONF = cfg.CONF
+
+CONF.import_opt('scope_key', 'cloudkitty.collector', 'collect')
 
 
 class InvalidFilter(Exception):
@@ -94,8 +99,9 @@ class ReportController(rest.RestController):
         # FIXME(sheeprine): We should filter on user id.
         # Use keystone token information by default but make it overridable and
         # enforce it by policy engine
-        groupby = ['project_id']
-        group_filters = {'project_id': tenant_id} if tenant_id else None
+        scope_key = CONF.collect.scope_key
+        groupby = [scope_key]
+        group_filters = {scope_key: tenant_id} if tenant_id else None
         total_resources = storage.total(
             groupby=groupby,
             begin=begin, end=end,
@@ -133,12 +139,13 @@ class ReportController(rest.RestController):
                          {"tenant_id": tenant_id})
         storage = pecan.request.storage_backend
 
+        scope_key = CONF.collect.scope_key
         storage_groupby = []
         if groupby is not None and 'tenant_id' in groupby:
-            storage_groupby.append('project_id')
+            storage_groupby.append(scope_key)
         if groupby is not None and 'res_type' in groupby:
             storage_groupby.append('type')
-        group_filters = {'project_id': tenant_id} if tenant_id else None
+        group_filters = {scope_key: tenant_id} if tenant_id else None
         results = storage.total(
             groupby=storage_groupby,
             begin=begin, end=end,
@@ -149,7 +156,7 @@ class ReportController(rest.RestController):
         for res in results:
             kwargs = {
                 'res_type': res.get('type') or res.get('res_type'),
-                'tenant_id': res.get('project_id') or res.get('tenant_id'),
+                'tenant_id': res.get(scope_key) or res.get('tenant_id'),
                 'begin': res['begin'],
                 'end': res['end'],
                 'rate': res['rate'],
