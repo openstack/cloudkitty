@@ -43,6 +43,8 @@ _opts = [
         cloudkitty.collector.gnocchi.collector_gnocchi_opts))),
     ('collector_monasca', list(itertools.chain(
         cloudkitty.collector.monasca.collector_monasca_opts))),
+    ('fetcher', list(itertools.chain(
+        cloudkitty.fetcher.fetcher_opts))),
     ('fetcher_gnocchi', list(itertools.chain(
         cloudkitty.fetcher.gnocchi.gfetcher_opts,
         cloudkitty.fetcher.gnocchi.fetcher_gnocchi_opts))),

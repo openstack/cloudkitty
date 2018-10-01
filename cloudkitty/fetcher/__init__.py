@@ -22,13 +22,13 @@ from oslo_config import cfg
 
 FETCHER_OPTS = 'fetcher'
 DEPRECATED_FETCHER_OPTS = 'tenant_fetcher'
-fetchers_opts = [
+fetcher_opts = [
     cfg.StrOpt('backend',
                default='keystone',
-               help='Driver used to fetch tenant list.',
-               deprecated_group=DEPRECATED_FETCHER_OPTS)
+               help='Driver used to fetch the list of scopes to rate.',
+               deprecated_group=DEPRECATED_FETCHER_OPTS),
 ]
-cfg.CONF.register_opts(fetchers_opts, 'fetcher')
+cfg.CONF.register_opts(fetcher_opts, 'fetcher')
 
 
 @six.add_metaclass(abc.ABCMeta)
