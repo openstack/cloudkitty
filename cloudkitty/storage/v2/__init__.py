@@ -118,7 +118,7 @@ class BaseStorage(object):
         :type limit: int
         :param paginate: Defaults to True. If False, all found results
                          will be returned.
-        :type limit: int
+        :type paginate: bool
         :rtype: dict
        """
 
@@ -126,7 +126,8 @@ class BaseStorage(object):
     def total(self, groupby=None,
               begin=None, end=None,
               metric_types=None,
-              filters=None, group_filters=None):
+              filters=None, group_filters=None,
+              offset=0, limit=1000, paginate=True):
         """Returns a grouped total for given groupby.
 
         :param groupby: Attributes on which to group by. These attributes must
@@ -144,9 +145,23 @@ class BaseStorage(object):
         :type group_filters: dict
         :param metric_types: Metric type to filter on.
         :type metric_types: str or list
-        :rtype: list of dicts
+        :param offset: Offset for pagination
+        :type offset: int
+        :param limit: Maximum amount of elements to return
+        :type limit: int
+        :param paginate: Defaults to True. If False, all found results
+                         will be returned.
+        :type paginate: bool
+        :rtype: dict
 
-        returns a list of dicts with the following format::
+        Returns a dict with the following format::
+
+            {
+               'total': int, # total amount of results found
+               'results': list of results,
+            }
+
+        Each result has the following format::
 
             {
                 'begin': XXX,

@@ -701,7 +701,8 @@ class GnocchiStorage(BaseStorage):
     def total(self, groupby=None,
               begin=None, end=None,
               metric_types=None,
-              filters=None, group_filters=None):
+              filters=None, group_filters=None,
+              offset=0, limit=1000, paginate=True):
         begin, end = self._check_begin_end(begin, end)
 
         if groupby is None:
@@ -726,6 +727,15 @@ class GnocchiStorage(BaseStorage):
                 if len(resource['measures']['measures']['aggregated']):
                     rated_resources.append(resource)
 
+        result = {'total': len(rated_resources)}
+        if paginate:
+            rated_resources = rated_resources[offset:limit]
+        if len(rated_resources) < 1:
+            return {
+                'total': 0,
+                'results': [],
+            }
+
         # NOTE(lukapeschke): We undo what has been done previously (grouping
         # per type). This is not performant. Should be fixed as soon as
         # previous note is supported in gnocchi
@@ -749,4 +759,5 @@ class GnocchiStorage(BaseStorage):
                 output_elem['type'] = rated_resource['group'].get(
                     'type', '').replace(RESOURCE_TYPE_NAME_ROOT, '') or ''
             output.append(output_elem)
-        return output
+        result['results'] = output
+        return result

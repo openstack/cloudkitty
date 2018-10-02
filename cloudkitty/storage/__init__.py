@@ -97,7 +97,8 @@ class V1StorageAdapter(storage_v2.BaseStorage):
     def total(self, groupby=None,
               begin=None, end=None,
               metric_types=None,
-              filters=None, group_filters=None):
+              filters=None, group_filters=None,
+              offset=0, limit=100, paginate=True):
         tenant_id = group_filters.get('project_id') if group_filters else None
 
         storage_gby = []
@@ -124,7 +125,10 @@ class V1StorageAdapter(storage_v2.BaseStorage):
                 t['type'] = t.get('res_type')
             else:
                 t['type'] = None
-        return total
+        return {
+            'total': len(total),
+            'results': total,
+        }
 
     def get_tenants(self, begin, end):
         tenants = self.storage.get_tenants(begin, end)

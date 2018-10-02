@@ -143,7 +143,7 @@ class StorageTotalTest(StorageTest):
         self.insert_data()
         total = self.storage.total(
             begin=begin,
-            end=end)
+            end=end)['results']
         self.assertEqual(1, len(total))
         self.assertEqual(total[0]["rate"], 0)
         self.assertEqual(begin, total[0]["begin"])
@@ -155,7 +155,7 @@ class StorageTotalTest(StorageTest):
         self.insert_data()
         total = self.storage.total(
             begin=begin,
-            end=end)
+            end=end)['results']
         # FIXME(sheeprine): floating point error (transition to decimal)
         self.assertEqual(1, len(total))
         self.assertEqual(1.9473999999999998, total[0]["rate"])
@@ -168,7 +168,7 @@ class StorageTotalTest(StorageTest):
         self.insert_data()
         total = self.storage.total(
             begin=begin,
-            end=end)
+            end=end)['results']
         self.assertEqual(1, len(total))
         self.assertEqual(1.1074, total[0]["rate"])
         self.assertEqual(begin, total[0]["begin"])
@@ -182,7 +182,7 @@ class StorageTotalTest(StorageTest):
         total = self.storage.total(
             begin=begin,
             end=end,
-            group_filters=group_filters)
+            group_filters=group_filters)['results']
         self.assertEqual(1, len(total))
         self.assertEqual(0.5537, total[0]["rate"])
         self.assertEqual(self._tenant_id, total[0]["tenant_id"])
@@ -196,7 +196,7 @@ class StorageTotalTest(StorageTest):
         total = self.storage.total(
             begin=begin,
             end=end,
-            metric_types='instance')
+            metric_types='instance')['results']
         self.assertEqual(1, len(total))
         self.assertEqual(0.84, total[0]["rate"])
         self.assertEqual('instance', total[0]["res_type"])
@@ -210,7 +210,7 @@ class StorageTotalTest(StorageTest):
         total = self.storage.total(
             begin=begin,
             end=end,
-            groupby=['project_id'])
+            groupby=['project_id'])['results']
         self.assertEqual(2, len(total))
         self.assertEqual(0.9737, total[0]["rate"])
         self.assertEqual(self._other_tenant_id, total[0]["tenant_id"])
@@ -228,7 +228,7 @@ class StorageTotalTest(StorageTest):
         total = self.storage.total(
             begin=begin,
             end=end,
-            groupby=['type'])
+            groupby=['type'])['results']
         self.assertEqual(2, len(total))
         self.assertEqual(0.2674, total[0]["rate"])
         self.assertEqual('image.size', total[0]["res_type"])
@@ -246,7 +246,7 @@ class StorageTotalTest(StorageTest):
         total = self.storage.total(
             begin=begin,
             end=end,
-            groupby=['project_id', 'type'])
+            groupby=['project_id', 'type'])['results']
         self.assertEqual(4, len(total))
         self.assertEqual(0.1337, total[0]["rate"])
         self.assertEqual(self._other_tenant_id, total[0]["tenant_id"])

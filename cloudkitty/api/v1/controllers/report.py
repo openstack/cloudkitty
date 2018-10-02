@@ -102,16 +102,15 @@ class ReportController(rest.RestController):
         scope_key = CONF.collect.scope_key
         groupby = [scope_key]
         group_filters = {scope_key: tenant_id} if tenant_id else None
-        total_resources = storage.total(
+        result = storage.total(
             groupby=groupby,
             begin=begin, end=end,
             metric_types=service,
             group_filters=group_filters)
 
-        # TODO(Aaron): `get_total` return a list of dict,
-        # Get value of rate from index[0]
-        total = sum(total['rate'] for total in total_resources)
-        return total if total else decimal.Decimal('0')
+        if result['total'] < 1:
+            return decimal.Decimal('0')
+        return sum(total['rate'] for total in result['results'])
 
     @wsme_pecan.wsexpose(report_models.SummaryCollectionModel,
                          datetime.datetime,
@@ -146,14 +145,14 @@ class ReportController(rest.RestController):
         if groupby is not None and 'res_type' in groupby:
             storage_groupby.append('type')
         group_filters = {scope_key: tenant_id} if tenant_id else None
-        results = storage.total(
+        result = storage.total(
             groupby=storage_groupby,
             begin=begin, end=end,
             metric_types=service,
             group_filters=group_filters)
 
         summarymodels = []
-        for res in results:
+        for res in result['results']:
             kwargs = {
                 'res_type': res.get('type') or res.get('res_type'),
                 'tenant_id': res.get(scope_key) or res.get('tenant_id'),
