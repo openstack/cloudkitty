@@ -89,12 +89,6 @@ class V1StorageAdapter(storage_v2.BaseStorage):
             res_type=metric_types,
             tenant_id=tenant_id)
 
-        for frame in frames:
-            for _, data_list in frame['usage'].items():
-                for data in data_list:
-                    data['scope_id'] = (data.get('project_id')
-                                        or data.get('tenant_id'))
-
         return {
             'total': len(frames),
             'dataframes': frames,

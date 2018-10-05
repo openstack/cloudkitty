@@ -48,8 +48,11 @@ class BaseStorage(object):
     def init(self):
         """Called for storage backend initialization"""
 
+    # NOTE(peschk_l): scope_id must not be used by any v2 storage backend. It
+    # is only present for backward compatibility with the v1 storage. It will
+    # be removed together with the v1 storage
     @abc.abstractmethod
-    def push(self, dataframes, scope_id):
+    def push(self, dataframes, scope_id=None):
         """Pushes dataframes to the storage backend
 
         A dataframe has the following format::
@@ -85,8 +88,6 @@ class BaseStorage(object):
 
         :param dataframes: List of dataframes
         :type dataframes: list
-        :param scope_id: ID of the scope (A project ID for example).
-        :type scope_id: str
         """
 
     @abc.abstractmethod
