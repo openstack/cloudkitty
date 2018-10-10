@@ -24,8 +24,7 @@ import testscenarios
 from cloudkitty import storage
 from cloudkitty import tests
 from cloudkitty.tests import samples
-from cloudkitty.tests import test_utils
-from cloudkitty.tests.utils import is_functional_test
+from cloudkitty.tests import utils as test_utils
 from cloudkitty import utils as ck_utils
 
 
@@ -66,7 +65,7 @@ class StorageTest(tests.TestCase):
         self.storage.push(working_data, self._other_tenant_id)
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
+@testtools.skipIf(test_utils.is_functional_test(), 'Not a functional test')
 class StorageDataframeTest(StorageTest):
 
     storage_scenarios = [
@@ -130,7 +129,7 @@ class StorageDataframeTest(StorageTest):
         self.assertEqual(3, len(data))
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
+@testtools.skipIf(test_utils.is_functional_test(), 'Not a functional test')
 class StorageTotalTest(StorageTest):
 
     storage_scenarios = [
@@ -270,7 +269,7 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[3]["end"])
 
 
-if not is_functional_test():
+if not test_utils.is_functional_test():
     StorageTest.generate_scenarios()
     StorageTotalTest.generate_scenarios()
     StorageDataframeTest.generate_scenarios()

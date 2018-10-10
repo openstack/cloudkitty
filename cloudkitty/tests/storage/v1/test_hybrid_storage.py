@@ -22,8 +22,7 @@ from gnocchiclient import exceptions as gexc
 
 from cloudkitty import storage
 from cloudkitty import tests
-from cloudkitty.tests import test_utils
-from cloudkitty.tests.utils import is_functional_test
+from cloudkitty.tests import utils as test_utils
 
 
 class BaseHybridStorageTest(tests.TestCase):
@@ -56,7 +55,7 @@ class PermissiveDict(object):
         return self.value == other.get(self.key)
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
+@testtools.skipIf(test_utils.is_functional_test(), 'Not a functional test')
 class HybridStorageTestGnocchi(BaseHybridStorageTest):
 
     def setUp(self):

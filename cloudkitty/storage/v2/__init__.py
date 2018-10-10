@@ -166,7 +166,6 @@ class BaseStorage(object):
             {
                 'begin': XXX,
                 'end': XXX,
-                'type': XXX,
                 'rate': XXX,
                 'groupby1': XXX,
                 'groupby2': XXX

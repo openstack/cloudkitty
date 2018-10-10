@@ -44,7 +44,7 @@ from cloudkitty import rating
 from cloudkitty import storage
 from cloudkitty.storage.v1.sqlalchemy import models
 from cloudkitty import tests
-from cloudkitty.tests import test_utils
+from cloudkitty.tests import utils as test_utils
 from cloudkitty.tests.utils import is_functional_test
 from cloudkitty import utils as ck_utils
 

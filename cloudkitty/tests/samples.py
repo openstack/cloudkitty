@@ -22,7 +22,10 @@ from oslo_utils import uuidutils
 
 from cloudkitty import utils as ck_utils
 
+# These have a different format in order to check that both forms are supported
 TENANT = 'f266f30b11f246b589fd266f85eeec39'
+OTHER_TENANT = '8d3ae500-89ea-4142-9c6e-1269db6a0b64'
+
 INITIAL_TIMESTAMP = 1420070400
 FIRST_PERIOD_BEGIN = INITIAL_TIMESTAMP
 FIRST_PERIOD_BEGIN_ISO = ck_utils.ts2iso(FIRST_PERIOD_BEGIN)

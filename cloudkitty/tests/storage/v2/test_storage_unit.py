@@ -1,0 +1,327 @@
+# Copyright 2018 Objectif Libre
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+#
+# @author: Luka Peschke
+#
+import datetime
+
+import mock
+import testscenarios
+
+from cloudkitty import storage
+from cloudkitty.tests import samples
+from cloudkitty.tests.storage.v2 import influx_utils
+from cloudkitty.tests import TestCase
+from cloudkitty.tests import utils as test_utils
+
+
+class StorageUnitTest(TestCase):
+
+    storage_scenarios = [
+        ('influx', dict(storage_backend='influxdb'))]
+
+    @classmethod
+    def generate_scenarios(cls):
+        cls.scenarios = testscenarios.multiply_scenarios(
+            cls.scenarios,
+            cls.storage_scenarios)
+
+    @mock.patch('cloudkitty.storage.v2.influx.InfluxClient',
+                new=influx_utils.FakeInfluxClient)
+    @mock.patch('cloudkitty.utils.load_conf', new=test_utils.load_conf)
+    def setUp(self):
+        super(StorageUnitTest, self).setUp()
+        self._project_id = samples.TENANT
+        self._other_project_id = samples.OTHER_TENANT
+        self.conf.set_override('backend', self.storage_backend, 'storage')
+        self.conf.set_override('version', '2', 'storage')
+        self.storage = storage.get_storage(conf=test_utils.load_conf())
+        self.storage.init()
+        self.data = []
+        self.init_data()
+
+    def init_data(self):
+        project_ids = [self._project_id, self._other_project_id]
+        for i in range(3):
+            start_delta = 3600 * i
+            end_delta = start_delta + 3600
+            start = datetime.datetime(2018, 1, 1) \
+                + datetime.timedelta(seconds=start_delta)
+            end = datetime.datetime(2018, 1, 1) \
+                + datetime.timedelta(seconds=end_delta)
+            data = test_utils.generate_v2_storage_data(
+                project_ids=project_ids,
+                start=start,
+                end=end)
+            self.data.append(data)
+            self.storage.push([data])
+
+    @staticmethod
+    def _expected_total_qty_len(data, project_id=None, types=None):
+        total = 0
+        qty = 0
+        length = 0
+        for data_part in data:
+            for mtype, usage_part in data_part['usage'].items():
+                if types is not None and mtype not in types:
+                    continue
+                for item in usage_part:
+                    if project_id is None or \
+                       project_id == item['groupby']['project_id']:
+                        total += item['rating']['price']
+                        qty += item['vol']['qty']
+                        length += 1
+
+        return round(float(total), 5), round(float(qty), 5), length
+
+    def _compare_get_total_result_with_expected(self,
+                                                expected_qty,
+                                                expected_total,
+                                                expected_total_len,
+                                                total):
+        self.assertEqual(len(total['results']), expected_total_len)
+        self.assertEqual(total['total'], expected_total_len)
+
+        returned_total = round(sum(r['rate'] for r in total['results']), 5)
+        self.assertLessEqual(abs(expected_total - returned_total), 0.00001)
+
+        returned_qty = round(sum(r['qty'] for r in total['results']), 5)
+        self.assertLessEqual(abs(expected_qty - returned_qty), 0.00001)
+
+    def test_get_total_all_scopes_all_periods(self):
+        expected_total, expected_qty, _ = self._expected_total_qty_len(
+            self.data)
+
+        begin = datetime.datetime(2018, 1, 1)
+        end = datetime.datetime(2018, 1, 1, 4)
+
+        self._compare_get_total_result_with_expected(
+            expected_qty,
+            expected_total,
+            1,
+            self.storage.total(begin=begin, end=end))
+
+    def test_get_total_one_scope_all_periods(self):
+        expected_total, expected_qty, _ = self._expected_total_qty_len(
+            self.data, self._project_id)
+
+        begin = datetime.datetime(2018, 1, 1)
+        end = datetime.datetime(2018, 1, 1, 4)
+
+        group_filters = {'project_id': self._project_id}
+        self._compare_get_total_result_with_expected(
+            expected_qty,
+            expected_total,
+            1,
+            self.storage.total(begin=begin,
+                               end=end,
+                               group_filters=group_filters),
+        )
+
+    def test_get_total_all_scopes_one_period(self):
+        expected_total, expected_qty, _ = self._expected_total_qty_len(
+            [self.data[0]])
+
+        begin = datetime.datetime(2018, 1, 1)
+        end = datetime.datetime(2018, 1, 1, 1)
+
+        self._compare_get_total_result_with_expected(
+            expected_qty,
+            expected_total,
+            1,
+            self.storage.total(begin=begin, end=end))
+
+    def test_get_total_one_scope_one_period(self):
+        expected_total, expected_qty, _ = self._expected_total_qty_len(
+            [self.data[0]], self._project_id)
+        expected_total, expected_qty, _ = self._expected_total_qty_len(
+            [self.data[0]], self._project_id)
+
+        begin = datetime.datetime(2018, 1, 1)
+        end = datetime.datetime(2018, 1, 1, 1)
+
+        group_filters = {'project_id': self._project_id}
+        self._compare_get_total_result_with_expected(
+            expected_qty,
+            expected_total,
+            1,
+            self.storage.total(begin=begin,
+                               end=end,
+                               group_filters=group_filters),
+        )
+
+    def test_get_total_all_scopes_all_periods_groupby_project_id(self):
+        expected_total_first, expected_qty_first, _ = \
+            self._expected_total_qty_len(self.data, self._project_id)
+        expected_total_second, expected_qty_second, _ = \
+            self._expected_total_qty_len(self.data, self._other_project_id)
+
+        begin = datetime.datetime(2018, 1, 1)
+        end = datetime.datetime(2018, 1, 1, 4)
+        total = self.storage.total(begin=begin, end=end,
+                                   groupby=['project_id'])
+        self.assertEqual(len(total['results']), 2)
+        self.assertEqual(total['total'], 2)
+
+        for t in total['results']:
+            self.assertIn('project_id', t.keys())
+
+        total['results'].sort(key=lambda x: x['project_id'], reverse=True)
+
+        self.assertLessEqual(
+            abs(round(total['results'][0]['rate'], 5) - expected_total_first),
+            0.00001,
+        )
+        self.assertLessEqual(
+            abs(round(total['results'][1]['rate'], 5) - expected_total_second),
+            0.00001,
+        )
+        self.assertLessEqual(
+            abs(round(total['results'][0]['qty'], 5) - expected_qty_first),
+            0.00001,
+        )
+        self.assertLessEqual(
+            abs(round(total['results'][1]['qty'], 5) - expected_qty_second),
+            0.00001,
+        )
+
+    def test_get_total_all_scopes_one_period_groupby_project_id(self):
+        expected_total_first, expected_qty_first, _ = \
+            self._expected_total_qty_len([self.data[0]], self._project_id)
+        expected_total_second, expected_qty_second, _ = \
+            self._expected_total_qty_len([self.data[0]],
+                                         self._other_project_id)
+
+        begin = datetime.datetime(2018, 1, 1)
+        end = datetime.datetime(2018, 1, 1, 1)
+        total = self.storage.total(begin=begin, end=end,
+                                   groupby=['project_id'])
+        self.assertEqual(len(total), 2)
+
+        for t in total['results']:
+            self.assertIn('project_id', t.keys())
+
+        total['results'].sort(key=lambda x: x['project_id'], reverse=True)
+
+        self.assertLessEqual(
+            abs(round(total['results'][0]['rate'], 5) - expected_total_first),
+            0.00001,
+        )
+        self.assertLessEqual(
+            abs(round(total['results'][1]['rate'], 5) - expected_total_second),
+            0.00001,
+        )
+        self.assertLessEqual(
+            abs(round(total['results'][0]['qty'], 5) - expected_qty_first),
+            0.00001,
+        )
+        self.assertLessEqual(
+            abs(round(total['results'][1]['qty'], 5) - expected_qty_second),
+            0.00001,
+        )
+
+    def test_get_total_all_scopes_all_periods_groupby_type_paginate(self):
+        expected_total, expected_qty, _ = \
+            self._expected_total_qty_len(self.data)
+
+        begin = datetime.datetime(2018, 1, 1)
+        end = datetime.datetime(2018, 1, 1, 4)
+
+        total = {'total': 0, 'results': []}
+        for offset in range(0, 7, 2):
+            chunk = self.storage.total(
+                begin=begin,
+                end=end,
+                offset=offset,
+                limit=offset + 2,
+                groupby=['type'])
+            # there are seven metric types
+            self.assertEqual(chunk['total'], 7)
+            # last chunk, shorter
+            if offset == 6:
+                self.assertEqual(len(chunk['results']), 1)
+            else:
+                self.assertEqual(len(chunk['results']), 2)
+            total['results'] += chunk['results']
+            total['total'] += len(chunk['results'])
+
+        unpaginated_total = self.storage.total(
+            begin=begin, end=end, groupby=['type'])
+        self.assertEqual(total, unpaginated_total)
+
+        self._compare_get_total_result_with_expected(
+            expected_qty,
+            expected_total,
+            7,
+            total)
+
+    def test_retrieve_all_scopes_all_types(self):
+        expected_total, expected_qty, expected_length = \
+            self._expected_total_qty_len(self.data)
+
+        begin = datetime.datetime(2018, 1, 1)
+        end = datetime.datetime(2018, 1, 1, 4)
+
+        frames = self.storage.retrieve(begin=begin, end=end)
+        self.assertEqual(frames['total'], expected_length)
+
+        retrieved_length = 0
+        for data_part in frames['dataframes']:
+            for usage_part in data_part['usage'].values():
+                retrieved_length += len(usage_part)
+
+        self.assertEqual(expected_length, retrieved_length)
+
+    def test_retrieve_all_scopes_one_type(self):
+        expected_total, expected_qty, expected_length = \
+            self._expected_total_qty_len(self.data, types=['image.size'])
+
+        begin = datetime.datetime(2018, 1, 1)
+        end = datetime.datetime(2018, 1, 1, 4)
+
+        frames = self.storage.retrieve(begin=begin, end=end,
+                                       metric_types=['image.size'])
+        self.assertEqual(frames['total'], expected_length)
+
+        retrieved_length = 0
+        for data_part in frames['dataframes']:
+            for usage_part in data_part['usage'].values():
+                retrieved_length += len(usage_part)
+
+        self.assertEqual(expected_length, retrieved_length)
+
+    def test_retrieve_one_scope_two_types_one_period(self):
+        expected_total, expected_qty, expected_length = \
+            self._expected_total_qty_len([self.data[0]], self._project_id,
+                                         types=['image.size', 'instance'])
+
+        begin = datetime.datetime(2018, 1, 1)
+        end = datetime.datetime(2018, 1, 1, 1)
+
+        group_filters = {'project_id': self._project_id}
+        frames = self.storage.retrieve(begin=begin, end=end,
+                                       group_filters=group_filters,
+                                       metric_types=['image.size', 'instance'])
+        self.assertEqual(frames['total'], expected_length)
+
+        retrieved_length = 0
+        for data_part in frames['dataframes']:
+            for usage_part in data_part['usage'].values():
+                retrieved_length += len(usage_part)
+
+        self.assertEqual(expected_length, retrieved_length)
+
+
+if not test_utils.is_functional_test():
+    StorageUnitTest.generate_scenarios()

@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    An InfluxDB v2 storage backend has been added. It will become the default
+    backend of the v2 storage interface.
+
+    The v1 storage interface will be deprecated in a future release. At that
+    point, documentation about how to upgrade the storage backend will be made
+    available, along with some helpers.

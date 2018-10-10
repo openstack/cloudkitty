@@ -26,7 +26,7 @@ from oslo_config import fixture as config_fixture
 from oslo_utils import uuidutils
 
 from cloudkitty import storage
-from cloudkitty.tests import samples
+from cloudkitty.tests import utils as test_utils
 from cloudkitty import utils as ck_utils
 
 
@@ -40,43 +40,6 @@ def _init_conf():
         CONF(args=[], project='cloudkitty',
              validate_default_values=True,
              default_config_files=['/etc/cloudkitty/cloudkitty.conf'])
-
-
-def get_storage_data(min_length=10,
-                     nb_projects=2,
-                     project_ids=None,
-                     start=datetime(2018, 1, 1),
-                     end=datetime(2018, 1, 1, 1)):
-    if isinstance(start, datetime):
-        start = ck_utils.dt2ts(start)
-    if isinstance(end, datetime):
-        end = ck_utils.dt2ts(end)
-
-    if not project_ids:
-        project_ids = [uuidutils.generate_uuid() for i in range(nb_projects)]
-    elif not isinstance(project_ids, list):
-        project_ids = [project_ids]
-
-    usage = {}
-    for metric_name, sample in samples.V2_STORAGE_SAMPLE.items():
-        dataframes = []
-        for project_id in project_ids:
-            data = [copy.deepcopy(sample)
-                    # for i in range(min_length + random.randint(1, 10))]
-                    for i in range(1)]
-            for elem in data:
-                elem['groupby']['id'] = uuidutils.generate_uuid()
-                elem['groupby']['project_id'] = project_id
-            dataframes += data
-        usage[metric_name] = dataframes
-
-    return {
-        'usage': usage,
-        'period': {
-            'begin': start,
-            'end': end
-        }
-    }
 
 
 class BaseFunctionalStorageTest(testtools.TestCase):
@@ -138,8 +101,9 @@ class BaseFunctionalStorageTest(testtools.TestCase):
     @staticmethod
     def gen_data_separate_projects(nb_projects):
         project_ids = [uuidutils.generate_uuid() for i in range(nb_projects)]
-        data = [get_storage_data(
-            project_ids=project_ids[i], nb_projects=1)
+        data = [
+            test_utils.generate_v2_storage_data(
+                project_ids=project_ids[i], nb_projects=1)
             for i in range(nb_projects)]
         return project_ids, data
 

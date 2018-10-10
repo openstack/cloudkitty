@@ -15,8 +15,56 @@
 #
 # @author: Luka Peschke
 #
+import copy
+from datetime import datetime
 from os import getenv
+import random
+
+from oslo_utils import uuidutils
+
+from cloudkitty.tests import samples
+from cloudkitty import utils as ck_utils
 
 
 def is_functional_test():
     return getenv('TEST_FUNCTIONAL', False)
+
+
+def generate_v2_storage_data(min_length=10,
+                             nb_projects=2,
+                             project_ids=None,
+                             start=datetime(2018, 1, 1),
+                             end=datetime(2018, 1, 1, 1)):
+    if isinstance(start, datetime):
+        start = ck_utils.dt2ts(start)
+    if isinstance(end, datetime):
+        end = ck_utils.dt2ts(end)
+
+    if not project_ids:
+        project_ids = [uuidutils.generate_uuid() for i in range(nb_projects)]
+    elif not isinstance(project_ids, list):
+        project_ids = [project_ids]
+
+    usage = {}
+    for metric_name, sample in samples.V2_STORAGE_SAMPLE.items():
+        dataframes = []
+        for project_id in project_ids:
+            data = [copy.deepcopy(sample)
+                    for i in range(min_length + random.randint(1, 10))]
+            for elem in data:
+                elem['groupby']['id'] = uuidutils.generate_uuid()
+                elem['groupby']['project_id'] = project_id
+            dataframes += data
+        usage[metric_name] = dataframes
+
+    return {
+        'usage': usage,
+        'period': {
+            'begin': start,
+            'end': end
+        }
+    }
+
+
+def load_conf(*args):
+    return samples.DEFAULT_METRICS_CONF
