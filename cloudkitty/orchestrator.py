@@ -201,15 +201,20 @@ class Worker(BaseWorker):
                         raise
                     except Exception as e:
                         LOG.warning(
-                            'Error while collecting metric '
+                            '[%(scope_id)s] Error while collecting metric '
                             '%(metric)s: %(error)s',
-                            {'metric': metric, 'error': e})
+                            {
+                                'scope_id': self._tenant_id,
+                                'metric': metric,
+                                'error': e,
+                            },
+                        )
                         raise collector.NoDataCollected('', metric)
                 except collector.NoDataCollected:
                     LOG.info(
-                        'No data collected for metric {} '
+                        '[{}] No data collected for metric {} '
                         'at timestamp {}'.format(
-                            metric, ck_utils.ts2dt(timestamp))
+                            self._tenant_id, metric, ck_utils.ts2dt(timestamp))
                     )
                 else:
                     # Rating
