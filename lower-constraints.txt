@@ -1,0 +1,43 @@
+# requirements
+pbr==2.0.0 # Apache-2.0
+alembic==0.8.0 # MIT
+eventlet==0.18.2 # MIT
+keystonemiddleware==4.0.0 # Apache-2.0
+gnocchiclient==2.5.0 # Apache-2.0
+python-monascaclient==1.9.0 # Apache-2.0
+python-keystoneclient==1.9.0 # Apache-2.0
+keystoneauth1==2.1.0 # Apache-2.0
+iso8601==0.1.9 # MIT
+PasteDeploy==1.5.0 # MIT
+pecan==1.0.0 # BSD
+WSME==0.8 # MIT
+oslo.config==3.7.0 # Apache-2.0
+oslo.context==2.9.0 # Apache-2.0
+oslo.concurrency==3.5.0 # Apache-2.0
+oslo.db==4.1.0 # Apache-2.0
+oslo.i18n==2.1.0 # Apache-2.0
+oslo.log==1.14.0 # Apache-2.0
+oslo.messaging==5.24.2 # Apache-2.0
+oslo.middleware==3.27.0 # Apache-2.0
+oslo.policy==0.5.0 # Apache-2.0
+oslo.utils==3.5.0 # Apache-2.0
+SQLAlchemy==1.0.10 # MIT
+six==1.9.0 # MIT
+stevedore==1.5.0 # Apache-2.0
+tooz==1.28.0 # Apache-2.0
+voluptuous==0.11.1 # BSD-3
+
+# test-requirements
+coverage==3.6 # Apache-2.0
+kombu==4.0.0 # BSD
+ddt==1.0.1 # MIT
+gabbi==1.26.1 # Apache-2.0
+testscenarios==0.4 # Apache-2.0/BSD
+stestr==2.0.0 # Apache-2.0
+mock==1.2 # BSD
+sphinx==1.6.2 # BSD
+openstackdocstheme==1.20.0 # Apache-2.0
+oslotest==1.10.0 # Apache-2.0
+sphinxcontrib-pecanwsme==0.8 # Apache-2.0
+reno==1.8.0  # Apache2
+sphinxcontrib-httpdomain==1.6.0 # Apache-2.0
