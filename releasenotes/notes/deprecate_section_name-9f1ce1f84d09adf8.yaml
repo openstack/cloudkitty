@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The 'gnocchi_collector', 'hybrid_storage', 'keystone_fetcher' and 'source_fetcher' group names have been deprecated and will be removed
+    in the future. Use the 'collector_gnocchi', 'storage_hybrid', 'fetcher_keystone' and 'fetcher_source' group names instead.

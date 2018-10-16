@@ -26,16 +26,23 @@ from cloudkitty.storage.v1.hybrid import models
 from cloudkitty import utils as ck_utils
 
 
+# NOTE(mc): The deprecated section should be removed in a future release.
+DEPRECATED_STORAGE_HYBRID_OPTS = 'hybrid_storage'
+STORAGE_HYBRID_OPTS = 'storage_hybrid'
+
 storage_opts = [
     cfg.StrOpt(
         'backend',
         default='gnocchi',
         help='Name of the storage backend that should be used '
-        'by the hybrid storage')
+        'by the hybrid storage',
+        deprecated_group=DEPRECATED_STORAGE_HYBRID_OPTS,
+    )
 ]
 
 CONF = cfg.CONF
-CONF.register_opts(storage_opts, group='hybrid_storage')
+
+CONF.register_opts(storage_opts, group=STORAGE_HYBRID_OPTS)
 
 HYBRID_BACKENDS_NAMESPACE = 'cloudkitty.storage.hybrid.backends'
 
@@ -53,7 +60,7 @@ class HybridStorage(BaseStorage):
         super(HybridStorage, self).__init__(**kwargs)
         self._hybrid_backend = driver.DriverManager(
             HYBRID_BACKENDS_NAMESPACE,
-            cfg.CONF.hybrid_storage.backend,
+            cfg.CONF.storage_hybrid.backend,
             invoke_on_load=True).driver
         self._sql_session = {}
 

@@ -25,21 +25,42 @@ from oslo_config import cfg
 from cloudkitty import fetcher
 
 
-KEYSTONE_FETCHER_OPTS = 'keystone_fetcher'
-keystone_common_opts = ks_loading.get_auth_common_conf_options()
-keystone_fetcher_opts = [
-    cfg.StrOpt('keystone_version',
-               default='2',
-               help='Keystone version to use.'), ]
+# NOTE(mc): The deprecated section should be removed in a future release.
+FETCHER_KEYSTONE_OPTS = 'fetcher_keystone'
+DEPRECATED_FETCHER_KEYSTONE_OPTS = 'keystone_fetcher'
 
-cfg.CONF.register_opts(keystone_common_opts, KEYSTONE_FETCHER_OPTS)
-cfg.CONF.register_opts(keystone_fetcher_opts, KEYSTONE_FETCHER_OPTS)
-ks_loading.register_session_conf_options(
-    cfg.CONF,
-    KEYSTONE_FETCHER_OPTS)
-ks_loading.register_auth_conf_options(
-    cfg.CONF,
-    KEYSTONE_FETCHER_OPTS)
+keystone_opts = ks_loading.get_auth_common_conf_options() + \
+    ks_loading.get_session_conf_options()
+
+keystone_opts = [
+    cfg.Opt(
+        opt.name,
+        type=opt.type,
+        help=opt.help,
+        secret=opt.secret,
+        required=opt.required,
+        deprecated_group=DEPRECATED_FETCHER_KEYSTONE_OPTS,
+    ) for opt in keystone_opts
+]
+
+fetcher_keystone_opts = [
+    cfg.StrOpt(
+        'keystone_version',
+        default='2',
+        help='Keystone version to use.',
+        deprecated_group=DEPRECATED_FETCHER_KEYSTONE_OPTS,
+    ),
+]
+
+cfg.CONF.register_opts(keystone_opts, FETCHER_KEYSTONE_OPTS)
+if cfg.CONF[FETCHER_KEYSTONE_OPTS].auth_section:
+    cfg.CONF.register_opts(
+        keystone_opts,
+        cfg.CONF[FETCHER_KEYSTONE_OPTS].auth_section,
+    )
+
+cfg.CONF.register_opts(fetcher_keystone_opts, FETCHER_KEYSTONE_OPTS)
+
 CONF = cfg.CONF
 
 
@@ -51,19 +72,19 @@ class KeystoneFetcher(fetcher.BaseFetcher):
     def __init__(self):
         self.auth = ks_loading.load_auth_from_conf_options(
             CONF,
-            KEYSTONE_FETCHER_OPTS)
+            FETCHER_KEYSTONE_OPTS)
         self.session = ks_loading.load_session_from_conf_options(
             CONF,
-            KEYSTONE_FETCHER_OPTS,
+            FETCHER_KEYSTONE_OPTS,
             auth=self.auth)
         self.admin_ks = kclient.Client(
-            version=CONF.keystone_fetcher.keystone_version,
+            version=CONF.fetcher_keystone.keystone_version,
             session=self.session,
             auth_url=self.auth.auth_url)
 
     def get_tenants(self):
         keystone_version = discover.normalize_version_number(
-            CONF.keystone_fetcher.keystone_version)
+            CONF.fetcher_keystone.keystone_version)
         auth_dispatch = {(3,): ('project', 'projects', 'list'),
                          (2,): ('tenant', 'tenants', 'roles_for_user')}
         for auth_version, auth_version_mapping in auth_dispatch.items():
