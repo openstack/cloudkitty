@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    A new ``cloudkitty-status upgrade check`` command has been added. It can be
+    used to validate a deployment before upgrading it from release N-1 to N.
