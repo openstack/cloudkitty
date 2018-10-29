@@ -202,14 +202,19 @@ class Worker(BaseWorker):
                     except Exception as e:
                         LOG.warning(
                             '[%(scope_id)s] Error while collecting metric '
-                            '%(metric)s: %(error)s',
+                            '%(metric)s: %(error)s. Retrying on next '
+                            'collection cycle.',
                             {
                                 'scope_id': self._tenant_id,
                                 'metric': metric,
                                 'error': e,
                             },
                         )
-                        raise collector.NoDataCollected('', metric)
+                        # FIXME(peschk_l): here we just exit, and the
+                        # collection will be retried during the next collect
+                        # cycle. In the future, we should implement a retrying
+                        # system in workers
+                        return
                 except collector.NoDataCollected:
                     LOG.info(
                         '[{}] No data collected for metric {} '
