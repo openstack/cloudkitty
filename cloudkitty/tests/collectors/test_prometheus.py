@@ -168,3 +168,16 @@ class PrometheusClientTest(tests.TestCase):
         }
         actual = self.client.build_query(**params)
         self.assertEqual(expected, actual)
+
+    def test_build_query_raises_PrometheusConfigError(self):
+        class InvalidPeriod(object):
+            def __str__(self):
+                raise ValueError
+
+        period = InvalidPeriod()
+
+        self.assertRaises(
+            prometheus.PrometheusConfigError,
+            self.client.build_query,
+            None, '$period', 0, 0, period, 'broken_metric',
+        )

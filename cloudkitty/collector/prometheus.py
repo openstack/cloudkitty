@@ -28,6 +28,7 @@ from voluptuous import Required
 from voluptuous import Schema
 
 from cloudkitty import collector
+from cloudkitty.collector import exceptions as collect_exceptions
 from cloudkitty import utils as ck_utils
 
 
@@ -52,6 +53,10 @@ PROMETHEUS_EXTRA_SCHEMA = {
 }
 
 
+class PrometheusConfigError(collect_exceptions.CollectError):
+    pass
+
+
 class PrometheusClient(object):
     @classmethod
     def build_query(cls, source, query, start, end, period, metric_name):
@@ -65,10 +70,8 @@ class PrometheusClient(object):
                     query, {'period': str(period) + 's'},
                 )
             except (KeyError, ValueError):
-                raise collector.NoDataCollected(
-                    collector.collector_name,
-                    metric_name
-                )
+                raise PrometheusConfigError(
+                    'Invalid prometheus query: {}'.format(query))
 
         # Due to the design of Cloudkitty, only instant queries are supported.
         # In that case 'time' equals 'end' and
@@ -151,9 +154,9 @@ class PrometheusCollector(collector.BaseCollector):
         )
 
         # If the query returns an empty dataset,
-        # raise a NoDataCollected exception.
+        # return an empty list
         if not res['data']['result']:
-            raise collector.NoDataCollected(self.collector_name, metric_name)
+            return []
 
         formatted_resources = []
 

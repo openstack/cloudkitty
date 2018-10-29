@@ -245,11 +245,10 @@ class BaseCollector(object):
         )
 
         name = self.conf[metric_name].get('alt_name', metric_name)
-        if data:
-            data = self.t_cloudkitty.format_service(name, data)
         if not data:
             raise NoDataCollected(self.collector_name, name)
-        return data
+
+        return self.t_cloudkitty.format_service(name, data)
 
 
 def validate_conf(conf):
