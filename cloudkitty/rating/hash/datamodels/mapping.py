@@ -56,10 +56,8 @@ class Mapping(wtypes.Base):
                              mandatory=False)
     """UUID of the hashmap group."""
 
-    tenant_id = wtypes.wsattr(ck_types.UuidType(),
-                              mandatory=False,
-                              default=None)
-    """UUID of the hashmap tenant."""
+    tenant_id = wtypes.wsattr(wtypes.text, mandatory=False, default=None)
+    """ID of the hashmap tenant."""
 
     @classmethod
     def sample(cls):

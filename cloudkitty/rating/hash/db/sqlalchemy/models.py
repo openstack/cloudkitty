@@ -259,7 +259,7 @@ class HashMapMapping(Base, HashMapBase):
             ondelete='SET NULL'),
         nullable=True)
     tenant_id = sqlalchemy.Column(
-        sqlalchemy.String(36),
+        sqlalchemy.String(255),
         nullable=True)
 
     def __repr__(self):
@@ -338,7 +338,7 @@ class HashMapThreshold(Base, HashMapBase):
             ondelete='SET NULL'),
         nullable=True)
     tenant_id = sqlalchemy.Column(
-        sqlalchemy.String(36),
+        sqlalchemy.String(255),
         nullable=True)
 
     def __repr__(self):
