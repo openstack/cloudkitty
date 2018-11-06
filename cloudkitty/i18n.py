@@ -18,6 +18,5 @@
 import oslo_i18n as i18n  # noqa
 
 _translators = i18n.TranslatorFactory(domain='cloudkitty')
-i18n.enable_lazy()
 
 _ = _translators.primary
