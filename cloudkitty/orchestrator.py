@@ -253,7 +253,7 @@ class Orchestrator(object):
         self.coord = coordination.get_coordinator(
             CONF.orchestrator.coordination_url,
             uuidutils.generate_uuid().encode('ascii'))
-        self.coord.start()
+        self.coord.start(start_heart=True)
 
     def _lock(self, tenant_id):
         lock_name = b"cloudkitty-" + str(tenant_id).encode('ascii')
@@ -303,7 +303,6 @@ class Orchestrator(object):
 
                     lock.release()
 
-                self.coord.heartbeat()
                 # NOTE(sheeprine): Slow down looping if all tenants are
                 # being processed
                 eventlet.sleep(1)
