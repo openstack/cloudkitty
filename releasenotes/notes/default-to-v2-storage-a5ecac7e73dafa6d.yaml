@@ -1,0 +1,11 @@
+---
+upgrade:
+  - |
+    CloudKitty's storage interface defaults to v2 from now on. v1 will be
+    deprecated in a future release. Documentation about how to upgrade the
+    storage backend along with some tools will be available at that point. New
+    deployments should use the v2 storage interface.
+
+    The default v2 backend is ``influxdb``. In order to keep using
+    ``sqlalchemy``, specify "version = 1" and "backend = sqlalchemy" in the
+    ``[storage]`` section of the configuration.

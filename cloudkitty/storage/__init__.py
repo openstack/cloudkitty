@@ -25,11 +25,11 @@ LOG = logging.getLogger(__name__)
 
 storage_opts = [
     cfg.StrOpt('backend',
-               default='sqlalchemy',
+               default='influxdb',
                help='Name of the storage backend driver.'),
     cfg.IntOpt('version',
                min=1, max=2,
-               default=1,
+               default=2,
                help='Storage version to use.'),
 ]
 
