@@ -265,7 +265,7 @@ In this example every volume is charged 0.001 per GB but if the size goes past
 (only one level apply at a time).
 
 For project 2d5b39657dc542d4b2a14b685335304e only, you'll get a 3% discount
-instead of 2% when the size goes past 50GB and the same %5 discount it it goes
+instead of 2% when the size goes past 50GB and the same %5 discount it goes
 further.
 
 :20GB: 0.02 per collection period.
