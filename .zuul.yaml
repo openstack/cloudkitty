@@ -1,26 +1,56 @@
 - job:
-    name: cloudkitty-tempest-full
-    run: playbooks/cloudkitty-tempest-full/run.yaml
-    post-run: playbooks/cloudkitty-tempest-full/post.yaml
-    timeout: 5400
-    parent: legacy-dsvm-base
+    name: cloudkitty-devstack-install
+    parent: devstack
+    description: |
+      Job testing cloudkitty installation on devstack
     required-projects:
-      - openstack-infra/devstack-gate
-      - openstack/cloudkitty
-      - openstack/cloudkitty-tempest-plugin
-      - openstack/python-cloudkittyclient
+      - name: openstack/cloudkitty
+      - name: openstack/python-cloudkittyclient
+    roles:
+      - zuul: openstack-infra/devstack
+    timeout: 5400
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+    vars:
+      devstack_plugins:
+        cloudkitty: https://git.openstack.org/openstack/cloudkitty
+      devstack_services:
+        ck-api: true
+        ck-proc: true
+        horizon: false
 
 - job:
-    name: cloudkitty-install
-    parent: legacy-dsvm-base
-    run: playbooks/cloudkitty-install/run.yaml
-    post-run: playbooks//cloudkitty-install/post.yaml
-    timeout: 7200
+    name: cloudkitty-tempest-full
+    parent: devstack-tempest
+    description: |
+      Job testing cloudkitty installation on devstack and running tempest tests
     required-projects:
-      - openstack-infra/devstack-gate
-      - openstack/cloudkitty
-      - openstack/cloudkitty-dashboard
-      - openstack/python-cloudkittyclient
+      - name: openstack/cloudkitty
+      - name: openstack/cloudkitty-tempest-plugin
+      - name: openstack/python-cloudkittyclient
+    roles:
+      - zuul: openstack-infra/devstack
+    timeout: 5400
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+    vars:
+      devstack_plugins:
+        cloudkitty: https://git.openstack.org/openstack/cloudkitty
+        cloudkitty-tempest-plugin: https://git.openstack.org/openstack/cloudkitty-tempest-plugin
+      devstack_services:
+        ck-api: true
+        ck-proc: true
+        horizon: false
+        tempest: true
+      tempest_concurrency: 1
+      tempest_test_regex: cloudkitty_tempest_plugin.*
+      tox_envlist: all
+      devstack_localrc:
+        TEMPEST_PLUGINS: /opt/stack/cloudkitty-tempest-plugin
 
 - project:
     templates:
@@ -36,8 +66,8 @@
       jobs:
         - cloudkitty-tempest-full:
             voting: false
-        - cloudkitty-install
+        - cloudkitty-devstack-install
     gate:
       queue: cloudkitty
       jobs:
-        - cloudkitty-install
+        - cloudkitty-devstack-install
