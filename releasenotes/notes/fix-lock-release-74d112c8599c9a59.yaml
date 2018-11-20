@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    cloudkitty-processor crashes which happened when using distributed
+    tooz locks have been fixed.
