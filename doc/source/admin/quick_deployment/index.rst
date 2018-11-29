@@ -1,0 +1,6 @@
+Quick Deployment
+================
+
+.. toctree::
+
+   devstack

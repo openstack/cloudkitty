@@ -10,13 +10,32 @@ Welcome to CloudKitty's documentation!
 CloudKitty is a Rating As A Service project aimed at translating metrics
 to prices.
 
-.. toctree::
-   :maxdepth: 2
+.. list-table::
+   :header-rows: 1
 
-   install/index
-   configuration/index
-   admin/index
-   developer/index
-   devstack
-   arch
-   api
+   * - Documentation type
+     - Table of contents
+
+   * - **End User**
+     - .. toctree::
+          :maxdepth: 2
+
+          user/index
+
+   * - **Admin / Operator**
+     - .. toctree::
+          :maxdepth: 2
+
+          admin/index
+
+   * - **Developer**
+     - .. toctree::
+          :maxdepth: 2
+
+          developer/index
+
+   * - **API Reference**
+     - .. toctree::
+          :maxdepth: 2
+
+          api-reference/index

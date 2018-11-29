@@ -125,7 +125,7 @@ without modifying source code or Cloudkitty configuration file.
 
 The ``/etc/cloudkitty/metrics.yml`` file looks like this:
 
-.. literalinclude:: ../../../etc/cloudkitty/metrics.yml
+.. literalinclude:: ../../../../etc/cloudkitty/metrics.yml
    :language: yaml
 
 Conversion information is included in the yaml file.

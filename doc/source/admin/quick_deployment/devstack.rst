@@ -1,6 +1,5 @@
-#####################
 DevStack installation
-#####################
+=====================
 
 Add the following lines in your ``local.conf`` file to enable CloudKitty with
 gnocchi collector::
