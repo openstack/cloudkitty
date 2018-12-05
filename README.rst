@@ -53,7 +53,7 @@ We are welcoming new contributors, if you've got new ideas, suggestions or want
 to contribute contact us.
 
 You can reach us thought IRC (#cloudkitty @freenode.net), or on the official
-OpenStack mailing list openstack-dev@lists.openstack.org.
+OpenStack mailing list openstack-discuss@lists.openstack.org.
 
 A storyboard_ is available if you need to report bugs.
 
