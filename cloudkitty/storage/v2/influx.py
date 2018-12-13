@@ -57,7 +57,7 @@ influx_storage_opts = [
     ),
     cfg.StrOpt(
         'cacert',
-        'Path of the CA certificate to trust for HTTPS connections',
+        help='Path of the CA certificate to trust for HTTPS connections',
         default=None
     ),
 ]
