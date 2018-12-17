@@ -56,7 +56,7 @@ influx_storage_opts = [
         default=False,
     ),
     cfg.StrOpt(
-        'cacert',
+        'cafile',
         help='Path of the CA certificate to trust for HTTPS connections',
         default=None
     ),
@@ -85,8 +85,8 @@ class InfluxClient(object):
         verify = CONF.storage_influxdb.use_ssl and not \
             CONF.storage_influxdb.insecure
 
-        if verify and CONF.storage_influxdb.cacert:
-            verify = CONF.storage_influxdb.cacert
+        if verify and CONF.storage_influxdb.cafile:
+            verify = CONF.storage_influxdb.cafile
 
         return influxdb.InfluxDBClient(
             username=CONF.storage_influxdb.username,
