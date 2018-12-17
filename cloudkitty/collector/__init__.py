@@ -193,11 +193,26 @@ class BaseCollector(object):
                                                  dependency)
 
     @staticmethod
-    def check_configuration(self, conf):
-        """Check metrics configuration
+    def check_configuration(conf):
+        """Checks and validates metric configuration.
 
+        Collectors requiring extra parameters for metric collection
+        should implement this method, call the method of the parent class,
+        extend the ``extra_args`` key in ``METRIC_BASE_SCHEMA`` and validate
+        the metric configuration against the new schema.
         """
-        return Schema(METRIC_BASE_SCHEMA)(conf)
+        conf = Schema(CONF_BASE_SCHEMA)(conf)
+        metric_schema = Schema(METRIC_BASE_SCHEMA)
+
+        scope_key = CONF.collect.scope_key
+
+        output = {}
+        for metric_name, metric in conf['metrics'].items():
+            output[metric_name] = metric_schema(metric)
+            if scope_key not in output[metric_name]['groupby']:
+                output[metric_name]['groupby'].append(scope_key)
+
+        return output
 
     @staticmethod
     def last_month():
@@ -231,6 +246,15 @@ class BaseCollector(object):
     @abc.abstractmethod
     def fetch_all(self, metric_name, start, end,
                   project_id=None, q_filter=None):
+        """Fetches information about a specific metric for a given period.
+
+        This method must respect the ``groupby`` and ``metadata`` arguments
+        provided in the metric conf at initialization.
+        (Available in ``self.conf['groupby']`` and ``self.conf['metadata']``).
+
+        Returns a list of items formatted with
+        ``CloudKittyFormatTransformer.format_item``.
+        """
         pass
 
     def retrieve(self, metric_name, start, end,

@@ -49,7 +49,7 @@ class PrometheusCollectorTest(tests.TestCase):
         self.collector = prometheus.PrometheusCollector(transformers, **args)
 
     def test_format_data_instant_query(self):
-        expected = ({}, {}, Decimal('7'))
+        expected = ({}, {'project_id': ''}, Decimal('7'))
 
         params = {
             'metric_name': 'http_requests_total',
@@ -62,7 +62,7 @@ class PrometheusCollectorTest(tests.TestCase):
         self.assertEqual(expected, actual)
 
     def test_format_data_instant_query_2(self):
-        expected = ({}, {}, Decimal('42'))
+        expected = ({}, {'project_id': ''}, Decimal('42'))
 
         params = {
             'metric_name': 'http_requests_total',
@@ -78,8 +78,8 @@ class PrometheusCollectorTest(tests.TestCase):
         expected = {
             'http_requests_total': [
                 {
-                    'desc': {},
-                    'groupby': {},
+                    'desc': {'project_id': ''},
+                    'groupby': {'project_id': ''},
                     'metadata': {},
                     'vol': {
                         'qty': Decimal('7'),
@@ -87,15 +87,14 @@ class PrometheusCollectorTest(tests.TestCase):
                     }
                 },
                 {
-                    'desc': {},
-                    'groupby': {},
+                    'desc': {'project_id': ''},
+                    'groupby': {'project_id': ''},
                     'metadata': {},
                     'vol': {
                         'qty': Decimal('42'),
                         'unit': 'instance'
                     }
                 }
-
             ]
         }
 

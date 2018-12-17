@@ -100,15 +100,15 @@ class PrometheusCollector(collector.BaseCollector):
 
     @staticmethod
     def check_configuration(conf):
-        """Check metrics configuration."""
-        conf = Schema(collector.CONF_BASE_SCHEMA)(conf)
+        conf = collector.BaseCollector.check_configuration(conf)
         metric_schema = Schema(collector.METRIC_BASE_SCHEMA).extend(
             PROMETHEUS_EXTRA_SCHEMA,
         )
 
         output = {}
-        for metric_name, metric in conf['metrics'].items():
+        for metric_name, metric in conf.items():
             output[metric_name] = metric_schema(metric)
+
         return output
 
     def _format_data(self, metric_name, project_id, start, end, data):

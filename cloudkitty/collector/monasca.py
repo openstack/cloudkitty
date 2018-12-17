@@ -83,25 +83,16 @@ class MonascaCollector(collector.BaseCollector):
 
     @staticmethod
     def check_configuration(conf):
-        """Check metrics configuration
-
-        """
-        conf = Schema(collector.CONF_BASE_SCHEMA)(conf)
+        conf = collector.BaseCollector.check_configuration(conf)
         metric_schema = Schema(collector.METRIC_BASE_SCHEMA).extend(
             MONASCA_EXTRA_SCHEMA)
 
-        scope_key = CONF.collect.scope_key
+        output = {}
+        for metric_name, metric in conf.items():
+            met = output[metric_name] = metric_schema(metric)
 
-        output = dict()
-        for metric_name, metric in conf['metrics'].items():
-            output[metric_name] = metric_schema(metric)
-            groupby = output[metric_name]['groupby']
-
-            if scope_key not in output[metric_name]['groupby']:
-                groupby.append(scope_key)
-            resource_key = conf[metric_name]['extra_args']['resource_key']
-            if resource_key not in groupby:
-                groupby.append(resource_key)
+            if met['extra_args']['resource_key'] not in met['groupby']:
+                met['groupby'].append(met['extra_args']['resource_key'])
 
         return output
 
