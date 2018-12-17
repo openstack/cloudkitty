@@ -35,7 +35,7 @@ etc/apache2/cloudkitty
 The ``etc/apache2/cloudkitty`` file contains example settings that
 work with a copy of cloudkitty installed via devstack.
 
-.. literalinclude:: ../../../etc/apache2/cloudkitty
+.. literalinclude:: ../../../../etc/apache2/cloudkitty
 
 1. On deb-based systems copy or symlink the file to
    ``/etc/apache2/sites-available``. For rpm-based systems the file will go in
