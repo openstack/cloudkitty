@@ -1,6 +1,5 @@
 fixtures:
   - ConfigFixture
-  - SkipIfFunctional
 
 tests:
   - name: test if / is publicly available

@@ -15,13 +15,10 @@
 #
 # @author: Stéphane Albert
 #
-import testtools
-
 import mock
 
 from cloudkitty.db import api as ck_db_api
 from cloudkitty import tests
-from cloudkitty.tests.utils import is_functional_test
 
 
 class FakeRPCClient(object):
@@ -42,7 +39,6 @@ class FakeRPCClient(object):
         self._queue.append(cast_data)
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class RatingTest(tests.TestCase):
     def setUp(self):
         super(RatingTest, self).setUp()

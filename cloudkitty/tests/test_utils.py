@@ -19,13 +19,11 @@ import datetime
 import decimal
 import fractions
 import itertools
-import testtools
 import unittest
 
 import mock
 from oslo_utils import timeutils
 
-from cloudkitty.tests.utils import is_functional_test
 from cloudkitty import utils as ck_utils
 
 
@@ -33,7 +31,6 @@ def iso2dt(iso_str):
     return timeutils.parse_isotime(iso_str)
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class UtilsTimeCalculationsTest(unittest.TestCase):
     def setUp(self):
         self.date_ts = 1416219015
@@ -144,7 +141,6 @@ class UtilsTimeCalculationsTest(unittest.TestCase):
         self.assertEqual(calc_dt, check_dt)
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class ConvertUnitTest(unittest.TestCase):
     """Class testing the convert_unit and num2decimal function"""
     possible_args = [

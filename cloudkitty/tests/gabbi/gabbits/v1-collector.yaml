@@ -1,6 +1,5 @@
 fixtures:
   - ConfigFixture
-  - SkipIfFunctional
 
 tests:
 

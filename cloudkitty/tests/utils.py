@@ -17,17 +17,12 @@
 #
 import copy
 from datetime import datetime
-from os import getenv
 import random
 
 from oslo_utils import uuidutils
 
 from cloudkitty.tests import samples
 from cloudkitty import utils as ck_utils
-
-
-def is_functional_test():
-    return getenv('TEST_FUNCTIONAL', False)
 
 
 def generate_v2_storage_data(min_length=10,
