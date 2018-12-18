@@ -135,20 +135,17 @@ class GnocchiCollector(collector.BaseCollector):
         """Check metrics configuration
 
         """
-        conf = Schema(collector.CONF_BASE_SCHEMA)(conf)
+        conf = collector.BaseCollector.check_configuration(conf)
         metric_schema = Schema(collector.METRIC_BASE_SCHEMA).extend(
             GNOCCHI_EXTRA_SCHEMA)
 
-        scope_key = CONF.collect.scope_key
+        output = {}
+        for metric_name, metric in conf.items():
+            met = output[metric_name] = metric_schema(metric)
 
-        output = dict()
-        for metric_name, metric in conf['metrics'].items():
-            output[metric_name] = metric_schema(metric)
-            output[metric_name]['groupby'].append(
-                output[metric_name]['extra_args']['resource_key']
-            )
-            if scope_key not in output[metric_name]['groupby']:
-                output[metric_name]['groupby'].append(scope_key)
+            if met['extra_args']['resource_key'] not in met['groupby']:
+                met['groupby'].append(met['extra_args']['resource_key'])
+
         return output
 
     @classmethod
