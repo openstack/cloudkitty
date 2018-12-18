@@ -147,8 +147,8 @@ def get_storage(**kwargs):
 
     version = kwargs.pop('version', None) or cfg.CONF.storage.version
     if int(version) > 1:
-        LOG.warning('V2 Storage is not considered stable and should not be '
-                    'used in production')
+        LOG.warning('V2 Storage is in beta. Its API is considered stable but '
+                    'its implementation may still evolve.')
     storage_namespace = 'cloudkitty.storage.v{}.backends'.format(version)
 
     if version == 1:

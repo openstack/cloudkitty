@@ -83,9 +83,8 @@ The following shows the basic configuration items:
 It is now time to configure the storage backend. Two storage backends are
 available: ``sqlalchemy`` and ``hybrid`` (SQLalchemy being the recommended one).
 
-.. warning:: A v2 backend storage is also available. Whether its implementation
-             nor its API are considered stable yet, and it will evolve during
-             the Stein cycle. It is available for development purposes only.
+.. warning:: A v2 influxdb backend storage is also available. Its API is
+             considered stable but its implementation may still evolve.
 
 .. code-block:: ini
 
