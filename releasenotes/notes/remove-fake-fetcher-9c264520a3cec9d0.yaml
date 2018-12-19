@@ -1,0 +1,4 @@
+---
+deprecations:
+  - |
+    The fake fetcher has been removed from CloudKitty's codebase.
