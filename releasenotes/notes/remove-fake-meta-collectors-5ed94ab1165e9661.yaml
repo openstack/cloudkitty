@@ -1,0 +1,4 @@
+---
+deprecations:
+  - |
+    The fake and meta collectors have been removed from CloudKitty's codebase.
