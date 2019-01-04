@@ -64,7 +64,7 @@ Documentation contents
 
    * - **End User**
      - .. toctree::
-          :maxdepth: 2
+          :maxdepth: 3
 
           user/index
 
