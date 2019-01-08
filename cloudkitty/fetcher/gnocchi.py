@@ -61,7 +61,8 @@ gfetcher_opts = [
     cfg.StrOpt(
         'region_name',
         default='RegionOne',
-        help='Region Name'),
+        help='Region Name',
+    ),
 ]
 
 
@@ -83,6 +84,7 @@ class GnocchiFetcher(fetcher.BaseFetcher):
 
     def __init__(self):
         super(GnocchiFetcher, self).__init__()
+
         adapter_options = {'connect_retries': 3}
         if CONF.fetcher_gnocchi.gnocchi_auth_type == 'keystone':
             auth_plugin = ks_loading.load_auth_from_conf_options(
@@ -97,9 +99,15 @@ class GnocchiFetcher(fetcher.BaseFetcher):
             )
         adapter_options['region_name'] = CONF.fetcher_gnocchi.region_name
 
+        verify = True
+        if CONF.fetcher_gnocchi.cafile:
+            verify = CONF.fetcher_gnocchi.cafile
+        elif CONF.fetcher_gnocchi.insecure:
+            verify = False
+
         self._conn = gclient.Client(
             '1',
-            session_options={'auth': auth_plugin},
+            session_options={'auth': auth_plugin, 'verify': verify},
             adapter_options=adapter_options,
         )
 
