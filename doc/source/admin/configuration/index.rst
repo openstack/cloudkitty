@@ -6,4 +6,5 @@ Configuration Guide
    :glob:
 
    configuration
+   collector
    policy
