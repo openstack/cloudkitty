@@ -98,6 +98,16 @@ GNOCCHI_EXTRA_SCHEMA = {
 }
 
 
+class AssociatedResourceNotFound(Exception):
+    """Exception raised when no resource can be associated with a metric."""
+
+    def __init__(self, resource_key, resource_id):
+        super(AssociatedResourceNotFound, self).__init__(
+            'Resource with {}={} could not be found'.format(
+                resource_key, resource_id),
+        )
+
+
 class GnocchiCollector(collector.BaseCollector):
 
     collector_name = 'gnocchi'
@@ -227,11 +237,17 @@ class GnocchiCollector(collector.BaseCollector):
 
         # Get gnocchi specific conf
         extra_args = self.conf[metric_name]['extra_args']
-        # Build query
-        query_parameters = self._generate_time_filter(start, end)
-
         resource_type = extra_args['resource_type']
         scope_key = CONF.collect.scope_key
+
+        # Build query
+
+        # FIXME(peschk_l): In order not to miss any resource whose metrics may
+        # contain measures after its destruction, we scan resources over three
+        # collect periods.
+        start -= CONF.collect.period
+        end += CONF.collect.period
+        query_parameters = self._generate_time_filter(start, end)
 
         if project_id:
             kwargs = {scope_key: project_id}
@@ -312,8 +328,12 @@ class GnocchiCollector(collector.BaseCollector):
         # metadata as defined in the conf
         metadata = dict()
         if resources_info is not None:
-            resource = resources_info[
-                groupby[metconf['extra_args']['resource_key']]]
+            resource_key = metconf['extra_args']['resource_key']
+            resource_id = groupby[resource_key]
+            try:
+                resource = resources_info[resource_id]
+            except KeyError:
+                raise AssociatedResourceNotFound(resource_key, resource_id)
             for i in metconf['metadata']:
                 metadata[i] = resource.get(i, '')
         qty = data['measures']['measures']['aggregated'][0][2]
@@ -348,8 +368,19 @@ class GnocchiCollector(collector.BaseCollector):
         for d in data:
             # Only if aggregates have been found
             if d['measures']['measures']['aggregated']:
-                metadata, groupby, qty = self._format_data(
-                    met, d, resources_info)
+                try:
+                    metadata, groupby, qty = self._format_data(
+                        met, d, resources_info)
+                except AssociatedResourceNotFound as e:
+                    LOG.warning(
+                        '[{}] An error occured during data collection '
+                        'between {} and {}: {}'.format(
+                            project_id,
+                            ck_utils.ts2dt(start),
+                            ck_utils.ts2dt(end),
+                            e),
+                    )
+                    continue
                 data = self.t_cloudkitty.format_item(
                     groupby,
                     metadata,
