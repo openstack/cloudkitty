@@ -1,0 +1,4 @@
+---
+deprecations:
+  - |
+    The gnocchi transformer has been removed from CloudKitty's codebase.
