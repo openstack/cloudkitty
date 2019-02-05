@@ -1,27 +1,4 @@
 - job:
-    name: cloudkitty-devstack-install
-    parent: devstack
-    description: |
-      Job testing cloudkitty installation on devstack
-    required-projects:
-      - name: openstack/cloudkitty
-      - name: openstack/python-cloudkittyclient
-    roles:
-      - zuul: openstack-infra/devstack
-    timeout: 5400
-    irrelevant-files:
-      - ^.*\.rst$
-      - ^doc/.*$
-      - ^releasenotes/.*$
-    vars:
-      devstack_plugins:
-        cloudkitty: https://git.openstack.org/openstack/cloudkitty
-      devstack_services:
-        ck-api: true
-        ck-proc: true
-        horizon: false
-
-- job:
     name: cloudkitty-tempest-full
     parent: devstack-tempest
     description: |
@@ -64,10 +41,8 @@
       - release-notes-jobs-python3
     check:
       jobs:
-        - cloudkitty-tempest-full:
-            voting: false
-        - cloudkitty-devstack-install
+        - cloudkitty-tempest-full
     gate:
       queue: cloudkitty
       jobs:
-        - cloudkitty-devstack-install
+        - cloudkitty-tempest-full
