@@ -41,6 +41,7 @@ keystone_opts = [
     cfg.Opt(
         o.name,
         type=o.type,
+        help=o.help,
         deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ) for o in keystone_opts
 ]
