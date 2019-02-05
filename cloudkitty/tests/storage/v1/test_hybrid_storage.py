@@ -16,7 +16,6 @@
 # @author: Luka Peschke
 #
 import mock
-import testtools
 
 from gnocchiclient import exceptions as gexc
 
@@ -55,7 +54,6 @@ class PermissiveDict(object):
         return self.value == other.get(self.key)
 
 
-@testtools.skipIf(test_utils.is_functional_test(), 'Not a functional test')
 class HybridStorageTestGnocchi(BaseHybridStorageTest):
 
     def setUp(self):

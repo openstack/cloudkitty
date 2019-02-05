@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import os.path
-import testtools
 
 from oslo_config import cfg
 from oslo_config import fixture as config_fixture
@@ -22,14 +21,12 @@ from oslo_policy import policy as oslo_policy
 
 from cloudkitty.common import policy
 from cloudkitty import tests
-from cloudkitty.tests.utils import is_functional_test
 from cloudkitty import utils
 
 
 CONF = cfg.CONF
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class PolicyFileTestCase(tests.TestCase):
 
     def setUp(self):
@@ -61,7 +58,6 @@ class PolicyFileTestCase(tests.TestCase):
                               self.context, action, self.target)
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class PolicyTestCase(tests.TestCase):
 
     def setUp(self):

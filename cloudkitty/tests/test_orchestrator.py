@@ -15,15 +15,12 @@
 #
 # @author: Stéphane Albert
 #
-import testtools
-
 import mock
 from oslo_messaging import conffixture
 from stevedore import extension
 
 from cloudkitty import orchestrator
 from cloudkitty import tests
-from cloudkitty.tests.utils import is_functional_test
 
 
 class FakeKeystoneClient(object):
@@ -36,7 +33,6 @@ class FakeKeystoneClient(object):
     tenants = FakeTenants()
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class OrchestratorTest(tests.TestCase):
     def setUp(self):
         super(OrchestratorTest, self).setUp()

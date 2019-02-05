@@ -15,7 +15,6 @@
 #
 # @author: Stéphane Albert
 #
-import testtools
 import unittest
 
 import mock
@@ -23,7 +22,6 @@ from oslo_utils import uuidutils
 
 from cloudkitty.fetcher import keystone
 from cloudkitty import tests
-from cloudkitty.tests.utils import is_functional_test
 
 
 class FakeRole(object):
@@ -69,7 +67,6 @@ def Client(**kwargs):
     return FakeKeystoneClient(**kwargs)
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class KeystoneFetcherTest(tests.TestCase):
     def setUp(self):
         super(KeystoneFetcherTest, self).setUp()

@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The gnocchi v2 storage backend has been removed. Users wanting to use the
+    v2 storage interface must use the InfluxDB backend.

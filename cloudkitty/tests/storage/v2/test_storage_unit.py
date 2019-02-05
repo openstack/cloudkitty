@@ -323,5 +323,4 @@ class StorageUnitTest(TestCase):
         self.assertEqual(expected_length, retrieved_length)
 
 
-if not test_utils.is_functional_test():
-    StorageUnitTest.generate_scenarios()
+StorageUnitTest.generate_scenarios()

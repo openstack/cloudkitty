@@ -13,7 +13,6 @@
 #    under the License.
 
 import sys
-import testtools
 import textwrap
 
 import ddt
@@ -22,10 +21,8 @@ import pep8
 
 from cloudkitty.hacking import checks
 from cloudkitty import tests
-from cloudkitty.tests.utils import is_functional_test
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 @ddt.ddt
 class HackingTestCase(tests.TestCase):
     """Hacking test cases

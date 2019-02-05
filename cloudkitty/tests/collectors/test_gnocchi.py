@@ -14,15 +14,11 @@
 #    under the License.
 #
 #
-import testtools
-
 from cloudkitty.collector import gnocchi
 from cloudkitty import tests
 from cloudkitty.tests import samples
-from cloudkitty.tests.utils import is_functional_test
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class GnocchiCollectorTest(tests.TestCase):
     def setUp(self):
         super(GnocchiCollectorTest, self).setUp()

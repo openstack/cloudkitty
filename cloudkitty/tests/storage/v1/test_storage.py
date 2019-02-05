@@ -16,7 +16,6 @@
 # @author: Stéphane Albert
 #
 import copy
-import testtools
 
 import mock
 import testscenarios
@@ -65,7 +64,6 @@ class StorageTest(tests.TestCase):
         self.storage.push(working_data, self._other_tenant_id)
 
 
-@testtools.skipIf(test_utils.is_functional_test(), 'Not a functional test')
 class StorageDataframeTest(StorageTest):
 
     storage_scenarios = [
@@ -129,7 +127,6 @@ class StorageDataframeTest(StorageTest):
         self.assertEqual(3, len(data))
 
 
-@testtools.skipIf(test_utils.is_functional_test(), 'Not a functional test')
 class StorageTotalTest(StorageTest):
 
     storage_scenarios = [
@@ -269,7 +266,6 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[3]["end"])
 
 
-if not test_utils.is_functional_test():
-    StorageTest.generate_scenarios()
-    StorageTotalTest.generate_scenarios()
-    StorageDataframeTest.generate_scenarios()
+StorageTest.generate_scenarios()
+StorageTotalTest.generate_scenarios()
+StorageDataframeTest.generate_scenarios()

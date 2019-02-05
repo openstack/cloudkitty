@@ -1,6 +1,5 @@
 fixtures:
   - HashMapConfigFixture
-  - SkipIfFunctional
 
 tests:
 

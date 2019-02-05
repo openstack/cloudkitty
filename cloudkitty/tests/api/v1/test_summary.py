@@ -14,15 +14,11 @@
 #    under the License.
 #
 """Test SummaryModel objects."""
-import testtools
-
 from oslotest import base
 
 from cloudkitty.api.v1.datamodels import report
-from cloudkitty.tests.utils import is_functional_test
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class TestSummary(base.BaseTestCase):
 
     def setUp(self):

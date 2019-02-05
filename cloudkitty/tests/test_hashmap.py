@@ -17,7 +17,6 @@
 #
 import copy
 import decimal
-import testtools
 
 import mock
 from oslo_utils import uuidutils
@@ -25,7 +24,6 @@ from oslo_utils import uuidutils
 from cloudkitty.rating import hash
 from cloudkitty.rating.hash.db import api
 from cloudkitty import tests
-from cloudkitty.tests.utils import is_functional_test
 
 
 TEST_TS = 1388577600
@@ -84,7 +82,6 @@ CK_RESOURCES_DATA = [{
                     "unit": "instance"}}]}}]
 
 
-@testtools.skipIf(is_functional_test(), 'Not a functional test')
 class HashMapRatingTest(tests.TestCase):
     def setUp(self):
         super(HashMapRatingTest, self).setUp()

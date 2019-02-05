@@ -18,7 +18,6 @@
 import abc
 import decimal
 import os
-from unittest.case import SkipTest
 
 from gabbi import fixture
 import mock
@@ -45,7 +44,6 @@ from cloudkitty import storage
 from cloudkitty.storage.v1.sqlalchemy import models
 from cloudkitty import tests
 from cloudkitty.tests import utils as test_utils
-from cloudkitty.tests.utils import is_functional_test
 from cloudkitty import utils as ck_utils
 
 
@@ -86,10 +84,9 @@ class BaseExtensionFixture(fixture.GabbiFixture):
         self.patch.return_value = fake_mgr
 
     def stop_fixture(self):
-        if not is_functional_test():
-            self.patch.assert_called_with(
-                self.namespace,
-                **self.assert_args)
+        self.patch.assert_called_with(
+            self.namespace,
+            **self.assert_args)
         self.mock.stop()
 
 
@@ -397,13 +394,6 @@ class MetricsConfFixture(fixture.GabbiFixture):
     def stop_fixture(self):
         """Remove the get_metrics_conf() monkeypatch."""
         ck_utils.load_conf = self._original_function
-
-
-class SkipIfFunctional(fixture.GabbiFixture):
-
-    def start_fixture(self):
-        if is_functional_test():
-            raise SkipTest
 
 
 def setup_app():
