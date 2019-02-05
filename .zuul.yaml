@@ -29,6 +29,17 @@
       devstack_localrc:
         TEMPEST_PLUGINS: /opt/stack/cloudkitty-tempest-plugin
 
+- job:
+    name: cloudkitty-tempest-full-python3
+    parent: cloudkitty-tempest-full
+    description: |
+      Job testing cloudkitty installation on devstack with python 3 and running
+    vars:
+      devstack_localrc:
+        DEVSTACK_GATE_USE_PYTHON3: "True"
+        USE_PYTHON3: "True"
+
+
 - project:
     templates:
       - check-requirements
@@ -42,7 +53,9 @@
     check:
       jobs:
         - cloudkitty-tempest-full
+        - cloudkitty-tempest-full-python3
     gate:
       queue: cloudkitty
       jobs:
         - cloudkitty-tempest-full
+        - cloudkitty-tempest-full-python3
