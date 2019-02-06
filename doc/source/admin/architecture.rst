@@ -10,11 +10,6 @@ CloudKitty can be cut in five big parts:
 * Storage
 * Report writer
 
-
-.. Graph is outdated, and needs to be modified. Skipping it.
-    .. graphviz:: graph/arch.dot
-
-
 Module loading and extensions
 =============================
 
@@ -28,16 +23,15 @@ management of its configuration.
 Collectors and storage backends are loaded with stevedore but configured in
 CloudKitty's configuration file.
 
-
 Collector
 =========
 
 **Loaded with stevedore**
 
-The name of the collector to use is specified in the configuration, only one
-collector can be loaded at once.
-This part is responsible of information gathering. It consists of a python
-class that loads data from a backend and return it in a format that CloudKitty
+The name of the collector to use is specified in the configuration. For now,
+only one collector can be loaded at once.
+This part is responsible for information gathering. It consists of a python
+class that loads data from a backend and returns it in a format that CloudKitty
 can handle.
 
 The data format of CloudKitty is the following:
@@ -64,25 +58,10 @@ The data format of CloudKitty is the following:
    }
 
 
-Example code of a basic collector:
+For information about how to write a custom collector, see
+the `developer documentation`_.
 
-.. code-block:: python
-
-    class MyCollector(BaseCollector):
-        def __init__(self, **kwargs):
-            super(MyCollector, self).__init__(**kwargs)
-
-        def get_mydata(self, start, end=None, project_id=None, q_filter=None):
-            # Do stuff
-            return ck_data
-
-
-You'll now be able to add the gathering of mydata in CloudKitty by modifying
-the configuration and specifying the new service in collect/services.
-
-If you need to load multiple collectors, you can use the ``meta`` collector and
-use its API to enable/disable collector loading, and set priority.
-
+.. _developer documentation: ../developer/collector.html
 
 Rating
 ======
@@ -126,7 +105,6 @@ Example of minimal rating module (taken from the Noop module):
                             entry['rating'] = {'price': decimal.Decimal(0)}
             return data
 
-
 Storage
 =======
 
@@ -137,7 +115,6 @@ implements an API on top of the storage to be able to query the data without
 the need of knowing the type of backend used.
 
 You can use the API to create reports on the fly for example.
-
 
 Writer
 ======
