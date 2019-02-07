@@ -15,7 +15,9 @@
 #
 # @author: Luka Peschke
 #
+from oslo_config import cfg
 from oslo_db.sqlalchemy import utils
+from oslo_log import log
 
 from cloudkitty import db
 from cloudkitty.storage_state import migration
@@ -23,21 +25,64 @@ from cloudkitty.storage_state import models
 from cloudkitty import utils as ck_utils
 
 
+LOG = log.getLogger(__name__)
+
+
+CONF = cfg.CONF
+# NOTE(peschk_l): Required for defaults
+CONF.import_opt('backend', 'cloudkitty.fetcher', 'fetcher')
+CONF.import_opt('collector', 'cloudkitty.collector', 'collect')
+CONF.import_opt('scope_key', 'cloudkitty.collector', 'collect')
+
+
 class StateManager(object):
     """Class allowing state management in CloudKitty"""
 
     model = models.IdentifierState
 
-    def _get_db_item(self, session, identifier):
-        q = utils.model_query(self.model, session)
-        return q.filter(self.model.identifier == identifier).first()
+    def _get_db_item(self, session, identifier,
+                     fetcher=None, collector=None, scope_key=None):
+        fetcher = fetcher or CONF.fetcher.backend
+        collector = collector or CONF.collect.collector
+        scope_key = scope_key or CONF.collect.scope_key
 
-    def set_state(self, identifier, state):
+        q = utils.model_query(self.model, session)
+        r = q.filter(self.model.identifier == identifier). \
+            filter(self.model.scope_key == scope_key). \
+            filter(self.model.fetcher == fetcher). \
+            filter(self.model.collector == collector). \
+            first()
+
+        # In case the identifier exists with empty columns, update them
+        if not r:
+            # NOTE(peschk_l): We must use == instead of 'is' because sqlachmey
+            # overloads this operator
+            r = q.filter(self.model.identifier == identifier). \
+                filter(self.model.scope_key == None). \
+                filter(self.model.fetcher == None). \
+                filter(self.model.collector == None). \
+                first()  # noqa
+            if r:
+                r.scope_key = scope_key
+                r.collector = collector
+                r.fetcher = fetcher
+                LOG.info('Updating identifier "{i}" with scope_key "{sk}", '
+                         'collector "{c}" and fetcher "{f}"'.format(
+                             i=identifier,
+                             sk=scope_key,
+                             c=collector,
+                             f=fetcher))
+                session.commit()
+        return r
+
+    def set_state(self, identifier, state,
+                  fetcher=None, collector=None, scope_key=None):
         if isinstance(state, int):
             state = ck_utils.ts2dt(state)
         session = db.get_session()
         session.begin()
-        r = self._get_db_item(session, identifier)
+        r = self._get_db_item(
+            session, identifier, fetcher, collector, scope_key)
         if r and r.state != state:
             r.state = state
             session.commit()
@@ -45,15 +90,20 @@ class StateManager(object):
             state_object = self.model(
                 identifier=identifier,
                 state=state,
+                fetcher=fetcher,
+                collector=collector,
+                scope_key=scope_key,
             )
             session.add(state_object)
             session.commit()
         session.close()
 
-    def get_state(self, identifier):
+    def get_state(self, identifier,
+                  fetcher=None, collector=None, scope_key=None):
         session = db.get_session()
         session.begin()
-        r = self._get_db_item(session, identifier)
+        r = self._get_db_item(
+            session, identifier, fetcher, collector, scope_key)
         session.close()
         return ck_utils.dt2ts(r.state) if r else None
 

@@ -31,9 +31,17 @@ class IdentifierState(Base, models.ModelBase):
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True)
-    # SHA1 of the identifier
     identifier = sqlalchemy.Column(sqlalchemy.String(256),
                                    nullable=False,
                                    unique=True)
+    scope_key = sqlalchemy.Column(sqlalchemy.String(40),
+                                  nullable=True,
+                                  unique=False)
+    fetcher = sqlalchemy.Column(sqlalchemy.String(40),
+                                nullable=True,
+                                unique=False)
+    collector = sqlalchemy.Column(sqlalchemy.String(40),
+                                  nullable=True,
+                                  unique=False)
     state = sqlalchemy.Column(sqlalchemy.DateTime,
                               nullable=False)
