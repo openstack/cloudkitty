@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2018 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,8 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-#
-# @author: Martin CAMEY
 #
 from decimal import Decimal
 from decimal import localcontext
@@ -34,7 +31,7 @@ from cloudkitty import utils as ck_utils
 LOG = log.getLogger(__name__)
 
 PROMETHEUS_COLLECTOR_OPTS = 'collector_prometheus'
-pcollector_collector_opts = [
+collector_prometheus_opts = [
     cfg.StrOpt(
         'prometheus_url',
         default='',
@@ -59,7 +56,7 @@ pcollector_collector_opts = [
         help='Explicitly trust untrusted HTTPS responses',
     ),
 ]
-cfg.CONF.register_opts(pcollector_collector_opts, PROMETHEUS_COLLECTOR_OPTS)
+cfg.CONF.register_opts(collector_prometheus_opts, PROMETHEUS_COLLECTOR_OPTS)
 
 CONF = cfg.CONF
 
