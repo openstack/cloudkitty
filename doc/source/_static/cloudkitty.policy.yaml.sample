@@ -84,3 +84,11 @@
 # GET  /v1/storage/dataframes
 #"storage:list_data_frames": ""
 
+# Get an example message
+# GET  /v2/example
+#"example:get_example": ""
+
+# Submit a fruit
+# POST  /v2/example
+#"example:submit_fruit": ""
+

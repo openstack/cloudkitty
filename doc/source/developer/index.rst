@@ -7,3 +7,4 @@ Developer Documentation
 
    collector
    storage
+   api/index

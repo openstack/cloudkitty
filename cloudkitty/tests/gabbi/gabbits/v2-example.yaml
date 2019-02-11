@@ -1,0 +1,40 @@
+fixtures:
+  - ConfigFixtureStorageV2
+
+tests:
+  - name: get an example resource
+    url: /v2/example
+    status: 200
+    response_json_paths:
+      $.message: This is an example endpoint
+
+  - name: submit a banana
+    url: /v2/example
+    status: 200
+    method: POST
+    request_headers:
+      content-type: application/json
+    data:
+      fruit: banana
+    response_json_paths:
+      $.message: Your fruit is a banana
+
+  - name: submit a forbidden fruit
+    url: /v2/example
+    status: 403
+    method: POST
+    request_headers:
+      content-type: application/json
+    data:
+      fruit: forbidden
+    response_json_paths:
+      $.message: You submitted a forbidden fruit
+
+  - name: submit invalid data
+    url: /v2/example
+    status: 400
+    method: POST
+    request_headers:
+      content-type: application/json
+    data:
+      invalid: invalid

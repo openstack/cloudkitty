@@ -1,0 +1,22 @@
+fixtures:
+  - ConfigFixtureStorageV2
+
+tests:
+  - name: test if / is publicly available
+    url: /
+    status: 200
+
+  - name: test if HEAD / is available
+    url: /
+    status: 200
+    method: HEAD
+
+  - name: test if both APIs are available
+    url: /
+    status: 200
+    response_json_paths:
+      $.versions.`len`: 2
+      $.versions[0].id: v1
+      $.versions[1].id: v2
+      $.versions[0].status: CURRENT
+      $.versions[1].status: EXPERIMENTAL

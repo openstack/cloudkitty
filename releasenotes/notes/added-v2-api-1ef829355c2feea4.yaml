@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    A v2 API has been bootstrapped. It is compatible with the v2 storage and
+    will be the base for all upcoming API endpoints. It is marked as
+    ``EXPERIMENTAL`` for now.
+
+upgrade:
+  - |
+    The v1 API is now marked as ``CURRENT``. The API root is now built with
+    Flask instead of pecan

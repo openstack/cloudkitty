@@ -1,0 +1,20 @@
+fixtures:
+  - ConfigFixture
+
+tests:
+  - name: test if / is publicly available
+    url: /
+    status: 200
+
+  - name: test if HEAD / is available
+    url: /
+    status: 200
+    method: HEAD
+
+  - name: test that only one APIs is available
+    url: /
+    status: 200
+    response_json_paths:
+      $.versions.`len`: 1
+      $.versions[0].id: v1
+      $.versions[0].status: CURRENT

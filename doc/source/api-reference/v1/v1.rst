@@ -67,9 +67,6 @@ Rating
 .. autotype:: cloudkitty.api.v1.datamodels.rating.CloudkittyResourceCollection
    :members:
 
-.. include:: rating/hashmap.rst
-
-.. include:: rating/pyscripts.rst
 
 Report
 ======

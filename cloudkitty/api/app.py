@@ -17,15 +17,17 @@
 #
 import os
 
+import flask
+import flask_restful
 from oslo_config import cfg
 from oslo_log import log
 from paste import deploy
-import pecan
+from werkzeug import wsgi
 
-from cloudkitty.api import config as api_config
-from cloudkitty.api import hooks
+from cloudkitty.api import root as api_root
+from cloudkitty.api.v1 import get_api_app as get_v1_app
+from cloudkitty.api.v2 import get_api_app as get_v2_app
 from cloudkitty import service
-from cloudkitty import storage
 
 
 LOG = log.getLogger(__name__)
@@ -48,43 +50,31 @@ api_opts = [
     cfg.PortOpt('port',
                 default=8889,
                 help='The port for the cloudkitty API server.'),
-    cfg.BoolOpt('pecan_debug',
-                default=False,
-                help='Toggle Pecan Debug Middleware.'),
 ]
 
 CONF = cfg.CONF
+CONF.import_opt('version', 'cloudkitty.storage', 'storage')
+
 CONF.register_opts(auth_opts)
 CONF.register_opts(api_opts, group='api')
 
 
-def get_pecan_config():
-    # Set up the pecan configuration
-    filename = api_config.__file__.replace('.pyc', '.py')
-    return pecan.configuration.conf_from_file(filename)
+def setup_app():
+    root_app = flask.Flask('cloudkitty')
+    root_api = flask_restful.Api(root_app)
+    root_api.add_resource(api_root.CloudkittyAPIRoot, '/')
 
+    dispatch_dict = {
+        '/v1': get_v1_app(),
+        '/v2': get_v2_app(),
+    }
 
-def setup_app(pecan_config=None, extra_hooks=None):
+    # Disabling v2 api in case v1 storage is used
+    if CONF.storage.version < 2:
+        LOG.warning('v1 storage is used, disabling v2 API')
+        dispatch_dict.pop('/v2')
 
-    app_conf = get_pecan_config()
-    storage_backend = storage.get_storage()
-
-    app_hooks = [
-        hooks.RPCHook(),
-        hooks.StorageHook(storage_backend),
-        hooks.ContextHook(),
-    ]
-
-    app = pecan.make_app(
-        app_conf.app.root,
-        static_root=app_conf.app.static_root,
-        template_path=app_conf.app.template_path,
-        debug=CONF.api.pecan_debug,
-        force_canonical=getattr(app_conf.app, 'force_canonical', True),
-        hooks=app_hooks,
-        guess_content_type_from_ext=False
-    )
-
+    app = wsgi.DispatcherMiddleware(root_app, dispatch_dict)
     return app
 
 
@@ -100,7 +90,7 @@ def load_app():
         raise cfg.ConfigFilesNotFoundError([cfg.CONF.api_paste_config])
     LOG.info("Full WSGI config used: %s", cfg_file)
     appname = "cloudkitty+{}".format(cfg.CONF.auth_strategy)
-    LOG.info("Cloudkitty api with '%s' auth type will be loaded.",
+    LOG.info("Cloudkitty API with '%s' auth type will be loaded.",
              cfg.CONF.auth_strategy)
     return deploy.loadapp("config:" + cfg_file, name=appname)
 

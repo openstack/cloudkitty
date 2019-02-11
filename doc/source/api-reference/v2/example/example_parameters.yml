@@ -1,0 +1,20 @@
+fruit:
+  in: body
+  description: |
+    A fruit. Must one of [**banana**, **strawberry**]
+  type: string
+  required: true
+
+example_msg:
+  in: body
+  description: |
+    Contains "This is an example endpoint"
+  type: string
+  required: true
+
+fruit_msg:
+  in: body
+  description: |
+    Contains "Your fruit is a <fruit>"
+  type: string
+  required: true

@@ -13,133 +13,72 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
+from flask import request
+import flask_restful
 from oslo_config import cfg
-import pecan
-from pecan import rest
-from wsme import types as wtypes
-import wsmeext.pecan as wsme_pecan
+import voluptuous
 
-from cloudkitty.api.v1 import controllers as v1_api
+from cloudkitty.api.v2 import utils as api_utils
+
 
 CONF = cfg.CONF
-CONF.import_opt('port', 'cloudkitty.api.app', 'api')
+CONF.import_opt('version', 'cloudkitty.storage', 'storage')
+
+API_VERSION_SCHEMA = voluptuous.Schema({
+    voluptuous.Required('id'): str,
+    voluptuous.Required('links'): [
+        voluptuous.Schema({
+            voluptuous.Required('href'): str,
+            voluptuous.Required('rel', default='self'): 'self',
+        }),
+    ],
+    voluptuous.Required('status'): voluptuous.Any(
+        'CURRENT',
+        'SUPPORTED',
+        'EXPERIMENTAL',
+        'DEPRECATED',
+    ),
+})
 
 
-class APILink(wtypes.Base):
-    """API link description.
+def get_api_versions():
+    """Returns a list of all existing API versions."""
+    apis = [
+        {
+            'id': 'v1',
+            'links': [{
+                'href': '{scheme}://{host}/v1'.format(
+                    scheme=request.scheme,
+                    host=request.host,
+                ),
+            }],
+            'status': 'CURRENT',
+        },
+        {
+            'id': 'v2',
+            'links': [{
+                'href': '{scheme}://{host}/v2'.format(
+                    scheme=request.scheme,
+                    host=request.host,
+                ),
+            }],
+            'status': 'EXPERIMENTAL',
+        },
+    ]
 
-    """
+    # v2 api is disabled when using v1 storage
+    if CONF.storage.version < 2:
+        apis = apis[:1]
 
-    type = wtypes.text
-    """Type of link."""
-
-    rel = wtypes.text
-    """Relationship with this link."""
-
-    href = wtypes.text
-    """URL of the link."""
-
-    @classmethod
-    def sample(cls):
-        version = 'v1'
-        sample = cls(
-            rel='self',
-            type='text/html',
-            href='http://127.0.0.1:{port}/{id}'.format(
-                port=CONF.api.port,
-                id=version))
-        return sample
-
-
-class APIMediaType(wtypes.Base):
-    """Media type description.
-
-    """
-
-    base = wtypes.text
-    """Base type of this media type."""
-
-    type = wtypes.text
-    """Type of this media type."""
-
-    @classmethod
-    def sample(cls):
-        sample = cls(
-            base='application/json',
-            type='application/vnd.openstack.cloudkitty-v1+json')
-        return sample
+    return apis
 
 
-VERSION_STATUS = wtypes.Enum(wtypes.text, 'EXPERIMENTAL', 'STABLE')
+class CloudkittyAPIRoot(flask_restful.Resource):
 
-
-class APIVersion(wtypes.Base):
-    """API Version description.
-
-    """
-
-    id = wtypes.text
-    """ID of the version."""
-
-    status = VERSION_STATUS
-    """Status of the version."""
-
-    updated = wtypes.text
-    "Last update in iso8601 format."
-
-    links = [APILink]
-    """List of links to API resources."""
-
-    media_types = [APIMediaType]
-    """Types accepted by this API."""
-
-    @classmethod
-    def sample(cls):
-        version = 'v1'
-        updated = '2014-08-11T16:00:00Z'
-        links = [APILink.sample()]
-        media_types = [APIMediaType.sample()]
-        sample = cls(id=version,
-                     status='STABLE',
-                     updated=updated,
-                     links=links,
-                     media_types=media_types)
-        return sample
-
-
-class RootController(rest.RestController):
-    """Root REST Controller exposing versions of the API.
-
-    """
-
-    v1 = v1_api.V1Controller()
-
-    @wsme_pecan.wsexpose([APIVersion])
-    def index(self):
-        """Return the version list
-
-        """
-        # TODO(sheeprine): Maybe we should store all the API version
-        # informations in every API modules
-        ver1 = APIVersion(
-            id='v1',
-            status='EXPERIMENTAL',
-            updated='2015-03-09T16:00:00Z',
-            links=[
-                APILink(
-                    rel='self',
-                    href='{scheme}://{host}/v1'.format(
-                        scheme=pecan.request.scheme,
-                        host=pecan.request.host,
-                    )
-                )
-            ],
-            media_types=[]
-        )
-
-        versions = []
-        versions.append(ver1)
-
-        return versions
+    @api_utils.add_output_schema(voluptuous.Schema({
+        'versions': [API_VERSION_SCHEMA],
+    }))
+    def get(self):
+        return {
+            'versions': get_api_versions(),
+        }
