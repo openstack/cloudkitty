@@ -19,6 +19,7 @@ import itertools
 import cloudkitty.api.app
 import cloudkitty.collector.gnocchi
 import cloudkitty.collector.monasca
+import cloudkitty.collector.prometheus
 import cloudkitty.config
 import cloudkitty.fetcher
 import cloudkitty.fetcher.gnocchi
@@ -43,6 +44,8 @@ _opts = [
         cloudkitty.collector.gnocchi.collector_gnocchi_opts))),
     ('collector_monasca', list(itertools.chain(
         cloudkitty.collector.monasca.collector_monasca_opts))),
+    ('collector_prometheus', list(itertools.chain(
+        cloudkitty.collector.prometheus.collector_prometheus_opts))),
     ('fetcher', list(itertools.chain(
         cloudkitty.fetcher.fetcher_opts))),
     ('fetcher_gnocchi', list(itertools.chain(

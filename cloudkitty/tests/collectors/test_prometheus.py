@@ -184,6 +184,7 @@ class PrometheusCollectorTest(tests.TestCase):
 
 
 class PrometheusClientTest(tests.TestCase):
+
     class FakeResponse(object):
         """Mimics an HTTP ``requests`` response"""
 

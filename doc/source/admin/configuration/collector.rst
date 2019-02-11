@@ -64,6 +64,23 @@ Section: ``collector_monasca``.
 * ``monasca_service_name``: Defaults to ``monasca``. Name of the Monasca
   service in Keystone.
 
+
+Prometheus
+----------
+
+Section ``collector_prometheus``.
+
+* ``prometheus_url``: Prometheus HTTP API URL.
+
+* ``prometheus_user``: For HTTP basic authentication. The username.
+
+* ``prometheus_password``: For HTTP basic authentication. The password.
+
+* ``cafile``: Option to allow custom certificate authority file.
+
+* ``insecure``: Option to explicitly allow untrusted HTTPS connections.
+
+
 Metric collection
 =================
 
@@ -228,7 +245,7 @@ Gnocchi
   unless you know what you're doing.
 
 * ``aggregation_method``: Defaults to ``max``. The aggregation method to use
-  when retrieving measures in gnocchi. Must be one of ``min``, ``max``,
+  when retrieving measures from gnocchi. Must be one of ``min``, ``max``,
   ``mean``.
 
 Monasca
@@ -239,5 +256,12 @@ Monasca
   unless you know what you're doing.
 
 * ``aggregation_method``: Defaults to ``max``. The aggregation method to use
-  when retrieving measures in gnocchi. Must be one of ``min``, ``max``,
+  when retrieving measures from monasca. Must be one of ``min``, ``max``,
   ``mean``.
+
+Prometheus
+~~~~~~~~~~
+
+* ``aggregation_method``: Defaults to ``max``. The aggregation method to use
+  when retrieving measures from prometheus. Must be one of ``avg``, ``min``,
+  ``max``, ``sum``, ``count``, ``stddev``, ``stdvar``.
