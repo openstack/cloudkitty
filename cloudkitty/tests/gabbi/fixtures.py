@@ -215,6 +215,14 @@ class ConfigFixture(fixture.GabbiFixture):
         db.get_engine().dispose()
 
 
+class ConfigFixtureStorageV2(ConfigFixture):
+
+    def start_fixture(self):
+        super(ConfigFixtureStorageV2, self).start_fixture()
+        self.conf.set_override('backend', 'influxdb', 'storage')
+        self.conf.set_override('version', '2', 'storage')
+
+
 class ConfigFixtureKeystoneAuth(ConfigFixture):
     auth_strategy = 'keystone'
 

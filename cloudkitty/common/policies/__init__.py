@@ -16,19 +16,21 @@
 import itertools
 
 from cloudkitty.common.policies import base
-from cloudkitty.common.policies import collector
-from cloudkitty.common.policies import info
-from cloudkitty.common.policies import rating
-from cloudkitty.common.policies import report
-from cloudkitty.common.policies import storage
+from cloudkitty.common.policies.v1 import collector as v1_collector
+from cloudkitty.common.policies.v1 import info as v1_info
+from cloudkitty.common.policies.v1 import rating as v1_rating
+from cloudkitty.common.policies.v1 import report as v1_report
+from cloudkitty.common.policies.v1 import storage as v1_storage
+from cloudkitty.common.policies.v2 import example as v2_example
 
 
 def list_rules():
     return itertools.chain(
         base.list_rules(),
-        collector.list_rules(),
-        info.list_rules(),
-        rating.list_rules(),
-        report.list_rules(),
-        storage.list_rules()
+        v1_collector.list_rules(),
+        v1_info.list_rules(),
+        v1_rating.list_rules(),
+        v1_report.list_rules(),
+        v1_storage.list_rules(),
+        v2_example.list_rules(),
     )

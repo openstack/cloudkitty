@@ -1,5 +1,6 @@
+=======================
 HashMap Module REST API
------------------------
+=======================
 
 .. rest-controller:: cloudkitty.rating.hash.controllers.root:HashMapConfigController
    :webprefix: /v1/rating/module_config/hashmap
