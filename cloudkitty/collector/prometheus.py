@@ -41,6 +41,24 @@ pcollector_collector_opts = [
         default='',
         help='Prometheus service URL',
     ),
+    cfg.StrOpt(
+        'prometheus_user',
+        help='Prometheus user (for basic auth only)',
+    ),
+    cfg.StrOpt(
+        'prometheus_password',
+        help='Prometheus user password (for basic auth only)',
+        secret=True,
+    ),
+    cfg.StrOpt(
+        'cafile',
+        help='Custom certificate authority file path',
+    ),
+    cfg.BoolOpt(
+        'insecure',
+        default=False,
+        help='Explicitly trust untrusted HTTPS responses',
+    ),
 ]
 cfg.CONF.register_opts(pcollector_collector_opts, PROMETHEUS_COLLECTOR_OPTS)
 
@@ -57,39 +75,58 @@ class PrometheusConfigError(collect_exceptions.CollectError):
     pass
 
 
+class PrometheusResponseError(collect_exceptions.CollectError):
+    pass
+
+
 class PrometheusClient(object):
-    @classmethod
-    def build_query(cls, source, query, start, end, period, metric_name):
-        """Build PromQL instant queries."""
-        start = ck_utils.iso8601_from_timestamp(start)
-        end = ck_utils.iso8601_from_timestamp(end)
+    INSTANT_QUERY_ENDPOINT = 'query'
+    RANGE_QUERY_ENDPOINT = 'query_range'
 
-        if '$period' in query:
-            try:
-                query = ck_utils.template_str_substitute(
-                    query, {'period': str(period) + 's'},
-                )
-            except (KeyError, ValueError):
-                raise PrometheusConfigError(
-                    'Invalid prometheus query: {}'.format(query))
+    def __init__(self, url, auth=None, verify=True):
+        self.url = url
+        self.auth = auth
+        self.verify = verify
 
-        # Due to the design of Cloudkitty, only instant queries are supported.
-        # In that case 'time' equals 'end' and
-        # the window time is reprezented by the period.
-        return source + '/query?query=' + query + '&time=' + end
-
-    @classmethod
-    def get_data(cls, source, query, start, end, period, metric_name):
-        url = cls.build_query(
-            source,
-            query,
-            start,
-            end,
-            period,
-            metric_name,
+    def _get(self, endpoint, params):
+        return requests.get(
+            '{}/{}'.format(self.url, endpoint),
+            params=params,
+            auth=self.auth,
+            verify=self.verify,
         )
 
-        return requests.get(url).json()
+    def get_instant(self, query, time=None, timeout=None):
+        res = self._get(
+            self.INSTANT_QUERY_ENDPOINT,
+            params={'query': query, 'time': time, 'timeout': timeout},
+        )
+        try:
+            return res.json()
+        except ValueError:
+            raise PrometheusResponseError(
+                'Could not get a valid json response for '
+                '{} (response: {})'.format(res.url, res.text)
+            )
+
+    def get_range(self, query, start, end, step, timeout=None):
+        res = self._get(
+            self.RANGE_QUERY_ENDPOINT,
+            params={
+                'query': query,
+                'start': start,
+                'end': end,
+                'step': step,
+                'timeout': timeout,
+            },
+        )
+        try:
+            return res.json()
+        except ValueError:
+            raise PrometheusResponseError(
+                'Could not get a valid json response for '
+                '{} (response: {})'.format(res.url, res.text)
+            )
 
 
 class PrometheusCollector(collector.BaseCollector):
@@ -97,6 +134,22 @@ class PrometheusCollector(collector.BaseCollector):
 
     def __init__(self, transformers, **kwargs):
         super(PrometheusCollector, self).__init__(transformers, **kwargs)
+        url = CONF.collector_prometheus.prometheus_url
+
+        user = CONF.collector_prometheus.prometheus_user
+        password = CONF.collector_prometheus.prometheus_password
+
+        verify = True
+        if CONF.collector_prometheus.cafile:
+            verify = CONF.collector_prometheus.cafile
+        elif CONF.collector_prometheus.insecure:
+            verify = False
+
+        self._conn = PrometheusClient(
+            url,
+            auth=(user, password) if user and password else None,
+            verify=verify,
+        )
 
     @staticmethod
     def check_configuration(conf):
@@ -138,19 +191,21 @@ class PrometheusCollector(collector.BaseCollector):
 
     def fetch_all(self, metric_name, start, end, project_id, q_filter=None):
         """Returns metrics to be valorized."""
-        # NOTE(mc): Remove potential trailing '/' to avoid
-        # url building problems
-        url = CONF.collector_prometheus.prometheus_url
-        if url.endswith('/'):
-            url = url[:-1]
+        query = self.conf[metric_name]['extra_args']['query']
+        period = CONF.collect.period
 
-        res = PrometheusClient.get_data(
-            url,
-            self.conf[metric_name]['extra_args']['query'],
-            start,
+        if '$period' in query:
+            try:
+                query = ck_utils.template_str_substitute(
+                    query, {'period': str(period) + 's'},
+                )
+            except (KeyError, ValueError):
+                raise PrometheusConfigError(
+                    'Invalid prometheus query: {}'.format(query))
+
+        res = self._conn.get_instant(
+            query,
             end,
-            self.period,
-            metric_name,
         )
 
         # If the query returns an empty dataset,
