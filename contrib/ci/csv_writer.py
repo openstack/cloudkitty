@@ -20,10 +20,11 @@ import calendar
 import copy
 import csv
 import datetime
-import json
 import random
 import sys
 import uuid
+
+from cloudkitty import json_utils as json
 
 
 COMPUTE = {

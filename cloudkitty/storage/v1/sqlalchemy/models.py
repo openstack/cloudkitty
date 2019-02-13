@@ -15,13 +15,13 @@
 #
 # @author: Stéphane Albert
 #
-import json
-
 from oslo_db.sqlalchemy import models
 import sqlalchemy
 from sqlalchemy.ext import declarative
 
+from cloudkitty import json_utils as json
 from cloudkitty import utils as ck_utils
+
 
 Base = declarative.declarative_base()
 

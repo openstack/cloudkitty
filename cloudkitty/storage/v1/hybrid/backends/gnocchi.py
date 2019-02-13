@@ -17,7 +17,6 @@
 #
 import datetime
 import decimal
-import json
 
 from gnocchiclient import client as gclient
 from gnocchiclient import exceptions as gexceptions
@@ -28,6 +27,7 @@ from oslo_utils import uuidutils
 import six
 
 from cloudkitty.collector import validate_conf
+from cloudkitty import json_utils as json
 from cloudkitty.storage.v1.hybrid.backends import BaseHybridBackend
 import cloudkitty.utils as ck_utils
 
@@ -65,14 +65,6 @@ ks_loading.register_auth_conf_options(
 
 RESOURCE_TYPE_NAME_ROOT = 'rating_service_'
 METADATA_NAME_ROOT = 'ckmeta_'
-
-
-class DecimalJSONEncoder(json.JSONEncoder):
-    """Wrapper class to handle decimal.Decimal objects in json.dumps()."""
-    def default(self, obj):
-        if isinstance(obj, decimal.Decimal):
-            return float(obj)
-        return super(DecimalJSONEncoder, self).default(obj)
 
 
 class UnknownResourceType(Exception):

@@ -15,18 +15,10 @@
 #
 # @author: Stéphane Albert
 #
-import decimal
-import json
 import os
 
+from cloudkitty import json_utils as json
 from cloudkitty import writer
-
-
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, decimal.Decimal):
-            return float(o)
-        return super(DecimalEncoder, self).default(o)
 
 
 class OSRFBackend(writer.BaseReportWriter):
@@ -59,7 +51,7 @@ class OSRFBackend(writer.BaseReportWriter):
 
     def _write_total(self):
         total = {'total': self.total}
-        self._report.write(json.dumps(total, cls=DecimalEncoder))
+        self._report.write(json.dumps(total))
         self._report.write(']')
         self._report.flush()
 
@@ -96,6 +88,6 @@ class OSRFBackend(writer.BaseReportWriter):
                           'end': self.usage_end_dt.isoformat()}
         data['usage'] = self._usage_data
 
-        self._report.write(json.dumps(data, cls=DecimalEncoder))
+        self._report.write(json.dumps(data))
         self._report.write(', ')
         self._report.flush()
