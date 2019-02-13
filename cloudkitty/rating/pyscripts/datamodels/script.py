@@ -42,7 +42,9 @@ class Script(wtypes.Base):
         sample = cls(script_id='bc05108d-f515-4984-8077-de319cbf35aa',
                      name='policy1',
                      data='return 0',
-                     checksum='da39a3ee5e6b4b0d3255bfef95601890afd80709')
+                     checksum='cf83e1357eefb8bdf1542850d66d8007d620e4050b5715d'
+                              'c83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec'
+                              '2f63b931bd47417a81a538327af927da3e')
         return sample
 
 

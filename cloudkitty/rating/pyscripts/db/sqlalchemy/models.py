@@ -82,7 +82,7 @@ class PyScriptsScript(Base, PyScriptsBase):
                               sqlalchemy.LargeBinary(),
                               nullable=False)
     _checksum = sqlalchemy.Column('checksum',
-                                  sqlalchemy.String(40),
+                                  sqlalchemy.String(128),
                                   nullable=False)
 
     @hybrid.hybrid_property
@@ -92,7 +92,7 @@ class PyScriptsScript(Base, PyScriptsBase):
 
     @data.setter
     def data(self, value):
-        sha_check = hashlib.sha1()
+        sha_check = hashlib.sha512()
         sha_check.update(value)
         self._checksum = sha_check.hexdigest()
         self._data = zlib.compress(value)

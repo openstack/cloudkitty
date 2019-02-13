@@ -84,11 +84,11 @@ CK_RESOURCES_DATA = [{
                     "unit": "instance"}}]}}]
 
 TEST_CODE1 = 'a = 1'.encode('utf-8')
-TEST_CODE1_CHECKSUM = hashlib.sha1(TEST_CODE1).hexdigest()
+TEST_CODE1_CHECKSUM = hashlib.sha512(TEST_CODE1).hexdigest()
 TEST_CODE2 = 'a = 0'.encode('utf-8')
-TEST_CODE2_CHECKSUM = hashlib.sha1(TEST_CODE2).hexdigest()
+TEST_CODE2_CHECKSUM = hashlib.sha512(TEST_CODE2).hexdigest()
 TEST_CODE3 = 'if a == 1: raise Exception()'.encode('utf-8')
-TEST_CODE3_CHECKSUM = hashlib.sha1(TEST_CODE3).hexdigest()
+TEST_CODE3_CHECKSUM = hashlib.sha512(TEST_CODE3).hexdigest()
 
 COMPLEX_POLICY1 = """
 import decimal
@@ -238,7 +238,8 @@ class PyScriptsRatingTest(tests.TestCase):
             setattr,
             script,
             'checksum',
-            'da39a3ee5e6b4b0d3255bfef95601890afd80709')
+            'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce4'
+            '7d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e')
 
     def test_update_checksum(self):
         self._db_api.create_script('policy1', TEST_CODE1)

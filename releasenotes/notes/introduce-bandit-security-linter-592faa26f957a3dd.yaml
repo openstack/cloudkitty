@@ -1,0 +1,6 @@
+---
+security:
+  - |
+    Introduce bandit security checks and fix potential security issues detected
+    by bandit linter. Remove unused option where host_ip was a binding to all
+    interfaces. Using of insecure hash function, switch from sha1 to sha512.

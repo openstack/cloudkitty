@@ -42,9 +42,6 @@ auth_opts = [
 ]
 
 api_opts = [
-    cfg.IPOpt('host_ip',
-              default='0.0.0.0',
-              help='The listen IP for the cloudkitty API server.'),
     cfg.PortOpt('port',
                 default=8889,
                 help='The port for the cloudkitty API server.'),

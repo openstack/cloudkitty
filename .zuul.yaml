@@ -40,6 +40,28 @@
         DEVSTACK_GATE_USE_PYTHON3: "True"
         USE_PYTHON3: "True"
 
+- job:
+    name: cloudkitty-tox-bandit
+    parent: openstack-tox
+    timeout: 2400
+    vars:
+      tox_envlist: bandit
+    required-projects:
+      - openstack/requirements
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^.*\.txt$
+      - ^api-ref/.*$
+      - ^apidocs/.*$
+      - ^contrib/.*$
+      - ^doc/.*$
+      - ^etc/.*$
+      - ^releasenotes/.*$
+      - ^setup.cfg$
+      - ^tools/.*$
+      - ^cloudkitty/hacking/.*$
+      - ^cloudkitty/tests/scenario/.*$
+      - ^cloudkitty/tests/unittests/.*$
 
 - project:
     templates:
@@ -55,6 +77,8 @@
       jobs:
         - cloudkitty-tempest-full
         - cloudkitty-tempest-full-python3
+        - cloudkitty-tox-bandit:
+            voting: false
     gate:
       queue: cloudkitty
       jobs:

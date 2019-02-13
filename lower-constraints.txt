@@ -45,3 +45,4 @@ reno==1.8.0  # Apache2
 sphinxcontrib-httpdomain==1.6.0 # Apache-2.0
 doc8==0.6.0 # Apache-2.0
 Pygments==2.2.0 # BSD
+bandit==1.1.0 # Apache-2.0

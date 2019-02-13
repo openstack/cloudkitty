@@ -77,7 +77,7 @@ class PyScripts(rating.RatingProcessorBase):
 
     def start_script(self, code, data):
         context = {'data': data}
-        exec(code, context)
+        exec(code, context)  # nosec
         return data
 
     def process(self, data):

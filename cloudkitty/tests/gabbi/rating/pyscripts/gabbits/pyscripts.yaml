@@ -38,7 +38,7 @@ tests:
       $.script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.name: "policy1"
       $.data: "a = 0"
-      $.checksum: "5ae340c1b3bb81955db1cb593cdc78540082c526"
+      $.checksum: "4c612e33c0e40b7bf53cf95fad47dbfbeab9dd62f9bc181a9d1c6f40a087782223c23f793e747b0466b9e6998c6ea54f4edbd20febd13edb13b55074b5ee1a5a"
     response_headers:
       location: '$SCHEME://$NETLOC/v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
 
@@ -62,7 +62,7 @@ tests:
       $.scripts[0].script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.scripts[0].name: "policy1"
       $.scripts[0].data: "a = 0"
-      $.scripts[0].checksum: "5ae340c1b3bb81955db1cb593cdc78540082c526"
+      $.scripts[0].checksum: "4c612e33c0e40b7bf53cf95fad47dbfbeab9dd62f9bc181a9d1c6f40a087782223c23f793e747b0466b9e6998c6ea54f4edbd20febd13edb13b55074b5ee1a5a"
 
   - name: list scripts excluding data
     url: /v1/rating/module_config/pyscripts/scripts?no_data=true
@@ -70,7 +70,7 @@ tests:
     response_json_paths:
       $.scripts[0].script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.scripts[0].name: "policy1"
-      $.scripts[0].checksum: "5ae340c1b3bb81955db1cb593cdc78540082c526"
+      $.scripts[0].checksum: "4c612e33c0e40b7bf53cf95fad47dbfbeab9dd62f9bc181a9d1c6f40a087782223c23f793e747b0466b9e6998c6ea54f4edbd20febd13edb13b55074b5ee1a5a"
 
   - name: get script
     url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-9879b79059fb
@@ -79,7 +79,7 @@ tests:
       $.script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.name: "policy1"
       $.data: "a = 0"
-      $.checksum: "5ae340c1b3bb81955db1cb593cdc78540082c526"
+      $.checksum: "4c612e33c0e40b7bf53cf95fad47dbfbeab9dd62f9bc181a9d1c6f40a087782223c23f793e747b0466b9e6998c6ea54f4edbd20febd13edb13b55074b5ee1a5a"
 
   - name: modify script
     url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-9879b79059fb
@@ -95,7 +95,7 @@ tests:
       $.script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.name: "policy1"
       $.data: "a = 1"
-      $.checksum: "b88f1ec0c9fe96fde96a6f9dabcbeee661dd7afe"
+      $.checksum: "acb3095e24b13960484e75bce070e13e8a7728760517c31b34929a6f732841c652e9d2cc4d186bd02ef2e7495fab3c4850673bedc945cee7c74fea85eabd542c"
 
   - name: modify unknown script
     url: /v1/rating/module_config/pyscripts/scripts/42
@@ -120,7 +120,7 @@ tests:
       $.script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.name: "policy1"
       $.data: "a = 1"
-      $.checksum: "b88f1ec0c9fe96fde96a6f9dabcbeee661dd7afe"
+      $.checksum: "acb3095e24b13960484e75bce070e13e8a7728760517c31b34929a6f732841c652e9d2cc4d186bd02ef2e7495fab3c4850673bedc945cee7c74fea85eabd542c"
 
   - name: delete script
     url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-9879b79059fb
