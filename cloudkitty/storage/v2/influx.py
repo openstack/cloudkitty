@@ -365,5 +365,5 @@ class InfluxStorage(v2_storage.BaseStorage):
             output.sort(key=lambda x: [x[group] for group in groupby])
         return {
             'total': len(output),
-            'results': output[offset:limit] if paginate else output,
+            'results': output[offset:offset + limit] if paginate else output,
         }

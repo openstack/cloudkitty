@@ -244,7 +244,7 @@ class StorageUnitTest(TestCase):
                 begin=begin,
                 end=end,
                 offset=offset,
-                limit=offset + 2,
+                limit=2,
                 groupby=['type'])
             # there are seven metric types
             self.assertEqual(chunk['total'], 7)
