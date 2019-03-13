@@ -116,10 +116,14 @@ class MetricConfigValidationTest(tests.TestCase):
 
     def test_prometheus_minimal_config_minimal_extra_args(self):
         data = copy.deepcopy(self.base_data)
-        data['metrics']['metric_one']['extra_args'] = {'query': 'query'}
+        data['metrics']['metric_one']['extra_args'] = {
+            'aggregation_method': 'max',
+        }
         expected_output = copy.deepcopy(self.base_output)
         expected_output['metric_one']['groupby'].append('project_id')
-        expected_output['metric_one']['extra_args'] = {'query': 'query'}
+        expected_output['metric_one']['extra_args'] = {
+            'aggregation_method': 'max',
+        }
 
         self.assertEqual(
             collector.prometheus.PrometheusCollector.check_configuration(data),

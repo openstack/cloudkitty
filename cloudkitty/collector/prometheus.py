@@ -22,8 +22,7 @@ from decimal import ROUND_HALF_UP
 from oslo_config import cfg
 from oslo_log import log
 import requests
-from voluptuous import All
-from voluptuous import Length
+from voluptuous import In
 from voluptuous import Required
 from voluptuous import Schema
 
@@ -66,13 +65,14 @@ CONF = cfg.CONF
 
 PROMETHEUS_EXTRA_SCHEMA = {
     Required('extra_args'): {
-        Required('query'): All(str, Length(min=1)),
+        Required('aggregation_method', default='max'):
+            In([
+                'avg', 'count', 'max',
+                'min', 'stddev', 'stdvar',
+                'sum'
+            ]),
     }
 }
-
-
-class PrometheusConfigError(collect_exceptions.CollectError):
-    pass
 
 
 class PrometheusResponseError(collect_exceptions.CollectError):
@@ -164,7 +164,7 @@ class PrometheusCollector(collector.BaseCollector):
 
         return output
 
-    def _format_data(self, metric_name, project_id, start, end, data):
+    def _format_data(self, metric_name, scope_key, scope_id, start, end, data):
         """Formats Prometheus data format to Cloudkitty data format.
 
         Returns metadata, groupby, qty
@@ -173,7 +173,7 @@ class PrometheusCollector(collector.BaseCollector):
         for meta in self.conf[metric_name]['metadata']:
             metadata[meta] = data['metric'][meta]
 
-        groupby = {}
+        groupby = {scope_key: scope_id}
         for meta in self.conf[metric_name]['groupby']:
             groupby[meta] = data['metric'].get(meta, '')
 
@@ -189,23 +189,26 @@ class PrometheusCollector(collector.BaseCollector):
 
         return metadata, groupby, qty
 
-    def fetch_all(self, metric_name, start, end, project_id, q_filter=None):
+    def fetch_all(self, metric_name, start, end, scope_id, q_filter=None):
         """Returns metrics to be valorized."""
-        query = self.conf[metric_name]['extra_args']['query']
-        period = CONF.collect.period
+        scope_key = CONF.collect.scope_key
+        method = self.conf[metric_name]['extra_args']['aggregation_method']
+        groupby = self.conf[metric_name].get('groupby', [])
+        metadata = self.conf[metric_name].get('metadata', [])
+        period = end - start
+        time = end
 
-        if '$period' in query:
-            try:
-                query = ck_utils.template_str_substitute(
-                    query, {'period': str(period) + 's'},
-                )
-            except (KeyError, ValueError):
-                raise PrometheusConfigError(
-                    'Invalid prometheus query: {}'.format(query))
-
+        query = '{0}({0}_over_time({1}{{{2}="{3}"}}[{4}s])) by ({5})'.format(
+            method,
+            metric_name,
+            scope_key,
+            scope_id,
+            period,
+            ', '.join(groupby + metadata),
+        )
         res = self._conn.get_instant(
             query,
-            end,
+            time,
         )
 
         # If the query returns an empty dataset,
@@ -218,7 +221,8 @@ class PrometheusCollector(collector.BaseCollector):
         for item in res['data']['result']:
             metadata, groupby, qty = self._format_data(
                 metric_name,
-                project_id,
+                scope_key,
+                scope_id,
                 start,
                 end,
                 item,
