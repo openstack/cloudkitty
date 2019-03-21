@@ -33,12 +33,21 @@ class PrometheusCollectorTest(tests.TestCase):
         self._tenant_id = samples.TENANT
         args = {
             'period': 3600,
+            'scope_key': 'namespace',
             'conf': {
                 'metrics': {
                     'http_requests_total': {
                         'unit': 'instance',
+                        'groupby': [
+                            'foo',
+                            'bar',
+                        ],
+                        'metadata': [
+                            'code',
+                            'instance',
+                        ],
                         'extra_args': {
-                            'query': 'http_request_total[$period]',
+                            'aggregation_method': 'avg',
                         },
                     },
                 }
@@ -47,12 +56,41 @@ class PrometheusCollectorTest(tests.TestCase):
         transformers = transformer.get_transformers()
         self.collector = prometheus.PrometheusCollector(transformers, **args)
 
+    def test_fetch_all_build_query(self):
+        query = (
+            'avg(avg_over_time(http_requests_total'
+            '{project_id="f266f30b11f246b589fd266f85eeec39"}[3600s]'
+            ')) by (foo, bar, project_id, code, instance)'
+        )
+
+        with mock.patch.object(
+            prometheus.PrometheusClient, 'get_instant',
+        ) as mock_get:
+            self.collector.fetch_all(
+                'http_requests_total',
+                samples.FIRST_PERIOD_BEGIN,
+                samples.FIRST_PERIOD_END,
+                self._tenant_id,
+            )
+            mock_get.assert_called_once_with(
+                query,
+                samples.FIRST_PERIOD_END,
+            )
+
     def test_format_data_instant_query(self):
-        expected = ({}, {'project_id': ''}, Decimal('7'))
+        expected = ({
+            'code': '200',
+            'instance': 'localhost:9090',
+        }, {
+            'bar': '',
+            'foo': '',
+            'project_id': ''
+        }, Decimal('7'))
 
         params = {
             'metric_name': 'http_requests_total',
-            'project_id': self._tenant_id,
+            'scope_key': 'project_id',
+            'scope_id': self._tenant_id,
             'start': samples.FIRST_PERIOD_BEGIN,
             'end': samples.FIRST_PERIOD_END,
             'data': samples.PROMETHEUS_RESP_INSTANT_QUERY['data']['result'][0],
@@ -61,11 +99,19 @@ class PrometheusCollectorTest(tests.TestCase):
         self.assertEqual(expected, actual)
 
     def test_format_data_instant_query_2(self):
-        expected = ({}, {'project_id': ''}, Decimal('42'))
+        expected = ({
+            'code': '200',
+            'instance': 'localhost:9090',
+        }, {
+            'bar': '',
+            'foo': '',
+            'project_id': ''
+        }, Decimal('42'))
 
         params = {
             'metric_name': 'http_requests_total',
-            'project_id': self._tenant_id,
+            'scope_key': 'project_id',
+            'scope_id': self._tenant_id,
             'start': samples.FIRST_PERIOD_BEGIN,
             'end': samples.FIRST_PERIOD_END,
             'data': samples.PROMETHEUS_RESP_INSTANT_QUERY['data']['result'][1],
@@ -77,18 +123,24 @@ class PrometheusCollectorTest(tests.TestCase):
         expected = {
             'http_requests_total': [
                 {
-                    'desc': {'project_id': ''},
-                    'groupby': {'project_id': ''},
-                    'metadata': {},
+                    'desc': {
+                        'bar': '', 'foo': '', 'project_id': '',
+                        'code': '200', 'instance': 'localhost:9090',
+                    },
+                    'groupby': {'bar': '', 'foo': '', 'project_id': ''},
+                    'metadata': {'code': '200', 'instance': 'localhost:9090'},
                     'vol': {
                         'qty': Decimal('7'),
                         'unit': 'instance'
                     }
                 },
                 {
-                    'desc': {'project_id': ''},
-                    'groupby': {'project_id': ''},
-                    'metadata': {},
+                    'desc': {
+                        'bar': '', 'foo': '', 'project_id': '',
+                        'code': '200', 'instance': 'localhost:9090',
+                    },
+                    'groupby': {'bar': '', 'foo': '', 'project_id': ''},
+                    'metadata': {'code': '200', 'instance': 'localhost:9090'},
                     'vol': {
                         'qty': Decimal('42'),
                         'unit': 'instance'

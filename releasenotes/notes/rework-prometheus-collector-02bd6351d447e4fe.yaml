@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Prometheus collector now supports, under extra_args section,
+    an aggregation_method option to decide which aggregation
+    method is to be performed over collected metrics.
