@@ -17,13 +17,33 @@
 from cloudkitty.collector import gnocchi
 from cloudkitty import tests
 from cloudkitty.tests import samples
+from cloudkitty import transformer
 
 
 class GnocchiCollectorTest(tests.TestCase):
     def setUp(self):
         super(GnocchiCollectorTest, self).setUp()
         self._tenant_id = samples.TENANT
-        self.collector = gnocchi.GnocchiCollector
+        self.conf.set_override('collector', 'gnocchi', 'collect')
+        self.conf.set_override(
+            'gnocchi_auth_type', 'basic', 'collector_gnocchi')
+
+        self.collector = gnocchi.GnocchiCollector(
+            transformer.get_transformers(),
+            period=3600,
+            conf=samples.DEFAULT_METRICS_CONF,
+        )
+
+    def test_format_data_raises_exception(self):
+        metconf = {'extra_args': {'resource_key': 'id'}}
+        data = {'group': {'id': '281b9dc6-5d02-4610-af2d-10d0d6887f48'}}
+        self.assertRaises(
+            gnocchi.AssociatedResourceNotFound,
+            self.collector._format_data,
+            metconf,
+            data,
+            resources_info={},
+        )
 
     # Filter generation
     def test_generate_one_field_filter(self):

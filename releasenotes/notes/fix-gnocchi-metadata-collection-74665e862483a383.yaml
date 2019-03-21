@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Metadata collection failures in the gnocchi collector caused by resources
+    having measures in periods where they are supposed to be deleted have
+    been fixed. Metadata is now collected over a three-period window in the
+    gnocchi collector.
