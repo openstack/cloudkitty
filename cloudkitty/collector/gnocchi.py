@@ -13,8 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import six
+
 from gnocchiclient import auth as gauth
 from gnocchiclient import client as gclient
+from gnocchiclient import exceptions as gexceptions
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -309,13 +312,23 @@ class GnocchiCollector(collector.BaseCollector):
         # get groupby
         groupby = self.conf[metric_name]['groupby']
 
-        return self._conn.aggregates.fetch(
-            op,
-            resource_type=resource_type,
-            start=ck_utils.ts2dt(start),
-            stop=ck_utils.ts2dt(end),
-            groupby=groupby,
-            search=self.extend_filter(*query_parameters))
+        try:
+            return self._conn.aggregates.fetch(
+                op,
+                resource_type=resource_type,
+                start=ck_utils.ts2dt(start),
+                stop=ck_utils.ts2dt(end),
+                groupby=groupby,
+                search=self.extend_filter(*query_parameters))
+        except (gexceptions.MetricNotFound, gexceptions.BadRequest) as e:
+            # FIXME(peschk_l): gnocchiclient seems to be raising a BadRequest
+            # when it should be raising MetricNotFound
+            if isinstance(e, gexceptions.BadRequest):
+                if 'Metrics not found' not in six.text_type(e):
+                    raise
+            LOG.warning('[{scope}] Skipping this metric for the '
+                        'current cycle.'.format(scope=project_id, err=e))
+            return []
 
     def _format_data(self, metconf, data, resources_info=None):
         """Formats gnocchi data to CK data.

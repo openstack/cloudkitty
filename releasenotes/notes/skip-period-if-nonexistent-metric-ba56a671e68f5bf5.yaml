@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    The behaviour of the gnocchi collector has changed in case of a nonexistent
+    metric. Given that a nonexistent metric is unlikely to exist in the next
+    collection cycle, the metric is simply skipped.
