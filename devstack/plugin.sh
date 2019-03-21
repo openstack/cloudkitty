@@ -159,13 +159,23 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF authinfos project_domain_name default
     iniset $CLOUDKITTY_CONF authinfos debug "$ENABLE_DEBUG_LOG_LEVEL"
 
-    iniset $CLOUDKITTY_CONF fetcher_keystone auth_section authinfos
-    iniset $CLOUDKITTY_CONF fetcher_keystone keystone_version 3
+    iniset $CLOUDKITTY_CONF fetcher backend $CLOUDKITTY_FETCHER
+    iniset $CLOUDKITTY_CONF "fetcher_$CLOUDKITTY_FETCHER" auth_section authinfos
+    if [[ "$CLOUDKITTY_FETCHER" == "keystone" ]]; then
+        iniset $CLOUDKITTY_CONF fetcher_keystone keystone_version 3
+    fi
+
+    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "influxdb" ]; then
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} user ${CLOUDKITTY_INFLUXDB_USER}
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} password ${CLOUDKITTY_INFLUXDB_PASSWORD}
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} database ${CLOUDKITTY_INFLUXDB_DATABASE}
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} host ${CLOUDKITTY_INFLUXDB_HOST}
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} port ${CLOUDKITTY_INFLUXDB_PORT}
+    fi
 
     # collect
     iniset $CLOUDKITTY_CONF collect collector $CLOUDKITTY_COLLECTOR
-    iniset $CLOUDKITTY_CONF ${CLOUDKITTY_COLLECTOR}_collector auth_section authinfos
-    iniset $CLOUDKITTY_CONF collect services $CLOUDKITTY_SERVICES
+    iniset $CLOUDKITTY_CONF "collector_${CLOUDKITTY_COLLECTOR}" auth_section authinfos
     iniset $CLOUDKITTY_CONF collect metrics_conf $CLOUDKITTY_CONF_DIR/$CLOUDKITTY_METRICS_CONF
 
     # output
@@ -176,9 +186,6 @@ function configure_cloudkitty {
     # storage
     iniset $CLOUDKITTY_CONF storage backend $CLOUDKITTY_STORAGE_BACKEND
     iniset $CLOUDKITTY_CONF storage version $CLOUDKITTY_STORAGE_VERSION
-    if [ "$CLOUDKITTY_STORAGE_BACKEND" != "sqlalchemy" ]; then
-        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} auth_section authinfos
-    fi
 
     # database
     local dburl=`database_connection_url cloudkitty`
@@ -221,6 +228,12 @@ function create_cloudkitty_data_dir {
     sudo chown $STACK_USER $CLOUDKITTY_DATA_DIR/locks
 }
 
+function create_influxdb_database {
+    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "influxdb" ]; then
+        influx -execute "CREATE DATABASE ${CLOUDKITTY_INFLUXDB_DATABASE}"
+    fi
+}
+
 # init_cloudkitty() - Initialize CloudKitty database
 function init_cloudkitty {
     # Delete existing cache
@@ -236,6 +249,8 @@ function init_cloudkitty {
     # (Re)create cloudkitty database
     recreate_database cloudkitty utf8
 
+    create_influxdb_database
+
     # Migrate cloudkitty database
     $CLOUDKITTY_BIN_DIR/cloudkitty-dbsync upgrade
 
@@ -249,10 +264,36 @@ function init_cloudkitty {
     create_cloudkitty_data_dir
 }
 
+function install_influx_ubuntu {
+    local influxdb_file=$(get_extra_file https://dl.influxdata.com/influxdb/releases/influxdb_1.6.3_amd64.deb)
+    sudo dpkg -i --skip-same-version ${influxdb_file}
+}
+
+function install_influx_fedora {
+    local influxdb_file=$(get_extra_file https://dl.influxdata.com/influxdb/releases/influxdb-1.6.3.x86_64.rpm)
+    sudo yum localinstall -y ${influxdb_file}
+}
+
+function install_influx {
+    if is_ubuntu; then
+        install_influx_ubuntu
+    elif is_fedora; then
+        install_influx_fedora
+    else
+        die $LINENO "Distribution must be Debian or Fedora-based"
+    fi
+    sudo cp -f "${CLOUDKITTY_DIR}"/devstack/files/influxdb.conf /etc/influxdb/influxdb.conf
+    sudo systemctl start influxdb || sudo systemctl restart influxdb
+}
+
 # install_cloudkitty() - Collect source and prepare
 function install_cloudkitty {
     git_clone $CLOUDKITTY_REPO $CLOUDKITTY_DIR $CLOUDKITTY_BRANCH
     setup_develop $CLOUDKITTY_DIR
+
+    if [ $CLOUDKITTY_STORAGE_BACKEND == 'influxdb' ]; then
+        install_influx
+    fi
 }
 
 # start_cloudkitty() - Start running processes, including screen

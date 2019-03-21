@@ -11,7 +11,7 @@ metrics:
       - vcpus
     mutate: NUMBOOL
     extra_args:
-      aggregation_method: max
+      aggregation_method: mean
       resource_type: instance
 
   image.size:
@@ -24,7 +24,7 @@ metrics:
       - container_format
       - disk_format
     extra_args:
-      aggregation_method: max
+      aggregation_method: mean
       resource_type: image
 
   volume.size:
@@ -35,7 +35,7 @@ metrics:
     metadata:
       - volume_type
     extra_args:
-      aggregation_method: max
+      aggregation_method: mean
       resource_type: volume
 
   network.outgoing.bytes:
@@ -47,7 +47,7 @@ metrics:
     metadata:
       - instance_id
     extra_args:
-      aggregation_method: max
+      aggregation_method: mean
       resource_type: instance_network_interface
 
   network.incoming.bytes:
@@ -59,7 +59,7 @@ metrics:
     metadata:
       - instance_id
     extra_args:
-      aggregation_method: max
+      aggregation_method: mean
       resource_type: instance_network_interface
 
   ip.floating:
@@ -71,7 +71,7 @@ metrics:
       - state
     mutate: NUMBOOL
     extra_args:
-      aggregation_method: max
+      aggregation_method: mean
       resource_type: network
 
   radosgw.objects.size:
@@ -81,5 +81,5 @@ metrics:
       - project_id
     factor: 1/1073741824
     extra_args:
-      aggregation_method: max
+      aggregation_method: mean
       resource_type: ceph_account

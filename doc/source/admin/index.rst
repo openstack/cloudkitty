@@ -6,7 +6,7 @@ Administration Guide
    :glob:
 
    architecture
-   quick_deployment/index
+   devstack
    install/index
    configuration/index
    cli/index
