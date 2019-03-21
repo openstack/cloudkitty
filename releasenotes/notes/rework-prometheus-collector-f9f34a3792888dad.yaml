@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Prometheus collector now supports HTTPS with custom CA file,
+    an insecure option to allow untrusted certificate
+    and basic HTTP authentication.

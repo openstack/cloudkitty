@@ -16,10 +16,12 @@
 # @author: Martin CAMEY
 #
 from decimal import Decimal
+
 import mock
 
 from cloudkitty import collector
 from cloudkitty.collector import prometheus
+from cloudkitty import json_utils as json
 from cloudkitty import tests
 from cloudkitty.tests import samples
 from cloudkitty import transformer
@@ -96,7 +98,7 @@ class PrometheusCollectorTest(tests.TestCase):
         }
 
         no_response = mock.patch(
-            'cloudkitty.collector.prometheus.PrometheusClient.get_data',
+            'cloudkitty.collector.prometheus.PrometheusClient.get_instant',
             return_value=samples.PROMETHEUS_RESP_INSTANT_QUERY,
         )
 
@@ -113,7 +115,7 @@ class PrometheusCollectorTest(tests.TestCase):
 
     def test_format_retrieve_raise_NoDataCollected(self):
         no_response = mock.patch(
-            'cloudkitty.collector.prometheus.PrometheusClient.get_data',
+            'cloudkitty.collector.prometheus.PrometheusClient.get_instant',
             return_value=samples.PROMETHEUS_EMPTY_RESP_INSTANT_QUERY,
         )
 
@@ -130,49 +132,133 @@ class PrometheusCollectorTest(tests.TestCase):
 
 
 class PrometheusClientTest(tests.TestCase):
+    class FakeResponse(object):
+        """Mimics an HTTP ``requests`` response"""
+
+        def __init__(self, url, text, status_code):
+            self.url = url
+            self.text = text
+            self.status_code = status_code
+
+        def json(self):
+            return json.loads(self.text)
+
+    @staticmethod
+    def _mock_requests_get(text):
+        """Factory to build FakeResponse with desired response body text"""
+        return lambda *args, **kwargs: PrometheusClientTest.FakeResponse(
+            args[0], text, 200,
+        )
+
     def setUp(self):
         super(PrometheusClientTest, self).setUp()
-        self.client = prometheus.PrometheusClient
-
-    def test_build_instant_query_first_period(self):
-        expected = 'http://localhost:9090/api/v1/query?' \
-                   'query=increase(http_requests_total[3600s])' \
-                   '&time=2015-01-01T01:00:00Z'
-        params = {
-            'source': 'http://localhost:9090/api/v1',
-            'query': 'increase(http_requests_total[$period])',
-            'start': samples.FIRST_PERIOD_BEGIN,
-            'end': samples.FIRST_PERIOD_END,
-            'period': '3600',
-            'metric_name': 'http_requests_total',
-        }
-        actual = self.client.build_query(**params)
-        self.assertEqual(expected, actual)
-
-    def test_build_instant_query_second_period(self):
-        expected = 'http://localhost:9090/api/v1/query?' \
-                   'query=increase(http_requests_total[3600s])' \
-                   '&time=2015-01-01T02:00:00Z'
-        params = {
-            'source': 'http://localhost:9090/api/v1',
-            'query': 'increase(http_requests_total[$period])',
-            'start': samples.SECOND_PERIOD_BEGIN,
-            'end': samples.SECOND_PERIOD_END,
-            'period': '3600',
-            'metric_name': 'http_requests_total',
-        }
-        actual = self.client.build_query(**params)
-        self.assertEqual(expected, actual)
-
-    def test_build_query_raises_PrometheusConfigError(self):
-        class InvalidPeriod(object):
-            def __str__(self):
-                raise ValueError
-
-        period = InvalidPeriod()
-
-        self.assertRaises(
-            prometheus.PrometheusConfigError,
-            self.client.build_query,
-            None, '$period', 0, 0, period, 'broken_metric',
+        self.client = prometheus.PrometheusClient(
+            'http://localhost:9090/api/v1',
         )
+
+    def test_get_with_no_options(self):
+        with mock.patch('requests.get') as mock_get:
+            self.client._get(
+                'query_range',
+                params={
+                    'query': 'max(http_requests_total) by (project_id)',
+                    'start': samples.FIRST_PERIOD_BEGIN,
+                    'end': samples.FIRST_PERIOD_END,
+                    'step': 10,
+                },
+            )
+            mock_get.assert_called_once_with(
+                'http://localhost:9090/api/v1/query_range',
+                params={
+                    'query': 'max(http_requests_total) by (project_id)',
+                    'start': samples.FIRST_PERIOD_BEGIN,
+                    'end': samples.FIRST_PERIOD_END,
+                    'step': 10,
+                },
+                auth=None,
+                verify=True,
+            )
+
+    def test_get_with_options(self):
+        client = prometheus.PrometheusClient(
+            'http://localhost:9090/api/v1',
+            auth=('foo', 'bar'),
+            verify='/some/random/path',
+        )
+        with mock.patch('requests.get') as mock_get:
+            client._get(
+                'query_range',
+                params={
+                    'query': 'max(http_requests_total) by (project_id)',
+                    'start': samples.FIRST_PERIOD_BEGIN,
+                    'end': samples.FIRST_PERIOD_END,
+                    'step': 10,
+                },
+            )
+            mock_get.assert_called_once_with(
+                'http://localhost:9090/api/v1/query_range',
+                params={
+                    'query': 'max(http_requests_total) by (project_id)',
+                    'start': samples.FIRST_PERIOD_BEGIN,
+                    'end': samples.FIRST_PERIOD_END,
+                    'step': 10,
+                },
+                auth=('foo', 'bar'),
+                verify='/some/random/path',
+            )
+
+    def test_get_instant(self):
+        mock_get = mock.patch(
+            'requests.get',
+            side_effect=self._mock_requests_get('{"foo": "bar"}'),
+        )
+
+        with mock_get:
+            res = self.client.get_instant(
+                'max(http_requests_total) by (project_id)',
+            )
+            self.assertEqual(res, {'foo': 'bar'})
+
+    def test_get_range(self):
+        mock_get = mock.patch(
+            'requests.get',
+            side_effect=self._mock_requests_get('{"foo": "bar"}'),
+        )
+
+        with mock_get:
+            res = self.client.get_range(
+                'max(http_requests_total) by (project_id)',
+                samples.FIRST_PERIOD_BEGIN,
+                samples.FIRST_PERIOD_END,
+                10,
+            )
+            self.assertEqual(res, {'foo': 'bar'})
+
+    def test_get_instant_raises_error_on_bad_json(self):
+        # Simulating malformed JSON response from HTTP+PromQL instant request
+        mock_get = mock.patch(
+            'requests.get',
+            side_effect=self._mock_requests_get('{"foo": "bar"'),
+        )
+        with mock_get:
+            self.assertRaises(
+                prometheus.PrometheusResponseError,
+                self.client.get_instant,
+                'max(http_requests_total) by (project_id)',
+            )
+
+    def test_get_range_raises_error_on_bad_json(self):
+        # Simulating malformed JSON response from HTTP+PromQL range request
+        mock_get = mock.patch(
+            'requests.get',
+            side_effect=self._mock_requests_get('{"foo": "bar"'),
+        )
+        with mock_get:
+            self.assertRaises(
+                prometheus.PrometheusResponseError,
+                self.client.get_range,
+                'max(http_requests_total) by (project_id)',
+                samples.FIRST_PERIOD_BEGIN,
+                samples.FIRST_PERIOD_END,
+                10,
+            )
