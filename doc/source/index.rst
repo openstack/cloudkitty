@@ -49,9 +49,16 @@ What can be done with CloudKitty ? What can't ?
   period, but the price's unit is what you decide it to be: euros, dollars,
   cents, squirrels...
 
-.. _hashmap: user/rating/hashmap.html
-
 .. _custom scripts: user/rating/pyscripts.html
+
+.. _roadmap: developer/roadmap.html
+
+What changes/features are to expect ?
+=====================================
+
+If you're interested in CloudKitty's evolution, see the project's `roadmap`_ .
+
+.. _hashmap: user/rating/hashmap.html
 
 Documentation contents
 ======================
