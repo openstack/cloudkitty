@@ -54,7 +54,10 @@ class DataFramesController(rest.RestController):
         :return: Collection of DataFrame objects.
         """
 
-        policy.authorize(pecan.request.context, 'storage:list_data_frames', {})
+        project_id = tenant_id or pecan.request.context.project_id
+        policy.authorize(pecan.request.context, 'storage:list_data_frames', {
+            'tenant_id': project_id,
+        })
 
         scope_key = CONF.collect.scope_key
         backend = pecan.request.storage_backend
