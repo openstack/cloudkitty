@@ -7,4 +7,5 @@ Configuration Guide
 
    configuration
    collector
+   storage
    policy
