@@ -208,7 +208,8 @@ class HashMap(rating.RatingProcessorBase):
                          cmp_value):
         for group_name, mappings in mapping_groups.items():
             for mapping_value, mapping in mappings.items():
-                if cmp_value == mapping_value:
+                if str(cmp_value) == mapping_value:
+
                     self.update_result(
                         group_name,
                         mapping['type'],

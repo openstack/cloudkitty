@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    HashMap module field mapping matching has been fixed: Field mapping values
+    are always stored as strings. However, metadatas to match can be floats or
+    integers (eg vcpus or ram). Given that mappings were matched with ``==``
+    until now, integers or float metadatas did never match.

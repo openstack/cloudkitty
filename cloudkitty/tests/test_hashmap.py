@@ -45,7 +45,8 @@ CK_RESOURCES_DATA = [{
                     "name": "prod1",
                     "project_id": "f266f30b11f246b589fd266f85eeec39",
                     "user_id": "55b3379b949243009ee96972fbf51ed1",
-                    "vcpus": "1"},
+                    # Integer rather than a string on purpose
+                    "vcpus": 1},
                 "vol": {
                     "qty": 1,
                     "unit": "instance"}
@@ -62,6 +63,22 @@ CK_RESOURCES_DATA = [{
                     "project_id": "f266f30b11f246b589fd266f85eeec39",
                     "user_id": "55b3379b949243009ee96972fbf51ed1",
                     "vcpus": "1"},
+                "vol": {
+                    "qty": 2,
+                    "unit": "instance"}},
+            {
+                "desc": {
+                    "availability_zone": "nova",
+                    "flavor": "m1.xlarge",
+                    "image_id": "0052f884-461d-4e3a-9598-7e5391888209",
+                    "memory": "16384",
+                    "metadata": {
+                        "farm": "dev"},
+                    "name": "dev1",
+                    "project_id": "f266f30b11f246b589fd266f85eeec39",
+                    "user_id": "55b3379b949243009ee96972fbf51ed1",
+                    # Integer rather than a string on purpose
+                    "vcpus": 8},
                 "vol": {
                     "qty": 2,
                     "unit": "instance"}},
@@ -856,7 +873,8 @@ class HashMapRatingTest(tests.TestCase):
         compute_list = expected_data[0]['usage']['compute']
         compute_list[0]['rating'] = {'price': decimal.Decimal('2.757')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('5.514')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('2.757')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal('5.514')}
+        compute_list[3]['rating'] = {'price': decimal.Decimal('2.757')}
         self.assertEqual(expected_data, actual_data)
 
     def test_process_fields(self):
@@ -896,7 +914,8 @@ class HashMapRatingTest(tests.TestCase):
         compute_list = expected_data[0]['usage']['compute']
         compute_list[0]['rating'] = {'price': decimal.Decimal('1.337')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('2.84')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('1.47070')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal('0')}
+        compute_list[3]['rating'] = {'price': decimal.Decimal('1.47070')}
         self.assertEqual(expected_data, actual_data)
 
     def test_process_fields_no_match(self):
@@ -918,10 +937,8 @@ class HashMapRatingTest(tests.TestCase):
                     self._hash._res = {}
                     self._hash.process_fields(service_name, item)
                     self._hash.add_rating_informations(item)
-        compute_list = expected_data[0]['usage']['compute']
-        compute_list[0]['rating'] = {'price': decimal.Decimal('0')}
-        compute_list[1]['rating'] = {'price': decimal.Decimal('0')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('0')}
+        for elem in expected_data[0]['usage']['compute']:
+            elem['rating'] = {'price': decimal.Decimal('0')}
         self.assertEqual(expected_data, actual_data)
 
     def test_process_field_threshold(self):
@@ -951,7 +968,8 @@ class HashMapRatingTest(tests.TestCase):
         compute_list = expected_data[0]['usage']['compute']
         compute_list[0]['rating'] = {'price': decimal.Decimal('0.1337')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('0.4')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('0.1337')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal('0.4')}
+        compute_list[3]['rating'] = {'price': decimal.Decimal('0.1337')}
         self.assertEqual(expected_data, actual_data)
 
     def test_process_field_threshold_no_match(self):
@@ -959,7 +977,7 @@ class HashMapRatingTest(tests.TestCase):
         field_db = self._db_api.create_field(service_db.service_id,
                                              'memory')
         self._db_api.create_threshold(
-            level=10240,
+            level=32768,
             cost='0.1337',
             map_type='flat',
             field_id=field_db.field_id)
@@ -973,10 +991,8 @@ class HashMapRatingTest(tests.TestCase):
                     self._hash._res = {}
                     self._hash.process_fields(service_name, item)
                     self._hash.add_rating_informations(item)
-        compute_list = expected_data[0]['usage']['compute']
-        compute_list[0]['rating'] = {'price': decimal.Decimal('0')}
-        compute_list[1]['rating'] = {'price': decimal.Decimal('0')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('0')}
+        for elem in expected_data[0]['usage']['compute']:
+            elem['rating'] = {'price': decimal.Decimal('0')}
         self.assertEqual(expected_data, actual_data)
 
     def test_process_service_threshold(self):
@@ -1004,7 +1020,8 @@ class HashMapRatingTest(tests.TestCase):
         compute_list = expected_data[0]['usage']['compute']
         compute_list[0]['rating'] = {'price': decimal.Decimal('0.1')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('0.15')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('0.1')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal('0.15')}
+        compute_list[3]['rating'] = {'price': decimal.Decimal('0.1')}
         self.assertEqual(expected_data, actual_data)
 
     def test_update_result_flat(self):
@@ -1091,7 +1108,10 @@ class HashMapRatingTest(tests.TestCase):
         service_db = self._db_api.create_service('compute')
         flavor_db = self._db_api.create_field(service_db.service_id,
                                               'flavor')
+        vcpus_db = self._db_api.create_field(service_db.service_id,
+                                             'vcpus')
         group_db = self._db_api.create_group('test_group')
+        second_group_db = self._db_api.create_group('second_test_group')
         self._db_api.create_mapping(
             cost='1.00',
             map_type='flat',
@@ -1108,6 +1128,12 @@ class HashMapRatingTest(tests.TestCase):
             map_type='flat',
             field_id=flavor_db.field_id,
             group_id=group_db.group_id)
+        self._db_api.create_mapping(
+            value='8',
+            cost='16.0',
+            map_type='flat',
+            field_id=vcpus_db.field_id,
+            group_id=second_group_db.group_id)
         image_db = self._db_api.create_field(service_db.service_id,
                                              'image_id')
         self._db_api.create_mapping(
@@ -1136,6 +1162,8 @@ class HashMapRatingTest(tests.TestCase):
         compute_list = expected_data[0]['usage']['compute']
         compute_list[0]['rating'] = {'price': decimal.Decimal('2.487')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('5.564')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('2.6357')}
+        # 8vcpu mapping * 2 + service_mapping * 1 + 128m ram threshold * 2
+        compute_list[2]['rating'] = {'price': decimal.Decimal('34.40')}
+        compute_list[3]['rating'] = {'price': decimal.Decimal('2.6357')}
         self._hash.process(actual_data)
         self.assertEqual(expected_data, actual_data)
