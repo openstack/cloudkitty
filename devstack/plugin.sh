@@ -177,6 +177,9 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF collect collector $CLOUDKITTY_COLLECTOR
     iniset $CLOUDKITTY_CONF "collector_${CLOUDKITTY_COLLECTOR}" auth_section authinfos
     iniset $CLOUDKITTY_CONF collect metrics_conf $CLOUDKITTY_CONF_DIR/$CLOUDKITTY_METRICS_CONF
+    # DO NOT DO THIS IN PRODUCTION! This is done in order to get data quicker
+    # when starting a devstack installation, but is NOT a recommended setting
+    iniset $CLOUDKITTY_CONF collect wait_periods 0
 
     # output
     iniset $CLOUDKITTY_CONF output backend $CLOUDKITTY_OUTPUT_BACKEND
