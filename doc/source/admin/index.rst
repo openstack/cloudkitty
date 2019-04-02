@@ -4,6 +4,7 @@ Administration Guide
 
 .. toctree::
    :glob:
+   :maxdepth: 2
 
    architecture
    devstack

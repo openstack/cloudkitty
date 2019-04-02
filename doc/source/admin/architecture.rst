@@ -110,11 +110,12 @@ Storage
 
 **Loaded with stevedore**
 
-The storage module is responsible of storing the data in a backend. It
-implements an API on top of the storage to be able to query the data without
-the need of knowing the type of backend used.
+The storage module is responsible for storing and retrieving data in a
+backend. It implements two interfaces (v1 and v2), each providing one or more
+drivers. For more information about the storage backend, see the
+`configuration section`_.
 
-You can use the API to create reports on the fly for example.
+.. _configuration section: configuration/storage.html
 
 Writer
 ======
