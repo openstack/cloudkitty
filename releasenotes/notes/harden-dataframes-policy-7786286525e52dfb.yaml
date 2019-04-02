@@ -1,0 +1,6 @@
+---
+security:
+  - |
+    The default policy for the ``/v1/storage/dataframes`` endpoint has been
+    changed from ``unprotected`` (accessible by any unauthenticated used) to
+    ``admin_or_owner`` (accessible only by admins or members of the project).
