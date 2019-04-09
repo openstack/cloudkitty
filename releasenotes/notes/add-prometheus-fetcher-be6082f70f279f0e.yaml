@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    A Prometheus scope fetcher has been added in order to dynamically discover
+    scopes from a Prometheus service using a user defined metric and a scope
+    attribute.
+    It can also filter out the response from Prometheus using metadata filters
+    to have a more fine-grained control over scope discovery.
+    It features HTTP basic auth capabilities and HTTPS configuration options
+    similar to Prometheus collector.

@@ -18,13 +18,14 @@ from decimal import ROUND_HALF_UP
 
 from oslo_config import cfg
 from oslo_log import log
-import requests
 from voluptuous import In
 from voluptuous import Required
 from voluptuous import Schema
 
 from cloudkitty import collector
-from cloudkitty.collector import exceptions as collect_exceptions
+from cloudkitty.collector.exceptions import CollectError
+from cloudkitty.common.prometheus_client import PrometheusClient
+from cloudkitty.common.prometheus_client import PrometheusResponseError
 from cloudkitty import utils as ck_utils
 
 
@@ -70,60 +71,6 @@ PROMETHEUS_EXTRA_SCHEMA = {
             ]),
     }
 }
-
-
-class PrometheusResponseError(collect_exceptions.CollectError):
-    pass
-
-
-class PrometheusClient(object):
-    INSTANT_QUERY_ENDPOINT = 'query'
-    RANGE_QUERY_ENDPOINT = 'query_range'
-
-    def __init__(self, url, auth=None, verify=True):
-        self.url = url
-        self.auth = auth
-        self.verify = verify
-
-    def _get(self, endpoint, params):
-        return requests.get(
-            '{}/{}'.format(self.url, endpoint),
-            params=params,
-            auth=self.auth,
-            verify=self.verify,
-        )
-
-    def get_instant(self, query, time=None, timeout=None):
-        res = self._get(
-            self.INSTANT_QUERY_ENDPOINT,
-            params={'query': query, 'time': time, 'timeout': timeout},
-        )
-        try:
-            return res.json()
-        except ValueError:
-            raise PrometheusResponseError(
-                'Could not get a valid json response for '
-                '{} (response: {})'.format(res.url, res.text)
-            )
-
-    def get_range(self, query, start, end, step, timeout=None):
-        res = self._get(
-            self.RANGE_QUERY_ENDPOINT,
-            params={
-                'query': query,
-                'start': start,
-                'end': end,
-                'step': step,
-                'timeout': timeout,
-            },
-        )
-        try:
-            return res.json()
-        except ValueError:
-            raise PrometheusResponseError(
-                'Could not get a valid json response for '
-                '{} (response: {})'.format(res.url, res.text)
-            )
 
 
 class PrometheusCollector(collector.BaseCollector):
@@ -203,10 +150,14 @@ class PrometheusCollector(collector.BaseCollector):
             period,
             ', '.join(groupby + metadata),
         )
-        res = self._conn.get_instant(
-            query,
-            time,
-        )
+
+        try:
+            res = self._conn.get_instant(
+                query,
+                time,
+            )
+        except PrometheusResponseError as e:
+            raise CollectError(*e.args)
 
         # If the query returns an empty dataset,
         # return an empty list

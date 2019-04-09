@@ -54,6 +54,8 @@ _opts = [
     ('fetcher_keystone', list(itertools.chain(
         cloudkitty.fetcher.keystone.keystone_opts,
         cloudkitty.fetcher.keystone.fetcher_keystone_opts))),
+    ('fetcher_prometheus', list(itertools.chain(
+        cloudkitty.fetcher.prometheus.fetcher_prometheus_opts))),
     ('fetcher_source', list(itertools.chain(
         cloudkitty.fetcher.source.fetcher_source_opts))),
     ('orchestrator', list(itertools.chain(
