@@ -19,6 +19,7 @@ import mock
 from oslo_messaging import conffixture
 from stevedore import extension
 
+from cloudkitty import collector
 from cloudkitty import orchestrator
 from cloudkitty import tests
 
@@ -88,3 +89,48 @@ class OrchestratorTest(tests.TestCase):
             self.assertEqual(2, worker._processors[1].obj.priority)
             self.assertEqual('fake2', worker._processors[2].name)
             self.assertEqual(1, worker._processors[2].obj.priority)
+
+
+class WorkerTest(tests.TestCase):
+
+    def setUp(self):
+        super(WorkerTest, self).setUp()
+
+        class FakeWorker(orchestrator.Worker):
+            def __init__(self):
+                self._tenant_id = 'a'
+                self._worker_id = '0'
+
+        self.worker = FakeWorker()
+        self.worker._collect = mock.MagicMock()
+
+    def test_do_collection_all_valid(self):
+        side_effect = [
+            {'period': {'begin': 0,
+                        'end': 3600},
+             'usage': [i]}
+            for i in range(5)
+        ]
+        self.worker._collect.side_effect = side_effect
+        metrics = ['metric{}'.format(i) for i in range(5)]
+        output = sorted(self.worker._do_collection(metrics, 0),
+                        key=lambda x: x['usage'][0])
+        self.assertEqual(side_effect, output)
+
+    def test_do_collection_some_empty(self):
+        side_effect = [
+            {'period': {'begin': 0,
+                        'end': 3600},
+             'usage': [i]}
+            for i in range(5)
+        ]
+        side_effect.insert(2, collector.NoDataCollected('a', 'b'))
+        side_effect.insert(4, collector.NoDataCollected('a', 'b'))
+        self.worker._collect.side_effect = side_effect
+        metrics = ['metric{}'.format(i) for i in range(7)]
+        output = sorted(self.worker._do_collection(metrics, 0),
+                        key=lambda x: x['usage'][0])
+        self.assertEqual([
+            i for i in side_effect
+            if not isinstance(i, collector.NoDataCollected)
+        ], output)

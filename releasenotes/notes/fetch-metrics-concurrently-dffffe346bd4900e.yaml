@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    Metrics are now fetched concurrently with ``eventlet`` instead of one
+    after another by the orchestrator, leading to a consequent performance
+    improvement. The maximum number of greenthreads to use can be specified
+    through the ``max_greenthreads`` option of the ``orchestrator`` section.

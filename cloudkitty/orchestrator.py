@@ -22,6 +22,7 @@ import sys
 import time
 
 import cotyledon
+import eventlet
 from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -55,6 +56,8 @@ orchestrator_opts = [
         default=multiprocessing.cpu_count(),
         min=1,
         help='Max nb of workers to run. Defaults to the nb of available CPUs'),
+    cfg.IntOpt('max_greenthreads', default=100, min=1,
+               help='Maximal number of greenthreads to use per worker.'),
 ]
 
 CONF.register_opts(orchestrator_opts, group='orchestrator')
@@ -182,11 +185,48 @@ class Worker(BaseWorker):
             next_timestamp,
             self._tenant_id,
         )
+        if not raw_data:
+            raise collector.NoDataCollected
 
-        if raw_data:
-            return [{'period': {'begin': start_timestamp,
-                                'end': next_timestamp},
-                     'usage': raw_data}]
+        return {'period': {'begin': start_timestamp,
+                           'end': next_timestamp},
+                'usage': raw_data}
+
+    def _do_collection(self, metrics, timestamp):
+
+        def _get_result(metric):
+            try:
+                return self._collect(metric, timestamp)
+            except collector.NoDataCollected:
+                LOG.info(
+                    '[scope: {scope}, worker: {worker}] No data collected '
+                    'for metric {metric} at timestamp {ts}'.format(
+                        scope=self._tenant_id,
+                        worker=self._worker_id,
+                        metric=metric,
+                        ts=ck_utils.ts2dt(timestamp))
+                )
+                return None
+            except Exception as e:
+                LOG.warning(
+                    '[scope: {scope}, worker: {worker}] Error while collecting'
+                    ' metric {metric} at timestamp {ts}: {e}. Exiting.'.format(
+                        scope=self._tenant_id,
+                        worker=self._worker_id,
+                        metric=metric,
+                        ts=ck_utils.ts2dt(timestamp),
+                        e=e)
+                )
+                # FIXME(peschk_l): here we just exit, and the
+                # collection will be retried during the next collect
+                # cycle. In the future, we should implement a retrying
+                # system in workers
+                sys.exit(1)
+
+        return list(filter(
+            lambda x: x is not None,
+            eventlet.GreenPool(size=CONF.orchestrator.max_greenthreads).imap(
+                _get_result, metrics)))
 
     def check_state(self):
         timestamp = self._state.get_state(self._tenant_id)
@@ -202,50 +242,15 @@ class Worker(BaseWorker):
 
             metrics = list(self._conf['metrics'].keys())
 
-            storage_data = []
-            for metric in metrics:
-                try:
-                    try:
-                        data = self._collect(metric, timestamp)
-                    except collector.NoDataCollected:
-                        raise
-                    except Exception as e:
-                        LOG.warning(
-                            '[scope: {scope}, worker: {worker}] Error while'
-                            'collecting metric {metric}: {error}. Retrying on '
-                            'next collection cycle.'.format(
-                                scope=self._tenant_id,
-                                worker=self._worker_id,
-                                metric=metric,
-                                error=e,
-                            ),
-                        )
-                        # FIXME(peschk_l): here we just exit, and the
-                        # collection will be retried during the next collect
-                        # cycle. In the future, we should implement a retrying
-                        # system in workers
-                        sys.exit(0)
-                except collector.NoDataCollected:
-                    LOG.info(
-                        '[scope: {scope}, worker: {worker}] No data collected '
-                        'for metric {metric} at timestamp {ts}'.format(
-                            scope=self._tenant_id,
-                            worker=self._worker_id,
-                            metric=metric,
-                            ts=ck_utils.ts2dt(timestamp))
-                    )
-                else:
-                    # Rating
-                    for processor in self._processors:
-                        processor.obj.process(data)
-                    # Writing
-                    if isinstance(data, list):
-                        storage_data += data
-                    else:
-                        storage_data.append(data)
+            # Collection
+            data = self._do_collection(metrics, timestamp)
 
-            # We're getting a full period so we directly commit
-            self._storage.push(storage_data, self._tenant_id)
+            # Rating
+            for processor in self._processors:
+                processor.obj.process(data)
+
+            # Writing
+            self._storage.push(data, self._tenant_id)
             self._state.set_state(self._tenant_id, timestamp)
 
 
@@ -340,4 +345,5 @@ class OrchestratorServiceManager(cotyledon.ServiceManager):
 
     def __init__(self):
         super(OrchestratorServiceManager, self).__init__()
-        self.service_id = self.add(Orchestrator, workers=4)
+        self.service_id = self.add(Orchestrator,
+                                   workers=CONF.orchestrator.max_workers)
