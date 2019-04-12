@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    The processor is now able to run several parallel workers. By default, one
+    worker is spawned for each available CPU. Workers can be limited through the
+    ``max_workers`` option of the ``orchestrator`` section.

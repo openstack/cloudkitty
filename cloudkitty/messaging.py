@@ -66,7 +66,7 @@ def get_server(target=None, endpoints=None):
     if not target:
         target = get_target()
     return oslo_messaging.get_rpc_server(transport, target,
-                                         endpoints, executor='eventlet',
+                                         endpoints, executor='threading',
                                          access_policy=access_policy)
 
 

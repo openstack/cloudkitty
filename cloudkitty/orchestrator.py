@@ -16,9 +16,12 @@
 # @author: Stéphane Albert
 #
 import decimal
+import multiprocessing
 import random
+import sys
+import time
 
-import eventlet
+import cotyledon
 from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -36,18 +39,24 @@ from cloudkitty import storage_state as state
 from cloudkitty import transformer
 from cloudkitty import utils as ck_utils
 
-eventlet.monkey_patch()
 
 LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 
 orchestrator_opts = [
-    cfg.StrOpt('coordination_url',
-               secret=True,
-               help='Coordination driver URL',
-               default='file:///var/lib/cloudkitty/locks'),
+    cfg.StrOpt(
+        'coordination_url',
+        secret=True,
+        help='Coordination driver URL',
+        default='file:///var/lib/cloudkitty/locks'),
+    cfg.IntOpt(
+        'max_workers',
+        default=multiprocessing.cpu_count(),
+        min=1,
+        help='Max nb of workers to run. Defaults to the nb of available CPUs'),
 ]
+
 CONF.register_opts(orchestrator_opts, group='orchestrator')
 
 CONF.import_opt('backend', 'cloudkitty.fetcher', 'fetcher')
@@ -152,12 +161,13 @@ class APIWorker(BaseWorker):
 
 
 class Worker(BaseWorker):
-    def __init__(self, collector, storage, tenant_id):
+    def __init__(self, collector, storage, tenant_id, worker_id):
         self._collector = collector
         self._storage = storage
         self._period = CONF.collect.period
         self._wait_time = CONF.collect.wait_periods * self._period
         self._tenant_id = tenant_id
+        self._worker_id = worker_id
         self._conf = ck_utils.load_conf(CONF.collect.metrics_conf)
         self._state = state.StateManager()
 
@@ -201,25 +211,28 @@ class Worker(BaseWorker):
                         raise
                     except Exception as e:
                         LOG.warning(
-                            '[%(scope_id)s] Error while collecting metric '
-                            '%(metric)s: %(error)s. Retrying on next '
-                            'collection cycle.',
-                            {
-                                'scope_id': self._tenant_id,
-                                'metric': metric,
-                                'error': e,
-                            },
+                            '[scope: {scope}, worker: {worker}] Error while'
+                            'collecting metric {metric}: {error}. Retrying on '
+                            'next collection cycle.'.format(
+                                scope=self._tenant_id,
+                                worker=self._worker_id,
+                                metric=metric,
+                                error=e,
+                            ),
                         )
                         # FIXME(peschk_l): here we just exit, and the
                         # collection will be retried during the next collect
                         # cycle. In the future, we should implement a retrying
                         # system in workers
-                        return
+                        sys.exit(0)
                 except collector.NoDataCollected:
                     LOG.info(
-                        '[{}] No data collected for metric {} '
-                        'at timestamp {}'.format(
-                            self._tenant_id, metric, ck_utils.ts2dt(timestamp))
+                        '[scope: {scope}, worker: {worker}] No data collected '
+                        'for metric {metric} at timestamp {ts}'.format(
+                            scope=self._tenant_id,
+                            worker=self._worker_id,
+                            metric=metric,
+                            ts=ck_utils.ts2dt(timestamp))
                     )
                 else:
                     # Rating
@@ -236,8 +249,11 @@ class Worker(BaseWorker):
             self._state.set_state(self._tenant_id, timestamp)
 
 
-class Orchestrator(object):
-    def __init__(self):
+class Orchestrator(cotyledon.Service):
+    def __init__(self, worker_id):
+        self._worker_id = worker_id
+        super(Orchestrator, self).__init__(self._worker_id)
+
         self.fetcher = driver.DriverManager(
             FETCHERS_NAMESPACE,
             CONF.fetcher.backend,
@@ -287,11 +303,13 @@ class Orchestrator(object):
         # pending_states = self._rating_endpoint.get_module_state()
         pass
 
-    def process(self):
+    def run(self):
+        LOG.debug('Started worker {}.'.format(self._worker_id))
         while True:
             self.tenants = self.fetcher.get_tenants()
             random.shuffle(self.tenants)
-            LOG.info('Tenants loaded for fetcher %s', self.fetcher.name)
+            LOG.info('[Worker: {w}] Tenants loaded for fetcher {f}'.format(
+                w=self._worker_id, f=self.fetcher.name))
 
             for tenant_id in self.tenants:
 
@@ -303,16 +321,23 @@ class Orchestrator(object):
                             self.collector,
                             self.storage,
                             tenant_id,
+                            self._worker_id,
                         )
                         worker.run()
 
                     lock.release()
 
-                # NOTE(sheeprine): Slow down looping if all tenants are
-                # being processed
-                eventlet.sleep(1)
             # FIXME(sheeprine): We may cause a drift here
-            eventlet.sleep(CONF.collect.period)
+            time.sleep(CONF.collect.period)
 
     def terminate(self):
+        LOG.debug('Terminating worker {}...'.format(self._worker_id))
         self.coord.stop()
+        LOG.debug('Terminated worker {}.'.format(self._worker_id))
+
+
+class OrchestratorServiceManager(cotyledon.ServiceManager):
+
+    def __init__(self):
+        super(OrchestratorServiceManager, self).__init__()
+        self.service_id = self.add(Orchestrator, workers=4)
