@@ -270,8 +270,10 @@ class InfluxStorage(v2_storage.BaseStorage):
 
     @staticmethod
     def _point_to_dataframe_entry(point):
-        groupby = point.pop('groupby').split('|')
-        metadata = point.pop('metadata').split('|')
+        groupby = (point.pop('groupby', None) or '').split('|')
+        groupby = [g for g in groupby if g]
+        metadata = (point.pop('metadata', None) or '').split('|')
+        metadata = [m for m in metadata if m]
         return {
             'vol': {
                 'unit': point['unit'],
