@@ -24,6 +24,7 @@ import cloudkitty.config
 import cloudkitty.fetcher
 import cloudkitty.fetcher.gnocchi
 import cloudkitty.fetcher.keystone
+import cloudkitty.fetcher.prometheus
 import cloudkitty.fetcher.source
 import cloudkitty.orchestrator
 import cloudkitty.service
