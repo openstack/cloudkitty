@@ -180,19 +180,19 @@ class StorageUnitTest(TestCase):
         total['results'].sort(key=lambda x: x['project_id'], reverse=True)
 
         self.assertLessEqual(
-            abs(round(total['results'][0]['rate'], 5) - expected_total_first),
+            abs(round(total['results'][0]['rate'] - expected_total_first, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][1]['rate'], 5) - expected_total_second),
+            abs(round(total['results'][1]['rate'] - expected_total_second, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][0]['qty'], 5) - expected_qty_first),
+            abs(round(total['results'][0]['qty'] - expected_qty_first, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][1]['qty'], 5) - expected_qty_second),
+            abs(round(total['results'][1]['qty'] - expected_qty_second, 5)),
             0.00001,
         )
 
@@ -215,19 +215,19 @@ class StorageUnitTest(TestCase):
         total['results'].sort(key=lambda x: x['project_id'], reverse=True)
 
         self.assertLessEqual(
-            abs(round(total['results'][0]['rate'], 5) - expected_total_first),
+            abs(round(total['results'][0]['rate'] - expected_total_first, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][1]['rate'], 5) - expected_total_second),
+            abs(round(total['results'][1]['rate'] - expected_total_second, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][0]['qty'], 5) - expected_qty_first),
+            abs(round(total['results'][0]['qty'] - expected_qty_first, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][1]['qty'], 5) - expected_qty_second),
+            abs(round(total['results'][1]['qty'] - expected_qty_second, 5)),
             0.00001,
         )
 
