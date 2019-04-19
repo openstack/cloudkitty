@@ -5,7 +5,7 @@
     post-run: playbooks/cloudkitty-install/post.yaml
     timeout: 7200
     required-projects:
-      - openstack-infra/devstack-gate
+      - openstack/devstack-gate
       - openstack/cloudkitty
       - openstack/cloudkitty-dashboard
       - openstack/python-cloudkittyclient
