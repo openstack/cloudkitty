@@ -16,8 +16,8 @@
       - ^releasenotes/.*$
     vars:
       devstack_plugins:
-        cloudkitty: https://git.openstack.org/openstack/cloudkitty
-        cloudkitty-tempest-plugin: https://git.openstack.org/openstack/cloudkitty-tempest-plugin
+        cloudkitty: https://opendev.org/openstack/cloudkitty
+        cloudkitty-tempest-plugin: https://opendev.org/openstack/cloudkitty-tempest-plugin
       devstack_services:
         ck-api: true
         ck-proc: true
