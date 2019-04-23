@@ -20,7 +20,7 @@ Configure DevStack to run CloudKitty
       $ cat >> local.conf << EOF
       [[local|localrc]]
       # ceilometer
-      enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer.git master
+      enable_plugin ceilometer https://opendev.org/openstack/ceilometer.git master
       EOF
 
 2. Enable CloudKitty:
@@ -30,7 +30,7 @@ Configure DevStack to run CloudKitty
       $ cd ${DEVSTACK_DIR}
       cat >> local.conf << EOF
       # cloudkitty
-      enable_plugin cloudkitty https://git.openstack.org/openstack/cloudkitty master
+      enable_plugin cloudkitty https://opendev.org/openstack/cloudkitty master
       enable_service ck-api, ck-proc
       EOF
 

@@ -6,7 +6,7 @@ Install the services
 
 Retrieve and install cloudkitty::
 
-    git clone https://git.openstack.org/openstack/cloudkitty.git
+    git clone https://opendev.org/openstack/cloudkitty.git
     cd cloudkitty
     python setup.py install
 
@@ -36,7 +36,7 @@ Install the client
 
 Retrieve and install cloudkitty client::
 
-    git clone https://git.openstack.org/openstack/python-cloudkittyclient.git
+    git clone https://opendev.org/openstack/python-cloudkittyclient.git
     cd python-cloudkittyclient
     python setup.py install
 
@@ -45,7 +45,7 @@ Install the dashboard module
 
 #. Retrieve and install cloudkitty's dashboard::
 
-    git clone https://git.openstack.org/openstack/cloudkitty-dashboard.git
+    git clone https://opendev.org/openstack/cloudkitty-dashboard.git
     cd cloudkitty-dashboard
     python setup.py install
 
