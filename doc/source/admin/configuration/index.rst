@@ -6,6 +6,7 @@ Configuration Guide
    :glob:
 
    configuration
+   fetcher
    collector
    storage
    policy
