@@ -84,11 +84,7 @@
 # GET  /v1/storage/dataframes
 #"storage:list_data_frames": "rule:admin_or_owner"
 
-# Get an example message
-# GET  /v2/example
-#"example:get_example": ""
-
-# Submit a fruit
-# POST  /v2/example
-#"example:submit_fruit": ""
+# Get the state of one or several scopes
+# GET  /v2/scope
+#"scope:get_state": "role:admin"
 

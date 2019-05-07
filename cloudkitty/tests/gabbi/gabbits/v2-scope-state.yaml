@@ -1,0 +1,113 @@
+fixtures:
+  - ConfigFixtureStorageV2
+  - ScopeStateFixture
+
+tests:
+  - name: Get all scopes
+    url: /v2/scope
+    status: 200
+    response_json_paths:
+      $.results.`len`: 8
+      $.results.[0].scope_id: aaaa
+
+  - name: Get all scopes with limit
+    url: /v2/scope
+    status: 200
+    query_parameters:
+      limit: 2
+    response_json_paths:
+      $.results.`len`: 2
+      $.results.[0].scope_id: aaaa
+      $.results.[1].scope_id: bbbb
+      $.results.[*].collector: [col1, col1]
+      $.results.[*].fetcher: [fet1, fet1]
+
+  - name: Get all scopes with limit and offset
+    url: /v2/scope
+    status: 200
+    query_parameters:
+      limit: 2
+      offset: 2
+    response_json_paths:
+      $.results.`len`: 2
+      $.results.[0].scope_id: cccc
+      $.results.[1].scope_id: dddd
+      $.results.[*].collector: [col2, col2]
+      $.results.[*].fetcher: [fet1, fet1]
+
+  - name: Get all scopes with offset off bounds
+    url: /v2/scope
+    status: 404
+    query_parameters:
+      limit: 2
+      offset: 20
+
+  - name: Get all scopes filter on collector
+    url: /v2/scope
+    status: 200
+    query_parameters:
+      collector: col2
+    response_json_paths:
+      $.results.`len`: 4
+      $.results.[0].scope_id: cccc
+      $.results.[1].scope_id: dddd
+      $.results.[2].scope_id: gggg
+      $.results.[3].scope_id: hhhh
+
+  - name: Get all scopes filter on collector and fetcher
+    url: /v2/scope
+    status: 200
+    query_parameters:
+      collector: col2
+      fetcher: fet2
+    response_json_paths:
+      $.results.`len`: 2
+      $.results.[0].scope_id: gggg
+      $.results.[1].scope_id: hhhh
+
+  - name: Get all scopes filter on several collectors and one fetcher
+    url: /v2/scope
+    status: 200
+    query_parameters:
+      collector: [col2, col1]
+      fetcher: fet2
+    response_json_paths:
+      $.results.`len`: 4
+      $.results.[2].scope_id: gggg
+      $.results.[3].scope_id: hhhh
+
+  - name: Get all scopes filter on several comma separated collectors and one fetcher
+    url: /v2/scope
+    status: 200
+    query_parameters:
+      collector: "col2,col1"
+      fetcher: fet2
+    response_json_paths:
+      $.results.`len`: 4
+      $.results.[2].scope_id: gggg
+      $.results.[3].scope_id: hhhh
+
+  - name: Get all scopes filter on several collectors and several keys
+    url: /v2/scope
+    status: 200
+    query_parameters:
+      collector: [col2, col1]
+      scope_key: [key1, key2]
+    response_json_paths:
+      $.results.`len`: 8
+      $.results[0].scope_id: aaaa
+
+  - name: Get all scopes filter on scope
+    url: /v2/scope
+    status: 200
+    query_parameters:
+      scope_id: dddd
+    response_json_paths:
+      $.results.`len`: 1
+      $.results.[0].scope_id: dddd
+
+  - name: Get all scopes nonexistent filter
+    url: /v2/scopes
+    status: 404
+    query_parameters:
+      scope_key: nope

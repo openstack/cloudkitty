@@ -1,0 +1,72 @@
+limit:
+  in: query
+  description: |
+    For pagination. The maximum number of results to return.
+  type: int
+  required: false
+
+offset: &offset
+  in: query
+  description: |
+    For pagination. The index of the first element that should be returned.
+  type: int
+  required: false
+
+scope_id: &scope_id
+  in: query
+  description: |
+    Filter on scope.
+  type: string
+  required: false
+
+fetcher: &fetcher
+  in: query
+  description: |
+    Filter on fetcher.
+  type: string
+  required: false
+
+collector: &collector
+  in: query
+  description: |
+    Filter on collector.
+  type: string
+  required: false
+
+scope_key: &scope_key
+  in: query
+  description: |
+    Filter on scope_key.
+  type: string
+  required: false
+
+state:
+  in: body
+  description: |
+    State of the scope.
+  type: string
+  required: true
+
+fetcher_resp:
+  <<: *fetcher
+  required: true
+  description: Fetcher for the given scope
+  in: body
+
+scope_id_resp:
+  <<: *scope_id
+  required: true
+  description: Scope
+  in: body
+
+collector_resp:
+  <<: *collector
+  required: true
+  description: Collector for the given scope
+  in: body
+
+scope_key_resp:
+  <<: *scope_key
+  required: true
+  description: Scope key for the given scope
+  in: body

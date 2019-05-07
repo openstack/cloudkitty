@@ -32,7 +32,7 @@ RESOURCE_SCHEMA = voluptuous.Schema({
 
 
 API_MODULES = [
-    'cloudkitty.api.v2.example',
+    'cloudkitty.api.v2.scope',
 ]
 
 

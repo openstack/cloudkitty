@@ -40,6 +40,47 @@ class StateManager(object):
 
     model = models.IdentifierState
 
+    def get_all(self,
+                identifier=None,
+                fetcher=None,
+                collector=None,
+                scope_key=None,
+                limit=100, offset=0):
+        """Returns the state of all scopes.
+
+        This function returns the state of all scopes with support for optional
+        filters.
+
+        :param identifier: optional scope identifiers to filter on
+        :type identifier: list
+        :param fetcher: optional scope fetchers to filter on
+        :type fetcher: list
+        :param collector: optional collectors to filter on
+        :type collector: list
+        :param fetcher: optional fetchers to filter on
+        :type fetcher: list
+        :param scope_key: optional scope_keys to filter on
+        :type scope_key: list
+        """
+        session = db.get_session()
+        session.begin()
+
+        q = utils.model_query(self.model, session)
+        if identifier:
+            q = q.filter(self.model.identifier.in_(identifier))
+        if fetcher:
+            q = q.filter(self.model.fetcher.in_(fetcher))
+        if collector:
+            q = q.filter(self.model.collector.in_(collector))
+        if scope_key:
+            q = q.filter(self.model.scope_key.in_(scope_key))
+        q = q.offset(offset).limit(limit)
+
+        r = q.all()
+        session.close()
+
+        return r
+
     def _get_db_item(self, session, identifier,
                      fetcher=None, collector=None, scope_key=None):
         fetcher = fetcher or CONF.fetcher.backend

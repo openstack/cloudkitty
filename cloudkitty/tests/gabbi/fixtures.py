@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 import abc
+import datetime
 import decimal
 import os
 
@@ -42,6 +41,7 @@ from cloudkitty import messaging
 from cloudkitty import rating
 from cloudkitty import storage
 from cloudkitty.storage.v1.sqlalchemy import models
+from cloudkitty import storage_state
 from cloudkitty import tests
 from cloudkitty.tests import utils as test_utils
 from cloudkitty import utils as ck_utils
@@ -367,6 +367,33 @@ class NowStorageDataFixture(BaseStorageDataFixture):
             project_id = '3d9a1b33-482f-42fd-aef9-b575a3da9369'
             data = self.create_fake_data(i, i + 3600, project_id)
             self.storage.push(data, project_id)
+
+
+class ScopeStateFixture(fixture.GabbiFixture):
+
+    def start_fixture(self):
+        self.sm = storage_state.StateManager()
+        self.sm.init()
+        data = [
+            ('aaaa', datetime.datetime(2019, 1, 1), 'fet1', 'col1', 'key1'),
+            ('bbbb', datetime.datetime(2019, 2, 2), 'fet1', 'col1', 'key2'),
+            ('cccc', datetime.datetime(2019, 3, 3), 'fet1', 'col2', 'key1'),
+            ('dddd', datetime.datetime(2019, 4, 4), 'fet1', 'col2', 'key2'),
+            ('eeee', datetime.datetime(2019, 5, 5), 'fet2', 'col1', 'key1'),
+            ('ffff', datetime.datetime(2019, 6, 6), 'fet2', 'col1', 'key2'),
+            ('gggg', datetime.datetime(2019, 6, 6), 'fet2', 'col2', 'key1'),
+            ('hhhh', datetime.datetime(2019, 6, 6), 'fet2', 'col2', 'key2'),
+        ]
+        for d in data:
+            self.sm.set_state(
+                d[0], d[1], fetcher=d[2], collector=d[3], scope_key=d[4])
+
+    def stop_fixture(self):
+        session = db.get_session()
+        q = utils.model_query(
+            self.sm.model,
+            session)
+        q.delete()
 
 
 class CORSConfigFixture(fixture.GabbiFixture):

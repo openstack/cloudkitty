@@ -1,0 +1,25 @@
+{
+    "results": [
+        {
+            "collector": "gnocchi",
+            "fetcher": "keystone",
+            "scope_id": "7a7e5183264644a7a79530eb56e59941",
+            "scope_key": "project_id",
+            "state": "2019-05-09 10:00:00"
+        },
+        {
+            "collector": "gnocchi",
+            "fetcher": "keystone",
+            "scope_id": "9084fadcbd46481788e0ad7405dcbf12",
+            "scope_key": "project_id",
+            "state": "2019-05-08 03:00:00"
+        },
+        {
+            "collector": "gnocchi",
+            "fetcher": "keystone",
+            "scope_id": "1f41d183fca5490ebda5c63fbaca026a",
+            "scope_key": "project_id",
+            "state": "2019-05-06 22:00:00"
+        }
+    ]
+}

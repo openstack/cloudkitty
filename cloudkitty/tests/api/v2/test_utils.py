@@ -16,6 +16,7 @@ import flask
 import mock
 import voluptuous
 from werkzeug.exceptions import BadRequest
+from werkzeug import MultiDict
 
 from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty import tests
@@ -27,9 +28,9 @@ class ApiUtilsDoInitTest(tests.TestCase):
         app = flask.Flask('cloudkitty')
         resources = [
             {
-                'module': 'cloudkitty.api.v2.example.example',
-                'resource_class': 'Example',
-                'url': '/example',
+                'module': 'cloudkitty.api.v2.scope.state',
+                'resource_class': 'ScopeState',
+                'url': '/scope',
             },
         ]
         api_utils.do_init(app, 'example', resources)
@@ -95,18 +96,18 @@ class AddInputSchemaTest(tests.TestCase):
         self.assertEqual(2, len(test_func.input_schema.schema.keys()))
 
         with mock.patch('flask.request') as m:
-            m.args = {}
+            m.args = MultiDict({})
             test_func(self)
-            m.args = {'offset': 0, 'limit': 100}
+            m.args = MultiDict({'offset': 0, 'limit': 100})
             test_func(self)
 
-            m.args = {'offset': 1}
+            m.args = MultiDict({'offset': 1})
             self.assertRaises(AssertionError, test_func, self)
-            m.args = {'limit': 99}
+            m.args = MultiDict({'limit': 99})
             self.assertRaises(AssertionError, test_func, self)
-            m.args = {'offset': -1}
+            m.args = MultiDict({'offset': -1})
             self.assertRaises(BadRequest, test_func, self)
-            m.args = {'limit': 0}
+            m.args = MultiDict({'limit': 0})
             self.assertRaises(BadRequest, test_func, self)
 
     def test_simple_add_input_schema_query(self):
@@ -123,9 +124,9 @@ class AddInputSchemaTest(tests.TestCase):
             list(test_func.input_schema.schema.keys())[0], 'arg_one')
 
         with mock.patch('flask.request') as m:
-            m.args = {}
+            m.args = MultiDict({})
             test_func(self)
-            m.args = {'arg_one': 'one'}
+            m.args = MultiDict({'arg_one': 'one'})
             test_func(self)
 
     def test_simple_add_input_schema_body(self):

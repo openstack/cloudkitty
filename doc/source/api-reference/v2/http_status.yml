@@ -9,7 +9,9 @@
 
 403:
   default: Forbidden operation for the authentified user.
-  fruit_error: This fruit is forbidden.
+
+404:
+  default: Not found
 
 405:
   default: The method is not allowed for the requested URL.

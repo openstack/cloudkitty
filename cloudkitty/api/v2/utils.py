@@ -13,6 +13,7 @@
 #    under the License.
 #
 import importlib
+import itertools
 
 import flask
 import flask_restful
@@ -48,10 +49,32 @@ class SingleQueryParam(object):
         return self._validate(output)
 
 
+class MultiQueryParam(object):
+    """Voluptuous validator allowing to validate multiple query parameters.
+
+    This validator splits comma-separated query parameter into lists,
+    verifies their type and returns it directly, instead of returning a list
+    containing a single element.
+
+    Note that this validator uses ``voluptuous.Coerce`` internally and thus
+    should not be used together with ``api_utils.get_string_type`` in python2.
+
+    :param param_type: Type of the query parameter
+    """
+    def __init__(self, param_type):
+        self._validate = lambda x: list(map(voluptuous.Coerce(param_type), x))
+
+    def __call__(self, v):
+        if not isinstance(v, list):
+            v = [v]
+        output = itertools.chain(*[elem.split(',') for elem in v])
+        return self._validate(output)
+
+
 def add_input_schema(location, schema):
     """Add a voluptuous schema validation on a method's input
 
-    Takes a dict which can be converted to a volptuous schema as parameter,
+    Takes a dict which can be converted to a voluptuous schema as parameter,
     and validates the parameters with this schema. The "location" parameter
     is used to specify the parameters' location. Note that for query
     parameters, a ``MultiDict`` is returned by Flask. Thus, each dict key will
@@ -66,11 +89,11 @@ def add_input_schema(location, schema):
             return fruit
 
 
-    To accept a list of query parameters, the following syntax can be used::
+    To accept a list of query parameters, a ``MultiQueryParam`` can be used::
 
         from cloudkitty.api.v2 import utils as api_utils
         @api_utils.add_input_schema('query', {
-            voluptuous.Required('fruit'): [str],
+            voluptuous.Required('fruit'): api_utils.MultiQueryParam(str),
         })
         def put(self, fruit=[]):
             for f in fruit:
@@ -95,7 +118,9 @@ def add_input_schema(location, schema):
                 if location == 'body':
                     args = flask.request.get_json()
                 elif location == 'query':
-                    args = dict(flask.request.args)
+                    # NOTE(lpeschke): issues with to_dict in python3.7,
+                    # see https://github.com/pallets/werkzeug/issues/1379
+                    args = dict(flask.request.args.lists())
                 try:
                     # ...here [2/2]
                     kwargs.update(wrap.input_schema(args))

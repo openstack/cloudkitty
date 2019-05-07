@@ -1,4 +1,4 @@
-# Copyright 2018 Objectif Libre
+# Copyright 2019 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -16,21 +16,16 @@ from oslo_policy import policy
 
 from cloudkitty.common.policies import base
 
-example_policies = [
+
+scope_policies = [
     policy.DocumentedRuleDefault(
-        name='example:get_example',
-        check_str=base.UNPROTECTED,
-        description='Get an example message',
-        operations=[{'path': '/v2/example',
+        name='scope:get_state',
+        check_str=base.ROLE_ADMIN,
+        description='Get the state of one or several scopes',
+        operations=[{'path': '/v2/scope',
                      'method': 'GET'}]),
-    policy.DocumentedRuleDefault(
-        name='example:submit_fruit',
-        check_str=base.UNPROTECTED,
-        description='Submit a fruit',
-        operations=[{'path': '/v2/example',
-                     'method': 'POST'}]),
 ]
 
 
 def list_rules():
-    return example_policies
+    return scope_policies

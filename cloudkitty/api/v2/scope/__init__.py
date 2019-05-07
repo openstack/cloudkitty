@@ -1,4 +1,4 @@
-# Copyright 2018 Objectif Libre
+# Copyright 2019 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -16,10 +16,10 @@ from cloudkitty.api.v2 import utils as api_utils
 
 
 def init(app):
-    api_utils.do_init(app, 'example', [
+    api_utils.do_init(app, 'scope', [
         {
-            'module': __name__ + '.' + 'example',
-            'resource_class': 'Example',
+            'module': __name__ + '.' + 'state',
+            'resource_class': 'ScopeState',
             'url': '',
         },
     ])
