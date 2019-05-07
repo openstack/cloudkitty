@@ -82,7 +82,7 @@
 
 # Return a list of rated resources for a time period and a tenant.
 # GET  /v1/storage/dataframes
-#"storage:list_data_frames": ""
+#"storage:list_data_frames": "rule:admin_or_owner"
 
 # Get an example message
 # GET  /v2/example

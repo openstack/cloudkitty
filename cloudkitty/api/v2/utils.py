@@ -120,7 +120,7 @@ def paginated(func):
 
     Example usage::
 
-       class Example(flask_restful.Resource):
+       class Example(base.BaseResource):
 
            @api_utils.paginated
            @api_utils.add_output_schema({
@@ -145,7 +145,7 @@ def add_output_schema(schema):
 
     Example usage::
 
-       class Example(flask_restful.Resource):
+       class Example(base.BaseResource):
 
            @api_utils.add_output_schema({
                voluptuous.Required(

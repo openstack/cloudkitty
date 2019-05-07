@@ -52,10 +52,10 @@ of all, we'll create a class with ``get`` and ``post`` methods in
 
 .. code-block:: python
 
-   import flask_restful
+   from cloudkitty.api.v2 import base
 
 
-   class Example(flask_restful.Resource):
+   class Example(base.BaseResource):
 
        def get(self):
            pass
@@ -77,13 +77,13 @@ Let's update our ``get`` method in order to use this decorator:
 
 .. code-block:: python
 
-   import flask_restful
    import voluptuous
 
+   from cloudkitty.api.v2 import base
    from cloudkitty.api.v2 import utils as api_utils
 
 
-   class Example(flask_restful.Resource):
+   class Example(base.BaseResource):
 
        @api_utils.add_output_schema({
            voluptuous.Required(
@@ -220,9 +220,9 @@ However, they can be overriden in ``policy.yaml``. Call them the following way:
    import flask
 
    from cloudkitty.common import policy
+   from cloudkitty.api.v2 import base
 
-
-   class Example(flask_restful.Resource):
+   class Example(base.BaseResource):
        # [...]
        def get(self):
            policy.authorize(flask.request.context, 'example:get_example', {})

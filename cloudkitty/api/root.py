@@ -14,10 +14,10 @@
 #    under the License.
 #
 from flask import request
-import flask_restful
 from oslo_config import cfg
 import voluptuous
 
+from cloudkitty.api.v2 import base
 from cloudkitty.api.v2 import utils as api_utils
 
 
@@ -73,7 +73,7 @@ def get_api_versions():
     return apis
 
 
-class CloudkittyAPIRoot(flask_restful.Resource):
+class CloudkittyAPIRoot(base.BaseResource):
 
     @api_utils.add_output_schema(voluptuous.Schema({
         'versions': [API_VERSION_SCHEMA],

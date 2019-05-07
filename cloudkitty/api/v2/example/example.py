@@ -13,15 +13,15 @@
 #    under the License.
 #
 import flask
-import flask_restful
 import voluptuous
 from werkzeug import exceptions as http_exceptions
 
+from cloudkitty.api.v2 import base
 from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty.common import policy
 
 
-class Example(flask_restful.Resource):
+class Example(base.BaseResource):
 
     @api_utils.add_output_schema({
         voluptuous.Required(
