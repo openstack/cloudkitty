@@ -142,10 +142,10 @@ class InfluxClient(object):
 
     @staticmethod
     def _get_filter(key, value):
-        if isinstance(value, six.text_type):
+        if isinstance(value, six.string_types):
             format_string = "{}='{}'"
         elif isinstance(value, (six.integer_types, float)):
-            format_string = "{}='{}'"
+            format_string = "{}={}"
         return format_string.format(key, value)
 
     @staticmethod
@@ -259,16 +259,6 @@ class InfluxStorage(v2_storage.BaseStorage):
         return begin, end
 
     @staticmethod
-    def _build_filters(filters, group_filters):
-        output = None
-        if filters and group_filters:
-            output = copy.deepcopy(filters)
-            output.update(group_filters)
-        elif group_filters:
-            output = group_filters
-        return output
-
-    @staticmethod
     def _point_to_dataframe_entry(point):
         groupby = (point.pop('groupby', None) or '').split('|')
         groupby = [g for g in groupby if g]
@@ -310,11 +300,10 @@ class InfluxStorage(v2_storage.BaseStorage):
         return output
 
     def retrieve(self, begin=None, end=None,
-                 filters=None, group_filters=None,
+                 filters=None,
                  metric_types=None,
                  offset=0, limit=1000, paginate=True):
         begin, end = self._check_begin_end(begin, end)
-        filters = self._build_filters(filters, group_filters)
         total, resp = self._conn.retrieve(
             metric_types, filters, begin, end, offset, limit, paginate)
 
@@ -345,11 +334,10 @@ class InfluxStorage(v2_storage.BaseStorage):
     def total(self, groupby=None,
               begin=None, end=None,
               metric_types=None,
-              filters=None, group_filters=None,
+              filters=None,
               offset=0, limit=1000, paginate=True):
 
         begin, end = self._check_begin_end(begin, end)
-        filters = self._build_filters(filters, group_filters)
 
         total = self._conn.get_total(
             metric_types, begin, end, groupby, filters)

@@ -92,7 +92,7 @@ class BaseStorage(object):
 
     @abc.abstractmethod
     def retrieve(self, begin=None, end=None,
-                 filters=None, group_filters=None,
+                 filters=None,
                  metric_types=None,
                  offset=0, limit=1000, paginate=True):
         """Returns the following dict::
@@ -106,10 +106,8 @@ class BaseStorage(object):
         :type begin: datetime
         :param end: End date
         :type end: datetime
-        :param filters: Metadata to filter on. ex: {'flavor_id': '42'}
+        :param filters: Attributes to filter on. ex: {'flavor_id': '42'}
         :type filters: dict
-        :param group_filters: Groupby to filter on. ex: {'project_id': '123ab'}
-        :type group_filters: dict
         :param metric_types: Metric type to filter on.
         :type metric_types: str or list
         :param offset: Offset for pagination
@@ -126,7 +124,7 @@ class BaseStorage(object):
     def total(self, groupby=None,
               begin=None, end=None,
               metric_types=None,
-              filters=None, group_filters=None,
+              filters=None,
               offset=0, limit=1000, paginate=True):
         """Returns a grouped total for given groupby.
 
@@ -139,10 +137,8 @@ class BaseStorage(object):
         :type begin: datetime
         :param end: End date
         :type end: datetime
-        :param filters: Metadata to filter on. ex: {'flavor_id': '42'}
+        :param filters: Attributes to filter on. ex: {'flavor_id': '42'}
         :type filters: dict
-        :param group_filters: Groupby to filter on. ex: {'project_id': '123ab'}
-        :type group_filters: dict
         :param metric_types: Metric type to filter on.
         :type metric_types: str or list
         :param offset: Offset for pagination

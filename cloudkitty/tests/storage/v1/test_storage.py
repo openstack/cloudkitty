@@ -102,22 +102,22 @@ class StorageDataframeTest(StorageTest):
 
     def test_get_frame_on_one_period_and_one_tenant(self):
         self.insert_different_data_two_tenants()
-        group_filters = {'project_id': self._tenant_id}
+        filters = {'project_id': self._tenant_id}
         data = self.storage.retrieve(
             begin=samples.FIRST_PERIOD_BEGIN,
             end=samples.FIRST_PERIOD_END,
-            group_filters=group_filters)['dataframes']
+            filters=filters)['dataframes']
         self.assertEqual(2, len(data))
 
     def test_get_frame_on_one_period_and_one_tenant_outside_data(self):
         self.insert_different_data_two_tenants()
-        group_filters = {'project_id': self._other_tenant_id}
+        filters = {'project_id': self._other_tenant_id}
         self.assertRaises(
             storage.NoTimeFrame,
             self.storage.retrieve,
             begin=samples.FIRST_PERIOD_BEGIN,
             end=samples.FIRST_PERIOD_END,
-            group_filters=group_filters)
+            filters=filters)
 
     def test_get_frame_on_two_periods(self):
         self.insert_different_data_two_tenants()
@@ -174,11 +174,11 @@ class StorageTotalTest(StorageTest):
         begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
         end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
         self.insert_data()
-        group_filters = {'project_id': self._tenant_id}
+        filters = {'project_id': self._tenant_id}
         total = self.storage.total(
             begin=begin,
             end=end,
-            group_filters=group_filters)['results']
+            filters=filters)['results']
         self.assertEqual(1, len(total))
         self.assertEqual(0.5537, total[0]["rate"])
         self.assertEqual(self._tenant_id, total[0]["tenant_id"])
