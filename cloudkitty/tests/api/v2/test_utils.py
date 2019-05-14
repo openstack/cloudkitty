@@ -82,6 +82,73 @@ class SingleQueryParamTest(tests.TestCase):
         )
 
 
+class DictQueryParamTest(tests.TestCase):
+
+    validator_class = api_utils.DictQueryParam
+
+    def test_empty_list_str_str(self):
+        validator = self.validator_class(str, str)
+        input_ = []
+        self.assertEqual(validator(input_), {})
+
+    def test_list_invalid_elem_missing_key_str_str(self):
+        validator = self.validator_class(str, str)
+        input_ = ['a:b', 'c']
+        self.assertRaises(voluptuous.DictInvalid, validator, input_)
+
+    def test_list_invalid_elem_too_many_columns_str_str(self):
+        validator = self.validator_class(str, str)
+        input_ = ['a:b', 'c:d:e']
+        self.assertRaises(voluptuous.DictInvalid, validator, input_)
+
+
+class SingleDictQueryParamTest(DictQueryParamTest):
+
+    validator_class = api_utils.SingleDictQueryParam
+
+    def test_single_valid_elem_str_int(self):
+        validator = self.validator_class(str, int)
+        input_ = 'life:42'
+        self.assertEqual(validator(input_), {'life': 42})
+
+    def test_list_one_valid_elem_str_int(self):
+        validator = self.validator_class(str, int)
+        input_ = ['life:42']
+        self.assertEqual(validator(input_), {'life': 42})
+
+    def test_list_several_valid_elems_str_int(self):
+        validator = self.validator_class(str, int)
+        input_ = ['life:42', 'one:1', 'two:2']
+        self.assertEqual(validator(input_), {'life': 42, 'one': 1, 'two': 2})
+
+
+class MultiDictQueryParamTest(DictQueryParamTest):
+
+    validator_class = api_utils.MultiDictQueryParam
+
+    def test_single_valid_elem_str_int(self):
+        validator = self.validator_class(str, int)
+        input_ = 'life:42'
+        self.assertEqual(validator(input_), {'life': [42]})
+
+    def test_list_one_valid_elem_str_int(self):
+        validator = self.validator_class(str, int)
+        input_ = ['life:42']
+        self.assertEqual(validator(input_), {'life': [42]})
+
+    def test_list_several_valid_elems_str_int(self):
+        validator = self.validator_class(str, int)
+        input_ = ['life:42', 'one:1', 'two:2']
+        self.assertEqual(validator(input_),
+                         {'life': [42], 'one': [1], 'two': [2]})
+
+    def test_list_several_valid_elems_shared_keys_str_int(self):
+        validator = self.validator_class(str, int)
+        input_ = ['even:0', 'uneven:1', 'even:2', 'uneven:3', 'even:4']
+        self.assertEqual(validator(input_),
+                         {'even': [0, 2, 4], 'uneven': [1, 3]})
+
+
 class AddInputSchemaTest(tests.TestCase):
 
     def test_paginated(self):

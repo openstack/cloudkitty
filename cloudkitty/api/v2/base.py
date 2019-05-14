@@ -16,6 +16,7 @@ import flask_restful
 from werkzeug import exceptions as http_exceptions
 
 from cloudkitty.common import policy
+from cloudkitty import storage
 
 
 class BaseResource(flask_restful.Resource):
@@ -31,3 +32,7 @@ class BaseResource(flask_restful.Resource):
         except policy.PolicyNotAuthorized:
             raise http_exceptions.Forbidden(
                 "You are not authorized to perform this action")
+
+    def __init__(self, *args, **kwargs):
+        super(BaseResource, self).__init__(*args, **kwargs)
+        self._storage = storage.get_storage()

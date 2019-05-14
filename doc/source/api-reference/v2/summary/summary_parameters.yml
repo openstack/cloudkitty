@@ -1,0 +1,79 @@
+limit:
+  in: query
+  description: |
+    For pagination. The maximum number of results to return.
+  type: int
+  required: false
+
+offset: &offset
+  in: query
+  description: |
+    For pagination. The index of the first element that should be returned.
+  type: int
+  required: false
+
+filters:
+  in: query
+  description: |
+    Optional filters.
+  type: dict
+  required: false
+
+groupby:
+  in: query
+  description: |
+    Optional attributes to group the summary by.
+  type: list of strings
+  required: false
+
+begin: &begin
+  in: query
+  description: |
+    Begin of the period for which the summary is required.
+  type: iso8601 timestamp
+  required: false
+
+end: &end
+  in: query
+  description: |
+    End of the period for which the summary is required.
+  type: iso8601 timestamp
+  required: false
+
+qty: &qty
+  in: body
+  description: |
+    Qty for the item.
+  type: float
+  required: true
+
+rate: &rate
+  in: body
+  description: |
+    Rate for the item.
+  type: float
+  required: true
+
+begin_resp:
+  <<: *begin
+  required: true
+  description: Begin of the period for the item.
+  in: body
+
+end_resp:
+  <<: *end
+  required: true
+  description: End of the period for the item.
+  in: body
+
+qty_resp:
+  <<: *qty
+  required: true
+  description: Qty for the item in the specified period.
+  in: body
+
+rate_resp:
+  <<: *rate
+  required: true
+  description: Rate for the item in the specified period.
+  in: body
