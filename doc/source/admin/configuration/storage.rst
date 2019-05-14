@@ -45,7 +45,7 @@ This backend has no specific options. It uses the ``connection`` option of the
 InfluxDB (v2)
 -------------
 
-Section: ``storage_influx``.
+Section: ``storage_influxdb``.
 
 * ``username``: InfluxDB username.
 
