@@ -67,7 +67,7 @@ _opts = [
         cloudkitty.config.state_opts))),
     ('storage', list(itertools.chain(
         cloudkitty.storage.storage_opts))),
-    ('storage_influx', list(itertools.chain(
+    ('storage_influxdb', list(itertools.chain(
         cloudkitty.storage.v2.influx.influx_storage_opts))),
     ('storage_gnocchi', list(itertools.chain(
         cloudkitty.storage.v1.hybrid.backends.gnocchi.gnocchi_storage_opts))),
