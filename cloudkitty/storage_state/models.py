@@ -18,6 +18,7 @@
 from oslo_db.sqlalchemy import models
 import sqlalchemy
 from sqlalchemy.ext import declarative
+from sqlalchemy import schema
 
 
 Base = declarative.declarative_base()
@@ -25,15 +26,25 @@ Base = declarative.declarative_base()
 
 class IdentifierState(Base, models.ModelBase):
     """Represents the state of a given identifier."""
-    __table_args__ = {'mysql_charset': "utf8",
-                      'mysql_engine': "InnoDB"}
+
+    @declarative.declared_attr
+    def __table_args__(cls):
+        return (
+            schema.UniqueConstraint(
+                'identifier',
+                'scope_key',
+                'collector',
+                'fetcher',
+                name='uq_cloudkitty_storage_states_identifier'),
+        )
+
     __tablename__ = 'cloudkitty_storage_states'
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True)
     identifier = sqlalchemy.Column(sqlalchemy.String(256),
                                    nullable=False,
-                                   unique=True)
+                                   unique=False)
     scope_key = sqlalchemy.Column(sqlalchemy.String(40),
                                   nullable=True,
                                   unique=False)
