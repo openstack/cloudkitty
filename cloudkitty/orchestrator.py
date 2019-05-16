@@ -282,8 +282,12 @@ class Orchestrator(cotyledon.Service):
         self.coord.start(start_heart=True)
 
     def _lock(self, tenant_id):
-        lock_name = b"cloudkitty-" + str(tenant_id).encode('ascii')
-        return self.coord.get_lock(lock_name)
+        name = b"cloudkitty-" \
+            + str(tenant_id + '-').encode('ascii') \
+            + str(CONF.collect.collector + '-').encode('ascii') \
+            + str(CONF.fetcher.backend + '-').encode('ascii') \
+            + str(CONF.collect.scope_key).encode('ascii')
+        return name, self.coord.get_lock(name)
 
     def _init_messaging(self):
         target = oslo_messaging.Target(topic='cloudkitty',
@@ -318,8 +322,17 @@ class Orchestrator(cotyledon.Service):
 
             for tenant_id in self.tenants:
 
-                lock = self._lock(tenant_id)
+                lock_name, lock = self._lock(tenant_id)
+                LOG.debug(
+                    '[Worker: {w}] Trying to acquire lock "{l}" ...'.format(
+                        w=self._worker_id, l=lock_name)
+                )
                 if lock.acquire(blocking=False):
+                    LOG.debug(
+                        '[Worker: {w}] Acquired lock "{l}" ...'.format(
+                            w=self._worker_id, l=lock_name)
+                    )
+                    LOG.debug('Acquired lock "{}".'.format(lock_name))
                     state = self._check_state(tenant_id)
                     if state:
                         worker = Worker(
