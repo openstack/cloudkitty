@@ -96,7 +96,7 @@ GNOCCHI_EXTRA_SCHEMA = {
         # This parameter permits to adapt the key of the resource identifier
         Required('resource_key', default='id'): All(str, Length(min=1)),
         Required('aggregation_method', default='max'):
-            In(['max', 'mean', 'min']),
+            In(['max', 'mean', 'min', 'rate:max', 'rate:mean', 'rate:min']),
     },
 }
 
