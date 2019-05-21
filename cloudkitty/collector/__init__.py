@@ -19,11 +19,13 @@ import abc
 import fractions
 
 from oslo_config import cfg
+from oslo_log import log as logging
 import six
 from stevedore import driver
 from voluptuous import All
 from voluptuous import Any
 from voluptuous import Coerce
+from voluptuous import Error as VoluptuousError
 from voluptuous import In
 from voluptuous import Invalid
 from voluptuous import Length
@@ -33,6 +35,9 @@ from voluptuous import Schema
 
 from cloudkitty import transformer
 from cloudkitty import utils as ck_utils
+
+
+LOG = logging.getLogger(__name__)
 
 collect_opts = [
     cfg.StrOpt('collector',
@@ -178,7 +183,12 @@ class BaseCollector(object):
             self.period = kwargs['period']
             self.conf = self.check_configuration(kwargs['conf'])
         except KeyError as e:
-            raise ValueError("Missing argument (%s)" % e)
+            key_error_message = "Missing argument (%s)" % e
+            LOG.error(key_error_message, e)
+            raise ValueError(key_error_message)
+        except VoluptuousError as v:
+            LOG.error('Problem while checking configurations.', v)
+            raise v
 
         self._check_transformers()
         self.t_cloudkitty = self.transformers['CloudKittyFormatTransformer']
