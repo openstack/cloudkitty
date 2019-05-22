@@ -282,7 +282,7 @@ class PyScriptsRatingTest(tests.TestCase):
             }}
         self.assertEqual(expected, self._pyscripts._scripts)
         context = {'a': 0}
-        exec(self._pyscripts._scripts[FAKE_UUID]['code'], context)
+        exec(self._pyscripts._scripts[FAKE_UUID]['code'], context)  # nosec
         self.assertEqual(1, context['a'])
 
     def test_update_script_on_checksum_change(self):
