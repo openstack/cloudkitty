@@ -16,6 +16,7 @@
 # @author: Stéphane Albert
 #
 import decimal
+import hashlib
 import multiprocessing
 import random
 import sys
@@ -282,11 +283,12 @@ class Orchestrator(cotyledon.Service):
         self.coord.start(start_heart=True)
 
     def _lock(self, tenant_id):
-        name = b"cloudkitty-" \
-            + str(tenant_id + '-').encode('ascii') \
-            + str(CONF.collect.collector + '-').encode('ascii') \
-            + str(CONF.fetcher.backend + '-').encode('ascii') \
-            + str(CONF.collect.scope_key).encode('ascii')
+        name = hashlib.sha256(
+            ("cloudkitty-"
+             + str(tenant_id + '-')
+             + str(CONF.collect.collector + '-')
+             + str(CONF.fetcher.backend + '-')
+             + str(CONF.collect.scope_key)).encode('ascii')).hexdigest()
         return name, self.coord.get_lock(name)
 
     def _init_messaging(self):
@@ -332,7 +334,6 @@ class Orchestrator(cotyledon.Service):
                         '[Worker: {w}] Acquired lock "{l}" ...'.format(
                             w=self._worker_id, l=lock_name)
                     )
-                    LOG.debug('Acquired lock "{}".'.format(lock_name))
                     state = self._check_state(tenant_id)
                     if state:
                         worker = Worker(
