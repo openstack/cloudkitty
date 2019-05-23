@@ -103,10 +103,10 @@ class WriteOrchestrator(object):
         if not timeframe_end:
             timeframe_end = timeframe + self._period
         try:
-            group_filters = {'project_id': self._tenant_id}
+            filters = {'project_id': self._tenant_id}
             data = self._storage.retrieve(begin=timeframe,
                                           end=timeframe_end,
-                                          group_filters=group_filters,
+                                          filters=filters,
                                           paginate=False)
             for df in data['dataframes']:
                 for service, resources in df['usage'].items():

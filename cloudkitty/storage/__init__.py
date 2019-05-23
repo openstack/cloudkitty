@@ -79,10 +79,10 @@ class V1StorageAdapter(storage_v2.BaseStorage):
         return metric_types
 
     def retrieve(self, begin=None, end=None,
-                 filters=None, group_filters=None,
+                 filters=None,
                  metric_types=None,
                  offset=0, limit=100, paginate=True):
-        tenant_id = group_filters.get('project_id') if group_filters else None
+        tenant_id = filters.get('project_id') if filters else None
         metric_types = self._check_metric_types(metric_types)
         frames = self.storage.get_time_frame(
             begin, end,
@@ -97,9 +97,9 @@ class V1StorageAdapter(storage_v2.BaseStorage):
     def total(self, groupby=None,
               begin=None, end=None,
               metric_types=None,
-              filters=None, group_filters=None,
+              filters=None,
               offset=0, limit=100, paginate=True):
-        tenant_id = group_filters.get('project_id') if group_filters else None
+        tenant_id = filters.get('project_id') if filters else None
 
         storage_gby = []
         if groupby:

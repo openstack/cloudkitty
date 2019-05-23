@@ -62,7 +62,7 @@ class DataFramesController(rest.RestController):
         scope_key = CONF.collect.scope_key
         backend = pecan.request.storage_backend
         dataframes = []
-        group_filters = {scope_key: tenant_id} if tenant_id else None
+        filters = {scope_key: tenant_id} if tenant_id else None
 
         if begin:
             begin = ck_utils.dt2ts(begin)
@@ -71,7 +71,7 @@ class DataFramesController(rest.RestController):
         try:
             resp = backend.retrieve(
                 begin, end,
-                group_filters=group_filters,
+                filters=filters,
                 metric_types=resource_type,
                 paginate=False)
         except storage.NoTimeFrame:

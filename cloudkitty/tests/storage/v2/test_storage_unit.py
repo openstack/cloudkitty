@@ -119,14 +119,14 @@ class StorageUnitTest(TestCase):
         begin = datetime.datetime(2018, 1, 1)
         end = datetime.datetime(2018, 1, 1, 4)
 
-        group_filters = {'project_id': self._project_id}
+        filters = {'project_id': self._project_id}
         self._compare_get_total_result_with_expected(
             expected_qty,
             expected_total,
             1,
             self.storage.total(begin=begin,
                                end=end,
-                               group_filters=group_filters),
+                               filters=filters),
         )
 
     def test_get_total_all_scopes_one_period(self):
@@ -151,14 +151,14 @@ class StorageUnitTest(TestCase):
         begin = datetime.datetime(2018, 1, 1)
         end = datetime.datetime(2018, 1, 1, 1)
 
-        group_filters = {'project_id': self._project_id}
+        filters = {'project_id': self._project_id}
         self._compare_get_total_result_with_expected(
             expected_qty,
             expected_total,
             1,
             self.storage.total(begin=begin,
                                end=end,
-                               group_filters=group_filters),
+                               filters=filters),
         )
 
     def test_get_total_all_scopes_all_periods_groupby_project_id(self):
@@ -309,9 +309,9 @@ class StorageUnitTest(TestCase):
         begin = datetime.datetime(2018, 1, 1)
         end = datetime.datetime(2018, 1, 1, 1)
 
-        group_filters = {'project_id': self._project_id}
+        filters = {'project_id': self._project_id}
         frames = self.storage.retrieve(begin=begin, end=end,
-                                       group_filters=group_filters,
+                                       filters=filters,
                                        metric_types=['image.size', 'instance'])
         self.assertEqual(frames['total'], expected_length)
 

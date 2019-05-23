@@ -101,12 +101,12 @@ class ReportController(rest.RestController):
         # enforce it by policy engine
         scope_key = CONF.collect.scope_key
         groupby = [scope_key]
-        group_filters = {scope_key: tenant_id} if tenant_id else None
+        filters = {scope_key: tenant_id} if tenant_id else None
         result = storage.total(
             groupby=groupby,
             begin=begin, end=end,
             metric_types=service,
-            group_filters=group_filters)
+            filters=filters)
 
         if result['total'] < 1:
             return decimal.Decimal('0')
@@ -144,12 +144,12 @@ class ReportController(rest.RestController):
             storage_groupby.append(scope_key)
         if groupby is not None and 'res_type' in groupby:
             storage_groupby.append('type')
-        group_filters = {scope_key: tenant_id} if tenant_id else None
+        filters = {scope_key: tenant_id} if tenant_id else None
         result = storage.total(
             groupby=storage_groupby,
             begin=begin, end=end,
             metric_types=service,
-            group_filters=group_filters)
+            filters=filters)
 
         summarymodels = []
         for res in result['results']:
