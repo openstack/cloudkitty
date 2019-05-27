@@ -112,7 +112,7 @@ class FakeInfluxClient(InfluxClient):
         points = list(filter(filter_func, self._points))
 
         columns = set()
-        for point in list(points):
+        for point in points:
             columns.update(point['tags'].keys())
             columns.update(point['fields'].keys())
         columns.add('time')
@@ -135,7 +135,28 @@ class FakeInfluxClient(InfluxClient):
         series['values'] = values
         output['series'] = [series]
 
-        return len(points), resultset.ResultSet(output)
+        return len(list(points)), resultset.ResultSet(output)
+
+    def delete(self, begin, end, filters):
+
+        beg = utils.dt2ts(begin) if begin else None
+        end = utils.dt2ts(end) if end else None
+
+        def __filter_func(elem):
+
+            def __time(elem):
+                return ((beg and beg > elem['time'])
+                        or (end and end <= elem['time']))
+
+            def __filt(elem):
+                return all(
+                    (elem['tags'].get(k, None) == v
+                     or elem['fields'].get(k, None) == v)
+                    for k, v in filters.items())
+
+            return __time(elem) and __filt(elem)
+
+        self._points = list(filter(__filter_func, self._points))
 
     def retention_policy_exists(self, database, policy):
         return True

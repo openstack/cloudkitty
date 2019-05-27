@@ -137,6 +137,9 @@ class V1StorageAdapter(storage_v2.BaseStorage):
     def get_state(self, tenant_id=None):
         return self.storage.get_state(tenant_id)
 
+    def delete(self, begin=None, end=None, filters=None):
+        LOG.warning('Calling unsupported "delete" method on v1 storage.')
+
 
 def get_storage(**kwargs):
     storage_args = {

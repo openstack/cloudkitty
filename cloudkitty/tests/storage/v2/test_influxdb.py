@@ -13,10 +13,12 @@
 #    under the License.
 #
 import collections
+from datetime import datetime
 import unittest
 
-from cloudkitty.storage.v2.influx import InfluxClient
-from cloudkitty.storage.v2.influx import InfluxStorage
+import mock
+
+from cloudkitty.storage.v2 import influx
 from cloudkitty.tests import TestCase
 
 
@@ -38,7 +40,7 @@ class TestInfluxDBStorage(TestCase):
 
     def test_point_to_dataframe_entry_valid_point(self):
         self.assertEqual(
-            InfluxStorage._point_to_dataframe_entry(self.point), {
+            influx.InfluxStorage._point_to_dataframe_entry(self.point), {
                 'vol': {'unit': 'banana', 'qty': 42},
                 'rating': {'price': 1.0},
                 'groupby': {'one': '1', 'two': '2'},
@@ -50,7 +52,7 @@ class TestInfluxDBStorage(TestCase):
         self.point['groupby'] = 'a'
         self.point['metadata'] = None
         self.assertEqual(
-            InfluxStorage._point_to_dataframe_entry(self.point), {
+            influx.InfluxStorage._point_to_dataframe_entry(self.point), {
                 'vol': {'unit': 'banana', 'qty': 42},
                 'rating': {'price': 1.0},
                 'groupby': {'a': ''},
@@ -62,7 +64,8 @@ class TestInfluxDBStorage(TestCase):
 class TestInfluxClient(unittest.TestCase):
 
     def setUp(self):
-        self.client = InfluxClient()
+        self.client = influx.InfluxClient()
+        self._storage = influx.InfluxStorage()
 
     def test_get_filter_query(self):
         filters = collections.OrderedDict(
@@ -74,3 +77,54 @@ class TestInfluxClient(unittest.TestCase):
 
     def test_get_filter_query_no_filters(self):
         self.assertEqual(self.client._get_filter_query({}), '')
+
+    def test_delete_no_parameters(self):
+        self._storage._conn._conn.query = m = mock.MagicMock()
+        self._storage.delete()
+        m.assert_called_once_with('DELETE FROM "dataframes";')
+
+    def test_delete_begin_end(self):
+        self._storage._conn._conn.query = m = mock.MagicMock()
+        self._storage.delete(begin=datetime(2019, 1, 1),
+                             end=datetime(2019, 1, 2))
+        m.assert_called_once_with(
+            """DELETE FROM "dataframes" WHERE time >= '2019-01-01T00:00:00Z'"""
+            """ AND time < '2019-01-02T00:00:00Z';""")
+
+    def test_delete_begin_end_filters(self):
+        self._storage._conn._conn.query = m = mock.MagicMock()
+        self._storage.delete(
+            begin=datetime(2019, 1, 1), end=datetime(2019, 1, 2),
+            filters={'project_id': 'foobar'})
+        m.assert_called_once_with(
+            """DELETE FROM "dataframes" WHERE time >= '2019-01-01T00:00:00Z'"""
+            """ AND time < '2019-01-02T00:00:00Z' AND "project_id"='foobar';"""
+        )
+
+    def test_delete_end_filters(self):
+        self._storage._conn._conn.query = m = mock.MagicMock()
+        self._storage.delete(end=datetime(2019, 1, 2),
+                             filters={'project_id': 'foobar'})
+        m.assert_called_once_with(
+            """DELETE FROM "dataframes" WHERE time < '2019-01-02T00:00:00Z' """
+            """AND "project_id"='foobar';""")
+
+    def test_delete_begin_filters(self):
+        self._storage._conn._conn.query = m = mock.MagicMock()
+        self._storage.delete(begin=datetime(2019, 1, 2),
+                             filters={'project_id': 'foobar'})
+        m.assert_called_once_with(
+            """DELETE FROM "dataframes" WHERE time >= '2019-01-02T00:00:00Z'"""
+            """ AND "project_id"='foobar';""")
+
+    def test_delete_begin(self):
+        self._storage._conn._conn.query = m = mock.MagicMock()
+        self._storage.delete(begin=datetime(2019, 1, 2))
+        m.assert_called_once_with("""DELETE FROM "dataframes" WHERE """
+                                  """time >= '2019-01-02T00:00:00Z';""")
+
+    def test_delete_end(self):
+        self._storage._conn._conn.query = m = mock.MagicMock()
+        self._storage.delete(end=datetime(2019, 1, 2))
+        m.assert_called_once_with("""DELETE FROM "dataframes" WHERE """
+                                  """time < '2019-01-02T00:00:00Z';""")

@@ -121,6 +121,18 @@ class BaseStorage(object):
        """
 
     @abc.abstractmethod
+    def delete(self, begin=None, end=None, filters=None):
+        """Deletes all data from for the given period and filters.
+
+        :param begin: Start date
+        :type begin: datetime
+        :param end: End date
+        :type end: datetime
+        :param filters: Attributes to filter on. ex: {'flavor_id': '42'}
+        :type filters: dict
+        """
+
+    @abc.abstractmethod
     def total(self, groupby=None,
               begin=None, end=None,
               metric_types=None,

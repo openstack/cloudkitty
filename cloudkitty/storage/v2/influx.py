@@ -206,6 +206,27 @@ class InfluxClient(object):
         total = sum(point['count'] for point in total.get_points())
         return total, result
 
+    @staticmethod
+    def _get_time_query_delete(begin, end):
+        output = ""
+        if begin:
+            output += " WHERE time >= '{}'".format(utils.isotime(begin))
+        if end:
+            output += " AND " if output else " WHERE "
+            output += "time < '{}'".format(utils.isotime(end))
+        return output
+
+    def delete(self, begin, end, filters):
+        query = 'DELETE FROM "dataframes"'
+        query += self._get_time_query_delete(begin, end)
+        filter_query = self._get_filter_query(filters)
+        if 'WHERE' not in query and filter_query:
+            query += " WHERE " + filter_query[5:]
+        else:
+            query += filter_query
+        query += ';'
+        self._conn.query(query)
+
 
 class InfluxStorage(v2_storage.BaseStorage):
 
@@ -317,6 +338,9 @@ class InfluxStorage(v2_storage.BaseStorage):
             'total': total,
             'dataframes': self._build_dataframes(points)
         }
+
+    def delete(self, begin=None, end=None, filters=None):
+        self._conn.delete(begin, end, filters)
 
     @staticmethod
     def _get_total_elem(begin, end, groupby, series_groupby, point):
