@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added a v2 API endpoint allowing to reset the state of several scopes.
+    This endpoint is available via a ``PUT`` request on ``/v2/scope`` and
+    supports filters. Admin privileges are required to use this endpoint.

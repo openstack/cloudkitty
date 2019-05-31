@@ -78,7 +78,6 @@ class StateManager(object):
 
         r = q.all()
         session.close()
-
         return r
 
     def _get_db_item(self, session, identifier,
@@ -124,6 +123,7 @@ class StateManager(object):
         session.begin()
         r = self._get_db_item(
             session, identifier, fetcher, collector, scope_key)
+
         if r and r.state != state:
             r.state = state
             session.commit()
@@ -137,6 +137,7 @@ class StateManager(object):
             )
             session.add(state_object)
             session.commit()
+
         session.close()
 
     def get_state(self, identifier,

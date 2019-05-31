@@ -48,3 +48,34 @@ Response Example
 
 .. literalinclude:: ./api_samples/scope/scope_get.json
    :language: javascript
+
+
+Reset the status of several scopes
+==================================
+
+Reset the status of several scopes.
+
+.. rest_method::  PUT /v2/scope
+
+.. rest_parameters:: scope/scope_parameters.yml
+
+   - state: state
+   - collector: collector
+   - fetcher: fetcher
+   - scope_id: scope_id
+   - scope_key: scope_key
+   - all_scopes: all_scopes
+
+Status codes
+------------
+
+.. rest_status_code:: success http_status.yml
+
+   - 202
+
+.. rest_status_code:: error http_status.yml
+
+   - 400
+   - 403
+   - 404
+   - 405

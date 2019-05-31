@@ -4,6 +4,9 @@
 201:
   default: Resource was successfully created.
 
+202:
+  default: Request has been accepted for asynchronous processing.
+
 400:
   default: Invalid request.
 

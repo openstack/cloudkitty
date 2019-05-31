@@ -111,3 +111,61 @@ tests:
     status: 404
     query_parameters:
       scope_key: nope
+
+  - name: Reset states of all scopes
+    url: /v2/scope
+    method: PUT
+    status: 202
+    request_headers:
+      content-type: application/json
+    data:
+      state: 20190716T085501Z
+      all_scopes: true
+
+  - name: Reset one scope state
+    url: /v2/scope
+    method: PUT
+    status: 202
+    request_headers:
+      content-type: application/json
+    data:
+      state: 20190716T085501Z
+      scope_id: aaaa
+
+  - name: Reset several scope states
+    url: /v2/scope
+    method: PUT
+    status: 202
+    request_headers:
+      content-type: application/json
+    data:
+      state: 20190716T085501Z
+      scope_id: aaaa
+      scope_id: bbbb
+
+  - name: Reset state with no scope_id or all_scopes
+    url: /v2/scope
+    method: PUT
+    status: 400
+    request_headers:
+      content-type: application/json
+    data:
+      scope_key: key1
+      state: 20190716T085501Z
+    response_strings:
+      - "Either all_scopes or a scope_id should be specified."
+
+  - name: Reset state with no params
+    url: /v2/scope
+    method: PUT
+    status: 400
+
+  - name: Reset state with no results for parameters
+    url: /v2/scope
+    method: PUT
+    status: 404
+    request_headers:
+      content-type: application/json
+    data:
+      state: 20190716T085501Z
+      scope_id: foobar

@@ -24,6 +24,12 @@ scope_policies = [
         description='Get the state of one or several scopes',
         operations=[{'path': '/v2/scope',
                      'method': 'GET'}]),
+    policy.DocumentedRuleDefault(
+        name='scope:reset_state',
+        check_str=base.ROLE_ADMIN,
+        description='Reset the state of one or several scopes',
+        operations=[{'path': '/v2/scope',
+                     'method': 'PUT'}]),
 ]
 
 

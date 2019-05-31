@@ -271,6 +271,16 @@ class BaseFakeRPC(fixture.GabbiFixture):
         self.server.stop()
 
 
+class ScopeStateResetFakeRPC(BaseFakeRPC):
+    class FakeRPCEndpoint(object):
+        target = oslo_messaging.Target(version='1.0')
+
+        def reset_state(self, ctxt, res_data):
+            pass
+
+    endpoint = FakeRPCEndpoint
+
+
 class QuoteFakeRPC(BaseFakeRPC):
     class FakeRPCEndpoint(object):
         target = oslo_messaging.Target(namespace='rating',

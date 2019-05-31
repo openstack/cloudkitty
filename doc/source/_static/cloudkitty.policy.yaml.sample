@@ -88,6 +88,10 @@
 # GET  /v2/scope
 #"scope:get_state": "role:admin"
 
+# Reset the state of one or several scopes
+# PUT  /v2/scope
+#"scope:reset_state": "role:admin"
+
 # Get a rating summary
 # GET  /v2/summary
 #"summary:get_summary": "rule:admin_or_owner"

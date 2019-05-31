@@ -15,13 +15,18 @@
 #
 # @author: Stéphane Albert
 #
+import datetime
 import mock
 from oslo_messaging import conffixture
 from stevedore import extension
 
 from cloudkitty import collector
 from cloudkitty import orchestrator
+from cloudkitty.storage.v2 import influx
+from cloudkitty import storage_state
 from cloudkitty import tests
+from tooz import coordination
+from tooz.drivers import file
 
 
 class FakeKeystoneClient(object):
@@ -32,6 +37,77 @@ class FakeKeystoneClient(object):
                     '4dfb25b0947c4f5481daf7b948c14187']
 
     tenants = FakeTenants()
+
+
+class ScopeEndpointTest(tests.TestCase):
+    def setUp(self):
+        super(ScopeEndpointTest, self).setUp()
+        messaging_conf = self.useFixture(conffixture.ConfFixture(self.conf))
+        messaging_conf.transport_url = 'fake:/'
+        self.conf.set_override('backend', 'influxdb', 'storage')
+
+    def test_reset_state(self):
+        coord_start_patch = mock.patch.object(
+            coordination.CoordinationDriverWithExecutor, 'start')
+        lock_acquire_patch = mock.patch.object(
+            file.FileLock, 'acquire', return_value=True)
+
+        storage_delete_patch = mock.patch.object(
+            influx.InfluxStorage, 'delete')
+        state_set_patch = mock.patch.object(
+            storage_state.StateManager, 'set_state')
+
+        with coord_start_patch, lock_acquire_patch, \
+                storage_delete_patch as sd, state_set_patch as ss:
+
+            endpoint = orchestrator.ScopeEndpoint()
+            endpoint.reset_state({}, {
+                'scopes': [
+                    {
+                        'scope_id': 'f266f30b11f246b589fd266f85eeec39',
+                        'scope_key': 'project_id',
+                        'collector': 'prometheus',
+                        'fetcher': 'prometheus',
+                    },
+                    {
+                        'scope_id': '4dfb25b0947c4f5481daf7b948c14187',
+                        'scope_key': 'project_id',
+                        'collector': 'gnocchi',
+                        'fetcher': 'gnocchi',
+                    },
+                ],
+                'state': '20190716T085501Z',
+            })
+
+            sd.assert_has_calls([
+                mock.call(
+                    begin=datetime.datetime(2019, 7, 16, 8, 55, 1),
+                    end=None,
+                    filters={
+                        'project_id': 'f266f30b11f246b589fd266f85eeec39',
+                        'collector': 'prometheus',
+                        'fetcher': 'prometheus'}),
+                mock.call(
+                    begin=datetime.datetime(2019, 7, 16, 8, 55, 1),
+                    end=None,
+                    filters={
+                        'project_id': '4dfb25b0947c4f5481daf7b948c14187',
+                        'collector': 'gnocchi',
+                        'fetcher': 'gnocchi'})], any_order=True)
+
+            ss.assert_has_calls([
+                mock.call(
+                    'f266f30b11f246b589fd266f85eeec39',
+                    datetime.datetime(2019, 7, 16, 8, 55, 1),
+                    scope_key='project_id',
+                    collector='prometheus',
+                    fetcher='prometheus'),
+                mock.call(
+                    '4dfb25b0947c4f5481daf7b948c14187',
+                    datetime.datetime(2019, 7, 16, 8, 55, 1),
+                    scope_key='project_id',
+                    collector='gnocchi',
+                    fetcher='gnocchi')], any_order=True)
 
 
 class OrchestratorTest(tests.TestCase):

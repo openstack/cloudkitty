@@ -40,11 +40,17 @@ scope_key: &scope_key
   type: string
   required: false
 
+all_scopes: &all_scopes
+  in: body
+  description: |
+    Confirmation whether all scopes must be reset
+  type: bool
+
 state:
   in: body
   description: |
     State of the scope.
-  type: string
+  type: iso8601 timestamp
   required: true
 
 fetcher_resp:

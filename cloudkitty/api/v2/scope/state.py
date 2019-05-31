@@ -19,10 +19,15 @@ from werkzeug import exceptions as http_exceptions
 from cloudkitty.api.v2 import base
 from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty.common import policy
+from cloudkitty import messaging
 from cloudkitty import storage_state
+from cloudkitty import utils as ck_utils
 
 
 class ScopeState(base.BaseResource):
+    def __init__(self, *args, **kwargs):
+        super(ScopeState, self).__init__(*args, **kwargs)
+        self._client = messaging.get_client()
 
     @api_utils.paginated
     @api_utils.add_input_schema('query', {
@@ -75,3 +80,59 @@ class ScopeState(base.BaseResource):
                 'state': str(r.state),
             } for r in results]
         }
+
+    @api_utils.add_input_schema('body', {
+        voluptuous.Exclusive('all_scopes', 'scope_selector'):
+            voluptuous.Boolean(),
+        voluptuous.Exclusive('scope_id', 'scope_selector'):
+            api_utils.MultiQueryParam(str),
+        voluptuous.Optional('scope_key', default=[]):
+            api_utils.MultiQueryParam(str),
+        voluptuous.Optional('fetcher', default=[]):
+            api_utils.MultiQueryParam(str),
+        voluptuous.Optional('collector', default=[]):
+            api_utils.MultiQueryParam(str),
+        voluptuous.Required('state'):
+            voluptuous.Coerce(ck_utils.iso2dt),
+    })
+    def put(self,
+            all_scopes=False,
+            scope_id=None,
+            scope_key=None,
+            fetcher=None,
+            collector=None,
+            state=None):
+
+        policy.authorize(
+            flask.request.context,
+            'scope:reset_state',
+            {'tenant_id': scope_id or flask.request.context.project_id}
+        )
+
+        if not all_scopes and scope_id is None:
+            raise http_exceptions.BadRequest(
+                "Either all_scopes or a scope_id should be specified.")
+
+        results = storage_state.StateManager().get_all(
+            identifier=scope_id,
+            scope_key=scope_key,
+            fetcher=fetcher,
+            collector=collector,
+        )
+
+        if len(results) < 1:
+            raise http_exceptions.NotFound(
+                "No resource found for provided filters.")
+
+        serialized_results = [{
+            'scope_id': r.identifier,
+            'scope_key': r.scope_key,
+            'fetcher': r.fetcher,
+            'collector': r.collector,
+        } for r in results]
+
+        self._client.cast({}, 'reset_state', res_data={
+            'scopes': serialized_results, 'state': ck_utils.dt2iso(state),
+        })
+
+        return {}, 202

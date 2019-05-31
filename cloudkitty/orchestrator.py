@@ -71,9 +71,19 @@ COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 STORAGES_NAMESPACE = 'cloudkitty.storage.backends'
 
 
+def get_lock(coord, tenant_id):
+    name = hashlib.sha256(
+        ("cloudkitty-"
+         + str(tenant_id + '-')
+         + str(CONF.collect.collector + '-')
+         + str(CONF.fetcher.backend + '-')
+         + str(CONF.collect.scope_key)).encode('ascii')).hexdigest()
+    return name, coord.get_lock(name.encode('ascii'))
+
+
 class RatingEndpoint(object):
     target = oslo_messaging.Target(namespace='rating',
-                                   version='1.1')
+                                   version='1.0')
 
     def __init__(self, orchestrator):
         self._global_reload = False
@@ -126,6 +136,56 @@ class RatingEndpoint(object):
             self._module_state[name] = False
             if name in self._pending_reload:
                 self._pending_reload.remove(name)
+
+
+class ScopeEndpoint(object):
+    target = oslo_messaging.Target(version='1.0')
+
+    def __init__(self):
+        self._coord = coordination.get_coordinator(
+            CONF.orchestrator.coordination_url,
+            uuidutils.generate_uuid().encode('ascii'))
+        self._state = state.StateManager()
+        self._storage = storage.get_storage()
+        self._coord.start(start_heart=True)
+
+    def reset_state(self, ctxt, res_data):
+        LOG.info('Received state reset command. {}'.format(res_data))
+        random.shuffle(res_data['scopes'])
+        for scope in res_data['scopes']:
+            lock_name, lock = get_lock(self._coord, scope['scope_id'])
+            LOG.debug(
+                '[ScopeEndpoint] Trying to acquire lock "{}" ...'.format(
+                    lock_name,
+                )
+            )
+            if lock.acquire(blocking=True):
+                LOG.debug(
+                    '[ScopeEndpoint] Acquired lock "{}".'.format(
+                        lock_name,
+                    )
+                )
+                state_dt = ck_utils.iso2dt(res_data['state'])
+                try:
+                    self._storage.delete(begin=state_dt, end=None, filters={
+                        scope['scope_key']: scope['scope_id'],
+                        'collector': scope['collector'],
+                        'fetcher': scope['fetcher'],
+                    })
+                    self._state.set_state(
+                        scope['scope_id'],
+                        state_dt,
+                        fetcher=scope['fetcher'],
+                        collector=scope['collector'],
+                        scope_key=scope['scope_key'],
+                    )
+                finally:
+                    lock.release()
+                    LOG.debug(
+                        '[ScopeEndpoint] Released lock "{}" .'.format(
+                            lock_name,
+                        )
+                    )
 
 
 class BaseWorker(object):
@@ -274,6 +334,7 @@ class Orchestrator(cotyledon.Service):
         # RPC
         self.server = None
         self._rating_endpoint = RatingEndpoint(self)
+        self._scope_endpoint = ScopeEndpoint()
         self._init_messaging()
 
         # DLM
@@ -282,21 +343,13 @@ class Orchestrator(cotyledon.Service):
             uuidutils.generate_uuid().encode('ascii'))
         self.coord.start(start_heart=True)
 
-    def _lock(self, tenant_id):
-        name = hashlib.sha256(
-            ("cloudkitty-"
-             + str(tenant_id + '-')
-             + str(CONF.collect.collector + '-')
-             + str(CONF.fetcher.backend + '-')
-             + str(CONF.collect.scope_key)).encode('ascii')).hexdigest()
-        return name, self.coord.get_lock(name)
-
     def _init_messaging(self):
         target = oslo_messaging.Target(topic='cloudkitty',
                                        server=CONF.host,
                                        version='1.0')
         endpoints = [
             self._rating_endpoint,
+            self._scope_endpoint,
         ]
         self.server = messaging.get_server(target, endpoints)
         self.server.start()
@@ -324,7 +377,7 @@ class Orchestrator(cotyledon.Service):
 
             for tenant_id in self.tenants:
 
-                lock_name, lock = self._lock(tenant_id)
+                lock_name, lock = get_lock(self.coord, tenant_id)
                 LOG.debug(
                     '[Worker: {w}] Trying to acquire lock "{l}" ...'.format(
                         w=self._worker_id, l=lock_name)
