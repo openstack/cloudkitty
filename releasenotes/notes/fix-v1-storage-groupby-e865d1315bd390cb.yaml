@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    ``CompileError: Can't resolve label reference for ORDER BY / GROUP BY.``
+    errors that were sometimes raised by SQLAlchemy when using the v1 storage
+    backend and grouping on ``tenant_id`` and ``res_type`` have been fixed.

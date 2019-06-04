@@ -127,7 +127,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
             self.frame_model.end <= end,
             self.frame_model.res_type != '_NO_DATA_')
         if groupby:
-            q = q.group_by(groupby)
+            q = q.group_by(sqlalchemy.sql.text(groupby))
 
         # Order by sum(rate)
         q = q.order_by(sqlalchemy.func.sum(self.frame_model.rate))
