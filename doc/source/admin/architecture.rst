@@ -2,127 +2,139 @@
 CloudKitty's Architecture
 =========================
 
-CloudKitty can be cut in five big parts:
+CloudKitty can be cut into four big parts:
 
-* API
-* Data collection (collector)
-* Rating processing
-* Storage
-* Report writer
+* Data retrieval (API)
+* Data collection (``cloudkitty-processor``)
+* Data rating
+* Data storage
+
+These parts are handled by two processes: ``cloudkitty-api`` and
+``cloudkitty-processor``. The data retrieval part is handled by the
+``cloudkitty-api`` process, the other ones are handled by
+``cloudkitty-processor``.
+
+The following is an overview of CloudKitty's architecture:
+
+.. image:: ../images/cloudkitty_architecture.png
+   :scale: 70%
+
+For details about the API, see the `api reference`_
+
+The processor falls into the following parts:
+
+* The **fetcher** retrieves a list of **scopes** to rate. A scope
+  distinguishes and isolates data. It also allows to split the workload
+  between several cloudkitty-processor workers. It can be anything
+  that makes sense in a given context, like an OpenStack project or a
+  Kubernetes namespace.
+
+* The **collector** collects data from a source for a given scope and
+  metric.
+
+* The collected data is then passed to the **rating modules** (several modules
+  can be enabled at the same time). These will apply user-defined rating rules
+  to the collected data.
+
+* Once the data has been rated, it is passed to the **storage driver**, which
+  will store it in a given storage backend. This data will then be available
+  through the API.
+
+.. _api reference: ../api-reference/index.html
 
 Module loading and extensions
 =============================
 
-Nearly every part of CloudKitty makes use of stevedore to load extensions
-dynamically.
+Nearly every part of CloudKitty makes use of stevedore_ to load extensions
+dynamically. The following schema shows the modular parts:
+
+.. image:: ../images/cloudkitty_modules.png
+   :scale: 70%
 
 Every rating module is loaded at runtime and can be enabled/disabled directly
 via CloudKitty's API. The module is responsible of its own API to ease the
 management of its configuration.
 
-Collectors and storage backends are loaded with stevedore but configured in
-CloudKitty's configuration file.
+Collectors, fetchers and the storage backend are loaded at runtime but must be
+configured in CloudKitty's configuration file.
+
+.. _stevedore: https://docs.openstack.org/stevedore/latest/
+
+Fetcher
+=======
+
+Four fetchers are available in cloudkitty:
+
+* The ``keystone`` fetcher retrieves a list of projects on which the
+  cloudkitty user has the ``rating`` role from Keystone.
+
+* The ``gnocchi`` fetcher retrieves a list of attributes from `Gnocchi`_ for a
+  given resource type. This is used for standalone Gnocchi deployments or to
+  discover new projects from Gnocchi when it is used with OpenStack. It can be
+  used in an OpenStack context or with a standalone Gnocchi deployment.
+
+* The ``prometheus`` fetcher works in a similar way to the Gnocchi fetcher,
+  which allows to discover scopes from `Prometheus`_.
+
+* The ``source`` fetcher is the simplest one: it reads a list of scopes from
+  the configuation file and provides it to the collector.
+
+Details about the configuration of each fetcher are available in the
+`fetcher configuration guide`_ .
+
+.. _fetcher configuration guide: configuration/fetcher.html
 
 Collector
 =========
 
-**Loaded with stevedore**
+There are three collectors available in CloudKitty:
 
-The name of the collector to use is specified in the configuration. For now,
-only one collector can be loaded at once.
-This part is responsible for information gathering. It consists of a python
-class that loads data from a backend and returns it in a format that CloudKitty
-can handle.
+* The ``gnocchi`` collector retrieves data from `Gnocchi`_. It can be used in
+  an OpenStack context or with a standalone Gnocchi deployment.
 
-The data format of CloudKitty is the following:
+* The ``monasca`` collector retrieves data from `Monasca`_. Keystone
+  authentication is required for this collector.
 
-.. code-block:: json
+* The ``prometheus`` collector retrieves data from `Prometheus`_.
 
-   {
-       "myservice": [
-           {
-               "rating": {
-                   "price": 0.1
-               },
-               "desc": {
-                   "sugar": "25",
-                   "fiber": "10",
-                   "name": "apples",
-               },
-               "vol": {
-                   "qty": 1,
-                   "unit": "banana"
-               }
-           }
-       ]
-   }
-
+Details about the configuration of each collector are available in the
+`collector configuration guide`_.
 
 For information about how to write a custom collector, see
 the `developer documentation`_.
 
 .. _developer documentation: ../developer/collector.html
+.. _collector configuration guide: configuration/collector.html
+.. _Gnocchi: https://gnocchi.xyz/
+.. _Monasca: https://docs.openstack.org/monasca-api/latest/
+.. _Prometheus: https://prometheus.io/docs/introduction/overview/
 
 Rating
 ======
 
-**Loaded with stevedore**
+Two rating modules are available in cloudkitty (``noop`` is not considered a
+real module, as it does nothing). Several rating modules can be enabled at the
+same time. Data will be passed to the enabled modules consecutively. The
+module priority can be set through the API, and it determines the order in
+which they will process the data (modules with the highest priority first).
 
-This is where every rating calculations is done. The data gathered by the
-collector is pushed in a pipeline of rating processors. Every processor does
-its calculations and updates the data.
+* The ``hashmap`` rating module is the most used one. It allows to create
+  rating rules based on metric metadatas.
 
-Example of minimal rating module (taken from the Noop module):
+* The ``pyscripts`` rating module allows to rate data with custom python
+  scripts.
 
-.. code-block:: python
+For information about the usage and configuration of rating modules, see the
+`rating modules documentation`_.
 
-    class Noop(rating.RatingProcessorBase):
-
-        controller = NoopController
-        description = 'Dummy test module'
-
-        @property
-        def enabled(self):
-            """Check if the module is enabled
-
-            :returns: bool if module is enabled
-            """
-            return True
-
-        @property
-        def priority(self):
-            return 1
-
-        def reload_config(self):
-            pass
-
-        def process(self, data):
-            for cur_data in data:
-                cur_usage = cur_data['usage']
-                for service in cur_usage:
-                    for entry in cur_usage[service]:
-                        if 'rating' not in entry:
-                            entry['rating'] = {'price': decimal.Decimal(0)}
-            return data
+.. _rating modules documentation: ../user/rating/index.html
 
 Storage
 =======
 
-**Loaded with stevedore**
-
-The storage module is responsible for storing and retrieving data in a
+The storage module is responsible for storing and retrieving data from a
 backend. It implements two interfaces (v1 and v2), each providing one or more
 drivers. For more information about the storage backend, see the
 `configuration section`_.
 
 .. _configuration section: configuration/storage.html
-
-Writer
-======
-
-**Loaded with stevedore**
-
-In the same way as the rating pipeline, the writing is handled with a pipeline.
-The data is pushed to write orchestrator that will store the data in a
-transient DB (in case of output file invalidation). And then to every writer in
-the pipeline which is responsible of the writing.
