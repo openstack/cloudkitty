@@ -19,7 +19,6 @@ import mock
 from cloudkitty.collector import monasca as mon_collector
 from cloudkitty import tests
 from cloudkitty import transformer
-from cloudkitty import utils
 
 
 class MonascaCollectorTest(tests.TestCase):
@@ -63,8 +62,8 @@ class MonascaCollectorTest(tests.TestCase):
             end = datetime.datetime(2019, 1, 1, 1)
             self.collector._fetch_measures(
                 'metric_one',
-                utils.dt2ts(start),
-                utils.dt2ts(end),
+                start,
+                end,
             )
             m.assert_called_once_with(
                 name='metric_one',
@@ -84,8 +83,8 @@ class MonascaCollectorTest(tests.TestCase):
             end = datetime.datetime(2019, 1, 1, 1)
             self.collector._fetch_measures(
                 'metric_two',
-                utils.dt2ts(start),
-                utils.dt2ts(end),
+                start,
+                end,
             )
             m.assert_called_once_with(
                 name='metric_two',

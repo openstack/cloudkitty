@@ -14,6 +14,7 @@
 #    under the License.
 #
 import copy
+import datetime
 import decimal
 
 from oslo_utils import uuidutils
@@ -25,14 +26,14 @@ TENANT = 'f266f30b11f246b589fd266f85eeec39'
 OTHER_TENANT = '8d3ae500-89ea-4142-9c6e-1269db6a0b64'
 
 INITIAL_TIMESTAMP = 1420070400
-FIRST_PERIOD_BEGIN = INITIAL_TIMESTAMP
-FIRST_PERIOD_BEGIN_ISO = ck_utils.ts2iso(FIRST_PERIOD_BEGIN)
-FIRST_PERIOD_END = FIRST_PERIOD_BEGIN + 3600
-FIRST_PERIOD_END_ISO = ck_utils.ts2iso(FIRST_PERIOD_END)
+FIRST_PERIOD_BEGIN = ck_utils.ts2dt(INITIAL_TIMESTAMP)
+FIRST_PERIOD_BEGIN_ISO = ck_utils.dt2iso(FIRST_PERIOD_BEGIN)
+FIRST_PERIOD_END = FIRST_PERIOD_BEGIN + datetime.timedelta(seconds=3600)
+FIRST_PERIOD_END_ISO = ck_utils.dt2iso(FIRST_PERIOD_END)
 SECOND_PERIOD_BEGIN = FIRST_PERIOD_END
-SECOND_PERIOD_BEGIN_ISO = ck_utils.ts2iso(SECOND_PERIOD_BEGIN)
-SECOND_PERIOD_END = SECOND_PERIOD_BEGIN + 3600
-SECOND_PERIOD_END_ISO = ck_utils.ts2iso(SECOND_PERIOD_END)
+SECOND_PERIOD_BEGIN_ISO = ck_utils.dt2iso(SECOND_PERIOD_BEGIN)
+SECOND_PERIOD_END = SECOND_PERIOD_BEGIN + datetime.timedelta(seconds=3600)
+SECOND_PERIOD_END_ISO = ck_utils.dt2iso(SECOND_PERIOD_END)
 
 COMPUTE_METADATA = {
     'availability_zone': 'nova',
@@ -223,8 +224,8 @@ DEFAULT_METRICS_CONF = {
 def split_storage_data(raw_data):
     final_data = []
     for frame in raw_data:
-        frame['period']['begin'] = ck_utils.ts2iso(frame['period']['begin'])
-        frame['period']['end'] = ck_utils.ts2iso(frame['period']['end'])
+        frame['period']['begin'] = ck_utils.dt2iso(frame['period']['begin'])
+        frame['period']['end'] = ck_utils.dt2iso(frame['period']['end'])
         usage_buffer = frame.pop('usage')
         # Sort to have a consistent result as we are converting it to a list
         for service, data in sorted(usage_buffer.items()):

@@ -47,7 +47,6 @@ from cloudkitty.tests.storage.v2 import influx_utils
 from cloudkitty.tests import utils as test_utils
 from cloudkitty import utils as ck_utils
 
-
 INITIAL_TIMESTAMP = 1420070400
 
 
@@ -294,6 +293,10 @@ class QuoteFakeRPC(BaseFakeRPC):
 
 class BaseStorageDataFixture(fixture.GabbiFixture):
     def create_fake_data(self, begin, end, project_id):
+        if isinstance(begin, int):
+            begin = ck_utils.ts2dt(begin)
+        if isinstance(end, int):
+            end = ck_utils.ts2dt(end)
         data = [{
             "period": {
                 "begin": begin,
@@ -359,7 +362,8 @@ class StorageDataFixture(BaseStorageDataFixture):
         for i in range(data_ts,
                        data_ts + data_duration,
                        3600):
-            data = self.create_fake_data(i, i + 3600, tenant_list[0])
+            data = self.create_fake_data(
+                i, i + 3600, tenant_list[0])
             self.storage.push(data, tenant_list[0])
         half_duration = int(data_duration / 2)
         for i in range(data_ts,

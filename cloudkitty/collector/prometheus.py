@@ -139,7 +139,7 @@ class PrometheusCollector(collector.BaseCollector):
         method = self.conf[metric_name]['extra_args']['aggregation_method']
         groupby = self.conf[metric_name].get('groupby', [])
         metadata = self.conf[metric_name].get('metadata', [])
-        period = end - start
+        period = int((end - start).total_seconds())
         time = end
 
         query = '{0}({0}_over_time({1}{{{2}="{3}"}}[{4}s])) by ({5})'.format(
@@ -154,7 +154,7 @@ class PrometheusCollector(collector.BaseCollector):
         try:
             res = self._conn.get_instant(
                 query,
-                time,
+                time.isoformat(),
             )
         except PrometheusResponseError as e:
             raise CollectError(*e.args)

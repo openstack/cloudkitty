@@ -80,7 +80,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
             self.frame_model.begin.desc())
         r = q.first()
         if r:
-            return ck_utils.dt2ts(r.begin)
+            return r.begin
 
     def get_total(self, begin=None, end=None, tenant_id=None,
                   service=None, groupby=None):
@@ -145,16 +145,16 @@ class SQLAlchemyStorage(storage.BaseStorage):
 
     def get_time_frame(self, begin, end, **filters):
         if not begin:
-            begin = ck_utils.get_month_start_timestamp()
+            begin = ck_utils.get_month_start()
         if not end:
-            end = ck_utils.get_next_month_timestamp()
+            end = ck_utils.get_next_month()
         session = db.get_session()
         q = utils.model_query(
             self.frame_model,
             session)
         q = q.filter(
-            self.frame_model.begin >= ck_utils.ts2dt(begin),
-            self.frame_model.end <= ck_utils.ts2dt(end))
+            self.frame_model.begin >= begin,
+            self.frame_model.end <= end)
         for filter_name, filter_value in filters.items():
             if filter_value:
                 q = q.filter(

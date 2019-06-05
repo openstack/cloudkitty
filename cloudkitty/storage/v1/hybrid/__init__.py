@@ -21,7 +21,6 @@ from cloudkitty import db
 from cloudkitty.storage.v1 import BaseStorage
 from cloudkitty.storage.v1.hybrid import migration
 from cloudkitty.storage.v1.hybrid import models
-from cloudkitty import utils as ck_utils
 
 
 # NOTE(mc): The deprecated section should be removed in a future release.
@@ -79,7 +78,7 @@ class HybridStorage(BaseStorage):
             q = q.filter(self.state_model.tenant_id == tenant_id)
         q = q.order_by(self.state_model.state.desc())
         r = q.first()
-        return ck_utils.dt2ts(r.state) if r else None
+        return r.state if r else None
 
     def _set_state(self, tenant_id, state):
         self._check_session(tenant_id)

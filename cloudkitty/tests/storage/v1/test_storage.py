@@ -14,6 +14,7 @@
 #    under the License.
 #
 import copy
+import datetime
 
 import mock
 import testscenarios
@@ -22,7 +23,6 @@ from cloudkitty import storage
 from cloudkitty import tests
 from cloudkitty.tests import samples
 from cloudkitty.tests import utils as test_utils
-from cloudkitty import utils as ck_utils
 
 
 class StorageTest(tests.TestCase):
@@ -73,7 +73,8 @@ class StorageDataframeTest(StorageTest):
         self.assertRaises(
             storage.NoTimeFrame,
             self.storage.retrieve,
-            begin=samples.FIRST_PERIOD_BEGIN - 3600,
+            begin=(samples.FIRST_PERIOD_BEGIN
+                   - datetime.timedelta(seconds=3600)),
             end=samples.FIRST_PERIOD_BEGIN)
 
     def test_get_frame_filter_outside_data(self):
@@ -81,7 +82,8 @@ class StorageDataframeTest(StorageTest):
         self.assertRaises(
             storage.NoTimeFrame,
             self.storage.retrieve,
-            begin=samples.FIRST_PERIOD_BEGIN - 3600,
+            begin=(samples.FIRST_PERIOD_BEGIN
+                   - datetime.timedelta(seconds=3600)),
             end=samples.FIRST_PERIOD_BEGIN)
 
     def test_get_frame_without_filter_but_timestamp(self):
@@ -132,8 +134,8 @@ class StorageTotalTest(StorageTest):
 
     # Total
     def test_get_empty_total(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN - 3600)
-        end = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
+        begin = samples.FIRST_PERIOD_BEGIN - datetime.timedelta(seconds=3600)
+        end = samples.FIRST_PERIOD_BEGIN
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -144,8 +146,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[0]["end"])
 
     def test_get_total_without_filter_but_timestamp(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        begin = samples.FIRST_PERIOD_BEGIN
+        end = samples.SECOND_PERIOD_END
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -157,8 +159,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[0]["end"])
 
     def test_get_total_filtering_on_one_period(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
+        begin = samples.FIRST_PERIOD_BEGIN
+        end = samples.FIRST_PERIOD_END
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -169,8 +171,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[0]["end"])
 
     def test_get_total_filtering_on_one_period_and_one_tenant(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
+        begin = samples.FIRST_PERIOD_BEGIN
+        end = samples.FIRST_PERIOD_END
         self.insert_data()
         filters = {'project_id': self._tenant_id}
         total = self.storage.total(
@@ -184,8 +186,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[0]["end"])
 
     def test_get_total_filtering_on_service(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.FIRST_PERIOD_END)
+        begin = samples.FIRST_PERIOD_BEGIN
+        end = samples.FIRST_PERIOD_END
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -198,8 +200,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[0]["end"])
 
     def test_get_total_groupby_tenant(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        begin = samples.FIRST_PERIOD_BEGIN
+        end = samples.SECOND_PERIOD_END
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -216,8 +218,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[1]["end"])
 
     def test_get_total_groupby_restype(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        begin = samples.FIRST_PERIOD_BEGIN
+        end = samples.SECOND_PERIOD_END
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -234,8 +236,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[1]["end"])
 
     def test_get_total_groupby_tenant_and_restype(self):
-        begin = ck_utils.ts2dt(samples.FIRST_PERIOD_BEGIN)
-        end = ck_utils.ts2dt(samples.SECOND_PERIOD_END)
+        begin = samples.FIRST_PERIOD_BEGIN
+        end = samples.SECOND_PERIOD_END
         self.insert_data()
         total = self.storage.total(
             begin=begin,

@@ -213,15 +213,29 @@ def refresh_stevedore(namespace=None):
 
 
 def check_time_state(timestamp=None, period=0, wait_periods=0):
-    if not timestamp:
-        return get_month_start_timestamp()
+    """Checks the state of a timestamp compared to the current time.
 
-    now = utcnow_ts()
-    next_timestamp = timestamp + period
-    wait_time = wait_periods * period
-    if next_timestamp + wait_time < now:
+    Returns the next timestamp based on the current timestamp and the period if
+    the next timestamp is inferior to the current time and the waiting period
+    or None if not.
+
+    :param timestamp: Current timestamp
+    :type timestamp: datetime.datetime
+    :param period: Period, in seconds
+    :type period: int
+    :param wait_periods: periods to wait before the current timestamp.
+    :type wait_periods: int
+    :rtype: datetime.datetime
+    """
+    if not timestamp:
+        return get_month_start()
+
+    period_delta = datetime.timedelta(seconds=period)
+    next_timestamp = timestamp + period_delta
+    wait_time = wait_periods * period_delta
+    if next_timestamp + wait_time < utcnow():
         return next_timestamp
-    return 0
+    return None
 
 
 def load_conf(conf_path):

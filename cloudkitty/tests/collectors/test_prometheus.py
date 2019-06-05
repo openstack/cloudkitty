@@ -73,7 +73,7 @@ class PrometheusCollectorTest(tests.TestCase):
             )
             mock_get.assert_called_once_with(
                 query,
-                samples.FIRST_PERIOD_END,
+                samples.FIRST_PERIOD_END.isoformat(),
             )
 
     def test_format_data_instant_query(self):

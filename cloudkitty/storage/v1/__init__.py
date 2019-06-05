@@ -14,13 +14,11 @@
 #    under the License.
 #
 import abc
+from datetime import timedelta
 
 from oslo_config import cfg
 from oslo_log import log as logging
 import six
-
-from cloudkitty import utils as ck_utils
-# from cloudkitty.storage import NoTimeFrame
 
 
 LOG = logging.getLogger(__name__)
@@ -39,9 +37,7 @@ class BaseStorage(object):
         self._collector = kwargs.get('collector')
 
         # State vars
-        self.usage_start = {}
         self.usage_start_dt = {}
-        self.usage_end = {}
         self.usage_end_dt = {}
         self._has_data = {}
 
@@ -59,17 +55,17 @@ class BaseStorage(object):
         Removes the usage from the json data and returns it.
         :param json_data: Data to filter.
         """
-        candidate_ts = None
+        candidate = None
         candidate_idx = 0
 
         for idx, usage in enumerate(json_data):
             usage_ts = usage['period']['begin']
-            if candidate_ts is None or usage_ts < candidate_ts:
-                candidate_ts = usage_ts
+            if candidate is None or usage_ts < candidate:
+                candidate = usage_ts
                 candidate_idx = idx
 
-        if candidate_ts:
-            return candidate_ts, json_data.pop(candidate_idx)['usage']
+        if candidate:
+            return candidate, json_data.pop(candidate_idx)['usage']
 
     def _pre_commit(self, tenant_id):
         """Called before every commit.
@@ -107,8 +103,7 @@ class BaseStorage(object):
         :param begin: New usage beginning timestamp.
         :param tenant_id: tenant_id to update.
         """
-        self.usage_start[tenant_id] = begin
-        self.usage_start_dt[tenant_id] = ck_utils.ts2dt(begin)
+        self.usage_start_dt[tenant_id] = begin
 
     def _update_end(self, end, tenant_id):
         """Update usage_end with a new timestamp.
@@ -116,17 +111,14 @@ class BaseStorage(object):
         :param end: New usage end timestamp.
         :param tenant_id: tenant_id to update.
         """
-        self.usage_end[tenant_id] = end
-        self.usage_end_dt[tenant_id] = ck_utils.ts2dt(end)
+        self.usage_end_dt[tenant_id] = end
 
     def _clear_usage_info(self, tenant_id):
         """Clear usage information timestamps.
 
         :param tenant_id: tenant_id which information needs to be removed.
         """
-        self.usage_start.pop(tenant_id, None)
         self.usage_start_dt.pop(tenant_id, None)
-        self.usage_end.pop(tenant_id, None)
         self.usage_end_dt.pop(tenant_id, None)
 
     def _check_commit(self, usage_start, tenant_id):
@@ -135,12 +127,13 @@ class BaseStorage(object):
         :param usage_start: Start of the period.
         :param tenant_id: tenant_id to check for.
         """
-        usage_end = self.usage_end.get(tenant_id)
+        usage_end = self.usage_end_dt.get(tenant_id)
         if usage_end is not None and usage_start >= usage_end:
             self.commit(tenant_id)
-        if self.usage_start.get(tenant_id) is None:
+        if self.usage_start_dt.get(tenant_id) is None:
             self._update_start(usage_start, tenant_id)
-            self._update_end(usage_start + self._period, tenant_id)
+            self._update_end(
+                usage_start + timedelta(seconds=self._period), tenant_id)
 
     @abc.abstractmethod
     def get_state(self, tenant_id=None):

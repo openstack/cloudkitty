@@ -28,10 +28,10 @@ def generate_v2_storage_data(min_length=10,
                              project_ids=None,
                              start=datetime(2018, 1, 1),
                              end=datetime(2018, 1, 1, 1)):
-    if isinstance(start, datetime):
-        start = ck_utils.dt2ts(start)
-    if isinstance(end, datetime):
-        end = ck_utils.dt2ts(end)
+    if isinstance(start, int):
+        start = ck_utils.ts2dt(start)
+    if isinstance(end, int):
+        end = ck_utils.ts2dt(end)
 
     if not project_ids:
         project_ids = [uuidutils.generate_uuid() for i in range(nb_projects)]

@@ -13,7 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+from datetime import timedelta
 import decimal
+import functools
 import hashlib
 import multiprocessing
 import random
@@ -222,6 +224,13 @@ class APIWorker(BaseWorker):
         return price
 
 
+def _check_state(obj, period, tenant_id):
+    timestamp = obj._state.get_state(tenant_id)
+    return ck_utils.check_time_state(timestamp,
+                                     period,
+                                     CONF.collect.wait_periods)
+
+
 class Worker(BaseWorker):
     def __init__(self, collector, storage, tenant_id, worker_id):
         self._collector = collector
@@ -232,11 +241,13 @@ class Worker(BaseWorker):
         self._worker_id = worker_id
         self._conf = ck_utils.load_conf(CONF.collect.metrics_conf)
         self._state = state.StateManager()
+        self._check_state = functools.partial(
+            _check_state, self, self._period, self._tenant_id)
 
         super(Worker, self).__init__(self._tenant_id)
 
     def _collect(self, metric, start_timestamp):
-        next_timestamp = start_timestamp + self._period
+        next_timestamp = start_timestamp + timedelta(seconds=self._period)
 
         raw_data = self._collector.retrieve(
             metric,
@@ -263,7 +274,7 @@ class Worker(BaseWorker):
                         scope=self._tenant_id,
                         worker=self._worker_id,
                         metric=metric,
-                        ts=ck_utils.ts2dt(timestamp))
+                        ts=timestamp)
                 )
                 return None
             except Exception as e:
@@ -273,7 +284,7 @@ class Worker(BaseWorker):
                         scope=self._tenant_id,
                         worker=self._worker_id,
                         metric=metric,
-                        ts=ck_utils.ts2dt(timestamp),
+                        ts=timestamp,
                         e=e)
                 )
                 # FIXME(peschk_l): here we just exit, and the
@@ -287,15 +298,9 @@ class Worker(BaseWorker):
             eventlet.GreenPool(size=CONF.orchestrator.max_greenthreads).imap(
                 _get_result, metrics)))
 
-    def check_state(self):
-        timestamp = self._state.get_state(self._tenant_id)
-        return ck_utils.check_time_state(timestamp,
-                                         self._period,
-                                         CONF.collect.wait_periods)
-
     def run(self):
         while True:
-            timestamp = self.check_state()
+            timestamp = self._check_state()
             if not timestamp:
                 break
 
@@ -340,6 +345,8 @@ class Orchestrator(cotyledon.Service):
             CONF.orchestrator.coordination_url,
             uuidutils.generate_uuid().encode('ascii'))
         self.coord.start(start_heart=True)
+        self._check_state = functools.partial(
+            _check_state, self, CONF.collect.period)
 
     def _init_messaging(self):
         target = oslo_messaging.Target(topic='cloudkitty',
@@ -351,12 +358,6 @@ class Orchestrator(cotyledon.Service):
         ]
         self.server = messaging.get_server(target, endpoints)
         self.server.start()
-
-    def _check_state(self, tenant_id):
-        timestamp = self._state.get_state(tenant_id)
-        return ck_utils.check_time_state(timestamp,
-                                         CONF.collect.period,
-                                         CONF.collect.wait_periods)
 
     def process_messages(self):
         # TODO(sheeprine): Code kept to handle threading and asynchronous

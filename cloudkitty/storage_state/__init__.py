@@ -20,7 +20,6 @@ from oslo_log import log
 from cloudkitty import db
 from cloudkitty.storage_state import migration
 from cloudkitty.storage_state import models
-from cloudkitty import utils as ck_utils
 
 
 LOG = log.getLogger(__name__)
@@ -115,8 +114,19 @@ class StateManager(object):
 
     def set_state(self, identifier, state,
                   fetcher=None, collector=None, scope_key=None):
-        if isinstance(state, int):
-            state = ck_utils.ts2dt(state)
+        """Set the state of a scope.
+
+        :param identifier: Identifier of the scope
+        :type identifier: str
+        :param state: state of the scope
+        :type state: datetime.datetime
+        :param fetcher: Fetcher associated to the scope
+        :type fetcher: str
+        :param collector: Collector associated to the scope
+        :type collector: str
+        :param scope_key: scope_key associated to the scope
+        :type scope_key: str
+        """
         session = db.get_session()
         session.begin()
         r = self._get_db_item(
@@ -140,12 +150,24 @@ class StateManager(object):
 
     def get_state(self, identifier,
                   fetcher=None, collector=None, scope_key=None):
+        """Get the state of a scope.
+
+        :param identifier: Identifier of the scope
+        :type identifier: str
+        :param fetcher: Fetcher associated to the scope
+        :type fetcher: str
+        :param collector: Collector associated to the scope
+        :type collector: str
+        :param scope_key: scope_key associated to the scope
+        :type scope_key: str
+        :rtype: datetime.datetime
+        """
         session = db.get_session()
         session.begin()
         r = self._get_db_item(
             session, identifier, fetcher, collector, scope_key)
         session.close()
-        return ck_utils.dt2ts(r.state) if r else None
+        return r.state if r else None
 
     def init(self):
         migration.upgrade('head')

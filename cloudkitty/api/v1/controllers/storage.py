@@ -25,7 +25,6 @@ import wsmeext.pecan as wsme_pecan
 from cloudkitty.api.v1.datamodels import storage as storage_models
 from cloudkitty.common import policy
 from cloudkitty import storage
-from cloudkitty import utils as ck_utils
 
 
 CONF = cfg.CONF
@@ -62,10 +61,6 @@ class DataFramesController(rest.RestController):
         dataframes = []
         filters = {scope_key: tenant_id} if tenant_id else None
 
-        if begin:
-            begin = ck_utils.dt2ts(begin)
-        if end:
-            end = ck_utils.dt2ts(end)
         try:
             resp = backend.retrieve(
                 begin, end,
@@ -95,8 +90,8 @@ class DataFramesController(rest.RestController):
                         frame_tenant = desc[scope_key]
                     resources.append(resource)
                 dataframe = storage_models.DataFrame(
-                    begin=ck_utils.iso2dt(frame['period']['begin']),
-                    end=ck_utils.iso2dt(frame['period']['end']),
+                    begin=frame['period']['begin'],
+                    end=frame['period']['end'],
                     tenant_id=frame_tenant,
                     resources=resources)
                 dataframes.append(dataframe)

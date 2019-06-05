@@ -137,13 +137,10 @@ class FakeInfluxClient(InfluxClient):
 
     def delete(self, begin, end, filters):
 
-        beg = utils.dt2ts(begin) if begin else None
-        end = utils.dt2ts(end) if end else None
-
         def __filter_func(elem):
 
             def __time(elem):
-                return ((beg and beg > elem['time'])
+                return ((begin and begin > elem['time'])
                         or (end and end <= elem['time']))
 
             def __filt(elem):

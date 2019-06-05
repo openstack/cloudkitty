@@ -133,7 +133,7 @@ class InfluxClient(object):
             'measurement': 'dataframes',
             'tags': measurement_tags,
             'fields': measurement_fields,
-            'time': utils.ts2dt(timestamp),
+            'time': timestamp,
         })
         if self._autocommit and len(self._points) >= self._chunk_size:
             self.commit()
@@ -266,15 +266,6 @@ class InfluxStorage(v2_storage.BaseStorage):
             begin = utils.get_month_start()
         if not end:
             end = utils.get_next_month()
-        if isinstance(begin, six.text_type):
-            begin = utils.iso2dt(begin)
-        if isinstance(begin, int):
-            begin = utils.ts2dt(begin)
-        if isinstance(end, six.text_type):
-            end = utils.iso2dt(end)
-        if isinstance(end, int):
-            end = utils.ts2dt(end)
-
         return begin, end
 
     @staticmethod

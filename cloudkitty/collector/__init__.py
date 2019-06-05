@@ -222,19 +222,6 @@ class BaseCollector(object):
 
         return output
 
-    @staticmethod
-    def last_month():
-        month_start = ck_utils.get_month_start()
-        month_end = ck_utils.get_month_end()
-        start_ts = ck_utils.dt2ts(month_start)
-        end_ts = ck_utils.dt2ts(month_end)
-        return start_ts, end_ts
-
-    @staticmethod
-    def current_month():
-        month_start = ck_utils.get_month_start()
-        return ck_utils.dt2ts(month_start)
-
     @classmethod
     def _res_to_func(cls, resource_name):
         trans_resource = 'get_'
@@ -262,8 +249,18 @@ class BaseCollector(object):
 
         Returns a list of items formatted with
         ``CloudKittyFormatTransformer.format_item``.
+
+        :param metric_name: Name of the metric to fetch
+        :type metric_name: str
+        :param start: start of the period
+        :type start: datetime.datetime
+        :param end: end of the period
+        :type end: datetime.datetime
+        :param project_id: ID of the scope for which data should be collected
+        :type project_id: str
+        :param q_filter: Optional filters
+        :type q_filter: dict
         """
-        pass
 
     def retrieve(self, metric_name, start, end,
                  project_id=None, q_filter=None):

@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+from datetime import timedelta
 import six
 
 from gnocchiclient import auth as gauth
@@ -248,8 +249,8 @@ class GnocchiCollector(collector.BaseCollector):
         # FIXME(peschk_l): In order not to miss any resource whose metrics may
         # contain measures after its destruction, we scan resources over three
         # collect periods.
-        start -= CONF.collect.period
-        end += CONF.collect.period
+        start -= timedelta(seconds=CONF.collect.period)
+        end += timedelta(seconds=CONF.collect.period)
         query_parameters = self._generate_time_filter(start, end)
 
         if project_id:
@@ -316,8 +317,8 @@ class GnocchiCollector(collector.BaseCollector):
             return self._conn.aggregates.fetch(
                 op,
                 resource_type=resource_type,
-                start=ck_utils.ts2dt(start),
-                stop=ck_utils.ts2dt(end),
+                start=start,
+                stop=end,
                 groupby=groupby,
                 search=self.extend_filter(*query_parameters))
         except (gexceptions.MetricNotFound, gexceptions.BadRequest) as e:
@@ -388,10 +389,7 @@ class GnocchiCollector(collector.BaseCollector):
                     LOG.warning(
                         '[{}] An error occured during data collection '
                         'between {} and {}: {}'.format(
-                            project_id,
-                            ck_utils.ts2dt(start),
-                            ck_utils.ts2dt(end),
-                            e),
+                            project_id, start, end, e),
                     )
                     continue
                 data = self.t_cloudkitty.format_item(

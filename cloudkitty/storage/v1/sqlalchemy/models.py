@@ -18,7 +18,6 @@ import sqlalchemy
 from sqlalchemy.ext import declarative
 
 from cloudkitty import json_utils as json
-from cloudkitty import utils as ck_utils
 
 
 Base = declarative.declarative_base()
@@ -74,8 +73,8 @@ class RatedDataFrame(Base, models.ModelBase):
 
         # Time informations
         period_dict = {}
-        period_dict['begin'] = ck_utils.dt2iso(self.begin)
-        period_dict['end'] = ck_utils.dt2iso(self.end)
+        period_dict['begin'] = self.begin
+        period_dict['end'] = self.end
 
         # Add period to the resource informations
         ck_dict = {}

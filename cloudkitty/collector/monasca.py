@@ -175,7 +175,7 @@ class MonascaCollector(collector.BaseCollector):
         group_by = self.conf[metric_name]['groupby']
 
         # NOTE(lpeschke): One aggregated measure per collect period
-        period = end - start
+        period = int((end - start).total_seconds())
 
         extra_args = self.conf[metric_name]['extra_args']
         kwargs = {}
@@ -186,8 +186,8 @@ class MonascaCollector(collector.BaseCollector):
             name=metric_name,
             merge_metrics=True,
             dimensions=dimensions,
-            start_time=ck_utils.ts2dt(start),
-            end_time=ck_utils.ts2dt(end),
+            start_time=start,
+            end_time=end,
             period=period,
             statistics=extra_args['aggregation_method'],
             group_by=group_by,
@@ -210,8 +210,8 @@ class MonascaCollector(collector.BaseCollector):
         metrics = self._conn.metrics.list(
             name=metric_name,
             dimensions=dimensions,
-            start_time=ck_utils.ts2dt(start),
-            end_time=ck_utils.ts2dt(end),
+            start_time=start,
+            end_time=end,
         )
 
         resource_key = self.conf[metric_name]['extra_args']['resource_key']

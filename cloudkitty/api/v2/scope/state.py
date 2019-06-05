@@ -78,7 +78,7 @@ class ScopeState(base.BaseResource):
                 'scope_key': r.scope_key,
                 'fetcher': r.fetcher,
                 'collector': r.collector,
-                'state': str(r.state),
+                'state': r.state.isoformat(),
             } for r in results]
         }
 
