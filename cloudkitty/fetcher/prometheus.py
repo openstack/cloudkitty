@@ -126,22 +126,16 @@ class PrometheusFetcher(fetcher.BaseFetcher):
 
             scope_ids = [
                 item['metric'][scope_attribute] for item in result
-                if item['metric'][scope_attribute]
+                if scope_attribute in item['metric'].keys()
             ]
-        except KeyError as e:
-            missing_key = e.args[0]
-            if missing_key in ['data', 'result', 'metric']:
-                msg = (
-                    'Unexpected Prometheus server response '
-                    '"{}" for "{}"'
-                ).format(
-                    res,
-                    query,
-                )
-            else:
-                msg = '"{}" not found in Prometheus server response'.format(
-                    missing_key
-                )
+        except KeyError:
+            msg = (
+                'Unexpected Prometheus server response '
+                '"{}" for "{}"'
+            ).format(
+                res,
+                query,
+            )
             raise PrometheusFetcherError(msg)
 
         # Returning unique ids

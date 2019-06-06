@@ -60,6 +60,39 @@ class PrometheusFetcherTest(tests.TestCase):
             self.fetcher.get_tenants()
             mock_get.assert_called_once_with(query)
 
+    def test_get_tenants(self):
+        response = mock.patch(
+            'cloudkitty.common.prometheus_client.PrometheusClient.get_instant',
+            return_value={
+                'data': {
+                    'result': [
+                        {
+                            'metric': {},
+                            'value': [42, 1337],
+                        },
+                        {
+                            'metric': {'namespace': 'scope_id1'},
+                            'value': [42, 1337],
+                        },
+                        {
+                            'metric': {'namespace': 'scope_id2'},
+                            'value': [42, 1337],
+                        },
+                        {
+                            'metric': {'namespace': 'scope_id3'},
+                            'value': [42, 1337],
+                        },
+                    ]
+                }
+            },
+        )
+
+        with response:
+            scopes = self.fetcher.get_tenants()
+            self.assertItemsEqual(scopes, [
+                'scope_id1', 'scope_id2', 'scope_id3',
+            ])
+
     def test_get_tenants_raises_exception(self):
         no_response = mock.patch(
             'cloudkitty.common.prometheus_client.PrometheusClient.get_instant',
@@ -73,26 +106,6 @@ class PrometheusFetcherTest(tests.TestCase):
             )
 
     def test_get_tenants_raises_exception2(self):
-        no_response = mock.patch(
-            'cloudkitty.common.prometheus_client.PrometheusClient.get_instant',
-            return_value={
-                'data': {
-                    'result': [{
-                        'metric': {
-                            'foo': 'bar'
-                        }
-                    }]
-                }
-            },
-        )
-
-        with no_response:
-            self.assertRaises(
-                prometheus.PrometheusFetcherError,
-                self.fetcher.get_tenants,
-            )
-
-    def test_get_tenants_raises_exception3(self):
         invalid_response = mock.patch(
             'cloudkitty.common.prometheus_client.PrometheusClient.get_instant',
             side_effect=PrometheusResponseError,
