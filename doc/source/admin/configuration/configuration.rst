@@ -1,55 +1,56 @@
-###################
-Configuration Guide
-###################
+================================
+Step by step configuration guide
+================================
 
-Configure Cloudkitty
-====================
+Edit ``/etc/cloudkitty/cloudkitty.conf`` to configure cloudkitty.
 
-Edit :file:`/etc/cloudkitty/cloudkitty.conf` to configure cloudkitty.
+Common options
+--------------
 
-Then you need to know which keystone API version you use (which can be
-determined using ``openstack endpoint list``)
-
-
-The first thing to set is the authentication method wished to reach Cloudkitty
-API endpoints.
-
-
-Without authentication
-----------------------
-
-If wanted, you can choose to not set any authentication method.
-This should be set in the ``DEFAULT`` block of the configuration file owing to
-the ``auth_strategy`` field:
+Options supported by most OpenStack projects are also supported by cloudkitty:
 
 .. code-block:: ini
 
     [DEFAULT]
-    verbose = True
+    verbose = true
+    debug = false
     log_dir = /var/log/cloudkitty
-    # oslo_messaging_rabbit is deprecated
     transport_url = rabbit://RABBIT_USER:RABBIT_PASSWORD@RABBIT_HOST
+
+
+API authentication method
+-------------------------
+
+The authentication method is defined through the ``auth_strategy`` option in
+the ``[DEFAULT]`` section.
+
+Standalone mode
++++++++++++++++
+
+If you're using CloudKitty in standalone mode, you'll have to use noauth:
+
+.. code-block:: ini
+
+    [DEFAULT]
     auth_strategy = noauth
 
+Keystone integration
+++++++++++++++++++++
 
-Otherwise, the only other officially implemented authentication method is
-keystone. More methods will be implemented soon. It should be set in the
-``DEFAULT`` configuration block too, with the ``auth_stategy`` field.
-
-
-For keystone (identity) API v3
-------------------------------
-
-The following shows the basic configuration items:
+If you're using CloudKitty with OpenStack, you'll want to use Keystone
+authentication:
 
 .. code-block:: ini
 
     [DEFAULT]
-    verbose = True
-    log_dir = /var/log/cloudkitty
-    # oslo_messaging_rabbit is deprecated
-    transport_url = rabbit://RABBIT_USER:RABBIT_PASSWORD@RABBIT_HOST/
     auth_strategy = keystone
+
+When using Keystone, you'll have to provide the CloudKitty credentials for
+Keystone. These must be specified in the ``[keystone_authtoken]`` section.
+Since these credentials will be used in multiple places, it is convenient to
+use a common section:
+
+.. code-block:: ini
 
     [ks_auth]
     auth_type = v3password
@@ -61,178 +62,135 @@ The following shows the basic configuration items:
     project_name = service
     user_domain_name = default
     project_domain_name = default
-    debug = True
 
     [keystone_authtoken]
     auth_section = ks_auth
 
-    [database]
-    connection = mysql+pymysql://CK_DBUSER:CK_DBPASSWORD@DB_HOST/cloudkitty
+.. note:: The ``service`` project may also be called ``services``.
 
-    [fetcher_keystone]
-    auth_section = ks_auth
-    keystone_version = 3
+CloudKitty provides the ``rating`` OpenStack service.
 
-    [tenant_fetcher]
-    backend = keystone
+To integrate cloudkitty to Keystone, run the following commands (as OpenStack
+administrator):
 
-.. note::
+.. code-block:: shell
 
-   The tenant named ``service`` is also commonly called ``services``
+    openstack user create cloudkitty --password CK_PASSWORD
 
-It is now time to configure the storage backend. Two storage backends are
-available: ``sqlalchemy`` and ``hybrid`` (SQLalchemy being the recommended one).
+    openstack role add --project service --user cloudkitty admin
 
-.. warning:: A v2 influxdb backend storage is also available. Its API is
-             considered stable but its implementation may still evolve.
+    openstack service create rating --name cloudkitty \
+        --description "OpenStack Rating Service"
 
-.. code-block:: ini
+    openstack endpoint create rating --region RegionOne \
+        public http://localhost:8889
 
-   [storage]
-   backend = sqlalchemy
-   version = 1
+    openstack endpoint create rating --region RegionOne \
+        admin http://localhost:8889
 
-As you will see in the following example, collector and storage backends
-sometimes need additional configuration sections. (The tenant fetcher works the
-same way). The section's name has the following format:
-``{backend_type}_{backend_name}`` (``collector_gnocchi`` for example).
+    openstack endpoint create rating --region RegionOne \
+        internal http://localhost:8889
 
-If you want to use the hybrid storage with a gnocchi backend, add the following
-entry:
+Storage
+-------
 
-.. code-block:: ini
+The next step is to configure the storage. Start with the SQL and create the
+``cloudkitty`` table and user:
 
-   [storage_gnocchi]
-   auth_section = ks_auth
-
-Two collectors are available: Gnocchi and Monasca. The Monasca collector
-collects metrics published by the Ceilometer agent to Monasca using Ceilosca_.
-
-The collect information, is separated from the Cloudkitty configuration file,
-in a yaml one.
-
-This allows Cloudkitty users to change metrology configuration,
-without modifying source code or Cloudkitty configuration file.
-
-.. code-block:: ini
-
-    [collect]
-    metrics_conf = /etc/cloudkitty/metrics.yml
-
-    [collector_gnocchi]
-    auth_section = ks_auth
-
-The ``/etc/cloudkitty/metrics.yml`` file looks like this:
-
-.. literalinclude:: ../../../../etc/cloudkitty/metrics.yml
-   :language: yaml
-
-Conversion information is included in the yaml file.
-It allows operators to change metrics units for rating
-and so to not stay stuck with the original unit.
-
-The conversion information must be set for each metric.
-It includes optionals factor and offset,
-plus a mandatory final unit (used once the conversion is done).
-By default, factor and offset are 1 and 0 respectively.
-All type of linear conversions are so covered.
-The complete formula looks like:
-
-``new_value = (value * factor) + offset``
-
-
-Setup the database and storage backend
---------------------------------------
-
-MySQL/MariaDB is the recommended database engine. To setup the database, use
-the ``mysql`` client::
+.. code-block:: shell
 
     mysql -uroot -p << EOF
     CREATE DATABASE cloudkitty;
     GRANT ALL PRIVILEGES ON cloudkitty.* TO 'CK_DBUSER'@'localhost' IDENTIFIED BY 'CK_DBPASSWORD';
     EOF
 
-If you need to authorize the mysql user associated to cloudkitty from another
-host you have to change the line accordingly.
+Specify the SQL credentials in the ``[database]`` section of the configuration
+file:
 
-Run the database synchronisation scripts::
+.. code-block:: ini
 
-    cloudkitty-dbsync upgrade
+    [database]
+    connection = mysql+pymysql://CK_DBUSER:CK_DBPASSWORD@DB_HOST/cloudkitty
 
+Once you have set up the SQL database service, the storage backend for rated
+data can be configured. A complete configuration reference can be found in the
+`storage backend configuration guide`_. We'll use a v2 storage backend, which
+enables the v2 API. The storage version and driver to use must be specified in
+the ``[storage]`` section of the documentation:
 
-Init the storage backend::
+.. code-block:: ini
 
-    cloudkitty-storage-init
+   [storage]
+   version = 2
+   backend = influxdb
 
+Driver-specific options are then specified in the ``[storage_{drivername}]``
+section:
 
-Integration with Keystone
--------------------------
+.. code-block:: ini
 
-cloudkitty uses Keystone for authentication, and provides a ``rating`` service.
+   [storage_influxdb]
+   username = cloudkitty
+   password = cloudkitty
+   database = cloudkitty
+   host = influxdb
 
-To integrate cloudkitty to Keystone, run the following commands (as OpenStack
-administrator)::
+Once you have configured the SQL and rated data storage backends, initalize
+the storage::
 
-    openstack user create cloudkitty --password CK_PASSWORD \
-        --email cloudkitty@localhost
-    openstack role add --project service --user cloudkitty admin
+   cloudkitty-storage-init
 
-Give the ``rating`` role to ``cloudkitty`` for each project that should be
-handled by cloudkitty::
+Then, run the database migrations::
 
-    openstack role create rating
-    openstack role add --project XXX --user cloudkitty rating
+   cloudkitty-dbsync upgrade
 
-Create the ``rating`` service and its endpoints::
+.. _storage backend configuration guide: ./storage.html
 
-    openstack service create rating --name cloudkitty \
-        --description "OpenStack Rating Service"
-    openstack endpoint create rating --region RegionOne \
-        public http://localhost:8889
-    openstack endpoint create rating --region RegionOne \
-        admin http://localhost:8889
-    openstack endpoint create rating --region RegionOne \
-        internal http://localhost:8889
+Fetcher
+-------
 
-.. note::
+The fetcher retrieves the list of scopes to rate, which will then be passed
+to the collector. A complete configuration reference can be found in the
+`fetcher configuration guide`_. For this example, we'll use the ``gnocchi``
+fetcher, which will discover scopes (in this case OpenStack projects) to rate.
+The fetcher to use is specified through the ``backend`` option of the
+``[fetcher]`` section:
 
-    The default port for the API service changed from 8888 to 8889
-    in the Newton release. If you installed Cloudkitty in an
-    earlier version, make sure to either explicitly define the
-    ``[api]/port`` setting to 8888 in ``cloudkitty.conf``, or update
-    your keystone endpoints to use the 8889 port.
+.. code-block:: ini
 
-Start cloudkitty
-================
+   [fetcher]
+   backend = gnocchi
 
-If you installed cloudkitty from packages
------------------------------------------
+Fetcher-specific options are then specified in the ``[fetcher_{fetchername}]``
+section:
 
-Start the processing services::
+.. code-block:: ini
 
-    systemctl start cloudkitty-processor.service
+   [fetcher_gnocchi]
+   auth_section = ks_auth
+   region_name = MyRegion
 
-If you installed cloudkitty from sources
------------------------------------------
+.. _fetcher configuration guide: ./fetcher.html
 
-Start the processing services::
+Collector
+---------
 
-    cloudkitty-processor --config-file /etc/cloudkitty/cloudkitty.conf
+The collector will retrieve data for the scopes provided by the fetcher and
+pass them to the rating modules. The collector to use is specified in
+the ``[collect]`` section, and the collector-specific options are specified
+in the ``[collector_{collectorname}]`` section:
 
-Choose and start the API server
--------------------------------
+.. code-block:: ini
 
-Cloudkitty includes the ``cloudkitty-api`` command. It can be
-used to run the API server. For smaller or proof-of-concept
-installations this is a reasonable choice. For larger installations it
-is strongly recommended to install the API server in a WSGI host
-such as mod_wsgi (see :ref:`mod_wsgi`). Doing so will provide better
-performance and more options for making adjustments specific to the
-installation environment.
+   [collect]
+   collector = gnocchi
 
-If you are using the ``cloudkitty-api`` command it can be started as::
+   [collector_gnocchi]
+   auth_section = ks_auth
+   region_name = MyRegion
 
-    $ cloudkitty-api -p 8889
+Note that you'll also have to configure what metrics the collector should
+collect, and how they should be collected. Have a look at the
+`collector configuration guide`_ for this:
 
-
-.. _Ceilosca: https://github.com/openstack/monasca-ceilometer
+.. _collector configuration guide: ./collector.html
