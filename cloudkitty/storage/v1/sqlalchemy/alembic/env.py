@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 from cloudkitty.common.db.alembic import env  # noqa
 from cloudkitty.storage.v1.sqlalchemy import models
 

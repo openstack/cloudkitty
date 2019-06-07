@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Martin CAMEY
-#
 from oslo_config import cfg
 
 from cloudkitty import fetcher

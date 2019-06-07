@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 from cloudkitty import service
 from cloudkitty import storage
 from cloudkitty import storage_state

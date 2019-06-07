@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Luka Peschke
-#
 from keystoneauth1 import loading as ks_loading
 from keystoneclient.v3 import client as ks_client
 from monascaclient import client as mclient

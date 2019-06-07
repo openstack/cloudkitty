@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Luka Peschke
-#
 from oslo_config import cfg
 from oslo_db.sqlalchemy import utils
 from oslo_log import log

@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 from cloudkitty import rating
 from cloudkitty.rating.pyscripts.controllers import root as root_api
 from cloudkitty.rating.pyscripts.db import api as pyscripts_db_api

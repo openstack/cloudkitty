@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 from oslo_context import context
 from pecan import hooks
 

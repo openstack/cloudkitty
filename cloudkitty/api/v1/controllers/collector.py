@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 from oslo_log import log as logging
 import pecan
 from pecan import rest

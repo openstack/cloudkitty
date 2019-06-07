@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 from cloudkitty.db import api
 from cloudkitty import json_utils as json
 

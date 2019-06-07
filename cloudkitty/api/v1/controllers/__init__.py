@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 from pecan import rest
 
 from cloudkitty.api.v1.controllers import collector as collector_api

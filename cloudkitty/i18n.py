@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 import oslo_i18n as i18n  # noqa
 
 _translators = i18n.TranslatorFactory(domain='cloudkitty')

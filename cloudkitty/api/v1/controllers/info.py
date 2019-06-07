@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Maxime Cottret
-#
 from oslo_config import cfg
 from oslo_log import log as logging
 import pecan

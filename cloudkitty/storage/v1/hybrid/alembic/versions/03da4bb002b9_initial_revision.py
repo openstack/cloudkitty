@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Luka Peschke
-#
 """initial revision
 
 Revision ID: 03da4bb002b9

@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Luka Peschke
-#
 from gnocchiclient import auth as gauth
 from gnocchiclient import client as gclient
 from keystoneauth1 import loading as ks_loading

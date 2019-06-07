@@ -14,8 +14,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 from keystoneauth1 import loading as ks_loading
 from keystoneclient import client as kclient
 from keystoneclient import discover

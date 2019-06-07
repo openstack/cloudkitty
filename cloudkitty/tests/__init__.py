@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Gauvain Pocentek
-#
 import decimal
 
 from keystoneauth1 import session as ks_sess

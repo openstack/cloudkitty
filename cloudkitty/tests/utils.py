@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Luka Peschke
-#
 import copy
 from datetime import datetime
 import random

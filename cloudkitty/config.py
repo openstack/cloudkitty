@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 from oslo_config import cfg
 from oslo_db import options as db_options  # noqa
 from oslo_messaging import opts  # noqa

@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Luka Peschke
-#
 from oslo_db.sqlalchemy import models
 import sqlalchemy
 from sqlalchemy.ext import declarative

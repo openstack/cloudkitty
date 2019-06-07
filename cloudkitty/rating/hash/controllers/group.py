@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Stéphane Albert
-#
 import pecan
 import six
 import wsmeext.pecan as wsme_pecan
