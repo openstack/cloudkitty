@@ -67,6 +67,9 @@ MONASCA_EXTRA_SCHEMA = {
             All(str, Length(min=1)),
         Required('aggregation_method', default='max'):
             In(['max', 'mean', 'min']),
+        # In case the metrics in Monasca do not belong to the project
+        # cloudkitty is identified in
+        Required('forced_project_id', default=''): str,
     },
 }
 
@@ -177,6 +180,10 @@ class MonascaCollector(collector.BaseCollector):
         period = end - start
 
         extra_args = self.conf[metric_name]['extra_args']
+        kwargs = {}
+        if extra_args['forced_project_id']:
+            kwargs['tenant_id'] = extra_args['forced_project_id']
+
         return self._conn.metrics.list_statistics(
             name=metric_name,
             merge_metrics=True,
@@ -185,7 +192,8 @@ class MonascaCollector(collector.BaseCollector):
             end_time=ck_utils.ts2dt(end),
             period=period,
             statistics=extra_args['aggregation_method'],
-            group_by=group_by)
+            group_by=group_by,
+            **kwargs)
 
     def _fetch_metrics(self, metric_name, start, end,
                        project_id=None, q_filter=None):

@@ -97,6 +97,7 @@ class MetricConfigValidationTest(tests.TestCase):
         expected_output['metric_one']['extra_args'] = {
             'aggregation_method': 'max',
             'resource_key': 'resource_id',
+            'forced_project_id': '',
         }
 
         self.assertEqual(

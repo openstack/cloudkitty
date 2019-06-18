@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    It is now possible to force a project_id to retrieve a specific metric
+    from it with the monasca collector.

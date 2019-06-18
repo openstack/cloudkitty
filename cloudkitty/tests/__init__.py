@@ -17,6 +17,7 @@
 #
 import decimal
 
+from keystoneauth1 import session as ks_sess
 import mock
 from oslo_config import fixture as config_fixture
 from oslotest import base
@@ -82,7 +83,7 @@ class TestCase(testscenarios.TestWithScenarios, base.BaseTestCase):
         self.auth = auth
         session = mock.patch(
             'keystoneauth1.loading.load_session_from_conf_options',
-            return_value=dict())
+            return_value=ks_sess.Session())
         session.start()
         self.session = session
 

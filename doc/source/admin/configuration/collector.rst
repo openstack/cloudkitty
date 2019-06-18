@@ -64,6 +64,13 @@ Section: ``collector_monasca``.
 * ``monasca_service_name``: Defaults to ``monasca``. Name of the Monasca
   service in Keystone.
 
+.. note:: By default, cloudkitty retrieves all metrics from Monasca in the
+          project it is identified in. However, some metrics may need to be
+          fetched from another tenant (for example if ceilometer is publishing
+          metrics to monasca in the ``service`` tenant but monasca-agent is
+          publishing metrics to the ``admin`` tenant). See the monasca-specific
+          section in "Metric collection" below for details on how to configure
+          this.
 
 Prometheus
 ----------
@@ -258,6 +265,12 @@ Monasca
 * ``aggregation_method``: Defaults to ``max``. The aggregation method to use
   when retrieving measures from monasca. Must be one of ``min``, ``max``,
   ``mean``.
+
+* ``forced_project_id``: Defaults to None. Force the given metric to be
+  fetched from a specific tenant instead of the one cloudkitty is identified
+  in. For example, if cloudkitty is identified in the ``service`` project, but
+  needs to fetch a metric from the ``admin`` project, its ID should be
+  specified through this option.
 
 Prometheus
 ~~~~~~~~~~
