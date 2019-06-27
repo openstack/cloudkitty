@@ -1,0 +1,60 @@
+fixtures:
+  - ConfigFixtureStorageV2
+  - InfluxStorageDataFixture
+
+tests:
+  - name: Get a summary
+    url: /v2/summary
+    status: 200
+    response_json_paths:
+      $.results.`len`: 1
+      $.total: 1
+
+  - name: Get a summary by project id
+    url: /v2/summary
+    status: 200
+    query_parameters:
+      groupby: project_id
+    response_json_paths:
+      $.results.`len`: 2
+      $.total: 2
+
+  - name: Get a summary by type
+    url: /v2/summary
+    status: 200
+    query_parameters:
+      groupby: type
+    response_json_paths:
+      $.results.`len`: 7
+      $.total: 7
+
+  - name: Get a summary by type and project_id
+    url: /v2/summary
+    status: 200
+    query_parameters:
+      groupby: [type, project_id]
+    response_json_paths:
+      $.results.`len`: 14
+      $.total: 14
+
+  - name: Get a summary by type and project_id limit 5 offset 0
+    url: /v2/summary
+    status: 200
+    query_parameters:
+      groupby: [type, project_id]
+      limit: 5
+      offset: 0
+    response_json_paths:
+      $.results.`len`: 5
+      $.total: 14
+
+  - name: Get a summary by type and project_id limit 5 offset 5
+    url: /v2/summary
+    status: 200
+    query_parameters:
+      groupby: [type, project_id]
+      limit: 5
+      offset: 5
+    response_json_paths:
+      $.results.`len`: 5
+      $.total: 14

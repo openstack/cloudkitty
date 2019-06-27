@@ -43,6 +43,7 @@ from cloudkitty import storage
 from cloudkitty.storage.v1.sqlalchemy import models
 from cloudkitty import storage_state
 from cloudkitty import tests
+from cloudkitty.tests.storage.v2 import influx_utils
 from cloudkitty.tests import utils as test_utils
 from cloudkitty import utils as ck_utils
 
@@ -429,6 +430,32 @@ class MetricsConfFixture(fixture.GabbiFixture):
     def stop_fixture(self):
         """Remove the get_metrics_conf() monkeypatch."""
         ck_utils.load_conf = self._original_function
+
+
+class InfluxStorageDataFixture(NowStorageDataFixture):
+
+    def start_fixture(self):
+        cli = influx_utils.FakeInfluxClient()
+        st = storage.get_storage()
+        st._conn = cli
+
+        self._get_storage_patch = mock.patch(
+            'cloudkitty.storage.get_storage',
+            new=lambda **kw: st,
+        )
+        self._get_storage_patch.start()
+
+        super(InfluxStorageDataFixture, self).start_fixture()
+
+    def initialize_data(self):
+        data = test_utils.generate_v2_storage_data(
+            start=ck_utils.get_month_start(),
+            end=ck_utils.utcnow().replace(hour=0),
+        )
+        self.storage.push([data])
+
+    def stop_fixture(self):
+        self._get_storage_patch.stop()
 
 
 def setup_app():

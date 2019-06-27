@@ -71,6 +71,78 @@ class MultiQueryParam(object):
         return self._validate(output)
 
 
+class DictQueryParam(object):
+    """Voluptuous helper to validate dict query params.
+
+    This validator converts a dict query parameter to a python dict.
+
+    :param key_type: Type of the dict keys
+    :param val_type: Type of the dict values
+    :param unique_values: Defaults to True. Set to True if each key should
+                          contain only one value
+    :type unique_values: bool
+    """
+    def __init__(self, key_type, val_type, unique_values=True):
+        self._kval = voluptuous.Coerce(key_type)
+        self._unique_val = unique_values
+
+        if self._unique_val:
+            self._vval = voluptuous.Coerce(val_type)
+        else:
+            def __vval(values):
+                return [voluptuous.Coerce(val_type)(v) for v in values]
+            self._vval = __vval
+
+    @staticmethod
+    def _append(output, key, val):
+        if key in output.keys():
+            output[key].append(val)
+        else:
+            output[key] = [val]
+        return output
+
+    def __call__(self, v):
+        if not isinstance(v, list):
+            v = [v]
+
+        tokens = itertools.chain(*[elem.split(',') for elem in v])
+        output = {}
+        for token in tokens:
+            try:
+                key, val = token.split(':')
+            except ValueError:  # Not enough or too many values to unpack
+                raise voluptuous.DictInvalid(
+                    'invalid key:value association {}'.format(token))
+
+            if key in output.keys():
+                if self._unique_val:
+                    raise voluptuous.DictInvalid(
+                        'key {} already provided'.format(key))
+
+            if self._unique_val:
+                output[key] = val
+            else:
+                output = self._append(output, key, val)
+
+        return {self._kval(k): self._vval(v) for k, v in output.items()}
+
+
+class SingleDictQueryParam(DictQueryParam):
+
+    def __init__(self, key_type, val_type):
+        super(SingleDictQueryParam, self).__init__(key_type=key_type,
+                                                   val_type=val_type,
+                                                   unique_values=True)
+
+
+class MultiDictQueryParam(DictQueryParam):
+
+    def __init__(self, key_type, val_type):
+        super(MultiDictQueryParam, self).__init__(key_type=key_type,
+                                                  val_type=val_type,
+                                                  unique_values=False)
+
+
 def add_input_schema(location, schema):
     """Add a voluptuous schema validation on a method's input
 
