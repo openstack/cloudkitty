@@ -23,6 +23,7 @@ from cloudkitty import storage
 from cloudkitty import tests
 from cloudkitty.tests import samples
 from cloudkitty.tests import utils as test_utils
+from cloudkitty import tzutils
 
 
 class StorageTest(tests.TestCase):
@@ -134,8 +135,9 @@ class StorageTotalTest(StorageTest):
 
     # Total
     def test_get_empty_total(self):
-        begin = samples.FIRST_PERIOD_BEGIN - datetime.timedelta(seconds=3600)
-        end = samples.FIRST_PERIOD_BEGIN
+        begin = tzutils.utc_to_local(samples.FIRST_PERIOD_BEGIN
+                                     - datetime.timedelta(seconds=3600))
+        end = tzutils.utc_to_local(samples.FIRST_PERIOD_BEGIN)
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -146,8 +148,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[0]["end"])
 
     def test_get_total_without_filter_but_timestamp(self):
-        begin = samples.FIRST_PERIOD_BEGIN
-        end = samples.SECOND_PERIOD_END
+        begin = tzutils.utc_to_local(samples.FIRST_PERIOD_BEGIN)
+        end = tzutils.utc_to_local(samples.SECOND_PERIOD_END)
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -159,8 +161,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[0]["end"])
 
     def test_get_total_filtering_on_one_period(self):
-        begin = samples.FIRST_PERIOD_BEGIN
-        end = samples.FIRST_PERIOD_END
+        begin = tzutils.utc_to_local(samples.FIRST_PERIOD_BEGIN)
+        end = tzutils.utc_to_local(samples.FIRST_PERIOD_END)
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -171,8 +173,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[0]["end"])
 
     def test_get_total_filtering_on_one_period_and_one_tenant(self):
-        begin = samples.FIRST_PERIOD_BEGIN
-        end = samples.FIRST_PERIOD_END
+        begin = tzutils.utc_to_local(samples.FIRST_PERIOD_BEGIN)
+        end = tzutils.utc_to_local(samples.FIRST_PERIOD_END)
         self.insert_data()
         filters = {'project_id': self._tenant_id}
         total = self.storage.total(
@@ -186,8 +188,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[0]["end"])
 
     def test_get_total_filtering_on_service(self):
-        begin = samples.FIRST_PERIOD_BEGIN
-        end = samples.FIRST_PERIOD_END
+        begin = tzutils.utc_to_local(samples.FIRST_PERIOD_BEGIN)
+        end = tzutils.utc_to_local(samples.FIRST_PERIOD_END)
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -200,8 +202,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[0]["end"])
 
     def test_get_total_groupby_tenant(self):
-        begin = samples.FIRST_PERIOD_BEGIN
-        end = samples.SECOND_PERIOD_END
+        begin = tzutils.utc_to_local(samples.FIRST_PERIOD_BEGIN)
+        end = tzutils.utc_to_local(samples.SECOND_PERIOD_END)
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -218,8 +220,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[1]["end"])
 
     def test_get_total_groupby_restype(self):
-        begin = samples.FIRST_PERIOD_BEGIN
-        end = samples.SECOND_PERIOD_END
+        begin = tzutils.utc_to_local(samples.FIRST_PERIOD_BEGIN)
+        end = tzutils.utc_to_local(samples.SECOND_PERIOD_END)
         self.insert_data()
         total = self.storage.total(
             begin=begin,
@@ -236,8 +238,8 @@ class StorageTotalTest(StorageTest):
         self.assertEqual(end, total[1]["end"])
 
     def test_get_total_groupby_tenant_and_restype(self):
-        begin = samples.FIRST_PERIOD_BEGIN
-        end = samples.SECOND_PERIOD_END
+        begin = tzutils.utc_to_local(samples.FIRST_PERIOD_BEGIN)
+        end = tzutils.utc_to_local(samples.SECOND_PERIOD_END)
         self.insert_data()
         total = self.storage.total(
             begin=begin,

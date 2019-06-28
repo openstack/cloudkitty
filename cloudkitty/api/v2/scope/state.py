@@ -21,7 +21,7 @@ from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty.common import policy
 from cloudkitty import messaging
 from cloudkitty import storage_state
-from cloudkitty import utils as ck_utils
+from cloudkitty import tzutils
 
 
 class ScopeState(base.BaseResource):
@@ -94,7 +94,7 @@ class ScopeState(base.BaseResource):
         voluptuous.Optional('collector', default=[]):
             api_utils.MultiQueryParam(str),
         voluptuous.Required('state'):
-            voluptuous.Coerce(ck_utils.iso2dt),
+            voluptuous.Coerce(tzutils.dt_from_iso),
     })
     def put(self,
             all_scopes=False,
@@ -133,7 +133,7 @@ class ScopeState(base.BaseResource):
         } for r in results]
 
         self._client.cast({}, 'reset_state', res_data={
-            'scopes': serialized_results, 'state': ck_utils.dt2iso(state),
+            'scopes': serialized_results, 'state': state.isoformat(),
         })
 
         return {}, 202

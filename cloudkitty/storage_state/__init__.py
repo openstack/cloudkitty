@@ -20,6 +20,7 @@ from oslo_log import log
 from cloudkitty import db
 from cloudkitty.storage_state import migration
 from cloudkitty.storage_state import models
+from cloudkitty import tzutils
 
 
 LOG = log.getLogger(__name__)
@@ -75,6 +76,10 @@ class StateManager(object):
 
         r = q.all()
         session.close()
+
+        for item in r:
+            item.state = tzutils.utc_to_local(item.state)
+
         return r
 
     def _get_db_item(self, session, identifier,
@@ -127,6 +132,7 @@ class StateManager(object):
         :param scope_key: scope_key associated to the scope
         :type scope_key: str
         """
+        state = tzutils.local_to_utc(state, naive=True)
         session = db.get_session()
         session.begin()
         r = self._get_db_item(
@@ -167,7 +173,7 @@ class StateManager(object):
         r = self._get_db_item(
             session, identifier, fetcher, collector, scope_key)
         session.close()
-        return r.state if r else None
+        return tzutils.utc_to_local(r.state) if r else None
 
     def init(self):
         migration.upgrade('head')

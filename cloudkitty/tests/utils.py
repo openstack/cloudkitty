@@ -14,24 +14,18 @@
 #    under the License.
 #
 import copy
-from datetime import datetime
 import random
 
 from oslo_utils import uuidutils
 
 from cloudkitty.tests import samples
-from cloudkitty import utils as ck_utils
 
 
 def generate_v2_storage_data(min_length=10,
                              nb_projects=2,
                              project_ids=None,
-                             start=datetime(2018, 1, 1),
-                             end=datetime(2018, 1, 1, 1)):
-    if isinstance(start, int):
-        start = ck_utils.ts2dt(start)
-    if isinstance(end, int):
-        end = ck_utils.ts2dt(end)
+                             start=None,
+                             end=None):
 
     if not project_ids:
         project_ids = [uuidutils.generate_uuid() for i in range(nb_projects)]

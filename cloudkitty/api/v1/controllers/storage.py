@@ -25,6 +25,7 @@ import wsmeext.pecan as wsme_pecan
 from cloudkitty.api.v1.datamodels import storage as storage_models
 from cloudkitty.common import policy
 from cloudkitty import storage
+from cloudkitty import tzutils
 
 
 CONF = cfg.CONF
@@ -90,8 +91,10 @@ class DataFramesController(rest.RestController):
                         frame_tenant = desc[scope_key]
                     resources.append(resource)
                 dataframe = storage_models.DataFrame(
-                    begin=frame['period']['begin'],
-                    end=frame['period']['end'],
+                    begin=tzutils.local_to_utc(
+                        frame['period']['begin'], naive=True),
+                    end=tzutils.local_to_utc(
+                        frame['period']['end'], naive=True),
                     tenant_id=frame_tenant,
                     resources=resources)
                 dataframes.append(dataframe)

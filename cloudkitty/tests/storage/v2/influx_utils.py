@@ -18,7 +18,6 @@ import functools
 from influxdb import resultset
 
 from cloudkitty.storage.v2.influx import InfluxClient
-from cloudkitty import utils
 
 
 class FakeInfluxClient(InfluxClient):
@@ -123,7 +122,7 @@ class FakeInfluxClient(InfluxClient):
 
         def __get_tag_or_field(point, key):
             if key == 'time':
-                return utils.isotime(point['time'])
+                return point['time'].isoformat()
             return point['tags'].get(key) or point['fields'].get(key)
 
         for point in points:

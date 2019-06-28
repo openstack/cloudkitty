@@ -4,6 +4,6 @@ fixtures:
     - NowStorageDataFixture
 
 tests:
-    - name: Can query api without auth
+    - name: Can query API without auth
       url: /v1/storage/dataframes
       status: 200

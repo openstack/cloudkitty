@@ -22,6 +22,7 @@ from oslo_log import log
 import six
 
 from cloudkitty.storage import v2 as v2_storage
+from cloudkitty import tzutils
 from cloudkitty import utils
 
 
@@ -149,7 +150,7 @@ class InfluxClient(object):
     @staticmethod
     def _get_time_query(begin, end):
         return " WHERE time >= '{}' AND time < '{}'".format(
-            utils.isotime(begin), utils.isotime(end))
+            begin.isoformat(), end.isoformat())
 
     def _get_filter_query(self, filters):
         if not filters:
@@ -176,7 +177,6 @@ class InfluxClient(object):
             query += ' GROUP BY ' + groupby_query
 
         query += ';'
-
         return self._conn.query(query)
 
     def retrieve(self,
@@ -263,10 +263,10 @@ class InfluxStorage(v2_storage.BaseStorage):
     @staticmethod
     def _check_begin_end(begin, end):
         if not begin:
-            begin = utils.get_month_start()
+            begin = tzutils.get_month_start()
         if not end:
-            end = utils.get_next_month()
-        return begin, end
+            end = tzutils.get_next_month()
+        return tzutils.local_to_utc(begin), tzutils.local_to_utc(end)
 
     @staticmethod
     def _point_to_dataframe_entry(point):
@@ -290,17 +290,17 @@ class InfluxStorage(v2_storage.BaseStorage):
         dataframes = {}
         for point in points:
             point_type = point['type']
-            if point['time'] not in dataframes.keys():
-                dataframes[point['time']] = {
+            time = tzutils.dt_from_iso(point['time'])
+            if time not in dataframes.keys():
+                dataframes[time] = {
                     'period': {
-                        'begin': point['time'],
-                        'end': utils.isotime(
-                            utils.iso2dt(point['time'])
-                            + datetime.timedelta(seconds=self._period)),
+                        'begin': time,
+                        'end': tzutils.add_delta(
+                            time, datetime.timedelta(seconds=self._period))
                     },
                     'usage': {},
                 }
-            usage = dataframes[point['time']]['usage']
+            usage = dataframes[time]['usage']
             if point_type not in usage.keys():
                 usage[point_type] = []
             usage[point_type].append(self._point_to_dataframe_entry(point))

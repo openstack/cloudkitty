@@ -13,12 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-"""
-Time calculations functions
-
-We're mostly using oslo_utils for time calculations but we're encapsulating it
-to ease maintenance in case of library modifications.
-"""
 import calendar
 import contextlib
 import datetime
@@ -36,6 +30,8 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 from six import moves
 from stevedore import extension
+
+from cloudkitty import tzutils
 
 
 _ISO8601_TIME_FORMAT_SUBSECOND = '%Y-%m-%dT%H:%M:%S.%f'
@@ -124,11 +120,6 @@ def dt2iso(orig_dt):
 def utcnow():
     """Returns a datetime for the current utc time."""
     return timeutils.utcnow()
-
-
-def utcnow_ts():
-    """Returns a timestamp for the current utc time."""
-    return timeutils.utcnow_ts()
 
 
 def get_month_days(dt):
@@ -228,12 +219,12 @@ def check_time_state(timestamp=None, period=0, wait_periods=0):
     :rtype: datetime.datetime
     """
     if not timestamp:
-        return get_month_start()
+        return tzutils.get_month_start()
 
     period_delta = datetime.timedelta(seconds=period)
-    next_timestamp = timestamp + period_delta
+    next_timestamp = tzutils.add_delta(timestamp, period_delta)
     wait_time = wait_periods * period_delta
-    if next_timestamp + wait_time < utcnow():
+    if tzutils.add_delta(next_timestamp, wait_time) < tzutils.localized_now():
         return next_timestamp
     return None
 

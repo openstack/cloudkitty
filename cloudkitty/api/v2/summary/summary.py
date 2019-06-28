@@ -18,7 +18,7 @@ import voluptuous
 from cloudkitty.api.v2 import base
 from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty.common import policy
-from cloudkitty import utils
+from cloudkitty import tzutils
 
 
 class Summary(base.BaseResource):
@@ -29,8 +29,8 @@ class Summary(base.BaseResource):
         voluptuous.Optional('groupby'): api_utils.MultiQueryParam(str),
         voluptuous.Optional('filters'):
             api_utils.SingleDictQueryParam(str, str),
-        voluptuous.Optional('begin'): voluptuous.Coerce(utils.iso2dt),
-        voluptuous.Optional('end'): voluptuous.Coerce(utils.iso2dt),
+        voluptuous.Optional('begin'): voluptuous.Coerce(tzutils.dt_from_iso),
+        voluptuous.Optional('end'): voluptuous.Coerce(tzutils.dt_from_iso),
     })
     def get(self, groupby=None, filters={},
             begin=None, end=None,
@@ -39,8 +39,8 @@ class Summary(base.BaseResource):
             flask.request.context,
             'summary:get_summary',
             {'tenant_id': flask.request.context.project_id})
-        begin = begin or utils.get_month_start()
-        end = end or utils.get_next_month()
+        begin = begin or tzutils.get_month_start()
+        end = end or tzutils.get_next_month()
 
         if not flask.request.context.is_admin:
             filters['project_id'] = flask.request.context.project_id

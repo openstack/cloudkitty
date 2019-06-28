@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    CloudKitty is now aware of timezones, and the API supports iso8601
+    formatted timestamps.

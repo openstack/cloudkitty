@@ -15,6 +15,8 @@
 import datetime
 import decimal
 
+from dateutil import tz
+
 from cloudkitty import json_utils as json
 from cloudkitty import tests
 
@@ -26,5 +28,6 @@ class JSONEncoderTest(tests.TestCase):
         self.assertEqual(json.dumps(obj), '{"nb": 42.0}')
 
     def test_encode_datetime(self):
-        obj = {'date': datetime.datetime(2019, 1, 1)}
-        self.assertEqual(json.dumps(obj), '{"date": "2019-01-01T00:00:00Z"}')
+        obj = {'date': datetime.datetime(2019, 1, 1, tzinfo=tz.UTC)}
+        self.assertEqual(json.dumps(obj),
+                         '{"date": "2019-01-01T00:00:00+00:00"}')

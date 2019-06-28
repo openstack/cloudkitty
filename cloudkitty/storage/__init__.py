@@ -13,12 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import functools
+
 from oslo_config import cfg
 from oslo_log import log as logging
 from stevedore import driver
 
 from cloudkitty.storage import v2 as storage_v2
-
+from cloudkitty import tzutils
 
 LOG = logging.getLogger(__name__)
 
@@ -63,12 +65,28 @@ class V1StorageAdapter(storage_v2.BaseStorage):
     def __init__(self, storage_args, storage_namespace, backend=None):
         self.storage = _get_storage_instance(
             storage_args, storage_namespace, backend=backend)
+        self._localize_dataframes = functools.partial(
+            self.__update_frames_timestamps, tzutils.utc_to_local)
+        self._make_dataframes_naive = functools.partial(
+            self.__update_frames_timestamps, tzutils.local_to_utc, naive=True)
 
     def init(self):
         return self.storage.init()
 
-    def push(self, dataframes, scope_id):
+    @staticmethod
+    def __update_frames_timestamps(func, frames, **kwargs):
+        for frame in frames:
+            period = frame['period'] if 'period' in frame.keys() else frame
+            begin = period['begin']
+            end = period['end']
+            if begin:
+                period['begin'] = func(begin, **kwargs)
+            if end:
+                period['end'] = func(end, **kwargs)
+
+    def push(self, dataframes, scope_id=None):
         if dataframes:
+            self._make_dataframes_naive(dataframes)
             self.storage.append(dataframes, scope_id)
             self.storage.commit(scope_id)
 
@@ -85,10 +103,11 @@ class V1StorageAdapter(storage_v2.BaseStorage):
         tenant_id = filters.get('project_id') if filters else None
         metric_types = self._check_metric_types(metric_types)
         frames = self.storage.get_time_frame(
-            begin, end,
+            tzutils.local_to_utc(begin, naive=True) if begin else None,
+            tzutils.local_to_utc(end, naive=True) if end else None,
             res_type=metric_types,
             tenant_id=tenant_id)
-
+        self._localize_dataframes(frames)
         return {
             'total': len(frames),
             'dataframes': frames,
@@ -111,7 +130,8 @@ class V1StorageAdapter(storage_v2.BaseStorage):
         storage_gby = ','.join(storage_gby) if storage_gby else None
         metric_types = self._check_metric_types(metric_types)
         total = self.storage.get_total(
-            begin, end,
+            tzutils.local_to_utc(begin, naive=True),
+            tzutils.local_to_utc(end, naive=True),
             tenant_id=tenant_id,
             service=metric_types,
             groupby=storage_gby)
@@ -125,6 +145,8 @@ class V1StorageAdapter(storage_v2.BaseStorage):
                 t['type'] = t.get('res_type')
             else:
                 t['type'] = None
+
+        self._localize_dataframes(total)
         return {
             'total': len(total),
             'results': total,

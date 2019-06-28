@@ -45,6 +45,7 @@ from cloudkitty import storage_state
 from cloudkitty import tests
 from cloudkitty.tests.storage.v2 import influx_utils
 from cloudkitty.tests import utils as test_utils
+from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
 
 INITIAL_TIMESTAMP = 1420070400
@@ -463,8 +464,8 @@ class InfluxStorageDataFixture(NowStorageDataFixture):
 
     def initialize_data(self):
         data = test_utils.generate_v2_storage_data(
-            start=ck_utils.get_month_start(),
-            end=ck_utils.utcnow().replace(hour=0),
+            start=tzutils.get_month_start(),
+            end=tzutils.localized_now().replace(hour=0),
         )
         self.storage.push([data])
 

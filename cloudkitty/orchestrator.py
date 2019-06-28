@@ -39,6 +39,7 @@ from cloudkitty import messaging
 from cloudkitty import storage
 from cloudkitty import storage_state as state
 from cloudkitty import transformer
+from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
 
 
@@ -165,7 +166,7 @@ class ScopeEndpoint(object):
                         lock_name,
                     )
                 )
-                state_dt = ck_utils.iso2dt(res_data['state'])
+                state_dt = tzutils.dt_from_iso(res_data['state'])
                 try:
                     self._storage.delete(begin=state_dt, end=None, filters={
                         scope['scope_key']: scope['scope_id'],
@@ -247,7 +248,8 @@ class Worker(BaseWorker):
         super(Worker, self).__init__(self._tenant_id)
 
     def _collect(self, metric, start_timestamp):
-        next_timestamp = start_timestamp + timedelta(seconds=self._period)
+        next_timestamp = tzutils.add_delta(
+            start_timestamp, timedelta(seconds=self._period))
 
         raw_data = self._collector.retrieve(
             metric,

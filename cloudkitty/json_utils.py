@@ -17,8 +17,6 @@ import decimal
 import functools
 import json
 
-from cloudkitty import utils as ck_utils
-
 
 class CloudkittyJSONEncoder(json.JSONEncoder):
     """Cloudkitty custom json encoder."""
@@ -27,7 +25,7 @@ class CloudkittyJSONEncoder(json.JSONEncoder):
         if isinstance(obj, decimal.Decimal):
             return float(obj)
         elif isinstance(obj, datetime.datetime):
-            return ck_utils.dt2iso(obj)
+            return obj.isoformat()
         return super(CloudkittyJSONEncoder, self).default(obj)
 
 

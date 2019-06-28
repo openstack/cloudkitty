@@ -25,6 +25,7 @@ import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1.datamodels import report as report_models
 from cloudkitty.common import policy
+from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
 
 LOG = logging.getLogger(__name__)
@@ -154,8 +155,8 @@ class ReportController(rest.RestController):
             kwargs = {
                 'res_type': res.get('type') or res.get('res_type'),
                 'tenant_id': res.get(scope_key) or res.get('tenant_id'),
-                'begin': res['begin'],
-                'end': res['end'],
+                'begin': tzutils.local_to_utc(res['begin'], naive=True),
+                'end': tzutils.local_to_utc(res['end'], naive=True),
                 'rate': res['rate'],
             }
             summarymodel = report_models.SummaryModel(**kwargs)

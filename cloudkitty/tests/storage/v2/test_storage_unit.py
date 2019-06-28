@@ -22,6 +22,7 @@ from cloudkitty.tests import samples
 from cloudkitty.tests.storage.v2 import influx_utils
 from cloudkitty.tests import TestCase
 from cloudkitty.tests import utils as test_utils
+from cloudkitty import tzutils
 
 
 class StorageUnitTest(TestCase):
@@ -51,13 +52,12 @@ class StorageUnitTest(TestCase):
 
     def init_data(self):
         project_ids = [self._project_id, self._other_project_id]
+        start_base = tzutils.utc_to_local(datetime.datetime(2018, 1, 1))
         for i in range(3):
-            start_delta = 3600 * i
-            end_delta = start_delta + 3600
-            start = datetime.datetime(2018, 1, 1) \
-                + datetime.timedelta(seconds=start_delta)
-            end = datetime.datetime(2018, 1, 1) \
-                + datetime.timedelta(seconds=end_delta)
+            start_delta = datetime.timedelta(seconds=3600 * i)
+            end_delta = start_delta + datetime.timedelta(seconds=3600)
+            start = tzutils.add_delta(start_base, start_delta)
+            end = tzutils.add_delta(start_base, end_delta)
             data = test_utils.generate_v2_storage_data(
                 project_ids=project_ids,
                 start=start,
