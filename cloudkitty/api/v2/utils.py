@@ -17,7 +17,6 @@ import itertools
 
 import flask
 import flask_restful
-import six
 import voluptuous
 from werkzeug import exceptions
 
@@ -33,7 +32,8 @@ class SingleQueryParam(object):
     containing a single element.
 
     Note that this validator uses ``voluptuous.Coerce`` internally and thus
-    should not be used together with ``api_utils.get_string_type`` in python2.
+    should not be used together with
+    ``cloudkitty.validation_utils.get_string_type`` in python2.
 
     :param param_type: Type of the query parameter
     """
@@ -57,7 +57,8 @@ class MultiQueryParam(object):
     containing a single element.
 
     Note that this validator uses ``voluptuous.Coerce`` internally and thus
-    should not be used together with ``api_utils.get_string_type`` in python2.
+    should not be used together with
+    ``cloudkitty.validation_utils.get_string_type`` in python2.
 
     :param param_type: Type of the query parameter
     """
@@ -224,7 +225,7 @@ def paginated(func):
                voluptuous.Required(
                    'message',
                    default='This is an example endpoint',
-               ): api_utils.get_string_type(),
+               ): validation_utils.get_string_type(),
            })
            def get(self, offset=0, limit=100):
                # [...]
@@ -248,7 +249,7 @@ def add_output_schema(schema):
                voluptuous.Required(
                    'message',
                    default='This is an example endpoint',
-               ): api_utils.get_string_type(),
+               ): validation_utils.get_string_type(),
            })
            def get(self):
                return {}
@@ -330,8 +331,3 @@ def do_init(app, blueprint_name, resources):
     if not blueprint_name.startswith('/'):
         blueprint_name = '/' + blueprint_name
     app.register_blueprint(blueprint, url_prefix=blueprint_name)
-
-
-def get_string_type():
-    """Returns ``basestring`` in python2 and ``str`` in python3."""
-    return six.string_types[0]

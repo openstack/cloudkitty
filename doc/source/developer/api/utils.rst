@@ -10,4 +10,4 @@
    page
 
 .. automodule:: cloudkitty.api.v2.utils
-   :members: SingleQueryParam, add_input_schema, paginated, add_output_schema, do_init, get_string_type
+   :members: SingleQueryParam, add_input_schema, paginated, add_output_schema, do_init
