@@ -12,6 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import collections
+import unittest
+
+from cloudkitty.storage.v2.influx import InfluxClient
 from cloudkitty.storage.v2.influx import InfluxStorage
 from cloudkitty.tests import TestCase
 
@@ -53,3 +57,20 @@ class TestInfluxDBStorage(TestCase):
                 'metadata': {}
             }
         )
+
+
+class TestInfluxClient(unittest.TestCase):
+
+    def setUp(self):
+        self.client = InfluxClient()
+
+    def test_get_filter_query(self):
+        filters = collections.OrderedDict(
+            (('str_filter', 'one'), ('float_filter', 2.0)))
+        self.assertEqual(
+            self.client._get_filter_query(filters),
+            """ AND "str_filter"='one' AND "float_filter"=2.0"""
+        )
+
+    def test_get_filter_query_no_filters(self):
+        self.assertEqual(self.client._get_filter_query({}), '')
