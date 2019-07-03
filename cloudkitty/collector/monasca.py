@@ -36,6 +36,9 @@ LOG = logging.getLogger(__name__)
 MONASCA_API_VERSION = '2_0'
 COLLECTOR_MONASCA_OPTS = 'collector_monasca'
 
+keystone_opts = ks_loading.get_auth_common_conf_options() + \
+    ks_loading.get_session_conf_options()
+
 collector_monasca_opts = [
     cfg.StrOpt(
         'interface',
@@ -49,14 +52,9 @@ collector_monasca_opts = [
     ),
 ]
 
-cfg.CONF.register_opts(collector_monasca_opts, COLLECTOR_MONASCA_OPTS)
-ks_loading.register_session_conf_options(
-    cfg.CONF,
-    COLLECTOR_MONASCA_OPTS)
-ks_loading.register_auth_conf_options(
-    cfg.CONF,
-    COLLECTOR_MONASCA_OPTS)
 CONF = cfg.CONF
+CONF.register_opts(keystone_opts, COLLECTOR_MONASCA_OPTS)
+CONF.register_opts(collector_monasca_opts, COLLECTOR_MONASCA_OPTS)
 
 METRICS_CONF = ck_utils.load_conf(CONF.collect.metrics_conf)
 
@@ -75,7 +73,6 @@ MONASCA_EXTRA_SCHEMA = {
 
 class EndpointNotFound(Exception):
     """Exception raised if the Monasca endpoint is not found"""
-    pass
 
 
 class MonascaCollector(collector.BaseCollector):
