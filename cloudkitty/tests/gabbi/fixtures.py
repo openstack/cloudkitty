@@ -14,10 +14,12 @@
 #    under the License.
 #
 import abc
+import collections
 import datetime
 import decimal
 import os
 
+from dateutil import tz
 from gabbi import fixture
 import mock
 from oslo_config import cfg
@@ -35,6 +37,7 @@ import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api import app
 from cloudkitty.api import middleware
+from cloudkitty import dataframe
 from cloudkitty import db
 from cloudkitty.db import api as ck_db_api
 from cloudkitty import messaging
@@ -48,7 +51,8 @@ from cloudkitty.tests import utils as test_utils
 from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
 
-INITIAL_TIMESTAMP = 1420070400
+
+INITIAL_DT = datetime.datetime(2015, 1, 1, tzinfo=tz.UTC)
 
 
 class UUIDFixture(fixture.GabbiFixture):
@@ -294,41 +298,31 @@ class QuoteFakeRPC(BaseFakeRPC):
 
 class BaseStorageDataFixture(fixture.GabbiFixture):
     def create_fake_data(self, begin, end, project_id):
-        if isinstance(begin, int):
-            begin = ck_utils.ts2dt(begin)
-        if isinstance(end, int):
-            end = ck_utils.ts2dt(end)
-        data = [{
-            "period": {
-                "begin": begin,
-                "end": end},
-            "usage": {
-                "cpu": [
-                    {
-                        "desc": {
-                            "dummy": True,
-                            "fake_meta": 1.0,
-                            "project_id": project_id},
-                        "vol": {
-                            "qty": 1,
-                            "unit": "nothing"},
-                        "rating": {
-                            "price": decimal.Decimal('1.337')}}]}}, {
-            "period": {
-                "begin": begin,
-                "end": end},
-            "usage": {
-                "image.size": [
-                    {
-                        "desc": {
-                            "dummy": True,
-                            "fake_meta": 1.0,
-                            "project_id": project_id},
-                        "vol": {
-                            "qty": 1,
-                            "unit": "nothing"},
-                        "rating": {
-                            "price": decimal.Decimal('0.121')}}]}}]
+
+        cpu_point = dataframe.DataPoint(
+            unit="nothing",
+            qty=1,
+            groupby={"fake_meta": 1.0, "project_id": project_id},
+            metadata={"dummy": True},
+            price=decimal.Decimal('1.337'),
+        )
+        image_point = dataframe.DataPoint(
+            unit="nothing",
+            qty=1,
+            groupby={"fake_meta": 1.0, "project_id": project_id},
+            metadata={"dummy": True},
+            price=decimal.Decimal('0.121'),
+        )
+        data = [
+            dataframe.DataFrame(
+                start=begin, end=end,
+                usage=collections.OrderedDict({"cpu": [cpu_point]}),
+            ),
+            dataframe.DataFrame(
+                start=begin, end=end,
+                usage=collections.OrderedDict({"image.size": [image_point]}),
+            ),
+        ]
         return data
 
     def start_fixture(self):
@@ -356,33 +350,38 @@ class BaseStorageDataFixture(fixture.GabbiFixture):
 class StorageDataFixture(BaseStorageDataFixture):
     def initialize_data(self):
         nodata_duration = (24 * 3 + 12) * 3600
+        hour_delta = datetime.timedelta(seconds=3600)
         tenant_list = ['8f82cc70-e50c-466e-8624-24bdea811375',
                        '7606a24a-b8ad-4ae0-be6c-3d7a41334a2e']
-        data_ts = INITIAL_TIMESTAMP + nodata_duration + 3600
-        data_duration = (24 * 2 + 8) * 3600
-        for i in range(data_ts,
-                       data_ts + data_duration,
-                       3600):
+        data_dt = INITIAL_DT + datetime.timedelta(
+            seconds=nodata_duration + 3600)
+        data_duration = datetime.timedelta(seconds=(24 * 2 + 8) * 3600)
+
+        iter_dt = data_dt
+        while iter_dt < data_dt + data_duration:
             data = self.create_fake_data(
-                i, i + 3600, tenant_list[0])
+                iter_dt, iter_dt + hour_delta, tenant_list[0])
             self.storage.push(data, tenant_list[0])
-        half_duration = int(data_duration / 2)
-        for i in range(data_ts,
-                       data_ts + half_duration,
-                       3600):
-            data = self.create_fake_data(i, i + 3600, tenant_list[1])
+            iter_dt += hour_delta
+
+        iter_dt = data_dt
+        while iter_dt < data_dt + data_duration / 2:
+            data = self.create_fake_data(
+                iter_dt, iter_dt + hour_delta, tenant_list[1])
             self.storage.push(data, tenant_list[1])
+            iter_dt += hour_delta
 
 
 class NowStorageDataFixture(BaseStorageDataFixture):
     def initialize_data(self):
-        begin = ck_utils.get_month_start_timestamp()
-        for i in range(begin,
-                       begin + 3600 * 12,
-                       3600):
+        dt = tzutils.get_month_start(naive=True).replace(tzinfo=tz.UTC)
+        hour_delta = datetime.timedelta(seconds=3600)
+        limit = dt + hour_delta * 12
+        while dt < limit:
             project_id = '3d9a1b33-482f-42fd-aef9-b575a3da9369'
-            data = self.create_fake_data(i, i + 3600, project_id)
+            data = self.create_fake_data(dt, dt + hour_delta, project_id)
             self.storage.push(data, project_id)
+            dt += hour_delta
 
 
 class ScopeStateFixture(fixture.GabbiFixture):

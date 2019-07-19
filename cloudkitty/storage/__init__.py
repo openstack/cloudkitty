@@ -19,6 +19,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from stevedore import driver
 
+from cloudkitty import dataframe
 from cloudkitty.storage import v2 as storage_v2
 from cloudkitty import tzutils
 
@@ -76,18 +77,19 @@ class V1StorageAdapter(storage_v2.BaseStorage):
     @staticmethod
     def __update_frames_timestamps(func, frames, **kwargs):
         for frame in frames:
-            period = frame['period'] if 'period' in frame.keys() else frame
-            begin = period['begin']
-            end = period['end']
-            if begin:
-                period['begin'] = func(begin, **kwargs)
+            start = frame.start
+            end = frame.end
+            if start:
+                frame.start = func(start, **kwargs)
             if end:
-                period['end'] = func(end, **kwargs)
+                frame.end = func(end, **kwargs)
 
     def push(self, dataframes, scope_id=None):
         if dataframes:
             self._make_dataframes_naive(dataframes)
-            self.storage.append(dataframes, scope_id)
+            self.storage.append(
+                [d.as_dict(mutable=True, legacy=True) for d in dataframes],
+                scope_id)
             self.storage.commit(scope_id)
 
     @staticmethod
@@ -107,11 +109,23 @@ class V1StorageAdapter(storage_v2.BaseStorage):
             tzutils.local_to_utc(end, naive=True) if end else None,
             res_type=metric_types,
             tenant_id=tenant_id)
+        frames = [dataframe.DataFrame.from_dict(frame, legacy=True)
+                  for frame in frames]
         self._localize_dataframes(frames)
         return {
             'total': len(frames),
             'dataframes': frames,
         }
+
+    @staticmethod
+    def _localize_total(iterable):
+        for elem in iterable:
+            begin = elem['begin']
+            end = elem['end']
+            if begin:
+                elem['begin'] = tzutils.utc_to_local(begin)
+            if end:
+                elem['end'] = tzutils.utc_to_local(end)
 
     def total(self, groupby=None,
               begin=None, end=None,
@@ -145,8 +159,7 @@ class V1StorageAdapter(storage_v2.BaseStorage):
                 t['type'] = t.get('res_type')
             else:
                 t['type'] = None
-
-        self._localize_dataframes(total)
+        self._localize_total(total)
         return {
             'total': len(total),
             'results': total,

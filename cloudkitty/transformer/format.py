@@ -16,6 +16,7 @@
 
 from oslo_log import log
 
+from cloudkitty import dataframe
 from cloudkitty import transformer
 
 
@@ -24,15 +25,16 @@ LOG = log.getLogger(__name__)
 
 class CloudKittyFormatTransformer(transformer.BaseTransformer):
     def format_item(self, groupby, metadata, unit, qty=1.0):
-        data = {}
-        data['groupby'] = groupby
-        data['metadata'] = metadata
-        # For backward compatibility.
-        data['desc'] = data['groupby'].copy()
-        data['desc'].update(data['metadata'])
-        data['vol'] = {'unit': unit, 'qty': qty}
+        # data = {}
+        # data['groupby'] = groupby
+        # data['metadata'] = metadata
+        # # For backward compatibility.
+        # data['desc'] = data['groupby'].copy()
+        # data['desc'].update(data['metadata'])
+        # data['vol'] = {'unit': unit, 'qty': qty}
 
-        return data
+        return dataframe.DataPoint(unit, qty, 0, groupby, metadata)
+        # return data
 
     def format_service(self, service, items):
         data = {}

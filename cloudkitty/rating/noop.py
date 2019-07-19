@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-import decimal
-
 from cloudkitty import rating
 
 
@@ -39,10 +37,4 @@ class Noop(rating.RatingProcessorBase):
         pass
 
     def process(self, data):
-        for cur_data in data:
-            cur_usage = cur_data['usage']
-            for service in cur_usage:
-                for entry in cur_usage[service]:
-                    if 'rating' not in entry:
-                        entry['rating'] = {'price': decimal.Decimal(0)}
         return data

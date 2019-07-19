@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    Data frames/points are now internally represented as objects rather than
+    dicts.

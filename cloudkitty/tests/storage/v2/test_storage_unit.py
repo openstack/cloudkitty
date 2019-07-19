@@ -70,15 +70,15 @@ class StorageUnitTest(TestCase):
         total = 0
         qty = 0
         length = 0
-        for data_part in data:
-            for mtype, usage_part in data_part['usage'].items():
+        for dataframe in data:
+            for mtype, points in dataframe.itertypes():
                 if types is not None and mtype not in types:
                     continue
-                for item in usage_part:
+                for point in points:
                     if project_id is None or \
-                       project_id == item['groupby']['project_id']:
-                        total += item['rating']['price']
-                        qty += item['vol']['qty']
+                       project_id == point.groupby['project_id']:
+                        total += point.price
+                        qty += point.qty
                         length += 1
 
         return round(float(total), 5), round(float(qty), 5), length
@@ -274,10 +274,8 @@ class StorageUnitTest(TestCase):
         frames = self.storage.retrieve(begin=begin, end=end)
         self.assertEqual(frames['total'], expected_length)
 
-        retrieved_length = 0
-        for data_part in frames['dataframes']:
-            for usage_part in data_part['usage'].values():
-                retrieved_length += len(usage_part)
+        retrieved_length = sum(len(list(frame.iterpoints()))
+                               for frame in frames['dataframes'])
 
         self.assertEqual(expected_length, retrieved_length)
 
@@ -292,10 +290,8 @@ class StorageUnitTest(TestCase):
                                        metric_types=['image.size'])
         self.assertEqual(frames['total'], expected_length)
 
-        retrieved_length = 0
-        for data_part in frames['dataframes']:
-            for usage_part in data_part['usage'].values():
-                retrieved_length += len(usage_part)
+        retrieved_length = sum(len(list(frame.iterpoints()))
+                               for frame in frames['dataframes'])
 
         self.assertEqual(expected_length, retrieved_length)
 
@@ -313,10 +309,8 @@ class StorageUnitTest(TestCase):
                                        metric_types=['image.size', 'instance'])
         self.assertEqual(frames['total'], expected_length)
 
-        retrieved_length = 0
-        for data_part in frames['dataframes']:
-            for usage_part in data_part['usage'].values():
-                retrieved_length += len(usage_part)
+        retrieved_length = sum(len(list(frame.iterpoints()))
+                               for frame in frames['dataframes'])
 
         self.assertEqual(expected_length, retrieved_length)
 

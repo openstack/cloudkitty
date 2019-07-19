@@ -18,6 +18,7 @@ import random
 
 from oslo_utils import uuidutils
 
+from cloudkitty import dataframe
 from cloudkitty.tests import samples
 
 
@@ -32,25 +33,25 @@ def generate_v2_storage_data(min_length=10,
     elif not isinstance(project_ids, list):
         project_ids = [project_ids]
 
-    usage = {}
+    df = dataframe.DataFrame(start=start, end=end)
     for metric_name, sample in samples.V2_STORAGE_SAMPLE.items():
-        dataframes = []
+        datapoints = []
         for project_id in project_ids:
             data = [copy.deepcopy(sample)
                     for i in range(min_length + random.randint(1, 10))]
             for elem in data:
                 elem['groupby']['id'] = uuidutils.generate_uuid()
                 elem['groupby']['project_id'] = project_id
-            dataframes += data
-        usage[metric_name] = dataframes
+            datapoints += [dataframe.DataPoint(
+                elem['vol']['unit'],
+                elem['vol']['qty'],
+                elem['rating']['price'],
+                elem['groupby'],
+                elem['metadata'],
+            ) for elem in data]
+        df.add_points(datapoints, metric_name)
 
-    return {
-        'usage': usage,
-        'period': {
-            'begin': start,
-            'end': end
-        }
-    }
+    return df
 
 
 def load_conf(*args):

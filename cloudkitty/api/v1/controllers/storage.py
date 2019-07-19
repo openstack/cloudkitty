@@ -14,7 +14,6 @@
 #    under the License.
 #
 import datetime
-import decimal
 
 from oslo_config import cfg
 import pecan
@@ -71,30 +70,21 @@ class DataFramesController(rest.RestController):
         except storage.NoTimeFrame:
             return storage_models.DataFrameCollection(dataframes=[])
         for frame in resp['dataframes']:
-            for service, data_list in frame['usage'].items():
-                frame_tenant = None
-                resources = []
-                for data in data_list:
-                    # This means we use a v1 storage backend
-                    if 'desc' in data.keys():
-                        desc = data['desc']
-                    else:
-                        desc = data['metadata'].copy()
-                        desc.update(data.get('groupby', {}))
-                    price = decimal.Decimal(str(data['rating']['price']))
+            resources = []
+            frame_tenant = None
+            for type_, points in frame.itertypes():
+                for point in points:
                     resource = storage_models.RatedResource(
-                        service=service,
-                        desc=desc,
-                        volume=data['vol']['qty'],
-                        rating=price)
+                        service=type_,
+                        desc=point.desc,
+                        volume=point.qty,
+                        rating=point.price)
                     if frame_tenant is None:
-                        frame_tenant = desc[scope_key]
+                        frame_tenant = point.desc[scope_key]
                     resources.append(resource)
                 dataframe = storage_models.DataFrame(
-                    begin=tzutils.local_to_utc(
-                        frame['period']['begin'], naive=True),
-                    end=tzutils.local_to_utc(
-                        frame['period']['end'], naive=True),
+                    begin=tzutils.local_to_utc(frame.start, naive=True),
+                    end=tzutils.local_to_utc(frame.end, naive=True),
                     tenant_id=frame_tenant,
                     resources=resources)
                 dataframes.append(dataframe)

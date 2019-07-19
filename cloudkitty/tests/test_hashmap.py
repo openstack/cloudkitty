@@ -14,11 +14,13 @@
 #    under the License.
 #
 import copy
+import datetime
 import decimal
 
 import mock
 from oslo_utils import uuidutils
 
+from cloudkitty import dataframe
 from cloudkitty.rating import hash
 from cloudkitty.rating.hash.db import api
 from cloudkitty import tests
@@ -26,10 +28,10 @@ from cloudkitty import tests
 
 TEST_TS = 1388577600
 FAKE_UUID = '6c1b8a30-797f-4b7e-ad66-9879b79059fb'
-CK_RESOURCES_DATA = [{
+CK_RESOURCES_DATA = [dataframe.DataFrame.from_dict({
     "period": {
-        "begin": "2014-10-01T00:00:00",
-        "end": "2014-10-01T01:00:00"},
+        "begin": datetime.datetime(2014, 10, 1),
+        "end": datetime.datetime(2014, 10, 1, 1)},
     "usage": {
         "compute": [
             {
@@ -94,7 +96,7 @@ CK_RESOURCES_DATA = [{
                     "vcpus": "1"},
                 "vol": {
                     "qty": 1,
-                    "unit": "instance"}}]}}]
+                    "unit": "instance"}}]}}, legacy=True)]
 
 
 class HashMapRatingTest(tests.TestCase):
@@ -859,21 +861,24 @@ class HashMapRatingTest(tests.TestCase):
             map_type='flat',
             service_id=service_db.service_id)
         self._hash.reload_config()
-        actual_data = copy.deepcopy(CK_RESOURCES_DATA)
         expected_data = copy.deepcopy(CK_RESOURCES_DATA)
-        for cur_data in actual_data:
-            cur_usage = cur_data['usage']
-            for service_name, service_data in cur_usage.items():
-                for item in service_data:
-                    self._hash._res = {}
-                    self._hash.process_services(service_name, item)
-                    self._hash.add_rating_informations(item)
-        compute_list = expected_data[0]['usage']['compute']
+        actual_data = dataframe.DataFrame(start=expected_data[0].start,
+                                          end=expected_data[0].end)
+        for cur_data in expected_data:
+            for service_name, point in cur_data.iterpoints():
+                self._hash._res = {}
+                self._hash.process_services(service_name, point)
+                actual_data.add_point(
+                    self._hash.add_rating_informations(point), service_name)
+        actual_data = [actual_data]
+        df_dicts = [d.as_dict(mutable=True) for d in expected_data]
+        compute_list = df_dicts[0]['usage']['compute']
         compute_list[0]['rating'] = {'price': decimal.Decimal('2.757')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('5.514')}
         compute_list[2]['rating'] = {'price': decimal.Decimal('5.514')}
         compute_list[3]['rating'] = {'price': decimal.Decimal('2.757')}
-        self.assertEqual(expected_data, actual_data)
+        self.assertEqual(df_dicts, [d.as_dict(mutable=True)
+                                    for d in actual_data])
 
     def test_process_fields(self):
         service_db = self._db_api.create_service('compute')
@@ -900,21 +905,24 @@ class HashMapRatingTest(tests.TestCase):
             map_type='flat',
             field_id=flavor_field.field_id)
         self._hash.reload_config()
-        actual_data = copy.deepcopy(CK_RESOURCES_DATA)
         expected_data = copy.deepcopy(CK_RESOURCES_DATA)
-        for cur_data in actual_data:
-            cur_usage = cur_data['usage']
-            for service_name, service_data in cur_usage.items():
-                for item in service_data:
-                    self._hash._res = {}
-                    self._hash.process_fields(service_name, item)
-                    self._hash.add_rating_informations(item)
-        compute_list = expected_data[0]['usage']['compute']
+        actual_data = dataframe.DataFrame(start=expected_data[0].start,
+                                          end=expected_data[0].end)
+        for cur_data in expected_data:
+            for service_name, point in cur_data.iterpoints():
+                self._hash._res = {}
+                self._hash.process_fields(service_name, point)
+                actual_data.add_point(
+                    self._hash.add_rating_informations(point), service_name)
+        actual_data = [actual_data]
+        df_dicts = [d.as_dict(mutable=True) for d in expected_data]
+        compute_list = df_dicts[0]['usage']['compute']
         compute_list[0]['rating'] = {'price': decimal.Decimal('1.337')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('2.84')}
         compute_list[2]['rating'] = {'price': decimal.Decimal('0')}
         compute_list[3]['rating'] = {'price': decimal.Decimal('1.47070')}
-        self.assertEqual(expected_data, actual_data)
+        self.assertEqual(df_dicts, [d.as_dict(mutable=True)
+                                    for d in actual_data])
 
     def test_process_fields_no_match(self):
         service_db = self._db_api.create_service('compute')
@@ -926,18 +934,19 @@ class HashMapRatingTest(tests.TestCase):
             map_type='flat',
             field_id=flavor_field.field_id)
         self._hash.reload_config()
-        actual_data = copy.deepcopy(CK_RESOURCES_DATA)
         expected_data = copy.deepcopy(CK_RESOURCES_DATA)
-        for cur_data in actual_data:
-            cur_usage = cur_data['usage']
-            for service_name, service_data in cur_usage.items():
-                for item in service_data:
-                    self._hash._res = {}
-                    self._hash.process_fields(service_name, item)
-                    self._hash.add_rating_informations(item)
-        for elem in expected_data[0]['usage']['compute']:
-            elem['rating'] = {'price': decimal.Decimal('0')}
-        self.assertEqual(expected_data, actual_data)
+        actual_data = dataframe.DataFrame(start=expected_data[0].start,
+                                          end=expected_data[0].end)
+        for cur_data in expected_data:
+            for service_name, point in cur_data.iterpoints():
+                self._hash._res = {}
+                self._hash.process_fields(service_name, point)
+                actual_data.add_point(
+                    self._hash.add_rating_informations(point), service_name)
+        actual_data = [actual_data]
+        df_dicts = [d.as_dict(mutable=True) for d in expected_data]
+        self.assertEqual(df_dicts, [d.as_dict(mutable=True)
+                                    for d in actual_data])
 
     def test_process_field_threshold(self):
         service_db = self._db_api.create_service('compute')
@@ -954,21 +963,24 @@ class HashMapRatingTest(tests.TestCase):
             map_type='flat',
             field_id=field_db.field_id)
         self._hash.reload_config()
-        actual_data = copy.deepcopy(CK_RESOURCES_DATA)
         expected_data = copy.deepcopy(CK_RESOURCES_DATA)
-        for cur_data in actual_data:
-            cur_usage = cur_data['usage']
-            for service_name, service_data in cur_usage.items():
-                for item in service_data:
-                    self._hash._res = {}
-                    self._hash.process_fields(service_name, item)
-                    self._hash.add_rating_informations(item)
-        compute_list = expected_data[0]['usage']['compute']
+        actual_data = dataframe.DataFrame(start=expected_data[0].start,
+                                          end=expected_data[0].end)
+        for cur_data in expected_data:
+            for service_name, point in cur_data.iterpoints():
+                self._hash._res = {}
+                self._hash.process_fields(service_name, point)
+                actual_data.add_point(
+                    self._hash.add_rating_informations(point), service_name)
+        actual_data = [actual_data]
+        df_dicts = [d.as_dict(mutable=True) for d in expected_data]
+        compute_list = df_dicts[0]['usage']['compute']
         compute_list[0]['rating'] = {'price': decimal.Decimal('0.1337')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('0.4')}
         compute_list[2]['rating'] = {'price': decimal.Decimal('0.4')}
         compute_list[3]['rating'] = {'price': decimal.Decimal('0.1337')}
-        self.assertEqual(expected_data, actual_data)
+        self.assertEqual(df_dicts, [d.as_dict(mutable=True)
+                                    for d in actual_data])
 
     def test_process_field_threshold_no_match(self):
         service_db = self._db_api.create_service('compute')
@@ -980,18 +992,18 @@ class HashMapRatingTest(tests.TestCase):
             map_type='flat',
             field_id=field_db.field_id)
         self._hash.reload_config()
-        actual_data = copy.deepcopy(CK_RESOURCES_DATA)
         expected_data = copy.deepcopy(CK_RESOURCES_DATA)
-        for cur_data in actual_data:
-            cur_usage = cur_data['usage']
-            for service_name, service_data in cur_usage.items():
-                for item in service_data:
-                    self._hash._res = {}
-                    self._hash.process_fields(service_name, item)
-                    self._hash.add_rating_informations(item)
-        for elem in expected_data[0]['usage']['compute']:
-            elem['rating'] = {'price': decimal.Decimal('0')}
-        self.assertEqual(expected_data, actual_data)
+        actual_data = dataframe.DataFrame(start=expected_data[0].start,
+                                          end=expected_data[0].end)
+        for cur_data in expected_data:
+            for service_name, point in cur_data.iterpoints():
+                self._hash._res = {}
+                self._hash.process_fields(service_name, point)
+                actual_data.add_point(
+                    self._hash.add_rating_informations(point), service_name)
+        actual_data = [actual_data]
+        self.assertEqual([d.as_dict(mutable=True) for d in expected_data],
+                         [d.as_dict(mutable=True) for d in actual_data])
 
     def test_process_service_threshold(self):
         service_db = self._db_api.create_service('compute')
@@ -1006,21 +1018,24 @@ class HashMapRatingTest(tests.TestCase):
             map_type='flat',
             service_id=service_db.service_id)
         self._hash.reload_config()
-        actual_data = copy.deepcopy(CK_RESOURCES_DATA)
         expected_data = copy.deepcopy(CK_RESOURCES_DATA)
-        for cur_data in actual_data:
-            cur_usage = cur_data['usage']
-            for service_name, service_data in cur_usage.items():
-                for item in service_data:
-                    self._hash._res = {}
-                    self._hash.process_services(service_name, item)
-                    self._hash.add_rating_informations(item)
-        compute_list = expected_data[0]['usage']['compute']
+        actual_data = dataframe.DataFrame(start=expected_data[0].start,
+                                          end=expected_data[0].end)
+        for cur_data in expected_data:
+            for service_name, point in cur_data.iterpoints():
+                self._hash._res = {}
+                self._hash.process_services(service_name, point)
+                actual_data.add_point(
+                    self._hash.add_rating_informations(point), service_name)
+        actual_data = [actual_data]
+        df_dicts = [d.as_dict(mutable=True) for d in expected_data]
+        compute_list = df_dicts[0]['usage']['compute']
         compute_list[0]['rating'] = {'price': decimal.Decimal('0.1')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('0.15')}
         compute_list[2]['rating'] = {'price': decimal.Decimal('0.15')}
         compute_list[3]['rating'] = {'price': decimal.Decimal('0.1')}
-        self.assertEqual(expected_data, actual_data)
+        self.assertEqual(df_dicts, [d.as_dict(mutable=True)
+                                    for d in actual_data])
 
     def test_update_result_flat(self):
         self._hash.update_result(
@@ -1155,13 +1170,16 @@ class HashMapRatingTest(tests.TestCase):
             field_id=memory_db.field_id,
             group_id=group_db.group_id)
         self._hash.reload_config()
-        actual_data = copy.deepcopy(CK_RESOURCES_DATA)
         expected_data = copy.deepcopy(CK_RESOURCES_DATA)
-        compute_list = expected_data[0]['usage']['compute']
+        actual_data = dataframe.DataFrame(start=expected_data[0].start,
+                                          end=expected_data[0].end)
+        df_dicts = [d.as_dict(mutable=True) for d in expected_data]
+        compute_list = df_dicts[0]['usage']['compute']
         compute_list[0]['rating'] = {'price': decimal.Decimal('2.487')}
         compute_list[1]['rating'] = {'price': decimal.Decimal('5.564')}
         # 8vcpu mapping * 2 + service_mapping * 1 + 128m ram threshold * 2
         compute_list[2]['rating'] = {'price': decimal.Decimal('34.40')}
         compute_list[3]['rating'] = {'price': decimal.Decimal('2.6357')}
-        self._hash.process(actual_data)
-        self.assertEqual(expected_data, actual_data)
+        actual_data = [self._hash.process(d) for d in expected_data]
+        self.assertEqual(df_dicts, [d.as_dict(mutable=True)
+                                    for d in actual_data])

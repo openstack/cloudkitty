@@ -12,15 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-import copy
 import datetime
-import decimal
 
 import influxdb
 from oslo_config import cfg
 from oslo_log import log
 import six
 
+from cloudkitty import dataframe
 from cloudkitty.storage import v2 as v2_storage
 from cloudkitty import tzutils
 
@@ -112,21 +111,27 @@ class InfluxClient(object):
     def append_point(self,
                      metric_type,
                      timestamp,
-                     qty, price, unit,
-                     fields, tags):
-        """Adds two points to commit to InfluxDB"""
+                     point):
+        """Adds a point to commit to InfluxDB.
 
-        measurement_fields = copy.deepcopy(fields)
-        measurement_fields['qty'] = float(qty)
-        measurement_fields['price'] = float(price)
-        measurement_fields['unit'] = unit
+        :param metric_type: Name of the metric type
+        :type metric_type: str
+        :param timestamp: Timestamp of the time
+        :type timestamp: datetime.datetime
+        :param point: Point to push
+        :type point: dataframe.DataPoint
+        """
+        measurement_fields = dict(point.metadata)
+        measurement_fields['qty'] = float(point.qty)
+        measurement_fields['price'] = float(point.price)
+        measurement_fields['unit'] = point.unit
         # Unfortunately, this seems to be the fastest way: Having several
         # measurements would imply a high client-side workload, and this allows
         # us to filter out unrequired keys
-        measurement_fields['groupby'] = '|'.join(tags.keys())
-        measurement_fields['metadata'] = '|'.join(fields.keys())
+        measurement_fields['groupby'] = '|'.join(point.groupby.keys())
+        measurement_fields['metadata'] = '|'.join(point.metadata.keys())
 
-        measurement_tags = copy.deepcopy(tags)
+        measurement_tags = dict(point.groupby)
         measurement_tags['type'] = metric_type
 
         self._points.append({
@@ -243,19 +248,10 @@ class InfluxStorage(v2_storage.BaseStorage):
 
     def push(self, dataframes, scope_id=None):
 
-        for dataframe in dataframes:
-            timestamp = dataframe['period']['begin']
-            for metric_name, metrics in dataframe['usage'].items():
-                for metric in metrics:
-                    self._conn.append_point(
-                        metric_name,
-                        timestamp,
-                        metric['vol']['qty'],
-                        metric['rating']['price'],
-                        metric['vol']['unit'],
-                        metric['metadata'],
-                        metric['groupby'],
-                    )
+        for frame in dataframes:
+            timestamp = frame.start
+            for type_, point in frame.iterpoints():
+                self._conn.append_point(type_, timestamp, point)
 
         self._conn.commit()
 
@@ -269,21 +265,17 @@ class InfluxStorage(v2_storage.BaseStorage):
 
     @staticmethod
     def _point_to_dataframe_entry(point):
-        groupby = (point.pop('groupby', None) or '').split('|')
-        groupby = [g for g in groupby if g]
-        metadata = (point.pop('metadata', None) or '').split('|')
-        metadata = [m for m in metadata if m]
-        return {
-            'vol': {
-                'unit': point['unit'],
-                'qty': decimal.Decimal(point['qty']),
-            },
-            'rating': {
-                'price': point['price'],
-            },
-            'groupby': {key: point.get(key, '') for key in groupby},
-            'metadata': {key: point.get(key, '') for key in metadata},
-        }
+        groupby = filter(lambda x: bool(x),
+                         (point.pop('groupby', None) or '').split('|'))
+        metadata = filter(lambda x: bool(x),
+                          (point.pop('metadata', None) or '').split('|'))
+        return dataframe.DataPoint(
+            point['unit'],
+            point['qty'],
+            point['price'],
+            {key: point.get(key, '') for key in groupby},
+            {key: point.get(key, '') for key in metadata},
+        )
 
     def _build_dataframes(self, points):
         dataframes = {}
@@ -291,21 +283,17 @@ class InfluxStorage(v2_storage.BaseStorage):
             point_type = point['type']
             time = tzutils.dt_from_iso(point['time'])
             if time not in dataframes.keys():
-                dataframes[time] = {
-                    'period': {
-                        'begin': time,
-                        'end': tzutils.add_delta(
-                            time, datetime.timedelta(seconds=self._period))
-                    },
-                    'usage': {},
-                }
-            usage = dataframes[time]['usage']
-            if point_type not in usage.keys():
-                usage[point_type] = []
-            usage[point_type].append(self._point_to_dataframe_entry(point))
+                dataframes[time] = dataframe.DataFrame(
+                    start=time,
+                    end=tzutils.add_delta(
+                        time, datetime.timedelta(seconds=self._period)),
+                )
+
+            dataframes[time].add_point(
+                self._point_to_dataframe_entry(point), point_type)
 
         output = list(dataframes.values())
-        output.sort(key=lambda x: x['period']['begin'])
+        output.sort(key=lambda frame: frame.start)
         return output
 
     def retrieve(self, begin=None, end=None,

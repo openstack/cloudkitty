@@ -65,7 +65,7 @@ class RatedDataFrame(Base, models.ModelBase):
         res_dict['rating'] = rating_dict
         res_dict['desc'] = json.loads(self.desc)
         res_dict['vol'] = vol_dict
-        res_dict['tenant_id'] = self.tenant_id
+        res_dict['desc']['tenant_id'] = self.tenant_id
 
         # Add resource to the usage dict
         usage_dict = {}

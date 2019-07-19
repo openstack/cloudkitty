@@ -21,6 +21,7 @@ from cloudkitty import collector
 from cloudkitty.collector import exceptions
 from cloudkitty.collector import prometheus
 from cloudkitty.common.prometheus_client import PrometheusResponseError
+from cloudkitty import dataframe
 from cloudkitty import tests
 from cloudkitty.tests import samples
 from cloudkitty import transformer
@@ -119,34 +120,17 @@ class PrometheusCollectorTest(tests.TestCase):
         self.assertEqual(expected, actual)
 
     def test_format_retrieve(self):
-        expected = {
-            'http_requests_total': [
-                {
-                    'desc': {
-                        'bar': '', 'foo': '', 'project_id': '',
-                        'code': '200', 'instance': 'localhost:9090',
-                    },
-                    'groupby': {'bar': '', 'foo': '', 'project_id': ''},
-                    'metadata': {'code': '200', 'instance': 'localhost:9090'},
-                    'vol': {
-                        'qty': Decimal('7'),
-                        'unit': 'instance'
-                    }
-                },
-                {
-                    'desc': {
-                        'bar': '', 'foo': '', 'project_id': '',
-                        'code': '200', 'instance': 'localhost:9090',
-                    },
-                    'groupby': {'bar': '', 'foo': '', 'project_id': ''},
-                    'metadata': {'code': '200', 'instance': 'localhost:9090'},
-                    'vol': {
-                        'qty': Decimal('42'),
-                        'unit': 'instance'
-                    }
-                }
-            ]
-        }
+        expected_name = 'http_requests_total'
+        expected_data = [
+            dataframe.DataPoint(
+                'instance', '7', '0',
+                {'bar': '', 'foo': '', 'project_id': ''},
+                {'code': '200', 'instance': 'localhost:9090'}),
+            dataframe.DataPoint(
+                'instance', '42', '0',
+                {'bar': '', 'foo': '', 'project_id': ''},
+                {'code': '200', 'instance': 'localhost:9090'}),
+        ]
 
         no_response = mock.patch(
             'cloudkitty.common.prometheus_client.PrometheusClient.get_instant',
@@ -154,7 +138,7 @@ class PrometheusCollectorTest(tests.TestCase):
         )
 
         with no_response:
-            actual = self.collector.retrieve(
+            actual_name, actual_data = self.collector.retrieve(
                 metric_name='http_requests_total',
                 start=samples.FIRST_PERIOD_BEGIN,
                 end=samples.FIRST_PERIOD_END,
@@ -162,7 +146,8 @@ class PrometheusCollectorTest(tests.TestCase):
                 q_filter=None,
             )
 
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected_name, actual_name)
+        self.assertEqual(expected_data, actual_data)
 
     def test_format_retrieve_raise_NoDataCollected(self):
         no_response = mock.patch(

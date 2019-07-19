@@ -80,5 +80,5 @@ class PyScripts(rating.RatingProcessorBase):
 
     def process(self, data):
         for script in self._scripts.values():
-            self.start_script(script['code'], data)
+            data = self.start_script(script['code'], data)
         return data

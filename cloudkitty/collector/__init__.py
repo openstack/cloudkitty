@@ -277,7 +277,7 @@ class BaseCollector(object):
         if not data:
             raise NoDataCollected(self.collector_name, name)
 
-        return self.t_cloudkitty.format_service(name, data)
+        return name, data
 
 
 def validate_conf(conf):

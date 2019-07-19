@@ -182,31 +182,31 @@ class WorkerTest(tests.TestCase):
         self.worker._collect = mock.MagicMock()
 
     def test_do_collection_all_valid(self):
-        side_effect = [
+        metrics = ['metric{}'.format(i) for i in range(5)]
+        side_effect = [(
+            metrics[i],
             {'period': {'begin': 0,
                         'end': 3600},
-             'usage': [i]}
-            for i in range(5)
-        ]
+             'usage': i},
+        ) for i in range(5)]
         self.worker._collect.side_effect = side_effect
-        metrics = ['metric{}'.format(i) for i in range(5)]
-        output = sorted(self.worker._do_collection(metrics, 0),
-                        key=lambda x: x['usage'][0])
+        output = sorted(self.worker._do_collection(metrics, 0).items(),
+                        key=lambda x: x[1]['usage'])
         self.assertEqual(side_effect, output)
 
     def test_do_collection_some_empty(self):
-        side_effect = [
+        metrics = ['metric{}'.format(i) for i in range(7)]
+        side_effect = [(
+            metrics[i],
             {'period': {'begin': 0,
                         'end': 3600},
-             'usage': [i]}
-            for i in range(5)
-        ]
+             'usage': i},
+        ) for i in range(5)]
         side_effect.insert(2, collector.NoDataCollected('a', 'b'))
         side_effect.insert(4, collector.NoDataCollected('a', 'b'))
         self.worker._collect.side_effect = side_effect
-        metrics = ['metric{}'.format(i) for i in range(7)]
-        output = sorted(self.worker._do_collection(metrics, 0),
-                        key=lambda x: x['usage'][0])
+        output = sorted(self.worker._do_collection(metrics, 0).items(),
+                        key=lambda x: x[1]['usage'])
         self.assertEqual([
             i for i in side_effect
             if not isinstance(i, collector.NoDataCollected)

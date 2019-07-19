@@ -34,6 +34,7 @@ from tooz import coordination
 
 from cloudkitty import collector
 from cloudkitty import config  # noqa
+from cloudkitty import dataframe
 from cloudkitty import extension_manager
 from cloudkitty import messaging
 from cloudkitty import storage
@@ -249,18 +250,16 @@ class Worker(BaseWorker):
         next_timestamp = tzutils.add_delta(
             start_timestamp, timedelta(seconds=self._period))
 
-        raw_data = self._collector.retrieve(
+        name, data = self._collector.retrieve(
             metric,
             start_timestamp,
             next_timestamp,
             self._tenant_id,
         )
-        if not raw_data:
+        if not data:
             raise collector.NoDataCollected
 
-        return {'period': {'begin': start_timestamp,
-                           'end': next_timestamp},
-                'usage': raw_data}
+        return name, data
 
     def _do_collection(self, metrics, timestamp):
 
@@ -276,7 +275,7 @@ class Worker(BaseWorker):
                         metric=metric,
                         ts=timestamp)
                 )
-                return None
+                return metric, None
             except Exception as e:
                 LOG.warning(
                     '[scope: {scope}, worker: {worker}] Error while collecting'
@@ -293,8 +292,8 @@ class Worker(BaseWorker):
                 # system in workers
                 sys.exit(1)
 
-        return list(filter(
-            lambda x: x is not None,
+        return dict(filter(
+            lambda x: x[1] is not None,
             eventlet.GreenPool(size=CONF.orchestrator.max_greenthreads).imap(
                 _get_result, metrics)))
 
@@ -307,14 +306,20 @@ class Worker(BaseWorker):
             metrics = list(self._conf['metrics'].keys())
 
             # Collection
-            data = self._do_collection(metrics, timestamp)
+            usage_data = self._do_collection(metrics, timestamp)
 
+            frame = dataframe.DataFrame(
+                start=timestamp,
+                end=tzutils.add_delta(timestamp,
+                                      timedelta(seconds=self._period)),
+                usage=usage_data,
+            )
             # Rating
             for processor in self._processors:
-                processor.obj.process(data)
+                frame = processor.obj.process(frame)
 
             # Writing
-            self._storage.push(data, self._tenant_id)
+            self._storage.push([frame], self._tenant_id)
             self._state.set_state(self._tenant_id, timestamp)
 
 

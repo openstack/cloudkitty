@@ -19,6 +19,7 @@ import decimal
 
 from oslo_utils import uuidutils
 
+from cloudkitty import dataframe
 from cloudkitty import utils as ck_utils
 
 # These have a different format in order to check that both forms are supported
@@ -40,21 +41,24 @@ COMPUTE_METADATA = {
     'flavor': 'm1.nano',
     'image_id': 'f5600101-8fa2-4864-899e-ebcb7ed6b568',
     'instance_id': '26c084e1-b8f1-4cbc-a7ec-e8b356788a17',
-    'id': '1558f911-b55a-4fd2-9173-c8f1f23e5639',
     'resource_id': '1558f911-b55a-4fd2-9173-c8f1f23e5639',
     'memory': '64',
     'metadata': {
         'farm': 'prod'
     },
     'name': 'prod1',
+    'vcpus': '1'
+}
+
+COMPUTE_GROUPBY = {
+    'id': '1558f911-b55a-4fd2-9173-c8f1f23e5639',
     'project_id': 'f266f30b11f246b589fd266f85eeec39',
     'user_id': '55b3379b949243009ee96972fbf51ed1',
-    'vcpus': '1'}
+}
 
 IMAGE_METADATA = {
     'checksum': '836c69cbcd1dc4f225daedbab6edc7c7',
     'resource_id': '7b5b73f2-9181-4307-a710-b1aa6472526d',
-    'id': '7b5b73f2-9181-4307-a710-b1aa6472526d',
     'container_format': 'aki',
     'created_at': '2014-06-04T16:26:01',
     'deleted': 'False',
@@ -67,48 +71,43 @@ IMAGE_METADATA = {
     'protected': 'False',
     'size': '4969360',
     'status': 'active',
-    'updated_at': '2014-06-04T16:26:02'}
+    'updated_at': '2014-06-04T16:26:02',
+}
+
+IMAGE_GROUPBY = {
+    'id': '7b5b73f2-9181-4307-a710-b1aa6472526d',
+}
 
 FIRST_PERIOD = {
     'begin': FIRST_PERIOD_BEGIN,
-    'end': FIRST_PERIOD_END}
+    'end': FIRST_PERIOD_END,
+}
 
 SECOND_PERIOD = {
     'begin': SECOND_PERIOD_BEGIN,
-    'end': SECOND_PERIOD_END}
+    'end': SECOND_PERIOD_END,
+}
 
-COLLECTED_DATA = [{
-    'period': FIRST_PERIOD,
-    'usage': {
-        'instance': [{
-            'desc': COMPUTE_METADATA,
-            'vol': {
-                'qty': decimal.Decimal(1.0),
-                'unit': 'instance'}}],
-        'image.size': [{
-            'desc': IMAGE_METADATA,
-            'vol': {
-                'qty': decimal.Decimal(1.0),
-                'unit': 'image'}}]
-    }}, {
-    'period': SECOND_PERIOD,
-    'usage': {
-        'instance': [{
-            'desc': COMPUTE_METADATA,
-            'vol': {
-                'qty': decimal.Decimal(1.0),
-                'unit': 'instance'}}]
-    },
-}]
+COLLECTED_DATA = [
+    dataframe.DataFrame(start=FIRST_PERIOD["begin"],
+                        end=FIRST_PERIOD["end"]),
+    dataframe.DataFrame(start=SECOND_PERIOD["begin"],
+                        end=SECOND_PERIOD["end"]),
+]
+
+_INSTANCE_POINT = dataframe.DataPoint(
+    'instance', '1.0', '0.42', COMPUTE_GROUPBY, COMPUTE_METADATA)
+
+_IMAGE_SIZE_POINT = dataframe.DataPoint(
+    'image', '1.0', '0.1337', IMAGE_GROUPBY, IMAGE_METADATA)
+
+
+COLLECTED_DATA[0].add_point(_INSTANCE_POINT, 'instance')
+COLLECTED_DATA[0].add_point(_IMAGE_SIZE_POINT, 'image.size')
+COLLECTED_DATA[1].add_point(_INSTANCE_POINT, 'instance')
+
 
 RATED_DATA = copy.deepcopy(COLLECTED_DATA)
-RATED_DATA[0]['usage']['instance'][0]['rating'] = {
-    'price': decimal.Decimal('0.42')}
-RATED_DATA[0]['usage']['image.size'][0]['rating'] = {
-    'price': decimal.Decimal('0.1337')}
-RATED_DATA[1]['usage']['instance'][0]['rating'] = {
-    'price': decimal.Decimal('0.42')}
-
 
 DEFAULT_METRICS_CONF = {
     "metrics": {
@@ -221,33 +220,6 @@ DEFAULT_METRICS_CONF = {
 }
 
 
-def split_storage_data(raw_data):
-    final_data = []
-    for frame in raw_data:
-        frame['period']['begin'] = ck_utils.dt2iso(frame['period']['begin'])
-        frame['period']['end'] = ck_utils.dt2iso(frame['period']['end'])
-        usage_buffer = frame.pop('usage')
-        # Sort to have a consistent result as we are converting it to a list
-        for service, data in sorted(usage_buffer.items()):
-            new_frame = copy.deepcopy(frame)
-            new_frame['usage'] = {service: data}
-            new_frame['usage'][service][0]['tenant_id'] = TENANT
-            final_data.append(new_frame)
-    return final_data
-
-
-# FIXME(sheeprine): storage is not using decimal for rates, we need to
-# transition to decimal.
-STORED_DATA = copy.deepcopy(COLLECTED_DATA)
-STORED_DATA[0]['usage']['instance'][0]['rating'] = {
-    'price': 0.42}
-STORED_DATA[0]['usage']['image.size'][0]['rating'] = {
-    'price': 0.1337}
-STORED_DATA[1]['usage']['instance'][0]['rating'] = {
-    'price': 0.42}
-
-STORED_DATA = split_storage_data(STORED_DATA)
-
 METRICS_CONF = DEFAULT_METRICS_CONF
 
 
@@ -306,7 +278,7 @@ V2_STORAGE_SAMPLE = {
         },
         "groupby": {
             "id": uuidutils.generate_uuid(),
-            "project_id": COMPUTE_METADATA['project_id'],
+            "project_id": COMPUTE_GROUPBY['project_id'],
         },
         "metadata": {
             "flavor": "m1.nano",
@@ -323,7 +295,7 @@ V2_STORAGE_SAMPLE = {
         },
         "groupby": {
             "id": uuidutils.generate_uuid(),
-            "project_id": COMPUTE_METADATA['project_id'],
+            "project_id": COMPUTE_GROUPBY['project_id'],
         },
         "metadata": {
             "disk_format": "qcow2",
@@ -339,7 +311,7 @@ V2_STORAGE_SAMPLE = {
         },
         "groupby": {
             "id": uuidutils.generate_uuid(),
-            "project_id": COMPUTE_METADATA['project_id'],
+            "project_id": COMPUTE_GROUPBY['project_id'],
         },
         "metadata": {
             "volume_type": "ceph-region1"
@@ -355,7 +327,7 @@ V2_STORAGE_SAMPLE = {
         },
         "groupby": {
             "id": uuidutils.generate_uuid(),
-            "project_id": COMPUTE_METADATA['project_id'],
+            "project_id": COMPUTE_GROUPBY['project_id'],
         },
         "metadata": {
             "instance_id": uuidutils.generate_uuid(),
@@ -371,7 +343,7 @@ V2_STORAGE_SAMPLE = {
         },
         "groupby": {
             "id": uuidutils.generate_uuid(),
-            "project_id": COMPUTE_METADATA['project_id'],
+            "project_id": COMPUTE_GROUPBY['project_id'],
         },
         "metadata": {
             "instance_id": uuidutils.generate_uuid(),
@@ -387,7 +359,7 @@ V2_STORAGE_SAMPLE = {
         },
         "groupby": {
             "id": uuidutils.generate_uuid(),
-            "project_id": COMPUTE_METADATA['project_id'],
+            "project_id": COMPUTE_GROUPBY['project_id'],
         },
         "metadata": {
             "state": "attached",
@@ -403,7 +375,7 @@ V2_STORAGE_SAMPLE = {
         },
         "groupby": {
             "id": uuidutils.generate_uuid(),
-            "project_id": COMPUTE_METADATA['project_id'],
+            "project_id": COMPUTE_GROUPBY['project_id'],
         },
         "metadata": {
             "object_id": uuidutils.generate_uuid(),

@@ -15,6 +15,7 @@
 #
 import decimal
 
+from cloudkitty import dataframe
 from cloudkitty import rating
 from cloudkitty.rating.hash.controllers import root as root_api
 from cloudkitty.rating.hash.db import api as hash_db_api
@@ -149,9 +150,7 @@ class HashMap(rating.RatingProcessorBase):
                 field_name = field_db.name
                 self._load_field_entries(service_name, field_name, field_uuid)
 
-    def add_rating_informations(self, data):
-        if 'rating' not in data:
-            data['rating'] = {'price': 0}
+    def add_rating_informations(self, point):
         for entry in self._res.values():
             rate = entry['rate']
             flat = entry['flat']
@@ -161,14 +160,14 @@ class HashMap(rating.RatingProcessorBase):
                 else:
                     rate *= entry['threshold']['cost']
             res = rate * flat
-            # FIXME(sheeprine): Added here to ensure that qty is decimal
-            res *= decimal.Decimal(data['vol']['qty'])
+            res *= point.qty
             if entry['threshold']['scope'] == 'service':
                 if entry['threshold']['type'] == 'flat':
                     res += entry['threshold']['cost']
                 else:
                     res *= entry['threshold']['cost']
-            data['rating']['price'] += res
+            point = point.set_price(point.price + res)
+        return point
 
     def update_result(self,
                       group,
@@ -228,7 +227,7 @@ class HashMap(rating.RatingProcessorBase):
                         True,
                         threshold_type)
 
-    def process_services(self, service_name, data):
+    def process_services(self, service_name, point):
         if service_name not in self._entries:
             return
         service_mappings = self._entries[service_name]['mappings']
@@ -238,15 +237,15 @@ class HashMap(rating.RatingProcessorBase):
                                mapping['cost'])
         service_thresholds = self._entries[service_name]['thresholds']
         self.process_thresholds(service_thresholds,
-                                data['vol']['qty'],
+                                point.qty,
                                 'service')
 
-    def process_fields(self, service_name, data):
+    def process_fields(self, service_name, point):
         if service_name not in self._entries:
             return
         if 'fields' not in self._entries[service_name]:
             return
-        desc_data = data['desc']
+        desc_data = point.desc
         field_mappings = self._entries[service_name]['fields']
         for field_name, group_mappings in field_mappings.items():
             if field_name not in desc_data:
@@ -260,12 +259,12 @@ class HashMap(rating.RatingProcessorBase):
                                         'field')
 
     def process(self, data):
-        for cur_data in data:
-            cur_usage = cur_data['usage']
-            for service_name, service_data in cur_usage.items():
-                for item in service_data:
-                    self._res = {}
-                    self.process_services(service_name, item)
-                    self.process_fields(service_name, item)
-                    self.add_rating_informations(item)
-        return data
+        output = dataframe.DataFrame(start=data.start, end=data.end)
+
+        for service_name, point in data.iterpoints():
+            self._res = {}
+            self.process_services(service_name, point)
+            self.process_fields(service_name, point)
+            output.add_point(self.add_rating_informations(point), service_name)
+
+        return output

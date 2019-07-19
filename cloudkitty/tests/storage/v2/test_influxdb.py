@@ -18,6 +18,7 @@ import unittest
 
 import mock
 
+from cloudkitty import dataframe
 from cloudkitty.storage.v2 import influx
 from cloudkitty.tests import TestCase
 
@@ -40,24 +41,28 @@ class TestInfluxDBStorage(TestCase):
 
     def test_point_to_dataframe_entry_valid_point(self):
         self.assertEqual(
-            influx.InfluxStorage._point_to_dataframe_entry(self.point), {
-                'vol': {'unit': 'banana', 'qty': 42},
-                'rating': {'price': 1.0},
-                'groupby': {'one': '1', 'two': '2'},
-                'metadata': {'1': 'one', '2': 'two'},
-            }
+            influx.InfluxStorage._point_to_dataframe_entry(self.point),
+            dataframe.DataPoint(
+                'banana',
+                42,
+                1,
+                {'one': '1', 'two': '2'},
+                {'1': 'one', '2': 'two'},
+            ),
         )
 
     def test_point_to_dataframe_entry_invalid_groupby_metadata(self):
         self.point['groupby'] = 'a'
         self.point['metadata'] = None
         self.assertEqual(
-            influx.InfluxStorage._point_to_dataframe_entry(self.point), {
-                'vol': {'unit': 'banana', 'qty': 42},
-                'rating': {'price': 1.0},
-                'groupby': {'a': ''},
-                'metadata': {}
-            }
+            influx.InfluxStorage._point_to_dataframe_entry(self.point),
+            dataframe.DataPoint(
+                'banana',
+                42,
+                1,
+                {'a': ''},
+                {},
+            ),
         )
 
 

@@ -53,39 +53,8 @@ class BaseStorage(object):
     def push(self, dataframes, scope_id=None):
         """Pushes dataframes to the storage backend
 
-        A dataframe has the following format::
-
-            {
-                "usage": {
-                    "bananas": [ # metric name
-                        {
-                            "vol": {
-                                "unit": "banana",
-                                "qty": 1
-                            },
-                            "rating": {
-                                "price": 1
-                            },
-                            "groupby": {
-                                "xxx_id": "hello",
-                                "yyy_id": "bye",
-                            },
-                            "metadata": {
-                                "flavor": "chocolate",
-                                "eaten_by": "gorilla",
-                            },
-                       }
-                    ],
-                    "metric_name2": [...],
-                }
-               "period": {
-                    "begin": "1239781290", # timestamp
-                    "end": "1239793490", # timestamp
-                }
-            }
-
         :param dataframes: List of dataframes
-        :type dataframes: list
+        :type dataframes: [cloudkitty.dataframe.DataFrame]
         """
 
     @abc.abstractmethod
