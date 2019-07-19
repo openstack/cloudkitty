@@ -28,6 +28,7 @@ class ScopeState(base.BaseResource):
     def __init__(self, *args, **kwargs):
         super(ScopeState, self).__init__(*args, **kwargs)
         self._client = messaging.get_client()
+        self._storage_state = storage_state.StateManager()
 
     @api_utils.paginated
     @api_utils.add_input_schema('query', {
@@ -60,7 +61,7 @@ class ScopeState(base.BaseResource):
             'scope:get_state',
             {'tenant_id': scope_id or flask.request.context.project_id}
         )
-        results = storage_state.StateManager().get_all(
+        results = self._storage_state.get_all(
             identifier=scope_id,
             scope_key=scope_key,
             fetcher=fetcher,
@@ -113,7 +114,7 @@ class ScopeState(base.BaseResource):
             raise http_exceptions.BadRequest(
                 "Either all_scopes or a scope_id should be specified.")
 
-        results = storage_state.StateManager().get_all(
+        results = self._storage_state.get_all(
             identifier=scope_id,
             scope_key=scope_key,
             fetcher=fetcher,
