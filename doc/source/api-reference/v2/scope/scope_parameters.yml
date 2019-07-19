@@ -76,3 +76,19 @@ scope_key_resp:
   required: true
   description: Scope key for the given scope
   in: body
+
+collector_body:
+  <<: *collector
+  in: body
+
+fetcher_body:
+  <<: *fetcher
+  in: body
+
+scope_id_body:
+  <<: *scope_id
+  in: body
+
+scope_key_body:
+  <<: *scope_key
+  in: body

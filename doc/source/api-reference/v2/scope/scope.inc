@@ -60,10 +60,10 @@ Reset the status of several scopes.
 .. rest_parameters:: scope/scope_parameters.yml
 
    - state: state
-   - collector: collector
-   - fetcher: fetcher
-   - scope_id: scope_id
-   - scope_key: scope_key
+   - collector: collector_body
+   - fetcher: fetcher_body
+   - scope_id: scope_id_body
+   - scope_key: scope_key_body
    - all_scopes: all_scopes
 
 Status codes
