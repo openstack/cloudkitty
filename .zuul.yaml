@@ -3,18 +3,18 @@
     parent: devstack-tempest
     description: |
       Job testing cloudkitty installation on devstack and running tempest tests
-    required-projects:
+    required-projects: &base_required_projects
       - name: openstack/cloudkitty
       - name: openstack/cloudkitty-tempest-plugin
       - name: openstack/python-cloudkittyclient
-    roles:
+    roles: &base_roles
       - zuul: openstack-infra/devstack
     timeout: 5400
-    irrelevant-files:
+    irrelevant-files: &base_irrelevant_files
       - ^.*\.rst$
       - ^doc/.*$
       - ^releasenotes/.*$
-    vars:
+    vars: &base_vars
       devstack_plugins:
         cloudkitty: https://opendev.org/openstack/cloudkitty
         cloudkitty-tempest-plugin: https://opendev.org/openstack/cloudkitty-tempest-plugin
@@ -29,6 +29,17 @@
       devstack_localrc:
         CLOUDKITTY_FETCHER: keystone
         TEMPEST_PLUGINS: /opt/stack/cloudkitty-tempest-plugin
+
+- job:
+    name: cloudkitty-tempest-full-ipv6-only
+    parent: devstack-tempest-ipv6
+    description: |
+      Job testing cloudkitty installation on devstack on IPv6 and running tempest tests
+    required-projects: *base_required_projects
+    roles: *base_roles
+    timeout: 5400
+    irrelevant-files: *base_irrelevant_files
+    vars: *base_vars
 
 - job:
     name: cloudkitty-tempest-full-python3
@@ -75,6 +86,7 @@
       jobs:
         - cloudkitty-tempest-full
         - cloudkitty-tempest-full-python3
+        - cloudkitty-tempest-full-ipv6-only
         - cloudkitty-tox-bandit:
             voting: false
     gate:
@@ -82,3 +94,4 @@
       jobs:
         - cloudkitty-tempest-full
         - cloudkitty-tempest-full-python3
+        - cloudkitty-tempest-full-ipv6-only
