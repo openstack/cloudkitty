@@ -88,8 +88,8 @@ class TestInfluxClient(unittest.TestCase):
         self._storage.delete(begin=datetime(2019, 1, 1),
                              end=datetime(2019, 1, 2))
         m.assert_called_once_with(
-            """DELETE FROM "dataframes" WHERE time >= '2019-01-01T00:00:00Z'"""
-            """ AND time < '2019-01-02T00:00:00Z';""")
+            """DELETE FROM "dataframes" WHERE time >= '2019-01-01T00:00:00'"""
+            """ AND time < '2019-01-02T00:00:00';""")
 
     def test_delete_begin_end_filters(self):
         self._storage._conn._conn.query = m = mock.MagicMock()
@@ -97,8 +97,8 @@ class TestInfluxClient(unittest.TestCase):
             begin=datetime(2019, 1, 1), end=datetime(2019, 1, 2),
             filters={'project_id': 'foobar'})
         m.assert_called_once_with(
-            """DELETE FROM "dataframes" WHERE time >= '2019-01-01T00:00:00Z'"""
-            """ AND time < '2019-01-02T00:00:00Z' AND "project_id"='foobar';"""
+            """DELETE FROM "dataframes" WHERE time >= '2019-01-01T00:00:00'"""
+            """ AND time < '2019-01-02T00:00:00' AND "project_id"='foobar';"""
         )
 
     def test_delete_end_filters(self):
@@ -106,7 +106,7 @@ class TestInfluxClient(unittest.TestCase):
         self._storage.delete(end=datetime(2019, 1, 2),
                              filters={'project_id': 'foobar'})
         m.assert_called_once_with(
-            """DELETE FROM "dataframes" WHERE time < '2019-01-02T00:00:00Z' """
+            """DELETE FROM "dataframes" WHERE time < '2019-01-02T00:00:00' """
             """AND "project_id"='foobar';""")
 
     def test_delete_begin_filters(self):
@@ -114,17 +114,17 @@ class TestInfluxClient(unittest.TestCase):
         self._storage.delete(begin=datetime(2019, 1, 2),
                              filters={'project_id': 'foobar'})
         m.assert_called_once_with(
-            """DELETE FROM "dataframes" WHERE time >= '2019-01-02T00:00:00Z'"""
+            """DELETE FROM "dataframes" WHERE time >= '2019-01-02T00:00:00'"""
             """ AND "project_id"='foobar';""")
 
     def test_delete_begin(self):
         self._storage._conn._conn.query = m = mock.MagicMock()
         self._storage.delete(begin=datetime(2019, 1, 2))
         m.assert_called_once_with("""DELETE FROM "dataframes" WHERE """
-                                  """time >= '2019-01-02T00:00:00Z';""")
+                                  """time >= '2019-01-02T00:00:00';""")
 
     def test_delete_end(self):
         self._storage._conn._conn.query = m = mock.MagicMock()
         self._storage.delete(end=datetime(2019, 1, 2))
         m.assert_called_once_with("""DELETE FROM "dataframes" WHERE """
-                                  """time < '2019-01-02T00:00:00Z';""")
+                                  """time < '2019-01-02T00:00:00';""")

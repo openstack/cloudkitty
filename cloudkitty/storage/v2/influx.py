@@ -23,7 +23,6 @@ import six
 
 from cloudkitty.storage import v2 as v2_storage
 from cloudkitty import tzutils
-from cloudkitty import utils
 
 
 LOG = log.getLogger(__name__)
@@ -208,10 +207,10 @@ class InfluxClient(object):
     def _get_time_query_delete(begin, end):
         output = ""
         if begin:
-            output += " WHERE time >= '{}'".format(utils.isotime(begin))
+            output += " WHERE time >= '{}'".format(begin.isoformat())
         if end:
             output += " AND " if output else " WHERE "
-            output += "time < '{}'".format(utils.isotime(end))
+            output += "time < '{}'".format(end.isoformat())
         return output
 
     def delete(self, begin, end, filters):
