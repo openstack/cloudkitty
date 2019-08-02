@@ -25,7 +25,7 @@ from voluptuous import Required
 from voluptuous import Schema
 
 from cloudkitty import collector
-from cloudkitty import transformer
+from cloudkitty import dataframe
 from cloudkitty import utils as ck_utils
 
 
@@ -94,8 +94,8 @@ class MonascaCollector(collector.BaseCollector):
 
         return output
 
-    def __init__(self, transformers, **kwargs):
-        super(MonascaCollector, self).__init__(transformers, **kwargs)
+    def __init__(self, **kwargs):
+        super(MonascaCollector, self).__init__(**kwargs)
 
         self.auth = ks_loading.load_auth_from_conf_options(
             CONF,
@@ -129,7 +129,7 @@ class MonascaCollector(collector.BaseCollector):
                 return endpoint.url
         return None
 
-    def _get_metadata(self, metric_name, transformers, conf):
+    def _get_metadata(self, metric_name, conf):
         info = {}
         info['unit'] = conf['metrics'][metric_name]['unit']
 
@@ -141,12 +141,9 @@ class MonascaCollector(collector.BaseCollector):
     # NOTE(lukapeschke) if anyone sees a better way to do this,
     # please make a patch
     @classmethod
-    def get_metadata(cls, resource_type, transformers, conf):
-        args = {
-            'transformers': transformer.get_transformers(),
-            'period': conf['period']}
-        tmp = cls(**args)
-        return tmp._get_metadata(resource_type, transformers, conf)
+    def get_metadata(cls, resource_type, conf):
+        tmp = cls(period=conf['period'])
+        return tmp._get_metadata(resource_type, conf)
 
     def _get_dimensions(self, metric_name, project_id, q_filter):
         dimensions = {}
@@ -267,11 +264,11 @@ class MonascaCollector(collector.BaseCollector):
             if len(d['statistics']):
                 metadata, groupby, qty = self._format_data(
                     met, d, resources_info)
-                data = self.t_cloudkitty.format_item(
+                formated_resources.append(dataframe.DataPoint(
+                    met['unit'],
+                    qty,
+                    0,
                     groupby,
                     metadata,
-                    met['unit'],
-                    qty=qty,
-                )
-                formated_resources.append(data)
+                ))
         return formated_resources

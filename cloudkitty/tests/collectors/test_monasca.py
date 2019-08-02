@@ -18,7 +18,6 @@ import mock
 
 from cloudkitty.collector import monasca as mon_collector
 from cloudkitty import tests
-from cloudkitty import transformer
 
 
 class MonascaCollectorTest(tests.TestCase):
@@ -50,7 +49,6 @@ class MonascaCollectorTest(tests.TestCase):
                 'MonascaCollector._get_monasca_endpoint',
                 return_value='http://noop'):
             self.collector = mon_collector.MonascaCollector(
-                transformer.get_transformers(),
                 period=3600,
                 conf=conf,
             )

@@ -26,6 +26,7 @@ from cloudkitty import collector
 from cloudkitty.collector.exceptions import CollectError
 from cloudkitty.common.prometheus_client import PrometheusClient
 from cloudkitty.common.prometheus_client import PrometheusResponseError
+from cloudkitty import dataframe
 from cloudkitty import utils as ck_utils
 
 
@@ -76,8 +77,8 @@ PROMETHEUS_EXTRA_SCHEMA = {
 class PrometheusCollector(collector.BaseCollector):
     collector_name = 'prometheus'
 
-    def __init__(self, transformers, **kwargs):
-        super(PrometheusCollector, self).__init__(transformers, **kwargs)
+    def __init__(self, **kwargs):
+        super(PrometheusCollector, self).__init__(**kwargs)
         url = CONF.collector_prometheus.prometheus_url
 
         user = CONF.collector_prometheus.prometheus_user
@@ -176,13 +177,12 @@ class PrometheusCollector(collector.BaseCollector):
                 item,
             )
 
-            item = self.t_cloudkitty.format_item(
+            formatted_resources.append(dataframe.DataPoint(
+                self.conf[metric_name]['unit'],
+                qty,
+                0,
                 groupby,
                 metadata,
-                self.conf[metric_name]['unit'],
-                qty=qty,
-            )
-
-            formatted_resources.append(item)
+            ))
 
         return formatted_resources

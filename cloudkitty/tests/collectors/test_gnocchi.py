@@ -17,7 +17,6 @@
 from cloudkitty.collector import gnocchi
 from cloudkitty import tests
 from cloudkitty.tests import samples
-from cloudkitty import transformer
 
 
 class GnocchiCollectorTest(tests.TestCase):
@@ -29,7 +28,6 @@ class GnocchiCollectorTest(tests.TestCase):
             'gnocchi_auth_type', 'basic', 'collector_gnocchi')
 
         self.collector = gnocchi.GnocchiCollector(
-            transformer.get_transformers(),
             period=3600,
             conf=samples.DEFAULT_METRICS_CONF,
         )

@@ -31,7 +31,6 @@ from voluptuous import Optional
 from voluptuous import Required
 from voluptuous import Schema
 
-from cloudkitty import transformer
 from cloudkitty import utils as ck_utils
 
 
@@ -101,15 +100,12 @@ METRIC_BASE_SCHEMA = {
 }
 
 
-def get_collector(transformers=None):
+def get_collector():
     metrics_conf = ck_utils.load_conf(CONF.collect.metrics_conf)
-    if not transformers:
-        transformers = transformer.get_transformers()
     collector_args = {
         'period': CONF.collect.period,
-        'transformers': transformers,
+        'conf': metrics_conf,
     }
-    collector_args.update({'conf': metrics_conf})
     return driver.DriverManager(
         COLLECTORS_NAMESPACE,
         CONF.collect.collector,
@@ -132,7 +128,6 @@ def get_metrics_based_collector_metadata():
     Results are based on enabled collector and metrics in CONF.
     """
     metrics_conf = ck_utils.load_conf(CONF.collect.metrics_conf)
-    transformers = transformer.get_transformers()
     collector = get_collector_without_invoke()
     metadata = {}
     if 'metrics' in metrics_conf:
@@ -140,21 +135,9 @@ def get_metrics_based_collector_metadata():
             alt_name = metric.get('alt_name', metric_name)
             metadata[alt_name] = collector.get_metadata(
                 metric_name,
-                transformers,
                 metrics_conf,
             )
     return metadata
-
-
-class TransformerDependencyError(Exception):
-    """Raised when a collector can't find a mandatory transformer."""
-
-    def __init__(self, collector, transformer):
-        super(TransformerDependencyError, self).__init__(
-            "Transformer '%s' not found, but required by %s" % (transformer,
-                                                                collector))
-        self.collector = collector
-        self.transformer = transformer
 
 
 class NoDataCollected(Exception):
@@ -173,11 +156,9 @@ class NoDataCollected(Exception):
 @six.add_metaclass(abc.ABCMeta)
 class BaseCollector(object):
     collector_name = None
-    dependencies = ['CloudKittyFormatTransformer']
 
-    def __init__(self, transformers, **kwargs):
+    def __init__(self, **kwargs):
         try:
-            self.transformers = transformers
             self.period = kwargs['period']
             self.conf = self.check_configuration(kwargs['conf'])
         except KeyError as e:
@@ -187,18 +168,6 @@ class BaseCollector(object):
         except VoluptuousError as v:
             LOG.error('Problem while checking configurations.', v)
             raise v
-
-        self._check_transformers()
-        self.t_cloudkitty = self.transformers['CloudKittyFormatTransformer']
-
-    def _check_transformers(self):
-        """Check for transformer prerequisites
-
-        """
-        for dependency in self.dependencies:
-            if dependency not in self.transformers:
-                raise TransformerDependencyError(self.collector_name,
-                                                 dependency)
 
     @staticmethod
     def check_configuration(conf):
@@ -229,7 +198,7 @@ class BaseCollector(object):
         return trans_resource
 
     @classmethod
-    def get_metadata(cls, resource_name, transformers):
+    def get_metadata(cls, resource_name):
         """Return metadata about collected resource as a dict.
 
            Dict object should contain:
@@ -247,8 +216,7 @@ class BaseCollector(object):
         provided in the metric conf at initialization.
         (Available in ``self.conf['groupby']`` and ``self.conf['metadata']``).
 
-        Returns a list of items formatted with
-        ``CloudKittyFormatTransformer.format_item``.
+        Returns a list of cloudkitty.dataframe.DataPoint objects.
 
         :param metric_name: Name of the metric to fetch
         :type metric_name: str

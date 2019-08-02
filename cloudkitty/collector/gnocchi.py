@@ -29,6 +29,7 @@ from voluptuous import Required
 from voluptuous import Schema
 
 from cloudkitty import collector
+from cloudkitty import dataframe
 from cloudkitty import utils as ck_utils
 
 
@@ -116,8 +117,8 @@ class GnocchiCollector(collector.BaseCollector):
 
     collector_name = 'gnocchi'
 
-    def __init__(self, transformers, **kwargs):
-        super(GnocchiCollector, self).__init__(transformers, **kwargs)
+    def __init__(self, **kwargs):
+        super(GnocchiCollector, self).__init__(**kwargs)
 
         adapter_options = {'connect_retries': 3}
         if CONF.collector_gnocchi.gnocchi_auth_type == 'keystone':
@@ -164,9 +165,8 @@ class GnocchiCollector(collector.BaseCollector):
         return output
 
     @classmethod
-    def get_metadata(cls, resource_name, transformers, conf):
-        info = super(GnocchiCollector, cls).get_metadata(resource_name,
-                                                         transformers)
+    def get_metadata(cls, resource_name, conf):
+        info = super(GnocchiCollector, cls).get_metadata(resource_name)
         try:
             info["metadata"].extend(
                 conf[resource_name]['groupby']
@@ -392,11 +392,11 @@ class GnocchiCollector(collector.BaseCollector):
                             project_id, start, end, e),
                     )
                     continue
-                data = self.t_cloudkitty.format_item(
+                formated_resources.append(dataframe.DataPoint(
+                    met['unit'],
+                    qty,
+                    0,
                     groupby,
                     metadata,
-                    met['unit'],
-                    qty=qty,
-                )
-                formated_resources.append(data)
+                ))
         return formated_resources

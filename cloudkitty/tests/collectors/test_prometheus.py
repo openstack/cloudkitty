@@ -24,7 +24,6 @@ from cloudkitty.common.prometheus_client import PrometheusResponseError
 from cloudkitty import dataframe
 from cloudkitty import tests
 from cloudkitty.tests import samples
-from cloudkitty import transformer
 
 
 class PrometheusCollectorTest(tests.TestCase):
@@ -53,8 +52,7 @@ class PrometheusCollectorTest(tests.TestCase):
                 }
             }
         }
-        transformers = transformer.get_transformers()
-        self.collector = prometheus.PrometheusCollector(transformers, **args)
+        self.collector = prometheus.PrometheusCollector(**args)
 
     def test_fetch_all_build_query(self):
         query = (

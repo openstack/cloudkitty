@@ -39,7 +39,6 @@ from cloudkitty import extension_manager
 from cloudkitty import messaging
 from cloudkitty import storage
 from cloudkitty import storage_state as state
-from cloudkitty import transformer
 from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
 
@@ -334,8 +333,7 @@ class Orchestrator(cotyledon.Service):
             invoke_on_load=True,
         ).driver
 
-        transformers = transformer.get_transformers()
-        self.collector = collector.get_collector(transformers)
+        self.collector = collector.get_collector()
         self.storage = storage.get_storage()
         self._state = state.StateManager()
 

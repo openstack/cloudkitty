@@ -61,8 +61,8 @@ following prototype:
 .. autoclass:: cloudkitty.collector.BaseCollector
    :members: fetch_all
 
-This method is supposed to return a list of objects formatted by
-``CloudKittyFormatTransformer``.
+This method is supposed to return a list of
+``cloudkitty.dataframe.DataPoint`` objects.
 
 Example code of a basic collector:
 
@@ -79,11 +79,12 @@ Example code of a basic collector:
             data = []
             for CONDITION:
                 # do stuff
-                data.append(self.t_cloudkitty.format_item(
+                data.append(dataframe.DataPoint(
+                    unit,
+                    qty, # int, float, decimal.Decimal or str
+                    0, # price
                     groupby, # dict
                     metadata, # dict
-                    unit, # str
-                    qty=qty, # int / float
                 ))
 
             return data

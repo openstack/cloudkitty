@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    Since data frames are now represented as objects internally, transformers
+    are not used anymore and have been completely removed from the codebase.
