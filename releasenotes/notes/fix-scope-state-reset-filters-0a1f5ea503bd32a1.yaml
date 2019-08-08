@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    An issue causing data not to be deleted from the storage backend when
+    resetting a scope's state through the API has been fixed.
