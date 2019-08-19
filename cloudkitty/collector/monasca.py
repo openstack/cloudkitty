@@ -57,7 +57,7 @@ CONF.register_opts(collector_monasca_opts, COLLECTOR_MONASCA_OPTS)
 METRICS_CONF = ck_utils.load_conf(CONF.collect.metrics_conf)
 
 MONASCA_EXTRA_SCHEMA = {
-    Required('extra_args'): {
+    Required('extra_args', default={}): {
         # Key corresponding to the resource id in a metric's dimensions
         # Allows to adapt the resource identifier. Should not need to be
         # modified in a standard OpenStack installation

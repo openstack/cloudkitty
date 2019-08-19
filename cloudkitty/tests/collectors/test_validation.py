@@ -81,11 +81,17 @@ class MetricConfigValidationTest(tests.TestCase):
 
     def test_monasca_minimal_config_no_extra_args(self):
         data = copy.deepcopy(self.base_data)
-
-        self.assertRaises(
-            verror.MultipleInvalid,
-            collector.monasca.MonascaCollector.check_configuration,
-            data,
+        expected_output = copy.deepcopy(self.base_output)
+        expected_output['metric_one']['groupby'].extend(
+            ['project_id', 'resource_id'])
+        expected_output['metric_one']['extra_args'] = {
+            'resource_key': 'resource_id',
+            'aggregation_method': 'max',
+            'forced_project_id': ''
+        }
+        self.assertEqual(
+            collector.monasca.MonascaCollector.check_configuration(data),
+            expected_output,
         )
 
     def test_monasca_minimal_config_minimal_extra_args(self):
@@ -107,12 +113,28 @@ class MetricConfigValidationTest(tests.TestCase):
 
     def test_prometheus_minimal_config_empty_extra_args(self):
         data = copy.deepcopy(self.base_data)
-        data['extra_args'] = {}
+        data['metrics']['metric_one']['extra_args'] = {}
 
-        self.assertRaises(
-            verror.MultipleInvalid,
-            collector.prometheus.PrometheusCollector.check_configuration,
-            data,
+        expected_output = copy.deepcopy(self.base_output)
+        expected_output['metric_one']['groupby'].append('project_id')
+        expected_output['metric_one']['extra_args'] = {
+            'aggregation_method': 'max',
+        }
+        self.assertEqual(
+            collector.prometheus.PrometheusCollector.check_configuration(data),
+            expected_output,
+        )
+
+    def test_prometheus_minimal_config_no_extra_args(self):
+        data = copy.deepcopy(self.base_data)
+        expected_output = copy.deepcopy(self.base_output)
+        expected_output['metric_one']['groupby'].append('project_id')
+        expected_output['metric_one']['extra_args'] = {
+            'aggregation_method': 'max',
+        }
+        self.assertEqual(
+            collector.prometheus.PrometheusCollector.check_configuration(data),
+            expected_output,
         )
 
     def test_prometheus_minimal_config_minimal_extra_args(self):
