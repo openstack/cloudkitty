@@ -108,3 +108,29 @@ class StateManagerTest(tests.TestCase):
         with mock.patch('cloudkitty.db.get_session'):
             self._test_x_state_no_column_update(
                 lambda x: self._state.set_state(x, datetime(2042, 1, 1)))
+
+    def test_set_state_does_not_duplicate_entries(self):
+        state = datetime(2042, 1, 1)
+        _, query_mock = self._get_query_mock(
+            self._get_r_mock('a', 'b', 'c', state))
+        with mock.patch(
+                'oslo_db.sqlalchemy.utils.model_query',
+                new=query_mock), mock.patch('cloudkitty.db.get_session') as sm:
+            sm.return_value = session_mock = mock.MagicMock()
+            self._state.set_state('fake_identifier', state)
+            session_mock.commit.assert_not_called()
+            session_mock.add.assert_not_called()
+
+    def test_set_state_does_update_state(self):
+        r_mock = self._get_r_mock('a', 'b', 'c', datetime(2000, 1, 1))
+        _, query_mock = self._get_query_mock(r_mock)
+        new_state = datetime(2042, 1, 1)
+        with mock.patch(
+                'oslo_db.sqlalchemy.utils.model_query',
+                new=query_mock), mock.patch('cloudkitty.db.get_session') as sm:
+            sm.return_value = session_mock = mock.MagicMock()
+            self.assertNotEqual(r_mock.state, new_state)
+            self._state.set_state('fake_identifier', new_state)
+            self.assertEqual(r_mock.state, new_state)
+            session_mock.commit.assert_called_once()
+            session_mock.add.assert_not_called()
