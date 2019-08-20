@@ -15,7 +15,7 @@ Custom module example
 Price definitions
 -----------------
 
-.. code:: python
+.. code-block:: python
 
     import decimal
 
@@ -36,7 +36,7 @@ Price definitions
 Price calculation functions
 ---------------------------
 
-.. code:: python
+.. code-block:: python
 
     # These functions return the price of a service usage on a collect period.
     # The price is always equivalent to the price per unit multiplied by
@@ -71,7 +71,7 @@ Price calculation functions
 Processing the data
 -------------------
 
-.. code:: python
+.. code-block:: python
 
     def process(data):
         # The 'data' parameter is a list of dictionaries containing a
@@ -100,9 +100,9 @@ Using your Script for rating
 Enabling the PyScripts module
 -----------------------------
 
-To use you script for rating, you will need to enable the pyscripts module
+To use your script for rating, you will need to enable the pyscripts module
 
-.. code:: raw
+.. code-block:: console
 
     $ cloudkitty module enable pyscripts
     +-----------+---------+----------+
@@ -116,7 +116,7 @@ Adding the script to CloudKitty
 
 Create the script and specify its name.
 
-.. code:: raw
+.. code-block:: console
 
     $ cloudkitty pyscript create my_awesome_script script.py
     +-------------------+--------------------------------------+------------------------------------------+---------------------------------------+
