@@ -84,18 +84,15 @@ class ScopeEndpointTest(tests.TestCase):
                     begin=tzutils.utc_to_local(
                         datetime.datetime(2019, 7, 16, 8, 55, 1)),
                     end=None,
-                    filters={
-                        'project_id': 'f266f30b11f246b589fd266f85eeec39',
-                        'collector': 'prometheus',
-                        'fetcher': 'prometheus'}),
+                    filters={'project_id': 'f266f30b11f246b589fd266f85eeec39'}
+                ),
                 mock.call(
                     begin=tzutils.utc_to_local(
                         datetime.datetime(2019, 7, 16, 8, 55, 1)),
                     end=None,
-                    filters={
-                        'project_id': '4dfb25b0947c4f5481daf7b948c14187',
-                        'collector': 'gnocchi',
-                        'fetcher': 'gnocchi'})], any_order=True)
+                    filters={'project_id': '4dfb25b0947c4f5481daf7b948c14187'},
+                )
+            ], any_order=True)
 
             ss.assert_has_calls([
                 mock.call(

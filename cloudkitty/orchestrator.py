@@ -170,8 +170,6 @@ class ScopeEndpoint(object):
                 try:
                     self._storage.delete(begin=state_dt, end=None, filters={
                         scope['scope_key']: scope['scope_id'],
-                        'collector': scope['collector'],
-                        'fetcher': scope['fetcher'],
                     })
                     self._state.set_state(
                         scope['scope_id'],
