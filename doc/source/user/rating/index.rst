@@ -28,7 +28,7 @@ List available modules
 
 List available rating modules:
 
-.. code:: console
+.. code-block:: console
 
     $ cloudkitty module list
     +-----------+---------+----------+
@@ -44,7 +44,7 @@ Enable or disable module
 
 Enable the hashmap rating module:
 
-.. code:: console
+.. code-block:: console
 
     $ cloudkitty module enable hashmap
     +---------+---------+----------+
@@ -55,7 +55,7 @@ Enable the hashmap rating module:
 
 Disable the pyscripts rating module:
 
-.. code:: console
+.. code-block:: console
 
     $ cloudkitty module disable pyscripts
     +-----------+---------+----------+
@@ -69,7 +69,7 @@ Set priority
 
 Set the hashmap rating module priority to 100:
 
-.. code:: console
+.. code-block:: console
 
     $ cloudkitty module set priority hashmap 100
     +---------+---------+----------+
