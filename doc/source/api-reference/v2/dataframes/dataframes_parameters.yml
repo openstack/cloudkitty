@@ -1,0 +1,6 @@
+dataframes_body:
+  in: body
+  description: |
+    List of dataframes to add
+  type: list
+  required: true

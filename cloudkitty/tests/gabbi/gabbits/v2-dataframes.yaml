@@ -1,0 +1,186 @@
+fixtures:
+  - ConfigFixtureStorageV2
+  - InfluxStorageDataFixture
+
+tests:
+  - name: Push dataframes
+    url: /v2/dataframes
+    method: POST
+    status: 204
+    request_headers:
+      content-type: application/json
+    data:
+      dataframes:
+        - period:
+            begin: 20190723T122810Z
+            end: 20190723T132810Z
+          usage:
+            metric_one:
+              - vol:
+                  unit: GiB
+                  qty: 1.2
+                rating:
+                  price: 0.04
+                groupby:
+                  group_one: one
+                  group_two: two
+                metadata:
+                  attr_one: one
+                  attr_two: two
+            metric_two:
+              - vol:
+                  unit: GiB
+                  qty: 1.2
+                rating:
+                  price: 0.04
+                groupby:
+                  group_one: one
+                  group_two: two
+                metadata:
+                  attr_one: one
+                  attr_two: two
+        - period:
+            begin: 20190723T122810Z
+            end: 20190723T132810Z
+          usage:
+            metric_one:
+              - vol:
+                  unit: GiB
+                  qty: 1.2
+                rating:
+                  price: 0.04
+                groupby:
+                  group_one: one
+                  group_two: two
+                metadata:
+                  attr_one: one
+                  attr_two: two
+            metric_two:
+              - vol:
+                  unit: GiB
+                  qty: 1.2
+                rating:
+                  price: 0.04
+                groupby:
+                  group_one: one
+                  group_two: two
+                metadata:
+                  attr_one: one
+                  attr_two: two
+
+  - name: Push dataframes with empty dataframes
+    url: /v2/dataframes
+    method: POST
+    status: 400
+    request_headers:
+      content-type: application/json
+    data:
+      dataframes: []
+    response_strings:
+      - "Parameter dataframes must not be empty."
+
+  - name: Push dataframes with missing key
+    url: /v2/dataframes
+    method: POST
+    status: 400
+    request_headers:
+      content-type: application/json
+    data:
+      dataframes:
+        - period:
+            begin: 20190723T122810Z
+            end: 20190723T132810Z
+          usage:
+            metric_one:
+              - vol:
+                  unit: GiB
+                  qty: 1.2
+                rating:
+                  price: 0.04
+                groupby:
+                  group_one: one
+                  group_two: two
+                metadata:
+                  attr_one: one
+                  attr_two: two
+            metric_two:
+              - vol:
+                  unit: GiB
+                  qty: 1.2
+                rating:
+                  price: 0.04
+                groupby:
+                  group_one: one
+                  group_two: two
+                metadata:
+                  attr_one: one
+                  attr_two: two
+        - period:
+            begin: 20190723T122810Z
+            end: 20190723T132810Z
+
+  - name: Push dataframe with malformed datapoint
+    url: /v2/dataframes
+    method: POST
+    status: 400
+    request_headers:
+      content-type: application/json
+    data:
+      dataframes:
+        - period:
+            begin: 20190723T122810Z
+            end: 20190723T132810Z
+          usage:
+            metric_one:
+              - vol:
+                  unit: GiB
+                  qty: 1.2
+            metric_two:
+              - vol:
+                  unit: GiB
+                  qty: 1.2
+                rating:
+                  price: 0.04
+                groupby:
+                  group_one: one
+                  group_two: two
+                metadata:
+                  attr_one: one
+                  attr_two: two
+
+  - name: Push dataframe with malformed datetimes
+    url: /v2/dataframes
+    method: POST
+    status: 400
+    request_headers:
+      content-type: application/json
+    data:
+      dataframes:
+        - period:
+            begin: 20190723TZ
+            end: 20190723TZ
+          usage:
+            metric_one:
+              - vol:
+                  unit: GiB
+                  qty: 1.2
+                rating:
+                  price: 0.04
+                groupby:
+                  group_one: one
+                  group_two: two
+                metadata:
+                  attr_one: one
+                  attr_two: two
+            metric_two:
+              - vol:
+                  unit: GiB
+                  qty: 1.2
+                rating:
+                  price: 0.04
+                groupby:
+                  group_one: one
+                  group_two: two
+                metadata:
+                  attr_one: one
+                  attr_two: two

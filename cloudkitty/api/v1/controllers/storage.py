@@ -80,7 +80,13 @@ class DataFramesController(rest.RestController):
                         volume=point.qty,
                         rating=point.price)
                     if frame_tenant is None:
-                        frame_tenant = point.desc[scope_key]
+                        # NOTE(jferrieu): Since DataFrame/DataPoint
+                        # implementation patch we cannot guarantee
+                        # anymore that a DataFrame does contain a scope_id
+                        # therefore the __UNDEF__ default value has been
+                        # retained to maintain backward compatibility
+                        # if it would occur being absent
+                        frame_tenant = point.desc.get(scope_key, '__UNDEF__')
                     resources.append(resource)
                 dataframe = storage_models.DataFrame(
                     begin=tzutils.local_to_utc(frame.start, naive=True),

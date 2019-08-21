@@ -7,8 +7,14 @@
 202:
   default: Request has been accepted for asynchronous processing.
 
+204:
+  default: Request was successful even though no content is to be returned.
+
 400:
   default: Invalid request.
+
+401:
+  default: Unauthenticated user.
 
 403:
   default: Forbidden operation for the authentified user.

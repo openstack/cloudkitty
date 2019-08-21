@@ -84,6 +84,10 @@
 # GET  /v1/storage/dataframes
 #"storage:list_data_frames": "rule:admin_or_owner"
 
+# Add one or several DataFrames
+# POST  /v2/dataframes
+#"dataframes:add": "role:admin"
+
 # Get the state of one or several scopes
 # GET  /v2/scope
 #"scope:get_state": "role:admin"

@@ -1,0 +1,96 @@
+{
+    "dataframes": [
+        {
+            "period": {
+                "begin": "20190723T122810Z",
+                "end": "20190723T132810Z"
+            },
+            "usage": {
+                "metric_one": [
+                    {
+                        "vol": {
+                            "unit": "GiB",
+                            "qty": 1.2
+                        },
+                        "rating": {
+                            "price": 0.04
+                        },
+                        "groupby": {
+                            "group_one": "one",
+                            "group_two": "two"
+                        },
+                        "metadata": {
+                            "attr_one": "one",
+                            "attr_two": "two"
+                        }
+                    }
+                ],
+                "metric_two": [
+                    {
+                        "vol": {
+                            "unit": "MB",
+                            "qty": 200.4
+                        },
+                        "rating": {
+                            "price": 0.06
+                        },
+                        "groupby": {
+                            "group_one": "one",
+                            "group_two": "two"
+                        },
+                        "metadata": {
+                            "attr_one": "one",
+                            "attr_two": "two"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "period": {
+                "begin": "20190823T122810Z",
+                "end": "20190823T132810Z"
+            },
+            "usage": {
+                "metric_one": [
+                    {
+                        "vol": {
+                            "unit": "GiB",
+                            "qty": 2.4
+                        },
+                        "rating": {
+                            "price": 0.08
+                        },
+                        "groupby": {
+                            "group_one": "one",
+                            "group_two": "two"
+                        },
+                        "metadata": {
+                            "attr_one": "one",
+                            "attr_two": "two"
+                        }
+                    }
+                ],
+                "metric_two": [
+                    {
+                        "vol": {
+                            "unit": "MB",
+                            "qty": 400.8
+                        },
+                        "rating": {
+                            "price": 0.12
+                        },
+                        "groupby": {
+                            "group_one": "one",
+                            "group_two": "two"
+                        },
+                        "metadata": {
+                            "attr_one": "one",
+                            "attr_two": "two"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

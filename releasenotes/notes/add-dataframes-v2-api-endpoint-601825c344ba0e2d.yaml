@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added a v2 API endpoint allowing to push dataframes into the CloudKitty
+    storage. This endpoint is available via a ``POST`` request on
+    ``/v2/dataframes``. Admin privileges are required to use this endpoint.

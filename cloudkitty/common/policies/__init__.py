@@ -21,6 +21,7 @@ from cloudkitty.common.policies.v1 import info as v1_info
 from cloudkitty.common.policies.v1 import rating as v1_rating
 from cloudkitty.common.policies.v1 import report as v1_report
 from cloudkitty.common.policies.v1 import storage as v1_storage
+from cloudkitty.common.policies.v2 import dataframes as v2_dataframes
 from cloudkitty.common.policies.v2 import scope as v2_scope
 from cloudkitty.common.policies.v2 import summary as v2_summary
 
@@ -33,6 +34,7 @@ def list_rules():
         v1_rating.list_rules(),
         v1_report.list_rules(),
         v1_storage.list_rules(),
+        v2_dataframes.list_rules(),
         v2_scope.list_rules(),
         v2_summary.list_rules(),
     )
