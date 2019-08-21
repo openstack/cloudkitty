@@ -97,7 +97,7 @@ class StateManager(object):
 
         # In case the identifier exists with empty columns, update them
         if not r:
-            # NOTE(peschk_l): We must use == instead of 'is' because sqlachmey
+            # NOTE(peschk_l): We must use == instead of 'is' because sqlalchemy
             # overloads this operator
             r = q.filter(self.model.identifier == identifier). \
                 filter(self.model.scope_key == None). \
@@ -138,9 +138,10 @@ class StateManager(object):
         r = self._get_db_item(
             session, identifier, fetcher, collector, scope_key)
 
-        if r and r.state != state:
-            r.state = state
-            session.commit()
+        if r:
+            if r.state != state:
+                r.state = state
+                session.commit()
         else:
             state_object = self.model(
                 identifier=identifier,
