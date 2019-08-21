@@ -22,6 +22,7 @@ from cloudkitty.common import policy
 from cloudkitty import messaging
 from cloudkitty import storage_state
 from cloudkitty import tzutils
+from cloudkitty import validation_utils as vutils
 
 
 class ScopeState(base.BaseResource):
@@ -42,11 +43,11 @@ class ScopeState(base.BaseResource):
             api_utils.MultiQueryParam(str),
     })
     @api_utils.add_output_schema({'results': [{
-        voluptuous.Required('scope_id'): api_utils.get_string_type(),
-        voluptuous.Required('scope_key'): api_utils.get_string_type(),
-        voluptuous.Required('fetcher'): api_utils.get_string_type(),
-        voluptuous.Required('collector'): api_utils.get_string_type(),
-        voluptuous.Required('state'): api_utils.get_string_type(),
+        voluptuous.Required('scope_id'): vutils.get_string_type(),
+        voluptuous.Required('scope_key'): vutils.get_string_type(),
+        voluptuous.Required('fetcher'): vutils.get_string_type(),
+        voluptuous.Required('collector'): vutils.get_string_type(),
+        voluptuous.Required('state'): vutils.get_string_type(),
     }]})
     def get(self,
             offset=0,

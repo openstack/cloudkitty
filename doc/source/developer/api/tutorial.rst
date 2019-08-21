@@ -80,7 +80,7 @@ Let's update our ``get`` method in order to use this decorator:
    import voluptuous
 
    from cloudkitty.api.v2 import base
-   from cloudkitty.api.v2 import utils as api_utils
+   from cloudkitty import validation_utils
 
 
    class Example(base.BaseResource):
@@ -89,7 +89,7 @@ Let's update our ``get`` method in order to use this decorator:
            voluptuous.Required(
                'message',
                default='This is an example endpoint',
-           ): api_utils.get_string_type(),
+           ): validation_utils.get_string_type(),
        })
        def get(self):
            return {}
@@ -116,7 +116,7 @@ exceptions for HTTP return codes.
 .. code-block:: python
 
    @api_utils.add_input_schema('body', {
-       voluptuous.Required('fruit'): api_utils.get_string_type(),
+       voluptuous.Required('fruit'): validation_utils.get_string_type(),
    })
    def post(self, fruit=None):
        policy.authorize(flask.request.context, 'example:submit_fruit', {})
@@ -159,8 +159,8 @@ parameter is provided only once, and returns it.
 .. autoclass:: cloudkitty.api.v2.utils.SingleQueryParam
 
 .. warning:: ``SingleQueryParam`` uses ``voluptuous.Coerce`` internally for
-             type checking. Thus, ``api_utils.get_string_type`` cannot be used
-             as ``basestring`` can't be instantiated.
+             type checking. Thus, ``validation_utils.get_string_type`` cannot
+             be used as ``basestring`` can't be instantiated.
 
 
 Authorising methods
