@@ -36,7 +36,7 @@ the hashmap module's resources should be a Flask-RESTful resource (eg.
           * A ``MyResource`` resource with support for ``GET``, ``POST``
             and ``PUT`` HTTP methods on the ``/myresource/<uuid:>`` route.
 
-          * A ``MyResourceList`` resource with support for the ``GET``HTTP
+          * A ``MyResourceList`` resource with support for the ``GET`` HTTP
             method on the ``/myresource`` route.
 
           * A blueprint containing these resources.
