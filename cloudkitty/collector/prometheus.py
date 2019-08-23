@@ -62,7 +62,7 @@ cfg.CONF.register_opts(collector_prometheus_opts, PROMETHEUS_COLLECTOR_OPTS)
 CONF = cfg.CONF
 
 PROMETHEUS_EXTRA_SCHEMA = {
-    Required('extra_args'): {
+    Required('extra_args', default={}): {
         Required('aggregation_method', default='max'):
             In([
                 'avg', 'count', 'max',
