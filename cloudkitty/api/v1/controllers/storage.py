@@ -70,9 +70,9 @@ class DataFramesController(rest.RestController):
         except storage.NoTimeFrame:
             return storage_models.DataFrameCollection(dataframes=[])
         for frame in resp['dataframes']:
-            resources = []
             frame_tenant = None
             for type_, points in frame.itertypes():
+                resources = []
                 for point in points:
                     resource = storage_models.RatedResource(
                         service=type_,

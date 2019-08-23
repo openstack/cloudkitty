@@ -316,11 +316,12 @@ class BaseStorageDataFixture(fixture.GabbiFixture):
         data = [
             dataframe.DataFrame(
                 start=begin, end=end,
-                usage=collections.OrderedDict({"cpu": [cpu_point]}),
+                usage=collections.OrderedDict({"cpu": [cpu_point, cpu_point]}),
             ),
             dataframe.DataFrame(
                 start=begin, end=end,
-                usage=collections.OrderedDict({"image.size": [image_point]}),
+                usage=collections.OrderedDict(
+                    {"image.size": [image_point, image_point]}),
             ),
         ]
         return data

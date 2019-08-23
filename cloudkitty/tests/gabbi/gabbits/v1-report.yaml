@@ -46,7 +46,7 @@ tests:
       end: "2015-02-04T00:00:00"
     status: 200
     response_strings:
-      - "122.472"
+      - "244.944"
 
   - name: get total for a period filtering on first tenant
     url: /v1/report/total
@@ -56,7 +56,7 @@ tests:
       tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
     status: 200
     response_strings:
-      - "81.648"
+      - "163.296"
 
   - name: get total for a period filtering on second tenant
     url: /v1/report/total
@@ -66,7 +66,7 @@ tests:
       tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
     status: 200
     response_strings:
-      - "40.824"
+      - "81.648"
 
   - name: get total for a period filtering on compute service
     url: /v1/report/total
@@ -76,7 +76,7 @@ tests:
       service: "cpu"
     status: 200
     response_strings:
-      - "112.308"
+      - "224.616"
 
   - name: get total for a period filtering on image service
     url: /v1/report/total
@@ -86,7 +86,7 @@ tests:
       service: "image.size"
     status: 200
     response_strings:
-      - "10.164"
+      - "20.328"
 
   - name: get total for a period filtering on compute service and tenant
     url: /v1/report/total
@@ -97,7 +97,7 @@ tests:
       service: "cpu"
     status: 200
     response_strings:
-      - "37.436"
+      - "74.872"
 
   - name: get total for a period with no data
     url: /v1/report/total
@@ -117,12 +117,12 @@ tests:
     status: 200
     response_json_paths:
       $.summary.`len`: 2
-      $.summary[0].rate: "40.824"
+      $.summary[0].rate: "81.648"
       $.summary[0].res_type: "ALL"
       $.summary[0].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.summary[0].begin: "2015-01-01T00:00:00"
       $.summary[0].end: "2015-02-04T00:00:00"
-      $.summary[1].rate: "81.648"
+      $.summary[1].rate: "163.296"
       $.summary[1].res_type: "ALL"
       $.summary[1].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.summary[1].begin: "2015-01-01T00:00:00"
@@ -138,12 +138,12 @@ tests:
     status: 200
     response_json_paths:
       $.summary.`len`: 2
-      $.summary[0].rate: "37.436"
+      $.summary[0].rate: "74.872"
       $.summary[0].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.summary[0].res_type: "cpu"
       $.summary[0].begin: "2015-01-01T00:00:00"
       $.summary[0].end: "2015-02-04T00:00:00"
-      $.summary[1].rate: "74.872"
+      $.summary[1].rate: "149.744"
       $.summary[1].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.summary[1].res_type: "cpu"
       $.summary[1].begin: "2015-01-01T00:00:00"
@@ -158,12 +158,12 @@ tests:
     status: 200
     response_json_paths:
       $.summary.`len`: 2
-      $.summary[/res_type][0].rate: "112.308"
+      $.summary[/res_type][0].rate: "224.616"
       $.summary[/res_type][0].res_type: "cpu"
       $.summary[/res_type][0].tenant_id: "ALL"
       $.summary[/res_type][0].begin: "2015-01-01T00:00:00"
       $.summary[/res_type][0].end: "2015-02-04T00:00:00"
-      $.summary[/res_type][1].rate: "10.164"
+      $.summary[/res_type][1].rate: "20.328"
       $.summary[/res_type][1].res_type: "image.size"
       $.summary[/res_type][1].tenant_id: "ALL"
       $.summary[/res_type][1].begin: "2015-01-01T00:00:00"
@@ -179,12 +179,12 @@ tests:
     status: 200
     response_json_paths:
       $.summary.`len`: 2
-      $.summary[/res_type][0].rate: "74.872"
+      $.summary[/res_type][0].rate: "149.744"
       $.summary[/res_type][0].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.summary[/res_type][0].res_type: "cpu"
       $.summary[/res_type][0].begin: "2015-01-01T00:00:00"
       $.summary[/res_type][0].end: "2015-02-04T00:00:00"
-      $.summary[/res_type][1].rate: "6.776"
+      $.summary[/res_type][1].rate: "13.552"
       $.summary[/res_type][1].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.summary[/res_type][1].res_type: "image.size"
       $.summary[/res_type][1].begin: "2015-01-01T00:00:00"
@@ -199,22 +199,22 @@ tests:
     status: 200
     response_json_paths:
       $.summary.`len`: 4
-      $.summary[0].rate: "3.388"
+      $.summary[0].rate: "6.776"
       $.summary[0].res_type: "image.size"
       $.summary[0].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.summary[0].begin: "2015-01-01T00:00:00"
       $.summary[0].end: "2015-02-04T00:00:00"
-      $.summary[1].rate: "6.776"
+      $.summary[1].rate: "13.552"
       $.summary[1].res_type: "image.size"
       $.summary[1].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.summary[1].begin: "2015-01-01T00:00:00"
       $.summary[1].end: "2015-02-04T00:00:00"
-      $.summary[2].rate: "37.436"
+      $.summary[2].rate: "74.872"
       $.summary[2].res_type: "cpu"
       $.summary[2].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.summary[2].begin: "2015-01-01T00:00:00"
       $.summary[2].end: "2015-02-04T00:00:00"
-      $.summary[3].rate: "74.872"
+      $.summary[3].rate: "149.744"
       $.summary[3].res_type: "cpu"
       $.summary[3].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.summary[3].begin: "2015-01-01T00:00:00"
