@@ -20,6 +20,7 @@ from cloudkitty.api.v2 import base
 from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty.common import policy
 from cloudkitty import dataframe
+from cloudkitty import tzutils
 
 
 class DataFrameList(base.BaseResource):
@@ -40,3 +41,50 @@ class DataFrameList(base.BaseResource):
         self._storage.push(dataframes)
 
         return {}, 204
+
+    @api_utils.paginated
+    @api_utils.add_input_schema('query', {
+        voluptuous.Optional('begin'):
+            api_utils.SingleQueryParam(tzutils.dt_from_iso),
+        voluptuous.Optional('end'):
+            api_utils.SingleQueryParam(tzutils.dt_from_iso),
+        voluptuous.Optional('filters'):
+            api_utils.SingleDictQueryParam(str, str),
+    })
+    @api_utils.add_output_schema({
+        voluptuous.Required('total'): int,
+        voluptuous.Required('dataframes'):
+            [dataframe.DataFrame.as_dict],
+    })
+    def get(self,
+            offset=0,
+            limit=100,
+            begin=None,
+            end=None,
+            filters={}):
+
+        policy.authorize(
+            flask.request.context,
+            'dataframes:get',
+            {'tenant_id': flask.request.context.project_id},
+        )
+
+        begin = begin or tzutils.get_month_start()
+        end = end or tzutils.get_next_month()
+
+        metric_types = [filters.pop('type')] if 'type' in filters else None
+        results = self._storage.retrieve(
+            begin=begin, end=end,
+            filters=filters,
+            metric_types=metric_types,
+            offset=offset, limit=limit,
+        )
+
+        if results['total'] < 1:
+            raise http_exceptions.NotFound(
+                "No resource found for provided filters.")
+
+        return {
+            'total': results['total'],
+            'dataframes': results['dataframes'],
+        }

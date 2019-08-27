@@ -1,6 +1,55 @@
 dataframes_body:
   in: body
   description: |
-    List of dataframes to add
+    List of dataframes to add.
   type: list
   required: true
+
+dataframes_resp:
+  in: body
+  description: |
+    List of dataframes matching the query parameters.
+  type: list
+  required: true
+
+total_resp:
+  in: body
+  description: |
+    Total of datapoints matching the query parameters.
+  type: int
+  required: true
+
+limit:
+  in: query
+  description: |
+    For pagination. The maximum number of results to return.
+  type: int
+  required: false
+
+offset:
+  in: query
+  description: |
+    For pagination. The index of the first element that should be returned.
+  type: int
+  required: false
+
+filters:
+  in: query
+  description: |
+    Optional filters.
+  type: dict
+  required: false
+
+begin:
+  in: query
+  description: |
+    Begin of the period for which the dataframes are required.
+  type: iso8601 timestamp
+  required: false
+
+end:
+  in: query
+  description: |
+    End of the period for which the dataframes are required.
+  type: iso8601 timestamp
+  required: false

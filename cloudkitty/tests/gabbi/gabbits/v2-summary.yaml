@@ -1,6 +1,6 @@
 fixtures:
   - ConfigFixtureStorageV2
-  - InfluxStorageDataFixture
+  - NowInfluxStorageDataFixture
 
 tests:
   - name: Get a summary

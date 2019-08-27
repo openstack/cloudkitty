@@ -88,6 +88,10 @@
 # POST  /v2/dataframes
 #"dataframes:add": "role:admin"
 
+# Get DataFrames
+# GET  /v2/dataframes
+#"dataframes:get": "rule:admin_or_owner"
+
 # Get the state of one or several scopes
 # GET  /v2/scope
 #"scope:get_state": "role:admin"

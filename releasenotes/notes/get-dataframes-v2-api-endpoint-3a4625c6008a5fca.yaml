@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a v2 API endpoint allowing to retrieve dataframes from
+    the CloudKitty storage. This endpoint is available via a ``GET``
+    request on ``/v2/dataframes``. Being the owner of the scope or
+    having admin privileges are required to use this endpoint.

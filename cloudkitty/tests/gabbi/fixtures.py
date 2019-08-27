@@ -447,7 +447,33 @@ class MetricsConfFixture(fixture.GabbiFixture):
         ck_utils.load_conf = self._original_function
 
 
-class InfluxStorageDataFixture(NowStorageDataFixture):
+class NowInfluxStorageDataFixture(NowStorageDataFixture):
+
+    def start_fixture(self):
+        cli = influx_utils.FakeInfluxClient()
+        st = storage.get_storage()
+        st._conn = cli
+
+        self._get_storage_patch = mock.patch(
+            'cloudkitty.storage.get_storage',
+            new=lambda **kw: st,
+        )
+        self._get_storage_patch.start()
+
+        super(NowInfluxStorageDataFixture, self).start_fixture()
+
+    def initialize_data(self):
+        data = test_utils.generate_v2_storage_data(
+            start=tzutils.get_month_start(),
+            end=tzutils.localized_now().replace(hour=0),
+        )
+        self.storage.push([data])
+
+    def stop_fixture(self):
+        self._get_storage_patch.stop()
+
+
+class InfluxStorageDataFixture(StorageDataFixture):
 
     def start_fixture(self):
         cli = influx_utils.FakeInfluxClient()
@@ -462,15 +488,18 @@ class InfluxStorageDataFixture(NowStorageDataFixture):
 
         super(InfluxStorageDataFixture, self).start_fixture()
 
-    def initialize_data(self):
-        data = test_utils.generate_v2_storage_data(
-            start=tzutils.get_month_start(),
-            end=tzutils.localized_now().replace(hour=0),
-        )
-        self.storage.push([data])
-
     def stop_fixture(self):
         self._get_storage_patch.stop()
+
+
+class UTCFixture(fixture.GabbiFixture):
+    """Set the local timezone to UTC"""
+    def start_fixture(self):
+        self._tzmock = mock.patch('cloudkitty.tzutils._LOCAL_TZ', tz.UTC)
+        self._tzmock.start()
+
+    def stop_fixture(self):
+        self._tzmock.stop()
 
 
 def setup_app():

@@ -24,6 +24,12 @@ dataframes_policies = [
         description='Add one or several DataFrames',
         operations=[{'path': '/v2/dataframes',
                      'method': 'POST'}]),
+    policy.DocumentedRuleDefault(
+        name='dataframes:get',
+        check_str=base.RULE_ADMIN_OR_OWNER,
+        description='Get DataFrames',
+        operations=[{'path': '/v2/dataframes',
+                     'method': 'GET'}]),
 ]
 
 
