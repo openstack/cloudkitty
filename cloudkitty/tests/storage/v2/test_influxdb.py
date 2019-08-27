@@ -21,6 +21,7 @@ import mock
 from cloudkitty import dataframe
 from cloudkitty.storage.v2 import influx
 from cloudkitty.tests import TestCase
+from cloudkitty import tzutils
 
 
 class TestInfluxDBStorage(TestCase):
@@ -66,9 +67,24 @@ class TestInfluxDBStorage(TestCase):
         )
 
 
-class TestInfluxClient(unittest.TestCase):
+class FakeResultSet(object):
+    def __init__(self, points=[], items=[]):
+        self._points = points
+        self._items = items
 
+    def get_points(self):
+        return self._points
+
+    def items(self):
+        return self._items
+
+
+class TestInfluxClient(unittest.TestCase):
     def setUp(self):
+        self.period_begin = tzutils.local_to_utc(
+            tzutils.get_month_start()).isoformat()
+        self.period_end = tzutils.local_to_utc(
+            tzutils.get_next_month()).isoformat()
         self.client = influx.InfluxClient()
         self._storage = influx.InfluxStorage()
 
@@ -82,6 +98,40 @@ class TestInfluxClient(unittest.TestCase):
 
     def test_get_filter_query_no_filters(self):
         self.assertEqual(self.client._get_filter_query({}), '')
+
+    def test_retrieve_format_with_pagination(self):
+        self._storage._conn._conn.query = m = mock.MagicMock()
+        m.return_value = (FakeResultSet(), FakeResultSet())
+
+        self._storage.retrieve()
+        m.assert_called_once_with(
+            "SELECT COUNT(groupby) FROM \"dataframes\""
+            " WHERE time >= '{0}'"
+            " AND time < '{1}';"
+            "SELECT * FROM \"dataframes\""
+            " WHERE time >= '{0}'"
+            " AND time < '{1}'"
+            " LIMIT 1000 OFFSET 0;".format(
+                self.period_begin, self.period_end,
+            ))
+
+    def test_retrieve_format_with_types(self):
+        self._storage._conn._conn.query = m = mock.MagicMock()
+        m.return_value = (FakeResultSet(), FakeResultSet())
+
+        self._storage.retrieve(metric_types=['foo', 'bar'])
+        m.assert_called_once_with(
+            "SELECT COUNT(groupby) FROM \"dataframes\""
+            " WHERE time >= '{0}'"
+            " AND time < '{1}'"
+            " AND (type='foo' OR type='bar');"
+            "SELECT * FROM \"dataframes\""
+            " WHERE time >= '{0}'"
+            " AND time < '{1}'"
+            " AND (type='foo' OR type='bar')"
+            " LIMIT 1000 OFFSET 0;".format(
+                self.period_begin, self.period_end,
+            ))
 
     def test_delete_no_parameters(self):
         self._storage._conn._conn.query = m = mock.MagicMock()

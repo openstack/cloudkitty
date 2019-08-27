@@ -194,7 +194,7 @@ class InfluxClient(object):
         query += self._get_type_query(types)
 
         if paginate:
-            query += ' OFFSET {} LIMIT {}'.format(offset, limit)
+            query += ' LIMIT {} OFFSET {}'.format(limit, offset)
 
         query += ';'
 
