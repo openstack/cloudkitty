@@ -19,16 +19,24 @@ import testscenarios
 
 from cloudkitty import storage
 from cloudkitty.tests import samples
+from cloudkitty.tests.storage.v2 import es_utils
 from cloudkitty.tests.storage.v2 import influx_utils
 from cloudkitty.tests import TestCase
 from cloudkitty.tests import utils as test_utils
 from cloudkitty import tzutils
 
 
+_ES_CLIENT_PATH = ('cloudkitty.storage.v2.elasticsearch'
+                   '.client.ElasticsearchClient')
+
+_INFLUX_CLIENT_PATH = 'cloudkitty.storage.v2.influx.InfluxClient'
+
+
 class StorageUnitTest(TestCase):
 
     storage_scenarios = [
-        ('influx', dict(storage_backend='influxdb'))]
+        ('influx', dict(storage_backend='influxdb')),
+        ('elastic', dict(storage_backend='elasticsearch'))]
 
     @classmethod
     def generate_scenarios(cls):
@@ -36,7 +44,9 @@ class StorageUnitTest(TestCase):
             cls.scenarios,
             cls.storage_scenarios)
 
-    @mock.patch('cloudkitty.storage.v2.influx.InfluxClient',
+    @mock.patch(_ES_CLIENT_PATH,
+                new=es_utils.FakeElasticsearchClient)
+    @mock.patch(_INFLUX_CLIENT_PATH,
                 new=influx_utils.FakeInfluxClient)
     @mock.patch('cloudkitty.utils.load_conf', new=test_utils.load_conf)
     def setUp(self):
@@ -92,10 +102,12 @@ class StorageUnitTest(TestCase):
         self.assertEqual(total['total'], expected_total_len)
 
         returned_total = round(sum(r['rate'] for r in total['results']), 5)
-        self.assertLessEqual(abs(expected_total - returned_total), 0.00001)
+        self.assertLessEqual(
+            abs(expected_total - float(returned_total)), 0.00001)
 
         returned_qty = round(sum(r['qty'] for r in total['results']), 5)
-        self.assertLessEqual(abs(expected_qty - returned_qty), 0.00001)
+        self.assertLessEqual(
+            abs(expected_qty - float(returned_qty)), 0.00001)
 
     def test_get_total_all_scopes_all_periods(self):
         expected_total, expected_qty, _ = self._expected_total_qty_len(
@@ -178,19 +190,23 @@ class StorageUnitTest(TestCase):
         total['results'].sort(key=lambda x: x['project_id'], reverse=True)
 
         self.assertLessEqual(
-            abs(round(total['results'][0]['rate'] - expected_total_first, 5)),
+            abs(round(float(total['results'][0]['rate'])
+                      - expected_total_first, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][1]['rate'] - expected_total_second, 5)),
+            abs(round(float(total['results'][1]['rate'])
+                      - expected_total_second, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][0]['qty'] - expected_qty_first, 5)),
+            abs(round(float(total['results'][0]['qty'])
+                      - expected_qty_first, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][1]['qty'] - expected_qty_second, 5)),
+            abs(round(float(total['results'][1]['qty'])
+                      - expected_qty_second, 5)),
             0.00001,
         )
 
@@ -213,19 +229,23 @@ class StorageUnitTest(TestCase):
         total['results'].sort(key=lambda x: x['project_id'], reverse=True)
 
         self.assertLessEqual(
-            abs(round(total['results'][0]['rate'] - expected_total_first, 5)),
+            abs(round(float(total['results'][0]['rate'])
+                      - expected_total_first, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][1]['rate'] - expected_total_second, 5)),
+            abs(round(float(total['results'][1]['rate'])
+                      - expected_total_second, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][0]['qty'] - expected_qty_first, 5)),
+            abs(round(float(total['results'][0]['qty'])
+                      - expected_qty_first, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(total['results'][1]['qty'] - expected_qty_second, 5)),
+            abs(round(float(total['results'][1]['qty'])
+                      - expected_qty_second, 5)),
             0.00001,
         )
 

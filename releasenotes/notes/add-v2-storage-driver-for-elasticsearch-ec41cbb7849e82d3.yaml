@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    A v2 storage driver for Elasticsearch has been added. It is marked as
+    ``EXPERIMENTAL`` for now.

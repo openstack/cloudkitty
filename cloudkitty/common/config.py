@@ -30,6 +30,7 @@ import cloudkitty.orchestrator
 import cloudkitty.service
 import cloudkitty.storage
 import cloudkitty.storage.v1.hybrid.backends.gnocchi
+import cloudkitty.storage.v2.elasticsearch
 import cloudkitty.storage.v2.influx
 import cloudkitty.utils
 
@@ -70,6 +71,8 @@ _opts = [
         cloudkitty.storage.storage_opts))),
     ('storage_influxdb', list(itertools.chain(
         cloudkitty.storage.v2.influx.influx_storage_opts))),
+    ('storage_elasticsearch', list(itertools.chain(
+        cloudkitty.storage.v2.elasticsearch.elasticsearch_storage_opts))),
     ('storage_gnocchi', list(itertools.chain(
         cloudkitty.storage.v1.hybrid.backends.gnocchi.gnocchi_storage_opts))),
     (None, list(itertools.chain(
