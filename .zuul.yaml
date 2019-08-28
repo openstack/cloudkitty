@@ -1,8 +1,9 @@
 - job:
-    name: cloudkitty-tempest-full
+    name: cloudkitty-tempest-full-v2-storage-influxdb
     parent: devstack-tempest
     description: |
-      Job testing cloudkitty installation on devstack and running tempest tests
+      Job testing cloudkitty installation on devstack with the InfluxDB v2
+      storage driver and running tempest tests
     required-projects: &base_required_projects
       - name: openstack/cloudkitty
       - name: openstack/cloudkitty-tempest-plugin
@@ -34,7 +35,8 @@
     name: cloudkitty-tempest-full-ipv6-only
     parent: devstack-tempest-ipv6
     description: |
-      Job testing cloudkitty installation on devstack on IPv6 and running tempest tests
+      Job testing cloudkitty installation on devstack on IPv6
+      and running tempest tests
     required-projects: *base_required_projects
     roles: *base_roles
     timeout: 5400
@@ -42,14 +44,38 @@
     vars: *base_vars
 
 - job:
-    name: cloudkitty-tempest-full-python3
-    parent: cloudkitty-tempest-full
+    name: cloudkitty-tempest-full-v2-storage-influxdb-py3
+    parent: cloudkitty-tempest-full-v2-storage-influxdb
     description: |
-      Job testing cloudkitty installation on devstack with python 3 and running
+      Job testing cloudkitty installation on devstack with python 3 and the
+      InfluxDB v2 storage driver and running tempest tests
     vars:
       devstack_localrc:
         DEVSTACK_GATE_USE_PYTHON3: "True"
         USE_PYTHON3: "True"
+
+- job:
+    name: cloudkitty-tempest-full-v1-storage-sqlalchemy
+    parent: cloudkitty-tempest-full-v2-storage-influxdb
+    description: |
+      Job testing cloudkitty installation on devstack with python 2 and the
+      SQLAlchemy v1 storage driver and running tempest tests
+    vars:
+      devstack_localrc:
+        CLOUDKITTY_STORAGE_BACKEND: sqlalchemy
+        CLOUDKITTY_STORAGE_VERSION: 1
+
+- job:
+    name: cloudkitty-tempest-full-v1-storage-sqlalchemy-py3
+    parent: cloudkitty-tempest-full-v1-storage-sqlalchemy
+    description: |
+      Job testing cloudkitty installation on devstack with python 3 and the
+      SQLAlchemy v1 storage driver and running tempest tests
+    vars:
+      devstack_localrc:
+        DEVSTACK_GATE_USE_PYTHON3: "True"
+        USE_PYTHON3: "True"
+
 
 - job:
     name: cloudkitty-tox-bandit
@@ -85,14 +111,18 @@
       - release-notes-jobs-python3
     check:
       jobs:
-        - cloudkitty-tempest-full
-        - cloudkitty-tempest-full-python3
+        - cloudkitty-tempest-full-v2-storage-influxdb
+        - cloudkitty-tempest-full-v2-storage-influxdb-py3
+        - cloudkitty-tempest-full-v1-storage-sqlalchemy
+        - cloudkitty-tempest-full-v1-storage-sqlalchemy-py3
         - cloudkitty-tempest-full-ipv6-only
         - cloudkitty-tox-bandit:
             voting: false
     gate:
       queue: cloudkitty
       jobs:
-        - cloudkitty-tempest-full
-        - cloudkitty-tempest-full-python3
+        - cloudkitty-tempest-full-v2-storage-influxdb
+        - cloudkitty-tempest-full-v2-storage-influxdb-py3
+        - cloudkitty-tempest-full-v1-storage-sqlalchemy
+        - cloudkitty-tempest-full-v1-storage-sqlalchemy-py3
         - cloudkitty-tempest-full-ipv6-only
