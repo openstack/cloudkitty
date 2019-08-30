@@ -29,8 +29,10 @@ class Summary(base.BaseResource):
         voluptuous.Optional('groupby'): api_utils.MultiQueryParam(str),
         voluptuous.Optional('filters'):
             api_utils.SingleDictQueryParam(str, str),
-        voluptuous.Optional('begin'): voluptuous.Coerce(tzutils.dt_from_iso),
-        voluptuous.Optional('end'): voluptuous.Coerce(tzutils.dt_from_iso),
+        voluptuous.Optional('begin'): api_utils.SingleQueryParam(
+            tzutils.dt_from_iso),
+        voluptuous.Optional('end'): api_utils.SingleQueryParam(
+            tzutils.dt_from_iso),
     })
     def get(self, groupby=None, filters={},
             begin=None, end=None,

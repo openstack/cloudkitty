@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    A validation issue causing the ``GET /v2/summary`` endpoint to
+    systematically return a 400 error if any of the ``begin`` or ``end``
+    parameters was specified has been fixed.

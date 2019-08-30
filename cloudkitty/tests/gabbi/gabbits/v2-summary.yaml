@@ -58,3 +58,13 @@ tests:
     response_json_paths:
       $.results.`len`: 5
       $.total: 14
+
+  - name: Get a summary with a start and end date
+    url: /v2/summary
+    status: 200
+    query_parameters:
+      begin: "2017-01-01T00:00:00+00:00"
+      end: "2017-01-02T00:00:00+00:00"
+    response_json_paths:
+      $.results.`len`: 0
+      $.total: 0
