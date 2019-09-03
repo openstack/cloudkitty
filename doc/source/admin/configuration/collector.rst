@@ -255,6 +255,10 @@ Gnocchi
   when retrieving measures from gnocchi. Must be one of ``min``, ``max``,
   ``mean``.
 
+* ``force_granularity``: Defaults to ``0``. If > 0, this granularity will be
+  used for metric aggregations. Else, the lowest available granularity will be
+  used (meaning the granularity covering the longest period).
+
 Monasca
 ~~~~~~~
 

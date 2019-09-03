@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    A ``force_granularity`` option has been added to the gnocchi collector's
+    ``extra_args``. It allows to force a granularity to use when doing metric
+    aggregations. If not specified or set to 0, the lowest available
+    granularity will be used.

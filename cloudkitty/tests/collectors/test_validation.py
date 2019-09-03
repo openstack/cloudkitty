@@ -70,6 +70,7 @@ class MetricConfigValidationTest(tests.TestCase):
         expected_output['metric_one']['groupby'] += ['project_id', 'id']
         expected_output['metric_one']['extra_args'] = {
             'aggregation_method': 'max',
+            'force_granularity': 0,
             'resource_type': 'res',
             'resource_key': 'id',
         }
@@ -77,6 +78,19 @@ class MetricConfigValidationTest(tests.TestCase):
         self.assertEqual(
             collector.gnocchi.GnocchiCollector.check_configuration(data),
             expected_output,
+        )
+
+    def test_gnocchi_minimal_config_negative_forced_aggregation(self):
+        data = copy.deepcopy(self.base_data)
+        data['metrics']['metric_one']['extra_args'] = {
+            'resource_type': 'res',
+            'force_aggregation': -42,
+        }
+
+        self.assertRaises(
+            verror.MultipleInvalid,
+            collector.gnocchi.GnocchiCollector.check_configuration,
+            data,
         )
 
     def test_monasca_minimal_config_no_extra_args(self):

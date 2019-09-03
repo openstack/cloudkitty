@@ -25,6 +25,7 @@ from oslo_log import log as logging
 from voluptuous import All
 from voluptuous import In
 from voluptuous import Length
+from voluptuous import Range
 from voluptuous import Required
 from voluptuous import Schema
 
@@ -99,6 +100,7 @@ GNOCCHI_EXTRA_SCHEMA = {
         Required('resource_key', default='id'): All(str, Length(min=1)),
         Required('aggregation_method', default='max'):
             In(['max', 'mean', 'min', 'rate:max', 'rate:mean', 'rate:min']),
+        Required('force_granularity', default=0): All(int, Range(min=0)),
     },
 }
 
@@ -291,11 +293,11 @@ class GnocchiCollector(collector.BaseCollector):
         # Get gnocchi specific conf
         extra_args = self.conf[metric_name]['extra_args']
 
-        # get ressource type
+        # get resource type
         resource_type = extra_args['resource_type']
         scope_key = CONF.collect.scope_key
 
-        # build search query using ressource type and project_id if provided
+        # build search query using resource type and project_id if provided
         query_parameters = list()
         query_parameters.append(
             self.gen_filter(cop="=", type=resource_type))
@@ -313,14 +315,17 @@ class GnocchiCollector(collector.BaseCollector):
         # get groupby
         groupby = self.conf[metric_name]['groupby']
 
+        agg_kwargs = {
+            'resource_type': resource_type,
+            'start': start,
+            'stop': end,
+            'groupby': groupby,
+            'search': self.extend_filter(*query_parameters),
+        }
+        if extra_args['force_granularity'] > 0:
+            agg_kwargs['granularity'] = extra_args['force_granularity']
         try:
-            return self._conn.aggregates.fetch(
-                op,
-                resource_type=resource_type,
-                start=start,
-                stop=end,
-                groupby=groupby,
-                search=self.extend_filter(*query_parameters))
+            return self._conn.aggregates.fetch(op, **agg_kwargs)
         except (gexceptions.MetricNotFound, gexceptions.BadRequest) as e:
             # FIXME(peschk_l): gnocchiclient seems to be raising a BadRequest
             # when it should be raising MetricNotFound
