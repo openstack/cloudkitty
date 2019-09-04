@@ -220,10 +220,10 @@ class GnocchiCollector(collector.BaseCollector):
         time_filter = list()
         time_filter.append(self.extend_filter(
             self.gen_filter(ended_at=None),
-            self.gen_filter(cop=">=", ended_at=start),
+            self.gen_filter(cop=">=", ended_at=start.isoformat()),
             lop='or'))
         time_filter.append(
-            self.gen_filter(cop="<=", started_at=end))
+            self.gen_filter(cop="<=", started_at=end.isoformat()))
         return time_filter
 
     def _fetch_resources(self, metric_name, start, end,
