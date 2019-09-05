@@ -177,6 +177,7 @@ class WorkerTest(tests.TestCase):
             def __init__(self):
                 self._tenant_id = 'a'
                 self._worker_id = '0'
+                self._log_prefix = '[IGNORE THIS MESSAGE]'
 
         self.worker = FakeWorker()
         self.worker._collect = mock.MagicMock()
