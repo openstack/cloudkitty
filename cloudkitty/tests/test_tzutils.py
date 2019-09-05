@@ -60,7 +60,7 @@ class TestTZUtils(unittest.TestCase):
         self.assertEqual(tzutils.dt_from_iso(tester, as_utc=True).isoformat(),
                          tester_utc)
 
-    def _test_add_delta(self, obj, tzone):
+    def _test_add_substract_delta(self, obj, tzone):
         delta = datetime.timedelta(seconds=3600)
         naive = obj.astimezone(tz.UTC).replace(tzinfo=None)
 
@@ -68,16 +68,20 @@ class TestTZUtils(unittest.TestCase):
             tzutils.add_delta(obj, delta).astimezone(tzone),
             (naive + delta).replace(tzinfo=tz.UTC).astimezone(tzone),
         )
+        self.assertEqual(
+            tzutils.substract_delta(obj, delta).astimezone(tzone),
+            (naive - delta).replace(tzinfo=tz.UTC).astimezone(tzone),
+        )
 
-    def test_add_delta_summertime(self):
+    def test_add_substract_delta_summertime(self):
         tzone = tz.gettz('Europe/Paris')
         obj = datetime.datetime(2019, 3, 31, 1, tzinfo=tzone)
-        self._test_add_delta(obj, tzone)
+        self._test_add_substract_delta(obj, tzone)
 
-    def test_add_delta(self):
+    def test_add_substract_delta(self):
         tzone = tz.gettz('Europe/Paris')
         obj = datetime.datetime(2019, 1, 1, tzinfo=tzone)
-        self._test_add_delta(obj, tzone)
+        self._test_add_substract_delta(obj, tzone)
 
     def test_get_month_start_no_arg(self):
         naive_utc_now = timeutils.utcnow()

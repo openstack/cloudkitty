@@ -104,6 +104,11 @@ def add_delta(dt, delta):
     return utc_to_local(local_to_utc(dt, naive=True) + delta)
 
 
+def substract_delta(dt, delta):
+    """Substracts a timedelta from a datetime object."""
+    return utc_to_local(local_to_utc(dt, naive=True) - delta)
+
+
 def get_month_start(dt=None, naive=False):
     """Returns the start of the month in the local timezone.
 

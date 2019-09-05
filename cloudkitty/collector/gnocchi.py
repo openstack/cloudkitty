@@ -31,6 +31,7 @@ from voluptuous import Schema
 
 from cloudkitty import collector
 from cloudkitty import dataframe
+from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
 
 
@@ -251,8 +252,9 @@ class GnocchiCollector(collector.BaseCollector):
         # FIXME(peschk_l): In order not to miss any resource whose metrics may
         # contain measures after its destruction, we scan resources over three
         # collect periods.
-        start -= timedelta(seconds=CONF.collect.period)
-        end += timedelta(seconds=CONF.collect.period)
+        delta = timedelta(seconds=CONF.collect.period)
+        start = tzutils.substract_delta(start, delta)
+        end = tzutils.add_delta(end, delta)
         query_parameters = self._generate_time_filter(start, end)
 
         if project_id:
