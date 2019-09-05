@@ -13,9 +13,12 @@
 #    under the License.
 #
 import collections
+import copy
 from datetime import datetime
+from datetime import timedelta
 import unittest
 
+from dateutil import tz
 import mock
 
 from cloudkitty import dataframe
@@ -29,6 +32,7 @@ class TestInfluxDBStorage(TestCase):
     def setUp(self):
         super(TestInfluxDBStorage, self).setUp()
         self.point = {
+            'type': 'amazing_type',
             'unit': 'banana',
             'qty': 42,
             'price': 1.0,
@@ -38,6 +42,7 @@ class TestInfluxDBStorage(TestCase):
             'two': '2',
             '1': 'one',
             '2': 'two',
+            'time': datetime(2019, 1, 1, tzinfo=tz.UTC).isoformat(),
         }
 
     def test_point_to_dataframe_entry_valid_point(self):
@@ -53,10 +58,11 @@ class TestInfluxDBStorage(TestCase):
         )
 
     def test_point_to_dataframe_entry_invalid_groupby_metadata(self):
-        self.point['groupby'] = 'a'
-        self.point['metadata'] = None
+        point = copy.deepcopy(self.point)
+        point['groupby'] = 'a'
+        point['metadata'] = None
         self.assertEqual(
-            influx.InfluxStorage._point_to_dataframe_entry(self.point),
+            influx.InfluxStorage._point_to_dataframe_entry(point),
             dataframe.DataPoint(
                 'banana',
                 42,
@@ -65,6 +71,25 @@ class TestInfluxDBStorage(TestCase):
                 {},
             ),
         )
+
+    def test_build_dataframes_differenciates_periods(self):
+        points = [copy.deepcopy(self.point) for _ in range(3)]
+        for idx, point in enumerate(points):
+            point[influx.PERIOD_FIELD_NAME] = 100 * (idx + 1)
+
+        dataframes = influx.InfluxStorage()._build_dataframes(points)
+        self.assertEqual(len(dataframes), 3)
+
+        for idx, frame in enumerate(dataframes):
+            self.assertEqual(frame.start, datetime(2019, 1, 1, tzinfo=tz.UTC))
+            delta = timedelta(seconds=(idx + 1) * 100)
+            self.assertEqual(frame.end,
+                             datetime(2019, 1, 1, tzinfo=tz.UTC) + delta)
+            typelist = list(frame.itertypes())
+            self.assertEqual(len(typelist), 1)
+            type_, points = typelist[0]
+            self.assertEqual(len(points), 1)
+            self.assertEqual(type_, 'amazing_type')
 
 
 class FakeResultSet(object):
