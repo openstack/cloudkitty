@@ -7,10 +7,6 @@ CloudKitty is shipped with core rating modules.
 Hashmap composition
 ===================
 
-You can see hashmap as a simple tree:
-
-.. graphviz:: graph/hashmap.dot
-
 HashMap is composed of different resources and groups.
 
 Group

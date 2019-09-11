@@ -13,11 +13,14 @@ API v1
    v1/*
    v1/rating/*
 
-API v2
-======
+.. only:: html
 
-.. toctree::
-   :maxdepth: 2
-   :glob:
+   API v2
+   ======
 
-   v2/*
+
+   .. toctree::
+      :maxdepth: 2
+      :glob:
+
+      v2/*
