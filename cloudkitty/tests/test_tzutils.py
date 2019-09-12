@@ -101,3 +101,30 @@ class TestTZUtils(unittest.TestCase):
         month_start = tzutils.get_month_start(param, naive=True)
         self.assertIsNone(month_start.tzinfo)
         self.assertEqual(month_start, datetime.datetime(2019, 1, 1))
+
+    def test_diff_seconds_positive_arg_naive_objects(self):
+        one = datetime.datetime(2019, 1, 1, 1, 1, 30)
+        two = datetime.datetime(2019, 1, 1, 1, 1)
+        self.assertEqual(tzutils.diff_seconds(one, two), 30)
+
+    def test_diff_seconds_negative_arg_naive_objects(self):
+        one = datetime.datetime(2019, 1, 1, 1, 1, 30)
+        two = datetime.datetime(2019, 1, 1, 1, 1)
+        self.assertEqual(tzutils.diff_seconds(two, one), 30)
+
+    def test_diff_seconds_positive_arg_aware_objects(self):
+        one = datetime.datetime(2019, 1, 1, 1, 1, 30, tzinfo=tz.UTC)
+        two = datetime.datetime(2019, 1, 1, 1, 1, tzinfo=tz.UTC)
+        self.assertEqual(tzutils.diff_seconds(one, two), 30)
+
+    def test_diff_seconds_negative_arg_aware_objects(self):
+        one = datetime.datetime(2019, 1, 1, 1, 1, 30, tzinfo=tz.UTC)
+        two = datetime.datetime(2019, 1, 1, 1, 1, tzinfo=tz.UTC)
+        self.assertEqual(tzutils.diff_seconds(two, one), 30)
+
+    def test_diff_seconds_negative_arg_aware_objects_on_summer_change(self):
+        one = datetime.datetime(2019, 3, 31, 1,
+                                tzinfo=tz.gettz('Europe/Paris'))
+        two = datetime.datetime(2019, 3, 31, 3,
+                                tzinfo=tz.gettz('Europe/Paris'))
+        self.assertEqual(tzutils.diff_seconds(two, one), 3600)

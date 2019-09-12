@@ -143,3 +143,19 @@ def get_next_month(dt=None, naive=False):
     start = get_month_start(dt, naive=naive)
     month_days = calendar.monthrange(start.year, start.month)[1]
     return add_delta(start, datetime.timedelta(days=month_days))
+
+
+def diff_seconds(one, two):
+    """Returns the difference in seconds between two datetime objects.
+
+    Objects will be converted to naive UTC objects before calculating the
+    difference. The return value is the absolute value of the difference.
+
+    :param one: First datetime object
+    :type one: datetime.datetime
+    :param two: datetime object to substract from the first one
+    :type two: datetime.datetime
+    :rtype: int
+    """
+    return abs(int((local_to_utc(one, naive=True)
+                    - local_to_utc(two, naive=True)).total_seconds()))

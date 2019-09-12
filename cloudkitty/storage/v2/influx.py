@@ -62,6 +62,9 @@ influx_storage_opts = [
 CONF.register_opts(influx_storage_opts, INFLUX_STORAGE_GROUP)
 
 
+PERIOD_FIELD_NAME = '__ck_collect_period'
+
+
 class InfluxClient(object):
     """Classe used to ease interaction with InfluxDB"""
 
@@ -110,14 +113,17 @@ class InfluxClient(object):
 
     def append_point(self,
                      metric_type,
-                     timestamp,
+                     start,
+                     period,
                      point):
         """Adds a point to commit to InfluxDB.
 
         :param metric_type: Name of the metric type
         :type metric_type: str
-        :param timestamp: Timestamp of the time
-        :type timestamp: datetime.datetime
+        :param start: Start of the period the point applies to
+        :type start: datetime.datetime
+        :param period: length of the period the point applies to (in seconds)
+        :type period: int
         :param point: Point to push
         :type point: dataframe.DataPoint
         """
@@ -131,6 +137,8 @@ class InfluxClient(object):
         measurement_fields['groupby'] = '|'.join(point.groupby.keys())
         measurement_fields['metadata'] = '|'.join(point.metadata.keys())
 
+        measurement_fields[PERIOD_FIELD_NAME] = period
+
         measurement_tags = dict(point.groupby)
         measurement_tags['type'] = metric_type
 
@@ -138,7 +146,7 @@ class InfluxClient(object):
             'measurement': 'dataframes',
             'tags': measurement_tags,
             'fields': measurement_fields,
-            'time': timestamp,
+            'time': start,
         })
         if self._autocommit and len(self._points) >= self._chunk_size:
             self.commit()
@@ -234,8 +242,8 @@ class InfluxStorage(v2_storage.BaseStorage):
 
     def __init__(self, *args, **kwargs):
         super(InfluxStorage, self).__init__(*args, **kwargs)
+        self._default_period = kwargs.get('period') or CONF.collect.period
         self._conn = InfluxClient()
-        self._period = kwargs.get('period', None) or CONF.collect.period
 
     def init(self):
         policy = CONF.storage_influxdb.retention_policy
@@ -249,9 +257,9 @@ class InfluxStorage(v2_storage.BaseStorage):
     def push(self, dataframes, scope_id=None):
 
         for frame in dataframes:
-            timestamp = frame.start
+            period = tzutils.diff_seconds(frame.end, frame.start)
             for type_, point in frame.iterpoints():
-                self._conn.append_point(type_, timestamp, point)
+                self._conn.append_point(type_, frame.start, period, point)
 
         self._conn.commit()
 
@@ -265,10 +273,8 @@ class InfluxStorage(v2_storage.BaseStorage):
 
     @staticmethod
     def _point_to_dataframe_entry(point):
-        groupby = filter(lambda x: bool(x),
-                         (point.pop('groupby', None) or '').split('|'))
-        metadata = filter(lambda x: bool(x),
-                          (point.pop('metadata', None) or '').split('|'))
+        groupby = filter(bool, (point.pop('groupby', None) or '').split('|'))
+        metadata = filter(bool, (point.pop('metadata', None) or '').split('|'))
         return dataframe.DataPoint(
             point['unit'],
             point['qty'],
@@ -282,18 +288,20 @@ class InfluxStorage(v2_storage.BaseStorage):
         for point in points:
             point_type = point['type']
             time = tzutils.dt_from_iso(point['time'])
-            if time not in dataframes.keys():
-                dataframes[time] = dataframe.DataFrame(
-                    start=time,
-                    end=tzutils.add_delta(
-                        time, datetime.timedelta(seconds=self._period)),
-                )
+            period = point.get(PERIOD_FIELD_NAME) or self._default_period
+            timekey = (
+                time,
+                tzutils.add_delta(time, datetime.timedelta(seconds=period)))
+            if timekey not in dataframes.keys():
+                dataframes[timekey] = dataframe.DataFrame(
+                    start=timekey[0],
+                    end=timekey[1])
 
-            dataframes[time].add_point(
+            dataframes[timekey].add_point(
                 self._point_to_dataframe_entry(point), point_type)
 
         output = list(dataframes.values())
-        output.sort(key=lambda frame: frame.start)
+        output.sort(key=lambda frame: (frame.start, frame.end))
         return output
 
     def retrieve(self, begin=None, end=None,
