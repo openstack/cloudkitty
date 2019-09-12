@@ -27,6 +27,7 @@ from cloudkitty.collector.exceptions import CollectError
 from cloudkitty.common.prometheus_client import PrometheusClient
 from cloudkitty.common.prometheus_client import PrometheusResponseError
 from cloudkitty import dataframe
+from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
 
 
@@ -140,7 +141,7 @@ class PrometheusCollector(collector.BaseCollector):
         method = self.conf[metric_name]['extra_args']['aggregation_method']
         groupby = self.conf[metric_name].get('groupby', [])
         metadata = self.conf[metric_name].get('metadata', [])
-        period = int((end - start).total_seconds())
+        period = tzutils.diff_seconds(end, start)
         time = end
 
         query = '{0}({0}_over_time({1}{{{2}="{3}"}}[{4}s])) by ({5})'.format(
