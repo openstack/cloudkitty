@@ -1,0 +1,10 @@
+---
+deprecations:
+  - |
+    Since ``eventlet`` has been replaced with ``futurist``, the
+    ``[orchestrator]/max_greenthreads`` option has been deprecated and
+    replaced with ``[orchestrator]/max_threads``.
+
+other:
+  - |
+    The ``eventlet`` library has been replaced with ``futurist``.
