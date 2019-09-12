@@ -47,10 +47,12 @@ class Summary(base.BaseResource):
         if not flask.request.context.is_admin:
             filters['project_id'] = flask.request.context.project_id
 
+        metric_types = [filters.pop('type')] if 'type' in filters else None
         total = self._storage.total(
             begin=begin, end=end,
             groupby=groupby,
             filters=filters,
+            metric_types=metric_types,
             offset=offset,
             limit=limit,
             paginate=True,
