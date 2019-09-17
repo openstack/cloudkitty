@@ -173,6 +173,11 @@ function configure_cloudkitty {
         iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} port ${CLOUDKITTY_INFLUXDB_PORT}
     fi
 
+    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "elasticsearch" ]; then
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} host ${CLOUDKITTY_ELASTICSEARCH_HOST}
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} index_name ${CLOUDKITTY_ELASTICSEARCH_INDEX}
+    fi
+
     # collect
     iniset $CLOUDKITTY_CONF collect collector $CLOUDKITTY_COLLECTOR
     iniset $CLOUDKITTY_CONF "collector_${CLOUDKITTY_COLLECTOR}" auth_section authinfos
@@ -237,6 +242,12 @@ function create_influxdb_database {
     fi
 }
 
+function create_elasticsearch_index {
+    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "elasticsearch" ]; then
+        curl -XPUT "${CLOUDKITTY_ELASTICSEARCH_HOST}/${CLOUDKITTY_ELASTICSEARCH_INDEX}"
+    fi
+}
+
 # init_cloudkitty() - Initialize CloudKitty database
 function init_cloudkitty {
     # Delete existing cache
@@ -253,6 +264,7 @@ function init_cloudkitty {
     recreate_database cloudkitty utf8
 
     create_influxdb_database
+    create_elasticsearch_index
 
     # Migrate cloudkitty database
     $CLOUDKITTY_BIN_DIR/cloudkitty-dbsync upgrade
@@ -289,6 +301,29 @@ function install_influx {
     sudo systemctl start influxdb || sudo systemctl restart influxdb
 }
 
+function install_elasticsearch_ubuntu {
+    sudo apt install -qy openjdk-8-jre
+    local elasticsearch_file=$(get_extra_file https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.8.3.deb)
+    sudo dpkg -i --skip-same-version ${elasticsearch_file}
+}
+
+function install_elasticsearch_fedora {
+    sudo yum install -y java-1.8.0-openjdk
+    local elasticsearch_file=$(get_extra_file https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.8.3.rpm)
+    sudo yum localinstall -y ${elasticsearch_file}
+}
+
+function install_elasticsearch {
+    if is_ubuntu; then
+        install_elasticsearch_ubuntu
+    elif is_fedora; then
+        install_elasticsearch_fedora
+    else
+        die $LINENO "Distribution must be Debian or Fedora-based"
+    fi
+    sudo systemctl start elasticsearch || sudo systemctl restart elasticsearch
+}
+
 # install_cloudkitty() - Collect source and prepare
 function install_cloudkitty {
     git_clone $CLOUDKITTY_REPO $CLOUDKITTY_DIR $CLOUDKITTY_BRANCH
@@ -296,6 +331,8 @@ function install_cloudkitty {
 
     if [ $CLOUDKITTY_STORAGE_BACKEND == 'influxdb' ]; then
         install_influx
+    elif [ $CLOUDKITTY_STORAGE_BACKEND == 'elasticsearch' ]; then
+        install_elasticsearch
     fi
 }
 
