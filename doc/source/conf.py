@@ -226,7 +226,7 @@ htmlhelp_basename = 'cloudkittydoc'
 # (source start file, target name, title, author,
 # documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'Cloudkitty.tex', u'Cloudkitty Documentation',
+    ('pdf-index', 'doc-cloudkitty.tex', u'Cloudkitty Documentation',
      u'Cloudkitty Team', 'manual'),
 ]
 
@@ -246,3 +246,15 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+# If false, no module index is generated.
+latex_domain_indices = False
+
+latex_elements = {
+    'makeindex': '',
+    'printindex': '',
+    'preamble': r'\setcounter{tocdepth}{3}',
+}
+
+# Disable usage of xindy https://bugzilla.redhat.com/show_bug.cgi?id=1643664
+latex_use_xindy = False
