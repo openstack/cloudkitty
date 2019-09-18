@@ -281,7 +281,7 @@ class Worker(BaseWorker):
                         metric=metric, ts=timestamp))
                 return metric, None
             except Exception as e:
-                LOG.warning(
+                LOG.exception(
                     self._log_prefix + 'Error while collecting'
                     ' metric {metric} at timestamp {ts}: {e}. Exiting.'.format(
                         metric=metric, ts=timestamp, e=e))
