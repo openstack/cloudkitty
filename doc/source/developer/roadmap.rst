@@ -198,3 +198,185 @@ Long-term effort
      - :roadmap-not-started:`Not started`
      - :roadmap-not-started:`Not started`
      - This would allow support for RBAC outside of an openstack context.
+
+API Migration status
+====================
+
+.. note:: v1 API endpoints which are not listed below will not be migrated.
+
+.. list-table::
+   :header-rows: 1
+
+   * - v1 endpoint
+     - Spec
+     - Endpoint
+     - Client
+     - Tempest tests
+
+   * - ``GET /v1/info/config``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/info/metric``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/rating/modules``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``PUT /v1/rating/modules``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``POST /v1/rating/quote``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/report/summary``
+     - :roadmap-done:`Done`
+     - :roadmap-done:`Done`
+     - :roadmap-done:`Done`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/storage/dataframes``
+     - :roadmap-done:`Done`
+     - :roadmap-done:`Done`
+     - :roadmap-review:`Review: https://review.opendev.org/#/c/681660/`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/rating/module_config/pyscripts/scripts``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``POST /v1/rating/module_config/pyscripts/scripts``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``PUT /v1/rating/module_config/pyscripts/scripts``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``DELETE /v1/rating/module_config/pyscripts/scripts``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/rating/module_config/hashmap/types``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/rating/module_config/hashmap/services``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``POST /v1/rating/module_config/hashmap/services``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``DELETE /v1/rating/module_config/hashmap/services``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/rating/module_config/hashmap/fields``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``POST /v1/rating/module_config/hashmap/fields``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``DELETE /v1/rating/module_config/hashmap/fields``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/rating/module_config/hashmap/mappings``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``POST /v1/rating/module_config/hashmap/mappings``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``PUT /v1/rating/module_config/hashmap/mappings``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``DELETE /v1/rating/module_config/hashmap/mappings``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/rating/module_config/hashmap/mappings/group``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/rating/module_config/hashmap/groups``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``POST /v1/rating/module_config/hashmap/groups``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``DELETE /v1/rating/module_config/hashmap/groups``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/rating/module_config/hashmap/groups/mappings``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+
+   * - ``GET /v1/rating/module_config/hashmap/groups/thresholds``
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
+     - :roadmap-not-started:`Not started`
