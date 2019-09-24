@@ -42,7 +42,6 @@ _opts = [
     ('collect', list(itertools.chain(
         cloudkitty.collector.collect_opts))),
     ('collector_gnocchi', list(itertools.chain(
-        cloudkitty.collector.gnocchi.keystone_opts,
         cloudkitty.collector.gnocchi.collector_gnocchi_opts))),
     ('collector_monasca', list(itertools.chain(
         cloudkitty.collector.monasca.keystone_opts,
@@ -55,7 +54,6 @@ _opts = [
         cloudkitty.fetcher.gnocchi.gfetcher_opts,
         cloudkitty.fetcher.gnocchi.fetcher_gnocchi_opts))),
     ('fetcher_keystone', list(itertools.chain(
-        cloudkitty.fetcher.keystone.keystone_opts,
         cloudkitty.fetcher.keystone.fetcher_keystone_opts))),
     ('fetcher_prometheus', list(itertools.chain(
         cloudkitty.fetcher.prometheus.fetcher_prometheus_opts))),

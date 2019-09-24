@@ -37,21 +37,7 @@ from cloudkitty import utils as ck_utils
 
 LOG = logging.getLogger(__name__)
 
-# NOTE(mc): The deprecated section should be removed in a future release.
 COLLECTOR_GNOCCHI_OPTS = 'collector_gnocchi'
-DEPRECATED_COLLECTOR_GNOCCHI_OPTS = 'gnocchi_collector'
-
-keystone_opts = ks_loading.get_auth_common_conf_options() + \
-    ks_loading.get_session_conf_options()
-
-keystone_opts = [
-    cfg.Opt(
-        o.name,
-        type=o.type,
-        help=o.help,
-        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
-    ) for o in keystone_opts
-]
 
 collector_gnocchi_opts = [
     cfg.StrOpt(
@@ -60,35 +46,31 @@ collector_gnocchi_opts = [
         choices=['keystone', 'basic'],
         help='Gnocchi auth type (keystone or basic). Keystone credentials '
         'can be specified through the "auth_section" parameter',
-        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ),
     cfg.StrOpt(
         'gnocchi_user',
         default='',
         help='Gnocchi user (for basic auth only)',
-        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ),
     cfg.StrOpt(
         'gnocchi_endpoint',
         default='',
         help='Gnocchi endpoint (for basic auth only)',
-        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ),
     cfg.StrOpt(
         'interface',
         default='internalURL',
         help='Endpoint URL type (for keystone auth only)',
-        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ),
     cfg.StrOpt(
         'region_name',
         default='RegionOne',
         help='Region Name',
-        deprecated_group=DEPRECATED_COLLECTOR_GNOCCHI_OPTS,
     ),
 ]
 
-cfg.CONF.register_opts(keystone_opts, COLLECTOR_GNOCCHI_OPTS)
+ks_loading.register_session_conf_options(cfg.CONF, COLLECTOR_GNOCCHI_OPTS)
+ks_loading.register_auth_conf_options(cfg.CONF, COLLECTOR_GNOCCHI_OPTS)
 cfg.CONF.register_opts(collector_gnocchi_opts, COLLECTOR_GNOCCHI_OPTS)
 
 CONF = cfg.CONF

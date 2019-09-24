@@ -19,12 +19,10 @@ import six
 from oslo_config import cfg
 
 FETCHER_OPTS = 'fetcher'
-DEPRECATED_FETCHER_OPTS = 'tenant_fetcher'
 fetcher_opts = [
     cfg.StrOpt('backend',
                default='keystone',
-               help='Driver used to fetch the list of scopes to rate.',
-               deprecated_group=DEPRECATED_FETCHER_OPTS),
+               help='Driver used to fetch the list of scopes to rate.'),
 ]
 cfg.CONF.register_opts(fetcher_opts, 'fetcher')
 
