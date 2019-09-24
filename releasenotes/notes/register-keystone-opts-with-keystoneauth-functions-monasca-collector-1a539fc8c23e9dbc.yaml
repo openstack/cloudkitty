@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Keystone authentication options are now registered with ``keystoneauth1`` in
+    the monasca collector helper functions, which allows to use the
+    ``auth_section`` option even when using the ``source`` fetcher.
