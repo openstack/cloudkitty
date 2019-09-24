@@ -17,17 +17,13 @@ from oslo_config import cfg
 
 from cloudkitty import fetcher
 
-
-# NOTE(mc): The deprecated section should be removed in a future release.
 FETCHER_SOURCE_OPTS = 'fetcher_source'
-DEPRECATED_FETCHER_SOURCE_OPTS = 'source_fetcher'
 
 fetcher_source_opts = [
     cfg.ListOpt(
         'sources',
         default=list(),
         help='list of source identifiers',
-        deprecated_group=DEPRECATED_FETCHER_SOURCE_OPTS,
     ),
 ]
 

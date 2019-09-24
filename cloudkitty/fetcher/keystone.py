@@ -23,40 +23,18 @@ from oslo_config import cfg
 from cloudkitty import fetcher
 
 
-# NOTE(mc): The deprecated section should be removed in a future release.
 FETCHER_KEYSTONE_OPTS = 'fetcher_keystone'
-DEPRECATED_FETCHER_KEYSTONE_OPTS = 'keystone_fetcher'
-
-keystone_opts = ks_loading.get_auth_common_conf_options() + \
-    ks_loading.get_session_conf_options()
-
-keystone_opts = [
-    cfg.Opt(
-        opt.name,
-        type=opt.type,
-        help=opt.help,
-        secret=opt.secret,
-        required=opt.required,
-        deprecated_group=DEPRECATED_FETCHER_KEYSTONE_OPTS,
-    ) for opt in keystone_opts
-]
 
 fetcher_keystone_opts = [
     cfg.StrOpt(
         'keystone_version',
         default='2',
         help='Keystone version to use.',
-        deprecated_group=DEPRECATED_FETCHER_KEYSTONE_OPTS,
     ),
 ]
 
-cfg.CONF.register_opts(keystone_opts, FETCHER_KEYSTONE_OPTS)
-if cfg.CONF[FETCHER_KEYSTONE_OPTS].auth_section:
-    cfg.CONF.register_opts(
-        keystone_opts,
-        cfg.CONF[FETCHER_KEYSTONE_OPTS].auth_section,
-    )
-
+ks_loading.register_session_conf_options(cfg.CONF, FETCHER_KEYSTONE_OPTS)
+ks_loading.register_auth_conf_options(cfg.CONF, FETCHER_KEYSTONE_OPTS)
 cfg.CONF.register_opts(fetcher_keystone_opts, FETCHER_KEYSTONE_OPTS)
 
 CONF = cfg.CONF

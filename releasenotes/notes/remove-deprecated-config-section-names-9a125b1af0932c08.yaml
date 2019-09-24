@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    Section names that had been deprecated in cloudkitty 9.0.0 have been removed
+    in 11.0.0. These include ``gnocchi_collector``, ``tenant_fetcher``,
+    ``keystone_fetcher``, ``source_fetcher`` and ``hybrid_storage``.

@@ -23,8 +23,6 @@ from cloudkitty.storage.v1.hybrid import migration
 from cloudkitty.storage.v1.hybrid import models
 
 
-# NOTE(mc): The deprecated section should be removed in a future release.
-DEPRECATED_STORAGE_HYBRID_OPTS = 'hybrid_storage'
 STORAGE_HYBRID_OPTS = 'storage_hybrid'
 
 storage_opts = [
@@ -33,7 +31,6 @@ storage_opts = [
         default='gnocchi',
         help='Name of the storage backend that should be used '
         'by the hybrid storage',
-        deprecated_group=DEPRECATED_STORAGE_HYBRID_OPTS,
     )
 ]
 
