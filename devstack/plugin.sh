@@ -200,7 +200,7 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF database connection $dburl
 
     # keystone middleware
-    configure_auth_token_middleware $CLOUDKITTY_CONF cloudkitty $CLOUDKITTY_AUTH_CACHE_DIR
+    configure_keystone_authtoken_middleware $CLOUDKITTY_CONF cloudkitty
 
     if is_service_enabled ck-api && [ "$CLOUDKITTY_USE_MOD_WSGI" == "True" ]; then
         _cloudkitty_config_apache_wsgi
