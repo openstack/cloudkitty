@@ -18,6 +18,7 @@ import voluptuous
 from werkzeug.exceptions import BadRequest
 from werkzeug import MultiDict
 
+from cloudkitty.api.v2.scope import state
 from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty import tests
 
@@ -34,6 +35,38 @@ class ApiUtilsDoInitTest(tests.TestCase):
             },
         ]
         api_utils.do_init(app, 'example', resources)
+
+    def test_do_init_suffix_without_heading_slash(self):
+        app = flask.Flask('cloudkitty')
+        resources = [
+            {
+                'module': 'cloudkitty.api.v2.scope.state',
+                'resource_class': 'ScopeState',
+                'url': 'suffix',
+            },
+        ]
+        with mock.patch.object(api_utils, '_get_blueprint_and_api') as fmock:
+            blueprint_mock, api_mock = mock.MagicMock(), mock.MagicMock()
+            fmock.return_value = (blueprint_mock, api_mock)
+            api_utils.do_init(app, 'prefix', resources)
+        api_mock.add_resource.assert_called_once_with(
+            state.ScopeState, '/suffix')
+
+    def test_do_init_suffix_without_heading_slash_no_prefix(self):
+        app = flask.Flask('cloudkitty')
+        resources = [
+            {
+                'module': 'cloudkitty.api.v2.scope.state',
+                'resource_class': 'ScopeState',
+                'url': 'suffix',
+            },
+        ]
+        with mock.patch.object(api_utils, '_get_blueprint_and_api') as fmock:
+            blueprint_mock, api_mock = mock.MagicMock(), mock.MagicMock()
+            fmock.return_value = (blueprint_mock, api_mock)
+            api_utils.do_init(app, '', resources)
+        api_mock.add_resource.assert_called_once_with(
+            state.ScopeState, '/suffix')
 
     def test_do_init_invalid_resource(self):
         app = flask.Flask('cloudkitty')

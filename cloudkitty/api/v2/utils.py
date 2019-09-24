@@ -326,6 +326,8 @@ def do_init(app, blueprint_name, resources):
     for resource_info in schema(resources):
         resource = _load_resource(resource_info['module'],
                                   resource_info['resource_class'])
+        if resource_info['url'] and not resource_info['url'].startswith('/'):
+            resource_info['url'] = '/' + resource_info['url']
         api.add_resource(resource, resource_info['url'])
 
     if not blueprint_name.startswith('/'):

@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    It is not required anymore to prefix the url of a resource with a ``/``
+    when using ``cloudkitty.api.v2.utils.do_init``.
