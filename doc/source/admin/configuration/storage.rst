@@ -26,6 +26,7 @@ the configuration file. The following options are available:
   Supported v2 drivers are:
 
   - ``influxdb``
+  - ``elasticsearch``
 
 Driver-specific options
 =======================
@@ -73,3 +74,21 @@ Section: ``storage_influxdb``.
           capacities of your InfluxDB host / cluster, you might want to do
           regular exports of your data and create a custom retention policy on
           cloudkitty's database.
+
+ElasticSearch (v2)
+------------------
+
+Section ``storage_elasticsearch``:
+
+* ``host``: Defaults to ``http://localhost:9200``. Elasticsearch host, along
+  with port and protocol.
+
+* ``index_name``: Defaults to ``cloudkitty``. Elasticsearch index to use.
+
+* ``insecure``: Defaults to ``false``. Set to true to allow insecure HTTPS
+  connections to Elasticsearch.
+
+* ``cafile``: Path of the CA certificate to trust for HTTPS connections.
+
+* ``scroll_duration``: Defaults to 30. Duration (in seconds) for which the ES
+  scroll contexts should be kept alive.
