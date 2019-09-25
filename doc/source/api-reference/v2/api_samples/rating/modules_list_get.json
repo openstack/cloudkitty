@@ -1,0 +1,18 @@
+ {
+   "modules": [
+     {
+         "module_id": "noop"
+         "description": "Dummy test module.",
+         "enabled": true,
+         "hot-config": false,
+         "priority": 1
+     },
+     {
+         "module_id": "hashmap",
+         "description": "HashMap rating module.",
+         "enabled": false,
+         "hot-config": true,
+         "priority": 2
+     }
+   ]
+ }

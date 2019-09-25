@@ -1215,18 +1215,6 @@
 # heartbeat. (integer value)
 #heartbeat_rate = 2
 
-# DEPRECATED: (DEPRECATED) Enable/Disable the RabbitMQ mandatory flag
-# for direct send. The direct send is used as reply, so the
-# MessageUndeliverable exception is raised in case the client queue
-# does not exist.MessageUndeliverable exception will be used to loop
-# for a timeout to lets a chance to sender to recover.This flag is
-# deprecated and it will not be possible to deactivate this
-# functionality anymore (boolean value)
-# This option is deprecated for removal.
-# Its value may be silently ignored in the future.
-# Reason: Mandatory flag no longer deactivable.
-#direct_mandatory_flag = true
-
 # Enable x-cancel-on-ha-failover flag so that rabbitmq server will
 # cancel and notify consumerswhen queue is down (boolean value)
 #enable_cancel_on_failover = false

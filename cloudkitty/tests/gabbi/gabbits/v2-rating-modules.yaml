@@ -1,0 +1,42 @@
+fixtures:
+  - ConfigFixtureStorageV2
+  - RatingModulesFixture
+  - QuoteFakeRPC
+
+tests:
+  - name: list all modules available
+    url: /v2/rating/modules
+    status: 200
+    response_json_paths:
+      $.modules.`len`: 3
+      $.modules[0].priority: 3
+      $.modules[0].module_id: "fake1"
+      $.modules[0].enabled: false
+      $.modules[0].description: "fake rating module"
+      $.modules[0].hot_config: false
+      $.modules[1].priority: 1
+      $.modules[1].module_id: "fake2"
+      $.modules[1].enabled: false
+      $.modules[1].description: "fake rating module"
+      $.modules[1].hot_config: false
+      $.modules[2].priority: 2
+      $.modules[2].module_id: "fake3"
+      $.modules[2].enabled: false
+      $.modules[2].description: "fake rating module"
+      $.modules[2].hot_config: false
+
+  - name: get information of one module
+    url: /v2/rating/modules/fake2
+    status: 200
+    response_json_paths:
+      $.priority: 1
+      $.module_id: "fake2"
+      $.enabled: false
+      $.description: "fake rating module"
+      $.hot_config: false
+
+  - name: get information of a unknown module
+    url: /v2/rating/modules/fakb
+    status: 404
+    response_json_paths:
+      $.message: "Module 'fakb' not found"

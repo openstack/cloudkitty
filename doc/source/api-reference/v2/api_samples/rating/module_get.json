@@ -1,0 +1,7 @@
+{
+  "module_id": "sample_id",
+  "description": "Sample extension",
+  "enabled": true,
+  "hot-config": false,
+  "priority": 2
+}

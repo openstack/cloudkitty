@@ -89,6 +89,14 @@
 # GET  /v2/dataframes
 #"dataframes:get": "rule:admin_or_owner"
 
+# Returns the list of loaded modules in Cloudkitty.
+# GET  /v2/rating/modules
+#"v2_rating:list_modules": "role:admin"
+
+# Get specified module.
+# GET  /v2/rating/modules/{module_id}
+#"v2_rating:get_module": "role:admin"
+
 # Get the state of one or several scopes
 # GET  /v2/scope
 #"scope:get_state": "role:admin"
