@@ -125,3 +125,6 @@
 # GET  /v2/task/reprocesses
 #"schedule:get_task_reprocesses": "role:admin"
 
+# Change the state and priority of a module.
+# PUT  /v2/rating/modules/{module_id}
+#"v2_rating:update_module": "role:admin"

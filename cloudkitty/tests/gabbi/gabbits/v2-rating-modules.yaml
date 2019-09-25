@@ -40,3 +40,64 @@ tests:
     status: 404
     response_json_paths:
       $.message: "Module 'fakb' not found"
+
+  - name: change priority of a module
+    url: /v2/rating/modules/fake3
+    method: PUT
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      priority: 5
+    status: 204
+
+  - name: get information of the modified module (priority)
+    url: /v2/rating/modules/fake3
+    status: 200
+    response_json_paths:
+      $.priority: 5
+      $.module_id: "fake3"
+      $.enabled: false
+      $.description: "fake rating module"
+      $.hot_config: false
+
+  - name: change enabled status of a module
+    url: /v2/rating/modules/fake3
+    method: PUT
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      enabled: true
+    status: 204
+
+  - name: get information of the modified module (status)
+    url: /v2/rating/modules/fake3
+    status: 200
+    response_json_paths:
+      $.priority: 5
+      $.module_id: "fake3"
+      $.enabled: true
+      $.description: "fake rating module"
+      $.hot_config: false
+
+  - name: change status and priority of a module
+    url: /v2/rating/modules/fake3
+    method: PUT
+    request_headers:
+      content-type: application/json
+      x-roles: admin
+    data:
+      priority: 3
+      enabled: false
+    status: 204
+
+  - name: get information of the modified module (both)
+    url: /v2/rating/modules/fake3
+    status: 200
+    response_json_paths:
+      $.priority: 3
+      $.module_id: "fake3"
+      $.enabled: false
+      $.description: "fake rating module"
+      $.hot_config: false
