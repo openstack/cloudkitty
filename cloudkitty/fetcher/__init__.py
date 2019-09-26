@@ -31,9 +31,9 @@ cfg.CONF.register_opts(fetcher_opts, 'fetcher')
 class BaseFetcher(object):
     """CloudKitty tenants fetcher.
 
-    Provides Cloudkitty integration with a backend announcing ratable tenants.
+    Provides Cloudkitty integration with a backend announcing ratable scopes.
     """
 
     @abc.abstractmethod
     def get_tenants(self):
-        """Get a list of tenants to rate."""
+        """Retrieve a list of scopes to rate."""
