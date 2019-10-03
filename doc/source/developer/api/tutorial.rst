@@ -234,6 +234,39 @@ However, they can be overriden in ``policy.yaml``. Call them the following way:
            # [...]
 
 
+Loading drivers
+---------------
+
+Most of the time, resources need to load some drivers (storage, SQL...).
+As the instantiation of these drivers can take some time, this should be done
+only once.
+
+Some drivers (like the storage driver) are loaded in ``BaseResource`` and are
+thus available to all resources.
+
+Resources requiring some additional drivers should implement the ``reload``
+function:
+
+.. code-block:: python
+
+   class BaseResource(flask_restful.Resource):
+
+       @classmethod
+       def reload(cls):
+           """Reloads all required drivers"""
+
+
+Here's an example taken from ``cloudkitty.api.v2.scope.state.ScopeState``:
+
+.. code-block:: python
+
+   @classmethod
+   def reload(cls):
+       super(ScopeState, cls).reload()
+       cls._client = messaging.get_client()
+       cls._storage_state = storage_state.StateManager()
+
+
 Registering resources
 =====================
 

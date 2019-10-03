@@ -37,6 +37,8 @@ import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api import app
 from cloudkitty.api import middleware
+from cloudkitty.api.v2.dataframes import dataframes as v2_api_dataframes
+from cloudkitty.api.v2.summary import summary as v2_api_summary
 from cloudkitty import dataframe
 from cloudkitty import db
 from cloudkitty.db import api as ck_db_api
@@ -459,6 +461,8 @@ class NowInfluxStorageDataFixture(NowStorageDataFixture):
             new=lambda **kw: st,
         )
         self._get_storage_patch.start()
+        v2_api_summary.Summary.reload()
+        v2_api_dataframes.DataFrameList.reload()
 
         super(NowInfluxStorageDataFixture, self).start_fixture()
 
@@ -485,6 +489,8 @@ class InfluxStorageDataFixture(StorageDataFixture):
             new=lambda **kw: st,
         )
         self._get_storage_patch.start()
+        v2_api_summary.Summary.reload()
+        v2_api_dataframes.DataFrameList.reload()
 
         super(InfluxStorageDataFixture, self).start_fixture()
 

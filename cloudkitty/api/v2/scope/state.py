@@ -26,10 +26,12 @@ from cloudkitty import validation_utils as vutils
 
 
 class ScopeState(base.BaseResource):
-    def __init__(self, *args, **kwargs):
-        super(ScopeState, self).__init__(*args, **kwargs)
-        self._client = messaging.get_client()
-        self._storage_state = storage_state.StateManager()
+
+    @classmethod
+    def reload(cls):
+        super(ScopeState, cls).reload()
+        cls._client = messaging.get_client()
+        cls._storage_state = storage_state.StateManager()
 
     @api_utils.paginated
     @api_utils.add_input_schema('query', {

@@ -33,6 +33,21 @@ class BaseResource(flask_restful.Resource):
             raise http_exceptions.Forbidden(
                 "You are not authorized to perform this action")
 
+    @classmethod
+    def reload(cls):
+        """Reloads all required drivers"""
+        cls._storage = storage.get_storage()
+
+    @classmethod
+    def load(cls):
+        """Loads all required drivers.
+
+        If the drivers are already loaded, does nothing.
+        """
+        if not getattr(cls, '_loaded', False):
+            cls.reload()
+            cls._loaded = True
+
     def __init__(self, *args, **kwargs):
         super(BaseResource, self).__init__(*args, **kwargs)
-        self._storage = storage.get_storage()
+        self.load()
