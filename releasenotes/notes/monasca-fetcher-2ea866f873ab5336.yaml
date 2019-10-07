@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Adds a Monasca fetcher retrieving scopes from Monasca dimensions. See the
+    `fetcher documentation
+    <https://docs.openstack.org/cloudkitty/latest/admin/configuration/fetcher.html#monasca>`__
+    for more details.

@@ -60,6 +60,20 @@ fetcher using regular Keystone authentication options as found here:
 :doc:`configuration`.
 
 
+Monasca
+-------
+
+Section ``fetcher_monasca``.
+
+* ``dimension_name``: Monasca dimension from which scope_ids is collected.
+
+* ``monasca_tenant_id``: If specified, monasca client will use this ID
+  instead of the default one.
+
+* ``monasca_service_name``: Name of the Monasca service (defaults to monasca).
+
+* ``interface``: Endpoint URL type (defaults to internal).
+
 Prometheus
 ----------
 

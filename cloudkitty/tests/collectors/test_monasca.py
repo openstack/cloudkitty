@@ -44,8 +44,8 @@ class MonascaCollectorTest(tests.TestCase):
             }
         }
         with mock.patch(
-                'cloudkitty.collector.monasca.'
-                'MonascaCollector._get_monasca_endpoint',
+                'cloudkitty.common.monasca_client.'
+                'get_monasca_endpoint',
                 return_value='http://noop'):
             self.collector = mon_collector.MonascaCollector(
                 period=3600,

@@ -63,7 +63,7 @@ configured in CloudKitty's configuration file.
 Fetcher
 =======
 
-Four fetchers are available in cloudkitty:
+Five fetchers are available in CloudKitty:
 
 * The ``keystone`` fetcher retrieves a list of projects on which the
   cloudkitty user has the ``rating`` role from Keystone.
@@ -72,6 +72,9 @@ Four fetchers are available in cloudkitty:
   given resource type. This is used for standalone Gnocchi deployments or to
   discover new projects from Gnocchi when it is used with OpenStack. It can be
   used in an OpenStack context or with a standalone Gnocchi deployment.
+
+* The ``monasca`` fetcher retrieves from `Monasca`_ all values from a
+  configurable metric dimension (``project_id`` by default).
 
 * The ``prometheus`` fetcher works in a similar way to the Gnocchi fetcher,
   which allows to discover scopes from `Prometheus`_.
