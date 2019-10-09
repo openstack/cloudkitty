@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    The ``interface`` parameter of the ``collector_monasca`` section is now
+    also used for the discovery of the monasca endpoint.
