@@ -106,7 +106,10 @@ class MonascaCollector(collector.BaseCollector):
             CONF,
             COLLECTOR_MONASCA_OPTS,
             auth=self.auth)
-        self.ks_client = ks_client.Client(session=self.session)
+        self.ks_client = ks_client.Client(
+            session=self.session,
+            interface=CONF.collector_monasca.interface,
+        )
         self.mon_endpoint = self._get_monasca_endpoint()
         if not self.mon_endpoint:
             raise EndpointNotFound()
