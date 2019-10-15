@@ -1,9 +1,8 @@
 - job:
-    name: cloudkitty-tempest-full-v2-storage-influxdb
+    name: base-cloudkitty-tempest-job
     parent: devstack-tempest
     description: |
-      Job testing cloudkitty installation on devstack with the InfluxDB v2
-      storage driver and running tempest tests
+      Job testing cloudkitty installation and running tempest tests
     required-projects: &base_required_projects
       - name: openstack/cloudkitty
       - name: openstack/cloudkitty-tempest-plugin
@@ -32,6 +31,24 @@
         TEMPEST_PLUGINS: /opt/stack/cloudkitty-tempest-plugin
 
 - job:
+    name: base-cloudkitty-v1-api-tempest-job
+    parent: base-cloudkitty-tempest-job
+    description: |
+      Job running tempest tests on devstack with the v1 API only
+      and the v1 storage driver
+    vars:
+      tempest_test_regex: cloudkitty_tempest_plugin.tests.api.v1.*
+
+- job:
+    name: base-cloudkitty-v2-api-tempest-job
+    parent: base-cloudkitty-tempest-job
+    description: |
+      Job running tempest tests on devstack with the v2 API
+      and a v2 storage driver
+    vars:
+      tempest_test_regex: cloudkitty_tempest_plugin.*
+
+- job:
     name: cloudkitty-tempest-full-ipv6-only
     parent: devstack-tempest-ipv6
     description: |
@@ -44,19 +61,8 @@
     vars: *base_vars
 
 - job:
-    name: cloudkitty-tempest-full-v2-storage-influxdb-py3
-    parent: cloudkitty-tempest-full-v2-storage-influxdb
-    description: |
-      Job testing cloudkitty installation on devstack with python 3 and the
-      InfluxDB v2 storage driver and running tempest tests
-    vars:
-      devstack_localrc:
-        DEVSTACK_GATE_USE_PYTHON3: "True"
-        USE_PYTHON3: "True"
-
-- job:
     name: cloudkitty-tempest-full-v1-storage-sqlalchemy
-    parent: cloudkitty-tempest-full-v2-storage-influxdb
+    parent: base-cloudkitty-v1-api-tempest-job
     description: |
       Job testing cloudkitty installation on devstack with python 2 and the
       SQLAlchemy v1 storage driver and running tempest tests
@@ -77,11 +83,33 @@
         USE_PYTHON3: "True"
 
 - job:
-    name: cloudkitty-tempest-full-v2-storage-elasticsearch
-    parent: cloudkitty-tempest-full-v2-storage-influxdb
+    name: cloudkitty-tempest-full-v2-storage-influxdb
+    parent: base-cloudkitty-v2-api-tempest-job
     description: |
       Job testing cloudkitty installation on devstack with python 2 and the
-      elasticsearch v2 storage driver and running tempest tests
+      InfluxDB v2 storage driver and running tempest tests
+    vars:
+      devstack_localrc:
+        CLOUDKITTY_STORAGE_BACKEND: influxdb
+        CLOUDKITTY_STORAGE_VERSION: 2
+
+- job:
+    name: cloudkitty-tempest-full-v2-storage-influxdb-py3
+    parent: cloudkitty-tempest-full-v2-storage-influxdb
+    description: |
+      Job testing cloudkitty installation on devstack with python 3 and the
+      InfluxDB v2 storage driver and running tempest tests
+    vars:
+      devstack_localrc:
+        DEVSTACK_GATE_USE_PYTHON3: "True"
+        USE_PYTHON3: "True"
+
+- job:
+    name: cloudkitty-tempest-full-v2-storage-elasticsearch
+    parent: base-cloudkitty-v2-api-tempest-job
+    description: |
+      Job testing cloudkitty installation on devstack with python 2 and the
+      Elasticsearch v2 storage driver and running tempest tests
     vars:
       devstack_localrc:
         CLOUDKITTY_STORAGE_BACKEND: elasticsearch
