@@ -92,14 +92,18 @@ class ElasticsearchClient(object):
                            {'term': {'metadata.' + k: v}}]
         return should
 
-    @staticmethod
-    def _build_composite(groupby):
+    def _build_composite(self, groupby):
         if not groupby:
             return []
         sources = []
         for elem in groupby:
             if elem == 'type':
                 sources.append({'type': {'terms': {'field': 'type'}}})
+            elif elem == 'time':
+                # Not doing a date_histogram aggregation because we don't know
+                # the period
+                sources.append({'begin': {'terms': {'field': 'start'}}})
+                sources.append({'end': {'terms': {'field': 'end'}}})
             else:
                 sources.append({elem: {'terms': {'field': 'groupby.' + elem}}})
 

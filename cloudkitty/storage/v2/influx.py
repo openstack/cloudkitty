@@ -65,19 +65,27 @@ CONF.register_opts(influx_storage_opts, INFLUX_STORAGE_GROUP)
 PERIOD_FIELD_NAME = '__ck_collect_period'
 
 
+def _sanitized_groupby(groupby):
+    forbidden = ('time',)
+    return [g for g in groupby if g not in forbidden] if groupby else []
+
+
 class InfluxClient(object):
     """Classe used to ease interaction with InfluxDB"""
 
-    def __init__(self, chunk_size=500, autocommit=True):
+    def __init__(self, chunk_size=500, autocommit=True, default_period=3600):
         """Creates an InfluxClient object.
 
         :param chunk_size: Size after which points should be pushed.
         :param autocommit: Set to false to disable autocommit
+        :param default_period: Placeholder for the period in cae it can't
+                               be determined.
         """
         self._conn = self._get_influx_client()
         self._chunk_size = chunk_size
         self._autocommit = autocommit
         self._retention_policy = CONF.storage_influxdb.retention_policy
+        self._default_period = default_period
         self._points = []
 
     @staticmethod
@@ -185,7 +193,13 @@ class InfluxClient(object):
         query += self._get_type_query(types)
 
         if groupby:
-            groupby_query = '"' + '","'.join(groupby) + '"'
+            groupby_query = ''
+            if 'time' in groupby:
+                groupby_query += 'time(' + str(self._default_period) + 's)'
+                groupby_query += ',' if groupby else ''
+            if groupby:
+                groupby_query += '"' + '","'.join(
+                    _sanitized_groupby(groupby)) + '"'
             query += ' GROUP BY ' + groupby_query
 
         query += ';'
@@ -243,7 +257,7 @@ class InfluxStorage(v2_storage.BaseStorage):
     def __init__(self, *args, **kwargs):
         super(InfluxStorage, self).__init__(*args, **kwargs)
         self._default_period = kwargs.get('period') or CONF.collect.period
-        self._conn = InfluxClient()
+        self._conn = InfluxClient(default_period=self._default_period)
 
     def init(self):
         policy = CONF.storage_influxdb.retention_policy
@@ -326,8 +340,11 @@ class InfluxStorage(v2_storage.BaseStorage):
     def delete(self, begin=None, end=None, filters=None):
         self._conn.delete(begin, end, filters)
 
-    @staticmethod
-    def _get_total_elem(begin, end, groupby, series_groupby, point):
+    def _get_total_elem(self, begin, end, groupby, series_groupby, point):
+        if groupby and 'time' in groupby:
+            begin = tzutils.dt_from_iso(point['time'])
+            period = point.get(PERIOD_FIELD_NAME) or self._default_period
+            end = tzutils.add_delta(begin, datetime.timedelta(seconds=period))
         output = {
             'begin': begin,
             'end': end,
@@ -335,7 +352,7 @@ class InfluxStorage(v2_storage.BaseStorage):
             'rate': point['price'],
         }
         if groupby:
-            for group in groupby:
+            for group in _sanitized_groupby(groupby):
                 output[group] = series_groupby.get(group, '')
         return output
 
@@ -353,12 +370,18 @@ class InfluxStorage(v2_storage.BaseStorage):
         output = []
         for (series_name, series_groupby), points in total.items():
             for point in points:
-                output.append(self._get_total_elem(
-                    begin, end,
-                    groupby,
-                    series_groupby,
-                    point))
+                # NOTE(peschk_l): InfluxDB returns all timestamps for a given
+                # period and interval, even those with no data. This filters
+                # out periods with no data
+                if point['qty'] is not None and point['price'] is not None:
+                    output.append(self._get_total_elem(
+                        tzutils.utc_to_local(begin),
+                        tzutils.utc_to_local(end),
+                        groupby,
+                        series_groupby,
+                        point))
 
+        groupby = _sanitized_groupby(groupby)
         if groupby:
             output.sort(key=lambda x: [x[group] for group in groupby])
         return {

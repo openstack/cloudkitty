@@ -17,6 +17,7 @@ import functools
 
 from influxdb import resultset
 
+from cloudkitty.storage.v2.influx import _sanitized_groupby
 from cloudkitty.storage.v2.influx import InfluxClient
 
 
@@ -63,6 +64,12 @@ class FakeInfluxClient(InfluxClient):
                 break
             valid = True
             for tag in serie['tags'].keys():
+                if tag == 'time':
+                    if point['time'].isoformat() != serie['values'][0][0]:
+                        valid = False
+                        break
+                    else:
+                        continue
                 if tag not in point['tags'].keys() or \
                    point['tags'][tag] != serie['tags'][tag]:
                     valid = False
@@ -74,10 +81,11 @@ class FakeInfluxClient(InfluxClient):
         if target_serie is None:
             target_serie = copy.deepcopy(self.total_series_sample)
             if groupby:
-                target_serie['tags'] = {k: point['tags'][k] for k in groupby}
+                target_serie['tags'] = {k: point['tags'][k] for k in
+                                        _sanitized_groupby(groupby)}
             else:
                 target_serie['tags'] = {}
-            target_serie['values'] = [['1970-01-01T00:00:00Z', 0, 0]]
+            target_serie['values'] = [[point['time'].isoformat(), 0, 0]]
             series.append(target_serie)
         return target_serie
 

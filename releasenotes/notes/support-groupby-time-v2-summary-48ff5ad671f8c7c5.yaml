@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    It is now possible to group v2 summaries by timestamp. In order to do this,
+    the ``time`` parameter must be specified in the ``groupby`` list:
+    ``cloudkitty summary get -g time,type``.

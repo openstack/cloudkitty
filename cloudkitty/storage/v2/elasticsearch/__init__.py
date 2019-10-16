@@ -184,6 +184,9 @@ class ElasticsearchStorage(v2_storage.BaseStorage):
         # Means we had a composite aggregation
         if 'key' in doc.keys():
             for key, value in doc['key'].items():
+                if key == 'begin' or key == 'end':
+                    # Elasticsearch returns ts in milliseconds
+                    value = tzutils.dt_from_ts(value // 1000)
                 output[key] = value
         return output
 
