@@ -13,6 +13,7 @@
 #    under the License.
 #
 import flask
+from oslo_config import cfg
 import voluptuous
 from werkzeug import exceptions as http_exceptions
 
@@ -21,6 +22,11 @@ from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty.common import policy
 from cloudkitty import dataframe
 from cloudkitty import tzutils
+
+
+CONF = cfg.CONF
+
+CONF.import_opt('scope_key', 'cloudkitty.collector', 'collect')
 
 
 class DataFrameList(base.BaseResource):
@@ -61,7 +67,7 @@ class DataFrameList(base.BaseResource):
             limit=100,
             begin=None,
             end=None,
-            filters={}):
+            filters=None):
 
         policy.authorize(
             flask.request.context,
@@ -72,7 +78,18 @@ class DataFrameList(base.BaseResource):
         begin = begin or tzutils.get_month_start()
         end = end or tzutils.get_next_month()
 
-        metric_types = [filters.pop('type')] if 'type' in filters else None
+        if filters and 'type' in filters:
+            metric_types = [filters.pop('type')]
+        else:
+            metric_types = None
+
+        if not flask.request.context.is_admin:
+            scope_key = CONF.collect.scope_key
+            if filters:
+                filters[scope_key] = flask.request.context.project_id
+            else:
+                filters = {scope_key: flask.request.context.project_id}
+
         results = self._storage.retrieve(
             begin=begin, end=end,
             filters=filters,

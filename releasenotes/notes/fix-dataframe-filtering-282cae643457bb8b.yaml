@@ -1,0 +1,6 @@
+---
+security:
+  - |
+    Data filtering on the ``GET /v1/dataframes`` and `` GET /v2/dataframes``
+    has been fixed. It was previously possible for users to retrieve data
+    from other scopes through these endpoints.

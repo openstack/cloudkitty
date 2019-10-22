@@ -59,8 +59,10 @@ class DataFramesController(rest.RestController):
         scope_key = CONF.collect.scope_key
         backend = pecan.request.storage_backend
         dataframes = []
-        filters = {scope_key: tenant_id} if tenant_id else None
-
+        if pecan.request.context.is_admin:
+            filters = {scope_key: tenant_id} if tenant_id else None
+        else:
+            filters = {scope_key: project_id}
         try:
             resp = backend.retrieve(
                 begin, end,
