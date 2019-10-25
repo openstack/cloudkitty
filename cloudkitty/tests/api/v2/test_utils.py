@@ -15,8 +15,8 @@
 import flask
 import mock
 import voluptuous
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import BadRequest
-from werkzeug import MultiDict
 
 from cloudkitty.api.v2.scope import state
 from cloudkitty.api.v2 import utils as api_utils

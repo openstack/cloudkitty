@@ -20,7 +20,11 @@ import flask_restful
 from oslo_config import cfg
 from oslo_log import log
 from paste import deploy
-from werkzeug import wsgi
+try:
+    from werkzeug.middleware import dispatcher
+# In case we have werkzeug<0.15
+except (ImportError, ModuleNotFoundError):
+    from werkzeug import wsgi as dispatcher
 
 from cloudkitty.api import root as api_root
 from cloudkitty.api.v1 import get_api_app as get_v1_app
@@ -69,7 +73,7 @@ def setup_app():
         LOG.warning('v1 storage is used, disabling v2 API')
         dispatch_dict.pop('/v2')
 
-    app = wsgi.DispatcherMiddleware(root_app, dispatch_dict)
+    app = dispatcher.DispatcherMiddleware(root_app, dispatch_dict)
     return app
 
 
