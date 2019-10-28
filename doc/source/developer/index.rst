@@ -6,6 +6,7 @@ Developer Documentation
    :glob:
 
    roadmap
+   fetcher
    collector
    storage
    api/index
