@@ -84,6 +84,14 @@ def dt_from_iso(time_str, as_utc=False):
         tz.UTC if as_utc else _LOCAL_TZ).replace(microsecond=0)
 
 
+def dt_from_ts(ts, as_utc=False):
+    """Parses a timezone-aware datetime object from an epoch timestamp.
+
+    Returns the object as being from the local timezone.
+    """
+    return datetime.datetime.fromtimestamp(ts, tz.UTC if as_utc else _LOCAL_TZ)
+
+
 def add_delta(dt, delta):
     """Adds a timedelta to a datetime object.
 

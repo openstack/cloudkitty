@@ -16,6 +16,7 @@ import datetime
 import unittest
 
 from dateutil import tz
+import mock
 from oslo_utils import timeutils
 
 from cloudkitty import tzutils
@@ -132,3 +133,15 @@ class TestTZUtils(unittest.TestCase):
         two = datetime.datetime(2019, 3, 31, 3,
                                 tzinfo=tz.gettz('Europe/Paris'))
         self.assertEqual(tzutils.diff_seconds(two, one), 3600)
+
+    def test_cloudkitty_dt_from_ts_as_utc(self):
+        ts = 1569902400
+        dt = datetime.datetime(2019, 10, 1, 4, tzinfo=tz.UTC)
+        self.assertEqual(dt, tzutils.dt_from_ts(ts, as_utc=True))
+
+    def test_cloudkitty_dt_from_ts_local_tz(self):
+        ts = 1569902400
+        timezone = tz.gettz('Europe/Paris')
+        dt = datetime.datetime(2019, 10, 1, 6, tzinfo=timezone)
+        with mock.patch.object(tzutils, '_LOCAL_TZ', new=timezone):
+            self.assertEqual(dt, tzutils.dt_from_ts(ts))

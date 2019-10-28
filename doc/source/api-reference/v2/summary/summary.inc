@@ -65,6 +65,11 @@ the columns for each element of ``results``. The columns are the four mandatory 
 (``begin``, ``end``, ``qty``, ``rate``) along with each attribute the result is
 grouped by.
 
+.. note:: It is also possible to group data by time, in order to obtain timeseries.
+          In order to do this, group by ``time``. No extra column will be added,
+          but you'll get one entry per collect period in the queried timeframe.
+          See examples below.
+
 .. rest_parameters:: summary/summary_parameters.yml
 
    - begin: begin_resp
@@ -74,6 +79,15 @@ grouped by.
 
 Response Example
 ----------------
+
+Grouping by time and project_id:
+
+.. code-block:: shell
+
+   curl "http://cloudkitty-api:8889/v2/summary?groupby=time&groupby=project_id&limit=3"
+
+.. literalinclude:: ./api_samples/summary/summary_get_groupby_time.json
+   :language: javascript
 
 .. code-block:: shell
 
