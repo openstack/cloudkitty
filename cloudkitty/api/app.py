@@ -23,7 +23,7 @@ from paste import deploy
 try:
     from werkzeug.middleware import dispatcher
 # In case we have werkzeug<0.15
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     from werkzeug import wsgi as dispatcher
 
 from cloudkitty.api import root as api_root
