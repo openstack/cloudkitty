@@ -13,10 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-from oslo_context import context
 from pecan import hooks
 
-from cloudkitty.common import policy
+from cloudkitty.common import context
 from cloudkitty import messaging
 
 
@@ -38,21 +37,5 @@ class StorageHook(hooks.PecanHook):
 
 class ContextHook(hooks.PecanHook):
     def on_route(self, state):
-        headers = state.request.headers
-
-        roles = headers.get('X-Roles', '').split(',')
-        is_admin = policy.check_is_admin(roles)
-
-        creds = {
-            'user_id': headers.get('X-User-Id', ''),
-            'tenant': headers.get('X-Tenant-Id', ''),
-            'auth_token': headers.get('X-Auth-Token', ''),
-            'is_admin': is_admin,
-            'roles': roles,
-            "user_name": headers.get('X-User-Name', ''),
-            "project_name": headers.get('X-Project-Name', ''),
-            "domain": headers.get('X-User-Domain-Id', ''),
-            "domain_name": headers.get('X-User-Domain-Name', ''),
-        }
-
-        state.request.context = context.RequestContext(**creds)
+        state.request.context = context.RequestContext.from_environ(
+            state.request.environ)

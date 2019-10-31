@@ -1,4 +1,4 @@
-# Copyright 2017 GohighSec.
+# Copyright 2019 Objectif Libre
 # All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,25 +12,15 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#
+from oslo_context import context
 
-from oslo_policy import policy
-
-RULE_ADMIN_OR_OWNER = 'rule:admin_or_owner'
-ROLE_ADMIN = 'role:admin'
-UNPROTECTED = ''
-
-rules = [
-    policy.RuleDefault(
-        name='context_is_admin',
-        check_str='role:admin'),
-    policy.RuleDefault(
-        name='admin_or_owner',
-        check_str='is_admin:True or project_id:%(project_id)s'),
-    policy.RuleDefault(
-        name='default',
-        check_str=UNPROTECTED)
-]
+from cloudkitty.common import policy
 
 
-def list_rules():
-    return rules
+class RequestContext(context.RequestContext):
+
+    def __init__(self, is_admin=None, **kwargs):
+        super(RequestContext, self).__init__(is_admin=is_admin, **kwargs)
+        if self.is_admin is None:
+            self.is_admin = policy.check_is_admin(self)

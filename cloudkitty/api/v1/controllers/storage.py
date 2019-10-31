@@ -53,7 +53,7 @@ class DataFramesController(rest.RestController):
 
         project_id = tenant_id or pecan.request.context.project_id
         policy.authorize(pecan.request.context, 'storage:list_data_frames', {
-            'tenant_id': project_id,
+            'project_id': project_id,
         })
 
         scope_key = CONF.collect.scope_key

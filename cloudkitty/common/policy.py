@@ -105,7 +105,9 @@ def authorize(context, action, target):
     init()
 
     try:
-        return _ENFORCER.authorize(action, target, context.to_dict(),
+        LOG.debug('Authenticating user with credentials %(credentials)s',
+                  {'credentials': context.to_dict()})
+        return _ENFORCER.authorize(action, target, context,
                                    do_raise=True,
                                    exc=PolicyNotAuthorized,
                                    action=action)
@@ -120,7 +122,7 @@ def authorize(context, action, target):
                       {'action': action, 'credentials': context.to_dict()})
 
 
-def check_is_admin(roles):
+def check_is_admin(context):
     """Whether or not roles contains 'admin' role according to policy setting.
 
     """
@@ -129,12 +131,11 @@ def check_is_admin(roles):
 
     init()
 
-    # include project_id on target to avoid KeyError if context_is_admin
-    # policy definition is missing, and default admin_or_owner rule
-    # attempts to apply.  Since our credentials dict does not include a
-    # project_id, this target can never match as a generic rule.
-    target = {'project_id': ''}
-    credentials = {'roles': roles}
+    target = {
+        'user_id': context.user_id,
+        'project_id': context.project_id,
+    }
+    credentials = context.to_policy_values()
 
     return _ENFORCER.authorize('context_is_admin', target, credentials)
 

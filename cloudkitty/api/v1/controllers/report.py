@@ -92,7 +92,7 @@ class ReportController(rest.RestController):
             tenant_context = pecan.request.context.project_id
             tenant_id = tenant_context if not tenant_id else tenant_id
         policy.authorize(pecan.request.context, 'report:get_total',
-                         {"tenant_id": tenant_id})
+                         {"project_id": tenant_id})
 
         storage = pecan.request.storage_backend
         # FIXME(sheeprine): We should filter on user id.
@@ -134,7 +134,7 @@ class ReportController(rest.RestController):
             tenant_context = pecan.request.context.project_id
             tenant_id = tenant_context if not tenant_id else tenant_id
         policy.authorize(pecan.request.context, 'report:get_summary',
-                         {"tenant_id": tenant_id})
+                         {"project_id": tenant_id})
         storage = pecan.request.storage_backend
 
         scope_key = CONF.collect.scope_key
