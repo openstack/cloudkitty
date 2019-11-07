@@ -57,11 +57,13 @@ orchestrator_opts = [
     cfg.IntOpt(
         'max_workers',
         default=multiprocessing.cpu_count(),
+        sample_default=4,
         min=1,
         help='Max nb of workers to run. Defaults to the nb of available CPUs'),
     cfg.IntOpt('max_threads',
                # NOTE(peschk_l): This is the futurist default
                default=multiprocessing.cpu_count() * 5,
+               sample_default=20,
                min=1,
                deprecated_name='max_greenthreads',
                advanced=True,
