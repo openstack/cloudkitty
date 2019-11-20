@@ -244,6 +244,23 @@ specified. The extra args for each collector are detailed below.
 Gnocchi
 ~~~~~~~
 
+.. note:: In order to retrieve metrics from Gnocchi, Cloudkitty uses the
+          dynamic aggregates endpoint. It builds an operation of the following
+          format: ``(aggregate RE_AGGREGATION_METHOD (metric METRIC_NAME
+          AGGREGATION_METHOD))``. This means "retrieve all aggregates of type
+          ``AGGREGATION_METHOD`` for the metric named ``METRIC_NAME`` and
+          re-aggregate them using ``RE_AGGREGATION_METHOD``".
+
+          By default, the re-aggregation method defaults to the
+          aggregation method.
+
+          Setting the re-aggregation method to a different value than the
+          aggregation method is useful when the granularity of the aggregates
+          does not match CloudKitty's collect period, or when using
+          ``rate:`` aggregation, as you're probably don't want a rate of rates,
+          but rather a sum or max of rates.
+
+
 * ``resource_type``: No default value. The resource type the current metric is
   bound to.
 
@@ -253,7 +270,10 @@ Gnocchi
 
 * ``aggregation_method``: Defaults to ``max``. The aggregation method to use
   when retrieving measures from gnocchi. Must be one of ``min``, ``max``,
-  ``mean``.
+  ``mean``, ``rate:min``, ``rate:max``, ``rate:mean``.
+
+* ``re_aggregation_method``: Defaults to ``aggregation_method``. The
+  re_aggregation method to use when retrieving measures from gnocchi.
 
 * ``force_granularity``: Defaults to ``0``. If > 0, this granularity will be
   used for metric aggregations. Else, the lowest available granularity will be

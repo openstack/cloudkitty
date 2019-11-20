@@ -13,7 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-#
+import datetime
+
+from dateutil import tz
+import mock
+
 from cloudkitty.collector import gnocchi
 from cloudkitty import tests
 from cloudkitty.tests import samples
@@ -146,3 +150,67 @@ class GnocchiCollectorTest(tests.TestCase):
             lop='or')
         expected = {'or': ['dummy1', 'dummy2']}
         self.assertEqual(expected, actual)
+
+
+class GnocchiCollectorAggregationOperationTest(tests.TestCase):
+
+    def setUp(self):
+        super(GnocchiCollectorAggregationOperationTest, self).setUp()
+        self.conf.set_override('collector', 'gnocchi', 'collect')
+        self.start = datetime.datetime(2019, 1, 1, tzinfo=tz.UTC)
+        self.end = datetime.datetime(2019, 1, 1, 1, tzinfo=tz.UTC)
+
+    def do_test(self, expected_op, extra_args=None):
+        conf = {
+            'metrics': {
+                'metric_one': {
+                    'unit': 'GiB',
+                    'groupby': ['project_id'],
+                    'extra_args': extra_args if extra_args else {},
+                }
+            }
+        }
+
+        coll = gnocchi.GnocchiCollector(period=3600, conf=conf)
+        with mock.patch.object(coll._conn.aggregates, 'fetch') as fetch_mock:
+            coll._fetch_metric('metric_one', self.start, self.end)
+            fetch_mock.assert_called_once_with(
+                expected_op,
+                groupby=['project_id', 'id'],
+                resource_type='resource_x',
+                search={'=': {'type': 'resource_x'}},
+                start=self.start, stop=self.end,
+            )
+
+    def test_no_agg_no_re_agg(self):
+        extra_args = {'resource_type': 'resource_x'}
+        expected_op = ["aggregate", "max", ["metric", "metric_one", "max"]]
+        self.do_test(expected_op, extra_args=extra_args)
+
+    def test_custom_agg_no_re_agg(self):
+        extra_args = {
+            'resource_type': 'resource_x',
+            'aggregation_method': 'mean',
+        }
+        expected_op = ["aggregate", "mean", ["metric", "metric_one", "mean"]]
+        self.do_test(expected_op, extra_args=extra_args)
+
+    def test_no_agg_custom_re_agg(self):
+        extra_args = {
+            'resource_type': 'resource_x',
+            're_aggregation_method': 'sum',
+        }
+        expected_op = ["aggregate", "sum", ["metric", "metric_one", "max"]]
+        self.do_test(expected_op, extra_args=extra_args)
+
+    def test_custom_agg_custom_re_agg(self):
+        extra_args = {
+            'resource_type': 'resource_x',
+            'aggregation_method': 'rate:mean',
+            're_aggregation_method': 'sum',
+        }
+        expected_op = [
+            "aggregate", "sum",
+            ["metric", "metric_one", "rate:mean"],
+        ]
+        self.do_test(expected_op, extra_args=extra_args)

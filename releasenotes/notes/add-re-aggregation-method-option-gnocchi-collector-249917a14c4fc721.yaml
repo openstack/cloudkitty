@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    It is now possible to differentiate the aggregation method from the
+    aggregate type in the gnocchi collector, in case the retrieved aggregates
+    need to be re-aggregated. This has been introduced with the
+    ``re_aggregation_method`` option.

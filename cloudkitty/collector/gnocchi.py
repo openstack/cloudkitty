@@ -83,6 +83,9 @@ GNOCCHI_EXTRA_SCHEMA = {
         Required('resource_key', default='id'): All(str, Length(min=1)),
         Required('aggregation_method', default='max'):
             In(['max', 'mean', 'min', 'rate:max', 'rate:mean', 'rate:min']),
+        Required('re_aggregation_method', default=None):
+            In([None, 'mean', 'median', 'std',
+                'min', 'max', 'sum', 'var', 'count']),
         Required('force_granularity', default=0): All(int, Range(min=0)),
     },
 }
@@ -292,8 +295,12 @@ class GnocchiCollector(collector.BaseCollector):
         if q_filter:
             query_parameters.append(q_filter)
 
+        re_aggregation_method = extra_args['re_aggregation_method']
+        if re_aggregation_method is None:
+            re_aggregation_method = extra_args['aggregation_method']
+
         # build aggregration operation
-        op = ["aggregate", extra_args['aggregation_method'],
+        op = ["aggregate", re_aggregation_method,
               ["metric", metric_name, extra_args['aggregation_method']]]
 
         # get groupby
