@@ -26,9 +26,7 @@ from cloudkitty.rating.hash.datamodels import mapping as mapping_models
 
 
 class HashMapConfigController(rating.RatingRestControllerBase):
-    """Controller exposing all management sub controllers.
-
-    """
+    """Controller exposing all management sub controllers."""
 
     _custom_actions = {
         'types': ['GET']

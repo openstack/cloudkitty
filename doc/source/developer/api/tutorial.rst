@@ -72,6 +72,7 @@ example endpoint"}**. The ``add_output_schema`` decorator adds voluptuous
 validation to a method's output. This allows to set defaults.
 
 .. autofunction:: cloudkitty.api.v2.utils.add_output_schema
+   :noindex:
 
 Let's update our ``get`` method in order to use this decorator:
 
@@ -108,6 +109,7 @@ parameter. In order to validate it, we'll use the ``add_input_schema``
 decorator:
 
 .. autofunction:: cloudkitty.api.v2.utils.add_input_schema
+   :noindex:
 
 Arguments validated by the input schema are passed as named arguments to the
 decorated function. Let's implement the post method. We'll use Werkzeug
@@ -157,6 +159,7 @@ query parameters as lists. The ``SingleQueryParam`` helper checks that a
 parameter is provided only once, and returns it.
 
 .. autoclass:: cloudkitty.api.v2.utils.SingleQueryParam
+   :noindex:
 
 .. warning:: ``SingleQueryParam`` uses ``voluptuous.Coerce`` internally for
              type checking. Thus, ``validation_utils.get_string_type`` cannot
@@ -274,6 +277,7 @@ Each endpoint should provide an ``init`` method taking a Flask app as only
 parameter. This method should call ``do_init``:
 
 .. autofunction:: cloudkitty.api.v2.utils.do_init
+   :noindex:
 
 Add the following to ``cloudkitty/api/v2/example/__init__.py``:
 

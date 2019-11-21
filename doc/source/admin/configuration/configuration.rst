@@ -2,6 +2,9 @@
 Step by step configuration guide
 ================================
 
+.. note:: For a sample ``cloudkitty.conf`` file, see
+          :doc:`samples/cloudkitty-conf` .
+
 Edit ``/etc/cloudkitty/cloudkitty.conf`` to configure cloudkitty.
 
 Common options

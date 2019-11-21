@@ -57,13 +57,19 @@ extensions = ['sphinx.ext.coverage',
               'oslo_policy.sphinxpolicygen',
               ]
 
+# Ignore the following warning: WARNING: while setting up extension
+# wsmeext.sphinxext: directive 'autoattribute' is already registered,
+# it will be overridden.
+suppress_warnings = ['app.add_directive']
+
 # openstackdocstheme options
 repository_name = 'openstack/cloudkitty'
 bug_project = 'cloudkitty'
 bug_tag = ''
 
+config_generator_config_file = '../../etc/oslo-config-generator/cloudkitty.conf'
 policy_generator_config_file = '../../etc/oslo-policy-generator/cloudkitty.conf'
-sample_policy_basename = '_static/cloudkitty'
+sample_policy_basename = sample_config_basename = '_static/cloudkitty'
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = []

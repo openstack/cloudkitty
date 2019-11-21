@@ -9,4 +9,5 @@ Configuration Guide
    fetcher
    collector
    storage
+   samples/cloudkitty-conf
    policy

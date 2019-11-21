@@ -1,15 +1,15 @@
-limit:
+begin: &begin
   in: query
   description: |
-    For pagination. The maximum number of results to return.
-  type: int
+    Begin of the period for which the summary is required.
+  type: iso8601 timestamp
   required: false
 
-offset: &offset
+end: &end
   in: query
   description: |
-    For pagination. The index of the first element that should be returned.
-  type: int
+    End of the period for which the summary is required.
+  type: iso8601 timestamp
   required: false
 
 filters:
@@ -26,33 +26,19 @@ groupby:
   type: list of strings
   required: false
 
-begin: &begin
+limit:
   in: query
   description: |
-    Begin of the period for which the summary is required.
-  type: iso8601 timestamp
+    For pagination. The maximum number of results to return.
+  type: int
   required: false
 
-end: &end
+offset: &offset
   in: query
   description: |
-    End of the period for which the summary is required.
-  type: iso8601 timestamp
+    For pagination. The index of the first element that should be returned.
+  type: int
   required: false
-
-qty: &qty
-  in: body
-  description: |
-    Qty for the item.
-  type: float
-  required: true
-
-rate: &rate
-  in: body
-  description: |
-    Rate for the item.
-  type: float
-  required: true
 
 begin_resp:
   <<: *begin
@@ -66,11 +52,25 @@ end_resp:
   description: End of the period for the item.
   in: body
 
+qty: &qty
+  in: body
+  description: |
+    Qty for the item.
+  type: float
+  required: true
+
 qty_resp:
   <<: *qty
   required: true
   description: Qty for the item in the specified period.
   in: body
+
+rate: &rate
+  in: body
+  description: |
+    Rate for the item.
+  type: float
+  required: true
 
 rate_resp:
   <<: *rate

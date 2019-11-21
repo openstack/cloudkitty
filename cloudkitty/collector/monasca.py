@@ -53,8 +53,6 @@ CONF.register_opts(collector_monasca_opts, COLLECTOR_MONASCA_OPTS)
 ks_loading.register_auth_conf_options(CONF, COLLECTOR_MONASCA_OPTS)
 ks_loading.register_session_conf_options(CONF, COLLECTOR_MONASCA_OPTS)
 
-METRICS_CONF = ck_utils.load_conf(CONF.collect.metrics_conf)
-
 MONASCA_EXTRA_SCHEMA = {
     Required('extra_args', default={}): {
         # Key corresponding to the resource id in a metric's dimensions

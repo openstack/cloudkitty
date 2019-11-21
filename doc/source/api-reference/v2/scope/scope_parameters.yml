@@ -1,3 +1,17 @@
+collector: &collector
+  in: query
+  description: |
+    Filter on collector.
+  type: string
+  required: false
+
+fetcher: &fetcher
+  in: query
+  description: |
+    Filter on fetcher.
+  type: string
+  required: false
+
 limit:
   in: query
   description: |
@@ -19,20 +33,6 @@ scope_id: &scope_id
   type: string
   required: false
 
-fetcher: &fetcher
-  in: query
-  description: |
-    Filter on fetcher.
-  type: string
-  required: false
-
-collector: &collector
-  in: query
-  description: |
-    Filter on collector.
-  type: string
-  required: false
-
 scope_key: &scope_key
   in: query
   description: |
@@ -46,23 +46,8 @@ all_scopes: &all_scopes
     Confirmation whether all scopes must be reset
   type: bool
 
-state:
-  in: body
-  description: |
-    State of the scope.
-  type: iso8601 timestamp
-  required: true
-
-fetcher_resp:
-  <<: *fetcher
-  required: true
-  description: Fetcher for the given scope
-  in: body
-
-scope_id_resp:
-  <<: *scope_id
-  required: true
-  description: Scope
+collector_body:
+  <<: *collector
   in: body
 
 collector_resp:
@@ -71,24 +56,39 @@ collector_resp:
   description: Collector for the given scope
   in: body
 
-scope_key_resp:
-  <<: *scope_key
-  required: true
-  description: Scope key for the given scope
-  in: body
-
-collector_body:
-  <<: *collector
-  in: body
-
 fetcher_body:
   <<: *fetcher
+  in: body
+
+fetcher_resp:
+  <<: *fetcher
+  required: true
+  description: Fetcher for the given scope
   in: body
 
 scope_id_body:
   <<: *scope_id
   in: body
 
+scope_id_resp:
+  <<: *scope_id
+  required: true
+  description: Scope
+  in: body
+
 scope_key_body:
   <<: *scope_key
   in: body
+
+scope_key_resp:
+  <<: *scope_key
+  required: true
+  description: Scope key for the given scope
+  in: body
+
+state:
+  in: body
+  description: |
+    State of the scope.
+  type: iso8601 timestamp
+  required: true

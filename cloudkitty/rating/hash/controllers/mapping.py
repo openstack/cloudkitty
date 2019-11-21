@@ -70,7 +70,8 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
         :param no_group: Filter on orphaned mappings.
         :param tenant_id: Tenant UUID to filter on.
         :param filter_tenant: Explicitly filter on tenant (default is to not
-        filter on tenant). Useful if you want to filter on tenant being None.
+                              filter on tenant). Useful if you want to filter
+                              on tenant being None.
         :return: List of every mappings.
         """
         hashmap = db_api.get_instance()
