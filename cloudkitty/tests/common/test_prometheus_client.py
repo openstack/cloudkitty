@@ -16,9 +16,9 @@
 import mock
 
 from cloudkitty.collector import prometheus
-from cloudkitty import json_utils as json
 from cloudkitty import tests
 from cloudkitty.tests import samples
+from cloudkitty.utils import json
 
 
 class PrometheusClientTest(tests.TestCase):

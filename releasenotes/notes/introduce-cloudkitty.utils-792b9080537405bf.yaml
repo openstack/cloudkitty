@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    Cloudkitty's ``*_utils`` modules have been grouped into the
+    new ``cloudkitty.utils`` module.

@@ -21,7 +21,7 @@ from cloudkitty import dataframe
 from cloudkitty.storage import v2 as v2_storage
 from cloudkitty.storage.v2.elasticsearch import client as es_client
 from cloudkitty.storage.v2.elasticsearch import exceptions
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 LOG = log.getLogger(__name__)
 

@@ -31,8 +31,8 @@ from voluptuous import Schema
 
 from cloudkitty import collector
 from cloudkitty import dataframe
-from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
+from cloudkitty.utils import tz as tzutils
 
 
 LOG = logging.getLogger(__name__)

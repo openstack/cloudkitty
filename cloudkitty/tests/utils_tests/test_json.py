@@ -17,8 +17,8 @@ import decimal
 
 from dateutil import tz
 
-from cloudkitty import json_utils as json
 from cloudkitty import tests
+from cloudkitty.utils import json
 
 
 class JSONEncoderTest(tests.TestCase):

@@ -21,7 +21,7 @@ from cloudkitty.api.v2 import base
 from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty.common import policy
 from cloudkitty import dataframe
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 
 CONF = cfg.CONF

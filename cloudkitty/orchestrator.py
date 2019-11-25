@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -40,8 +39,8 @@ from cloudkitty import extension_manager
 from cloudkitty import messaging
 from cloudkitty import storage
 from cloudkitty import storage_state as state
-from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
+from cloudkitty.utils import tz as tzutils
 
 
 LOG = logging.getLogger(__name__)

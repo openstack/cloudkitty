@@ -16,7 +16,7 @@ import unittest
 
 import voluptuous.error
 
-from cloudkitty import validation_utils
+from cloudkitty.utils import validation as validation_utils
 
 
 class DictTypeValidatorTest(unittest.TestCase):

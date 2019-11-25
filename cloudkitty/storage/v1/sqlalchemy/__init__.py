@@ -19,12 +19,12 @@ from oslo_db.sqlalchemy import utils
 import sqlalchemy
 
 from cloudkitty import db
-from cloudkitty import json_utils as json
 from cloudkitty.storage import NoTimeFrame
 from cloudkitty.storage import v1 as storage
 from cloudkitty.storage.v1.sqlalchemy import migration
 from cloudkitty.storage.v1.sqlalchemy import models
 from cloudkitty import utils as ck_utils
+from cloudkitty.utils import json
 
 
 class SQLAlchemyStorage(storage.BaseStorage):

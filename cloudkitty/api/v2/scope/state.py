@@ -21,8 +21,8 @@ from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty.common import policy
 from cloudkitty import messaging
 from cloudkitty import storage_state
-from cloudkitty import tzutils
-from cloudkitty import validation_utils as vutils
+from cloudkitty.utils import tz as tzutils
+from cloudkitty.utils import validation as vutils
 
 
 class ScopeState(base.BaseResource):

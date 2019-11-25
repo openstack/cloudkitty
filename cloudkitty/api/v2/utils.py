@@ -21,7 +21,7 @@ import voluptuous
 from werkzeug import exceptions
 
 from cloudkitty.api import v2 as v2_api
-from cloudkitty import json_utils as json
+from cloudkitty.utils import json
 
 
 class SingleQueryParam(object):
@@ -33,7 +33,7 @@ class SingleQueryParam(object):
 
     Note that this validator uses ``voluptuous.Coerce`` internally and thus
     should not be used together with
-    ``cloudkitty.validation_utils.get_string_type`` in python2.
+    ``cloudkitty.utils.validation.get_string_type`` in python2.
 
     :param param_type: Type of the query parameter
     """
@@ -58,7 +58,7 @@ class MultiQueryParam(object):
 
     Note that this validator uses ``voluptuous.Coerce`` internally and thus
     should not be used together with
-    ``cloudkitty.validation_utils.get_string_type`` in python2.
+    ``cloudkitty.utils.validation.get_string_type`` in python2.
 
     :param param_type: Type of the query parameter
     """

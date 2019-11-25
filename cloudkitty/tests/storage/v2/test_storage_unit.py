@@ -23,7 +23,7 @@ from cloudkitty.tests.storage.v2 import es_utils
 from cloudkitty.tests.storage.v2 import influx_utils
 from cloudkitty.tests import TestCase
 from cloudkitty.tests import utils as test_utils
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 
 _ES_CLIENT_PATH = ('cloudkitty.storage.v2.elasticsearch'

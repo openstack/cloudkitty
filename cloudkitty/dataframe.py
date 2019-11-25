@@ -20,9 +20,9 @@ import functools
 import voluptuous
 from werkzeug import datastructures
 
-from cloudkitty import json_utils as json
-from cloudkitty import tzutils
-from cloudkitty import validation_utils as vutils
+from cloudkitty.utils import json
+from cloudkitty.utils import tz as tzutils
+from cloudkitty.utils import validation as vutils
 
 # NOTE(peschk_l): qty and price are converted to strings to avoid
 # floating-point conversion issues:

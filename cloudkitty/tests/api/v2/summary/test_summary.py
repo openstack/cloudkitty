@@ -17,7 +17,7 @@ import unittest
 import mock
 
 from cloudkitty.api.v2.summary import summary
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 
 class TestSummaryEndpoint(unittest.TestCase):

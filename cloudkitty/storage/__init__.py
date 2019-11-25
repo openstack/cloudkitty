@@ -21,7 +21,7 @@ from stevedore import driver
 
 from cloudkitty import dataframe
 from cloudkitty.storage import v2 as storage_v2
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 LOG = logging.getLogger(__name__)
 

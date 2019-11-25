@@ -50,8 +50,8 @@ from cloudkitty import storage_state
 from cloudkitty import tests
 from cloudkitty.tests.storage.v2 import influx_utils
 from cloudkitty.tests import utils as test_utils
-from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
+from cloudkitty.utils import tz as tzutils
 
 
 INITIAL_DT = datetime.datetime(2015, 1, 1, tzinfo=tz.UTC)
@@ -501,7 +501,7 @@ class InfluxStorageDataFixture(StorageDataFixture):
 class UTCFixture(fixture.GabbiFixture):
     """Set the local timezone to UTC"""
     def start_fixture(self):
-        self._tzmock = mock.patch('cloudkitty.tzutils._LOCAL_TZ', tz.UTC)
+        self._tzmock = mock.patch('cloudkitty.utils.tz._LOCAL_TZ', tz.UTC)
         self._tzmock.start()
 
     def stop_fixture(self):

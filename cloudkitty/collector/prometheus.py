@@ -27,8 +27,8 @@ from cloudkitty.collector.exceptions import CollectError
 from cloudkitty.common.prometheus_client import PrometheusClient
 from cloudkitty.common.prometheus_client import PrometheusResponseError
 from cloudkitty import dataframe
-from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
+from cloudkitty.utils import tz as tzutils
 
 
 LOG = log.getLogger(__name__)

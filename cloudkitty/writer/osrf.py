@@ -15,7 +15,7 @@
 #
 import os
 
-from cloudkitty import json_utils as json
+from cloudkitty.utils import json
 from cloudkitty import writer
 
 

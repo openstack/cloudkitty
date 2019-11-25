@@ -17,8 +17,8 @@ import itertools
 from oslo_log import log
 import requests
 
-from cloudkitty import json_utils as json
 from cloudkitty.storage.v2.elasticsearch import exceptions
+from cloudkitty.utils import json
 
 LOG = log.getLogger(__name__)
 

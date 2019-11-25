@@ -19,8 +19,8 @@ from dateutil import tz
 import mock
 from oslo_utils import timeutils
 
-from cloudkitty import tzutils
 from cloudkitty import utils
+from cloudkitty.utils import tz as tzutils
 
 
 class TestTZUtils(unittest.TestCase):

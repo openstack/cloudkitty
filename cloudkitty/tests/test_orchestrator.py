@@ -26,7 +26,7 @@ from cloudkitty import orchestrator
 from cloudkitty.storage.v2 import influx
 from cloudkitty import storage_state
 from cloudkitty import tests
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 
 class FakeKeystoneClient(object):

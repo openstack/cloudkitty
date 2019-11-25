@@ -20,7 +20,7 @@ from oslo_log import log
 from cloudkitty import db
 from cloudkitty.storage_state import migration
 from cloudkitty.storage_state import models
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 
 LOG = log.getLogger(__name__)

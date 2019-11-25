@@ -25,8 +25,8 @@ import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1.datamodels import report as report_models
 from cloudkitty.common import policy
-from cloudkitty import tzutils
 from cloudkitty import utils as ck_utils
+from cloudkitty.utils import tz as tzutils
 
 LOG = logging.getLogger(__name__)
 

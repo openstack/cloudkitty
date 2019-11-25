@@ -24,7 +24,7 @@ import wsmeext.pecan as wsme_pecan
 from cloudkitty.api.v1.datamodels import storage as storage_models
 from cloudkitty.common import policy
 from cloudkitty import storage
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 
 CONF = cfg.CONF

@@ -23,7 +23,7 @@ from cloudkitty import storage
 from cloudkitty import tests
 from cloudkitty.tests import samples
 from cloudkitty.tests import utils as test_utils
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 
 class StorageTest(tests.TestCase):

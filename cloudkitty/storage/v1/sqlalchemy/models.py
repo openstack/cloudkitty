@@ -17,7 +17,7 @@ from oslo_db.sqlalchemy import models
 import sqlalchemy
 from sqlalchemy.ext import declarative
 
-from cloudkitty import json_utils as json
+from cloudkitty.utils import json
 
 
 Base = declarative.declarative_base()

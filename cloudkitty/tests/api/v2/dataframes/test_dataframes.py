@@ -17,7 +17,7 @@ import unittest
 import mock
 
 from cloudkitty.api.v2.dataframes import dataframes
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 
 class TestDataframeListEndpoint(unittest.TestCase):

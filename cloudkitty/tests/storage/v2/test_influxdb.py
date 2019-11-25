@@ -24,7 +24,7 @@ import mock
 from cloudkitty import dataframe
 from cloudkitty.storage.v2 import influx
 from cloudkitty.tests import TestCase
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 
 class TestInfluxDBStorage(TestCase):

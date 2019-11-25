@@ -25,9 +25,9 @@ from oslo_utils import uuidutils
 import six
 
 from cloudkitty.collector import validate_conf
-from cloudkitty import json_utils as json
 from cloudkitty.storage.v1.hybrid.backends import BaseHybridBackend
 import cloudkitty.utils as ck_utils
+from cloudkitty.utils import json
 
 
 LOG = logging.getLogger(__name__)

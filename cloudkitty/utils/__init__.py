@@ -31,7 +31,7 @@ from oslo_utils import timeutils
 from six import moves
 from stevedore import extension
 
-from cloudkitty import tzutils
+from cloudkitty.utils import tz as tzutils
 
 
 _ISO8601_TIME_FORMAT_SUBSECOND = '%Y-%m-%dT%H:%M:%S.%f'

@@ -14,7 +14,7 @@
 #    under the License.
 #
 from cloudkitty.db import api
-from cloudkitty import json_utils as json
+from cloudkitty.utils import json
 
 
 class StateManager(object):

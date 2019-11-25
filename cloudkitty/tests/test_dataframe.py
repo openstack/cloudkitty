@@ -21,7 +21,7 @@ from dateutil import tz
 from werkzeug import datastructures
 
 from cloudkitty import dataframe
-from cloudkitty import json_utils as json
+from cloudkitty.utils import json
 
 
 class TestDataPoint(unittest.TestCase):
