@@ -161,6 +161,7 @@ class InfluxClient(object):
 
     @staticmethod
     def _get_filter(key, value):
+        format_string = ''
         if isinstance(value, six.string_types):
             format_string = """"{}"='{}'"""
         elif isinstance(value, (six.integer_types, float)):

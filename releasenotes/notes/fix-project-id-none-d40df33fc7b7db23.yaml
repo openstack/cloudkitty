@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    The 500 errors happening on some API endpoints when keystone authentication
+    is enabled and the request context bears no ``project_id`` have been fixed.
