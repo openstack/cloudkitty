@@ -248,6 +248,29 @@ class BaseCollector(object):
         return name, data
 
 
+class InvalidConfiguration(Exception):
+    pass
+
+
+def check_duplicates(metric_name, metric):
+    """Checks for duplicates in "groupby" and "metadata".
+
+    :param metric: config dict for a metric to check
+    :type metric: dict
+    """
+    groupby = set(metric['groupby'])
+    metadata = set(metric['metadata'])
+    duplicates = groupby.intersection(metadata)
+    if duplicates:
+        raise InvalidConfiguration(
+            'Metric {} has duplicates in groupby and metadata: {}'.format(
+                metric_name, metric))
+
+    metric['groupby'] = list(groupby)
+    metric['metadata'] = list(metadata)
+    return metric
+
+
 def validate_conf(conf):
     """Validates the provided configuration."""
     collector = get_collector_without_invoke()
@@ -255,4 +278,5 @@ def validate_conf(conf):
     for metric_name, metric in output.items():
         if 'alt_name' not in metric.keys():
             metric['alt_name'] = metric_name
+        check_duplicates(metric_name, metric)
     return output

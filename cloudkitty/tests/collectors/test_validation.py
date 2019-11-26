@@ -27,7 +27,7 @@ class MetricConfigValidationTest(tests.TestCase):
         'metrics': {
             'metric_one': {
                 'groupby': ['one'],
-                'metadata': ['one'],
+                'metadata': ['two'],
                 'unit': 'u',
             }
         }
@@ -36,7 +36,7 @@ class MetricConfigValidationTest(tests.TestCase):
     base_output = {
         'metric_one': {
             'groupby': ['one'],
-            'metadata': ['one'],
+            'metadata': ['two'],
             'unit': 'u',
             'factor': 1,
             'offset': 0,
@@ -166,3 +166,11 @@ class MetricConfigValidationTest(tests.TestCase):
             collector.prometheus.PrometheusCollector.check_configuration(data),
             expected_output,
         )
+
+    def test_check_duplicates(self):
+        data = copy.deepcopy(self.base_data)
+        for metric_name, metric in data['metrics'].items():
+            metric['metadata'].append('one')
+            self.assertRaises(
+                collector.InvalidConfiguration,
+                collector.check_duplicates, metric_name, metric)

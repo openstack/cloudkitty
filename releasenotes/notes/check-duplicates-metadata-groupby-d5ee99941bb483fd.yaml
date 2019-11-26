@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    When the config is loaded, there is now a verification for duplicates
+    between ``groupby`` and ``metadata`` for each metric.
