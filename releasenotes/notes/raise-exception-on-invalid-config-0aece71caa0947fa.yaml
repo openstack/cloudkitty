@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    The ``cloudkitty.utils.load_conf`` function does now raise an exception in
+    case the ``metrics.yml`` file can't be read or has an invalid format.

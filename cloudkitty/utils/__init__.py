@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2014 Objectif Libre
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -230,21 +229,15 @@ def check_time_state(timestamp=None, period=0, wait_periods=0):
 
 
 def load_conf(conf_path):
-    """Return loaded yaml configuration.
+    """Loads the metric collection configuration.
 
-    In case not found yaml file,
-    return an empty dict.
+    :param conf_path: Path of the file to load
+    :type conf_path: str
+    :rtype: dict
     """
-    # NOTE(mc): We can not raise any exception in this function as it called
-    # at some file imports. Default values should be used instead. This is
-    # done for the docs and tests in gerrit which does not copy yaml conf file.
-    try:
-        with open(conf_path) as conf:
-            res = yaml.safe_load(conf)
-        return res or {}
-    except Exception:
-        LOG.warning("Error when trying to retrieve {} file.".format(conf_path))
-        return {}
+    with open(conf_path) as conf:
+        res = yaml.safe_load(conf)
+    return res or {}
 
 
 @contextlib.contextmanager
