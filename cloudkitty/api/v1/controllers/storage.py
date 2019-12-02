@@ -62,6 +62,9 @@ class DataFramesController(rest.RestController):
         if pecan.request.context.is_admin:
             filters = {scope_key: tenant_id} if tenant_id else None
         else:
+            # Unscoped non-admin user
+            if project_id is None:
+                return {'dataframes': []}
             filters = {scope_key: project_id}
         try:
             resp = backend.retrieve(

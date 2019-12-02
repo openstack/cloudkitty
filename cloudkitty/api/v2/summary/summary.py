@@ -45,6 +45,13 @@ class Summary(base.BaseResource):
         end = end or tzutils.get_next_month()
 
         if not flask.request.context.is_admin:
+            if flask.request.context.project_id is None:
+                # Unscoped non-admin user
+                return {
+                    'total': 0,
+                    'columns': [],
+                    'results': [],
+                }
             filters['project_id'] = flask.request.context.project_id
 
         metric_types = [filters.pop('type')] if 'type' in filters else None

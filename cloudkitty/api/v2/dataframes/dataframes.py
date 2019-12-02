@@ -84,6 +84,12 @@ class DataFrameList(base.BaseResource):
             metric_types = None
 
         if not flask.request.context.is_admin:
+            if flask.request.context.project_id is None:
+                # Unscoped non-admin user
+                return {
+                    'total': 0,
+                    'dataframes': []
+                }
             scope_key = CONF.collect.scope_key
             if filters:
                 filters[scope_key] = flask.request.context.project_id
