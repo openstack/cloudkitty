@@ -156,11 +156,13 @@ class MetricConfigValidationTest(tests.TestCase):
         data = copy.deepcopy(self.base_data)
         data['metrics']['metric_one']['extra_args'] = {
             'aggregation_method': 'max',
+            'query_function': 'abs',
         }
         expected_output = copy.deepcopy(self.base_output)
         expected_output['metric_one']['groupby'].append('project_id')
         expected_output['metric_one']['extra_args'] = {
             'aggregation_method': 'max',
+            'query_function': 'abs',
         }
 
         self.assertEqual(

@@ -302,3 +302,11 @@ Prometheus
 * ``aggregation_method``: Defaults to ``max``. The aggregation method to use
   when retrieving measures from prometheus. Must be one of ``avg``, ``min``,
   ``max``, ``sum``, ``count``, ``stddev``, ``stdvar``.
+
+* ``query_function``: Optional argument. The function to apply to an instant
+  vector after the ``aggregation_method`` or ``range_function`` has altered the
+  data. Must be one of ``abs``, ``ceil``, ``exp``, ``floor``, ``ln``, ``log2``,
+  ``log10``, ``round``, ``sqrt``. For more information on these functions,
+  you can check `this page`_
+
+.. _this page: https://prometheus.io/docs/prometheus/latest/querying/basics/

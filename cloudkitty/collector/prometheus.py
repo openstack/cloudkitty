@@ -19,6 +19,7 @@ from decimal import ROUND_HALF_UP
 from oslo_config import cfg
 from oslo_log import log
 from voluptuous import In
+from voluptuous import Optional
 from voluptuous import Required
 from voluptuous import Schema
 
@@ -71,6 +72,12 @@ PROMETHEUS_EXTRA_SCHEMA = {
                 'min', 'stddev', 'stdvar',
                 'sum'
             ]),
+        Optional('query_function'):
+            In([
+                'abs', 'ceil', 'exp',
+                'floor', 'ln', 'log2',
+                'log10', 'round', 'sqrt'
+            ])
     }
 }
 
@@ -139,18 +146,40 @@ class PrometheusCollector(collector.BaseCollector):
         """Returns metrics to be valorized."""
         scope_key = CONF.collect.scope_key
         method = self.conf[metric_name]['extra_args']['aggregation_method']
+        query_function = self.conf[metric_name]['extra_args'].get(
+            'query_function')
         groupby = self.conf[metric_name].get('groupby', [])
         metadata = self.conf[metric_name].get('metadata', [])
         period = tzutils.diff_seconds(end, start)
         time = end
 
-        query = '{0}({0}_over_time({1}{{{2}="{3}"}}[{4}s])) by ({5})'.format(
-            method,
+        # The metric with the period
+        query = '{0}{{{1}="{2}"}}[{3}s]'.format(
             metric_name,
             scope_key,
             scope_id,
-            period,
-            ', '.join(groupby + metadata),
+            period
+        )
+        # Applying the aggregation_method on a Range Vector
+        query = "{0}_over_time({1})".format(
+            method,
+            query
+        )
+        # Applying the query_function
+        if query_function is not None:
+            query = "{0}({1})".format(
+                query_function,
+                query
+            )
+        # Applying the aggregation_method on a Instant Vector
+        query = "{0}({1})".format(
+            method,
+            query
+        )
+        # Filter by groupby and metadata
+        query = "{0} by ({1})".format(
+            query,
+            ', '.join(groupby + metadata)
         )
 
         try:
