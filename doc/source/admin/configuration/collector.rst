@@ -309,4 +309,9 @@ Prometheus
   ``log10``, ``round``, ``sqrt``. For more information on these functions,
   you can check `this page`_
 
+* ``range_function``: Optional argument. The function to apply instead of the
+  implicit ``{aggregation_method}_over_time``. Must be one of ``changes``,
+  ``delta``, ``deriv``, ``idelta``, ``irange``, ``irate``, ``rate``. For more
+  information on these functions, you can check `this page`_
+
 .. _this page: https://prometheus.io/docs/prometheus/latest/querying/basics/

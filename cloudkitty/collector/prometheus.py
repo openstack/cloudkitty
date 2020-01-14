@@ -77,6 +77,12 @@ PROMETHEUS_EXTRA_SCHEMA = {
                 'abs', 'ceil', 'exp',
                 'floor', 'ln', 'log2',
                 'log10', 'round', 'sqrt'
+            ]),
+        Optional('range_function'):
+            In([
+                'changes', 'delta', 'deriv',
+                'idelta', 'irange', 'irate',
+                'rate'
             ])
     }
 }
@@ -148,6 +154,8 @@ class PrometheusCollector(collector.BaseCollector):
         method = self.conf[metric_name]['extra_args']['aggregation_method']
         query_function = self.conf[metric_name]['extra_args'].get(
             'query_function')
+        range_function = self.conf[metric_name]['extra_args'].get(
+            'range_function')
         groupby = self.conf[metric_name].get('groupby', [])
         metadata = self.conf[metric_name].get('metadata', [])
         period = tzutils.diff_seconds(end, start)
@@ -160,11 +168,18 @@ class PrometheusCollector(collector.BaseCollector):
             scope_id,
             period
         )
-        # Applying the aggregation_method on a Range Vector
-        query = "{0}_over_time({1})".format(
-            method,
-            query
-        )
+        # Applying the aggregation_method or the range_function on
+        # a Range Vector
+        if range_function is not None:
+            query = "{0}({1})".format(
+                range_function,
+                query
+            )
+        else:
+            query = "{0}_over_time({1})".format(
+                method,
+                query
+            )
         # Applying the query_function
         if query_function is not None:
             query = "{0}({1})".format(
