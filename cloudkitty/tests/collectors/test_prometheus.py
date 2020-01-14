@@ -47,6 +47,7 @@ class PrometheusCollectorTest(tests.TestCase):
                         ],
                         'extra_args': {
                             'aggregation_method': 'avg',
+                            'query_function': 'abs'
                         },
                     },
                 }
@@ -56,9 +57,9 @@ class PrometheusCollectorTest(tests.TestCase):
 
     def test_fetch_all_build_query(self):
         query = (
-            'avg(avg_over_time(http_requests_total'
+            'avg(abs(avg_over_time(http_requests_total'
             '{project_id="f266f30b11f246b589fd266f85eeec39"}[3600s]'
-            ')) by (foo, bar, project_id, code, instance)'
+            '))) by (foo, bar, project_id, code, instance)'
         )
 
         with mock.patch.object(
