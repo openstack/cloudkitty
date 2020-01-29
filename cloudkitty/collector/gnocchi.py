@@ -75,6 +75,27 @@ cfg.CONF.register_opts(collector_gnocchi_opts, COLLECTOR_GNOCCHI_OPTS)
 
 CONF = cfg.CONF
 
+# According to 'gnocchi/rest/aggregates/operations.py#AGG_MAP' and
+# 'gnocchi/rest/aggregates/operations.py#AGG_MAP' the following are the basic
+# aggregation methods that one can use when configuring an aggregation
+# method in the archive policy in Gnocchi or using the aggregation API.
+BASIC_AGGREGATION_METHODS = set(('mean', 'sum', 'last', 'max', 'min', 'std',
+                                 'median', 'first', 'count'))
+for agg in list(BASIC_AGGREGATION_METHODS):
+    BASIC_AGGREGATION_METHODS.add("rate:%s" % agg)
+
+EXTRA_AGGREGATION_METHODS_FOR_ARCHIVE_POLICY = set(
+    (str(i) + 'pct' for i in six.moves.range(1, 100)))
+
+for agg in list(EXTRA_AGGREGATION_METHODS_FOR_ARCHIVE_POLICY):
+    EXTRA_AGGREGATION_METHODS_FOR_ARCHIVE_POLICY.add("rate:%s" % agg)
+
+# The aggregation method that one can use to configure the archive
+# policies also supports the 'pct' (percentile) operation. Therefore,
+# we also expose this as a configuration.
+VALID_AGGREGATION_METHODS_FOR_METRICS = BASIC_AGGREGATION_METHODS.union(
+    EXTRA_AGGREGATION_METHODS_FOR_ARCHIVE_POLICY)
+
 GNOCCHI_EXTRA_SCHEMA = {
     Required('extra_args'): {
         Required('resource_type'): All(str, Length(min=1)),
@@ -82,11 +103,10 @@ GNOCCHI_EXTRA_SCHEMA = {
         # This parameter permits to adapt the key of the resource identifier
         Required('resource_key', default='id'): All(str, Length(min=1)),
         Required('aggregation_method', default='max'):
-            In(['max', 'mean', 'min', 'rate:max', 'rate:mean', 'rate:min']),
-        Required('re_aggregation_method', default=None):
-            In([None, 'mean', 'median', 'std',
-                'min', 'max', 'sum', 'var', 'count']),
-        Required('force_granularity', default=0): All(int, Range(min=0)),
+            In(VALID_AGGREGATION_METHODS_FOR_METRICS),
+        Required('re_aggregation_method', default='max'):
+            In(BASIC_AGGREGATION_METHODS),
+        Required('force_granularity', default=3600): All(int, Range(min=0)),
     },
 }
 
@@ -295,28 +315,23 @@ class GnocchiCollector(collector.BaseCollector):
         if q_filter:
             query_parameters.append(q_filter)
 
-        re_aggregation_method = extra_args['re_aggregation_method']
-        if re_aggregation_method is None:
-            re_aggregation_method = extra_args['aggregation_method']
-
-        # build aggregration operation
-        op = ["aggregate", re_aggregation_method,
-              ["metric", metric_name, extra_args['aggregation_method']]]
-
-        # get groupby
-        groupby = self.conf[metric_name]['groupby']
+        op = self.build_operation_command(extra_args, metric_name)
 
         agg_kwargs = {
             'resource_type': resource_type,
             'start': start,
             'stop': end,
-            'groupby': groupby,
+            'groupby': self.conf[metric_name]['groupby'],
             'search': self.extend_filter(*query_parameters),
         }
         if extra_args['force_granularity'] > 0:
             agg_kwargs['granularity'] = extra_args['force_granularity']
+
         try:
-            return self._conn.aggregates.fetch(op, **agg_kwargs)
+            measurements = self._conn.aggregates.fetch(op, **agg_kwargs)
+            LOG.debug("Measurements [%s] received with operation [%s] and "
+                      "arguments [%s].", measurements, op, agg_kwargs)
+            return measurements
         except (gexceptions.MetricNotFound, gexceptions.BadRequest) as e:
             # FIXME(peschk_l): gnocchiclient seems to be raising a BadRequest
             # when it should be raising MetricNotFound
@@ -326,6 +341,13 @@ class GnocchiCollector(collector.BaseCollector):
             LOG.warning('[{scope}] Skipping this metric for the '
                         'current cycle.'.format(scope=project_id, err=e))
             return []
+
+    @staticmethod
+    def build_operation_command(extra_args, metric_name):
+        re_aggregation_method = extra_args['re_aggregation_method']
+        op = ["aggregate", re_aggregation_method,
+              ["metric", metric_name, extra_args['aggregation_method']]]
+        return op
 
     def _format_data(self, metconf, data, resources_info=None):
         """Formats gnocchi data to CK data.

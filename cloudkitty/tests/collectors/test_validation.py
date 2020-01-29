@@ -69,12 +69,9 @@ class MetricConfigValidationTest(tests.TestCase):
         expected_output = copy.deepcopy(self.base_output)
         expected_output['metric_one']['groupby'] += ['project_id', 'id']
         expected_output['metric_one']['extra_args'] = {
-            'aggregation_method': 'max',
-            're_aggregation_method': None,
-            'force_granularity': 0,
-            'resource_type': 'res',
-            'resource_key': 'id',
-        }
+            'aggregation_method': 'max', 're_aggregation_method': 'max',
+            'force_granularity': 3600, 'resource_type': 'res',
+            'resource_key': 'id'}
 
         self.assertEqual(
             collector.gnocchi.GnocchiCollector.check_configuration(data),

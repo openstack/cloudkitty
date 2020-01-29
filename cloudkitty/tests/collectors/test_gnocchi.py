@@ -180,6 +180,7 @@ class GnocchiCollectorAggregationOperationTest(tests.TestCase):
                 resource_type='resource_x',
                 search={'=': {'type': 'resource_x'}},
                 start=self.start, stop=self.end,
+                granularity=3600
             )
 
     def test_no_agg_no_re_agg(self):
@@ -192,7 +193,7 @@ class GnocchiCollectorAggregationOperationTest(tests.TestCase):
             'resource_type': 'resource_x',
             'aggregation_method': 'mean',
         }
-        expected_op = ["aggregate", "mean", ["metric", "metric_one", "mean"]]
+        expected_op = ["aggregate", "max", ["metric", "metric_one", "mean"]]
         self.do_test(expected_op, extra_args=extra_args)
 
     def test_no_agg_custom_re_agg(self):
