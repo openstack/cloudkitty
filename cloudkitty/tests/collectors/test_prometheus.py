@@ -46,16 +46,111 @@ class PrometheusCollectorTest(tests.TestCase):
                             'instance',
                         ],
                         'extra_args': {
-                            'aggregation_method': 'avg',
-                            'query_function': 'abs'
+                            'aggregation_method': 'avg'
                         },
                     },
                 }
             }
         }
-        self.collector = prometheus.PrometheusCollector(**args)
+        args_range_function = {
+            'period': 3600,
+            'scope_key': 'namespace',
+            'conf': {
+                'metrics': {
+                    'http_requests_total': {
+                        'unit': 'instance',
+                        'groupby': [
+                            'foo',
+                            'bar',
+                        ],
+                        'metadata': [
+                            'code',
+                            'instance',
+                        ],
+                        'extra_args': {
+                            'aggregation_method': 'avg',
+                            'query_function': 'abs',
+                        },
+                    },
+                }
+            }
+        }
+        args_query_function = {
+            'period': 3600,
+            'scope_key': 'namespace',
+            'conf': {
+                'metrics': {
+                    'http_requests_total': {
+                        'unit': 'instance',
+                        'groupby': [
+                            'foo',
+                            'bar',
+                        ],
+                        'metadata': [
+                            'code',
+                            'instance',
+                        ],
+                        'extra_args': {
+                            'aggregation_method': 'avg',
+                            'range_function': 'delta',
+                        },
+                    },
+                }
+            }
+        }
+        args_all = {
+            'period': 3600,
+            'scope_key': 'namespace',
+            'conf': {
+                'metrics': {
+                    'http_requests_total': {
+                        'unit': 'instance',
+                        'groupby': [
+                            'foo',
+                            'bar',
+                        ],
+                        'metadata': [
+                            'code',
+                            'instance',
+                        ],
+                        'extra_args': {
+                            'aggregation_method': 'avg',
+                            'range_function': 'delta',
+                            'query_function': 'abs',
+                        },
+                    },
+                }
+            }
+        }
+        self.collector_mandatory = prometheus.PrometheusCollector(**args)
+        self.collector_without_range_function = prometheus.PrometheusCollector(
+            **args_range_function)
+        self.collector_without_query_function = prometheus.PrometheusCollector(
+            **args_query_function)
+        self.collector_all = prometheus.PrometheusCollector(**args_all)
 
-    def test_fetch_all_build_query(self):
+    def test_fetch_all_build_query_only_mandatory(self):
+        query = (
+            'avg(avg_over_time(http_requests_total'
+            '{project_id="f266f30b11f246b589fd266f85eeec39"}[3600s]'
+            ')) by (foo, bar, project_id, code, instance)'
+        )
+
+        with mock.patch.object(
+            prometheus.PrometheusClient, 'get_instant',
+        ) as mock_get:
+            self.collector_mandatory.fetch_all(
+                'http_requests_total',
+                samples.FIRST_PERIOD_BEGIN,
+                samples.FIRST_PERIOD_END,
+                self._tenant_id,
+            )
+            mock_get.assert_called_once_with(
+                query,
+                samples.FIRST_PERIOD_END.isoformat(),
+            )
+
+    def test_fetch_all_build_query_without_range_function(self):
         query = (
             'avg(abs(avg_over_time(http_requests_total'
             '{project_id="f266f30b11f246b589fd266f85eeec39"}[3600s]'
@@ -65,7 +160,49 @@ class PrometheusCollectorTest(tests.TestCase):
         with mock.patch.object(
             prometheus.PrometheusClient, 'get_instant',
         ) as mock_get:
-            self.collector.fetch_all(
+            self.collector_without_range_function.fetch_all(
+                'http_requests_total',
+                samples.FIRST_PERIOD_BEGIN,
+                samples.FIRST_PERIOD_END,
+                self._tenant_id,
+            )
+            mock_get.assert_called_once_with(
+                query,
+                samples.FIRST_PERIOD_END.isoformat(),
+            )
+
+    def test_fetch_all_build_query_without_query_function(self):
+        query = (
+            'avg(delta(http_requests_total'
+            '{project_id="f266f30b11f246b589fd266f85eeec39"}[3600s]'
+            ')) by (foo, bar, project_id, code, instance)'
+        )
+
+        with mock.patch.object(
+            prometheus.PrometheusClient, 'get_instant',
+        ) as mock_get:
+            self.collector_without_query_function.fetch_all(
+                'http_requests_total',
+                samples.FIRST_PERIOD_BEGIN,
+                samples.FIRST_PERIOD_END,
+                self._tenant_id,
+            )
+            mock_get.assert_called_once_with(
+                query,
+                samples.FIRST_PERIOD_END.isoformat(),
+            )
+
+    def test_fetch_all_build_query_all(self):
+        query = (
+            'avg(abs(delta(http_requests_total'
+            '{project_id="f266f30b11f246b589fd266f85eeec39"}[3600s]'
+            '))) by (foo, bar, project_id, code, instance)'
+        )
+
+        with mock.patch.object(
+            prometheus.PrometheusClient, 'get_instant',
+        ) as mock_get:
+            self.collector_all.fetch_all(
                 'http_requests_total',
                 samples.FIRST_PERIOD_BEGIN,
                 samples.FIRST_PERIOD_END,
@@ -94,7 +231,7 @@ class PrometheusCollectorTest(tests.TestCase):
             'end': samples.FIRST_PERIOD_END,
             'data': samples.PROMETHEUS_RESP_INSTANT_QUERY['data']['result'][0],
         }
-        actual = self.collector._format_data(**params)
+        actual = self.collector_mandatory._format_data(**params)
         self.assertEqual(expected, actual)
 
     def test_format_data_instant_query_2(self):
@@ -115,7 +252,7 @@ class PrometheusCollectorTest(tests.TestCase):
             'end': samples.FIRST_PERIOD_END,
             'data': samples.PROMETHEUS_RESP_INSTANT_QUERY['data']['result'][1],
         }
-        actual = self.collector._format_data(**params)
+        actual = self.collector_mandatory._format_data(**params)
         self.assertEqual(expected, actual)
 
     def test_format_retrieve(self):
@@ -137,7 +274,7 @@ class PrometheusCollectorTest(tests.TestCase):
         )
 
         with no_response:
-            actual_name, actual_data = self.collector.retrieve(
+            actual_name, actual_data = self.collector_mandatory.retrieve(
                 metric_name='http_requests_total',
                 start=samples.FIRST_PERIOD_BEGIN,
                 end=samples.FIRST_PERIOD_END,
@@ -157,7 +294,7 @@ class PrometheusCollectorTest(tests.TestCase):
         with no_response:
             self.assertRaises(
                 collector.NoDataCollected,
-                self.collector.retrieve,
+                self.collector_mandatory.retrieve,
                 metric_name='http_requests_total',
                 start=samples.FIRST_PERIOD_BEGIN,
                 end=samples.FIRST_PERIOD_END,
@@ -174,7 +311,7 @@ class PrometheusCollectorTest(tests.TestCase):
         with invalid_response:
             self.assertRaises(
                 exceptions.CollectError,
-                self.collector.retrieve,
+                self.collector_mandatory.retrieve,
                 metric_name='http_requests_total',
                 start=samples.FIRST_PERIOD_BEGIN,
                 end=samples.FIRST_PERIOD_END,
