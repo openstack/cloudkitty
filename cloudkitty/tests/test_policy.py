@@ -16,9 +16,9 @@ import os.path
 
 from oslo_config import cfg
 from oslo_config import fixture as config_fixture
-from oslo_context import context
 from oslo_policy import policy as oslo_policy
 
+from cloudkitty.common import context
 from cloudkitty.common import policy
 from cloudkitty import tests
 from cloudkitty import utils
@@ -31,9 +31,13 @@ class PolicyFileTestCase(tests.TestCase):
 
     def setUp(self):
         super(PolicyFileTestCase, self).setUp()
-        self.context = context.RequestContext('fake', 'fake', roles=['member'])
-        self.target = {}
         self.fixture = self.useFixture(config_fixture.Config(CONF))
+        self.context = context.RequestContext(
+            user_id='fake',
+            project_id='fake',
+            roles=['member'],
+            is_admin=False)
+        self.target = {}
         self.addCleanup(policy.reset)
         CONF(args=[], project='cloudkitty', default_config_files=[])
 
@@ -78,8 +82,8 @@ class PolicyTestCase(tests.TestCase):
         policy.reset()
         policy.init()
         policy._ENFORCER.register_defaults(rules)
-        self.context = context.RequestContext('fake',
-                                              'fake',
+        self.context = context.RequestContext(user_id='fake',
+                                              project_id='fake',
                                               roles=['member'])
         self.target = {}
         self.addCleanup(policy.reset)
@@ -116,8 +120,8 @@ class PolicyTestCase(tests.TestCase):
     def test_ignore_case_role_check(self):
         lowercase_action = "test:lowercase_admin"
         uppercase_action = "test:uppercase_admin"
-        admin_context = context.RequestContext('admin',
-                                               'fake',
+        admin_context = context.RequestContext(user_id='admin',
+                                               project_id='fake',
                                                roles=['AdMiN'])
         policy.authorize(admin_context, lowercase_action, self.target)
         policy.authorize(admin_context, uppercase_action, self.target)

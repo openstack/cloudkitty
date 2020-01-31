@@ -15,10 +15,9 @@
 import importlib
 
 import flask
-from oslo_context import context
 import voluptuous
 
-from cloudkitty.common import policy
+from cloudkitty.common import context
 
 
 RESOURCE_SCHEMA = voluptuous.Schema({
@@ -39,21 +38,8 @@ API_MODULES = [
 
 
 def _extend_request_context():
-    headers = flask.request.headers
-
-    roles = headers.get('X-Roles', '').split(',')
-    is_admin = policy.check_is_admin(roles)
-
-    ctx = {
-        'user_id': headers.get('X-User-Id', ''),
-        'auth_token': headers.get('X-Auth-Token', ''),
-        'is_admin': is_admin,
-        'roles': roles,
-        'project_id': headers.get('X-Project-Id', ''),
-        'domain_id': headers.get('X-Domain-Id', ''),
-    }
-
-    flask.request.context = context.RequestContext(**ctx)
+    flask.request.context = context.RequestContext.from_environ(
+        flask.request.environ)
 
 
 def get_api_app():

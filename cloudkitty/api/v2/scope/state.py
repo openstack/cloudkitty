@@ -62,7 +62,7 @@ class ScopeState(base.BaseResource):
         policy.authorize(
             flask.request.context,
             'scope:get_state',
-            {'tenant_id': scope_id or flask.request.context.project_id}
+            {'project_id': scope_id or flask.request.context.project_id}
         )
         results = self._storage_state.get_all(
             identifier=scope_id,
@@ -110,7 +110,7 @@ class ScopeState(base.BaseResource):
         policy.authorize(
             flask.request.context,
             'scope:reset_state',
-            {'tenant_id': scope_id or flask.request.context.project_id}
+            {'project_id': scope_id or flask.request.context.project_id}
         )
 
         if not all_scopes and scope_id is None:
