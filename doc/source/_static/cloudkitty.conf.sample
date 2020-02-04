@@ -513,7 +513,7 @@
 #
 
 # Keystone version to use. (string value)
-#keystone_version = 2
+#keystone_version = 3
 
 
 [fetcher_prometheus]

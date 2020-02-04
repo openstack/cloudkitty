@@ -49,7 +49,7 @@ Keystone
 
 Section ``fetcher_keystone``.
 
-* ``keystone_version``: Defaults to ``2``. Keystone version to use.
+* ``keystone_version``: Defaults to ``3``. Keystone version to use.
 
 * ``auth_section``: If the ``auth_section`` option is defined then all the
   options declared in the target section will be used in order to fetch scopes

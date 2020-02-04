@@ -28,7 +28,7 @@ FETCHER_KEYSTONE_OPTS = 'fetcher_keystone'
 fetcher_keystone_opts = [
     cfg.StrOpt(
         'keystone_version',
-        default='2',
+        default='3',
         help='Keystone version to use.',
     ),
 ]
