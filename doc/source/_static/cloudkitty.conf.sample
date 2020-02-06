@@ -182,6 +182,7 @@
 #
 
 # Size of RPC connection pool. (integer value)
+# Minimum value: 1
 #rpc_conn_pool_size = 30
 
 # The pool size limit for connections expiration policy (integer
@@ -1131,13 +1132,15 @@
 # Deprecated group/name - [oslo_messaging_rabbit]/kombu_ssl_ca_certs
 #ssl_ca_file =
 
-# EXPERIMENTAL: Run the health check heartbeat thread through a native
-# python thread. By default if this option isn't provided the  health
-# check heartbeat will inherit the execution model from the parent
-# process. By example if the parent process have monkey patched the
-# stdlib by using eventlet/greenlet then the heartbeat will be run
+# DEPRECATED: Run the health check heartbeat thread through a native
+# python thread by default. If this option is equal to False then the
+# health check heartbeat will inherit the execution model from the
+# parent process. For example if the parent process has monkey patched
+# the stdlib by using eventlet/greenlet then the heartbeat will be run
 # through a green thread. (boolean value)
-#heartbeat_in_pthread = false
+# This option is deprecated for removal.
+# Its value may be silently ignored in the future.
+#heartbeat_in_pthread = true
 
 # How long to wait before reconnecting in response to an AMQP consumer
 # cancel notification. (floating point value)
