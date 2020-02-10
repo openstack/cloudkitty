@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Cross-tenant metric submission is now supported in the monasca collector.
+    In order to a fetch metric from the scope that is currently being processed,
+    the ``forced_project_id`` option must be set to ``SCOPE_ID``.

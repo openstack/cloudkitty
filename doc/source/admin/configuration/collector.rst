@@ -294,7 +294,9 @@ Monasca
   fetched from a specific tenant instead of the one cloudkitty is identified
   in. For example, if cloudkitty is identified in the ``service`` project, but
   needs to fetch a metric from the ``admin`` project, its ID should be
-  specified through this option.
+  specified through this option. If this option is set to ``SCOPE_ID``,
+  the metric will be fetched from the current project (this assumes that
+  scopes are configured to be projects/tenants).
 
 Prometheus
 ~~~~~~~~~~

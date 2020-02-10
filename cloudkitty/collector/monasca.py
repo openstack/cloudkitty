@@ -177,7 +177,11 @@ class MonascaCollector(collector.BaseCollector):
         extra_args = self.conf[metric_name]['extra_args']
         kwargs = {}
         if extra_args['forced_project_id']:
-            kwargs['tenant_id'] = extra_args['forced_project_id']
+            if extra_args['forced_project_id'] == 'SCOPE_ID' and project_id:
+                kwargs['tenant_id'] = project_id
+                dimensions.pop(CONF.collect.scope_key, None)
+            else:
+                kwargs['tenant_id'] = extra_args['forced_project_id']
 
         return self._conn.metrics.list_statistics(
             name=metric_name,
