@@ -101,7 +101,8 @@ class StorageUnitTest(TestCase):
         self.assertEqual(len(total['results']), expected_total_len)
         self.assertEqual(total['total'], expected_total_len)
 
-        returned_total = round(sum(r['rate'] for r in total['results']), 5)
+        returned_total = round(
+            sum(r.get('rate', r.get('price')) for r in total['results']), 5)
         self.assertLessEqual(
             abs(expected_total - float(returned_total)), 0.00001)
 
@@ -189,14 +190,18 @@ class StorageUnitTest(TestCase):
 
         total['results'].sort(key=lambda x: x['project_id'], reverse=True)
 
+        first_element = total['results'][0]
         self.assertLessEqual(
-            abs(round(float(total['results'][0]['rate'])
-                      - expected_total_first, 5)),
+            abs(round(
+                float(first_element.get('rate', first_element.get('price')))
+                - expected_total_first, 5)),
             0.00001,
         )
+        second_element = total['results'][1]
         self.assertLessEqual(
-            abs(round(float(total['results'][1]['rate'])
-                      - expected_total_second, 5)),
+            abs(round(
+                float(second_element.get('rate', second_element.get('price')))
+                - expected_total_second, 5)),
             0.00001,
         )
         self.assertLessEqual(
@@ -228,14 +233,17 @@ class StorageUnitTest(TestCase):
 
         total['results'].sort(key=lambda x: x['project_id'], reverse=True)
 
+        first_entry = total['results'][0]
+        second_entry = total['results'][1]
         self.assertLessEqual(
-            abs(round(float(total['results'][0]['rate'])
+            abs(round(float(first_entry.get('rate', first_entry.get('price')))
                       - expected_total_first, 5)),
             0.00001,
         )
         self.assertLessEqual(
-            abs(round(float(total['results'][1]['rate'])
-                      - expected_total_second, 5)),
+            abs(round(
+                float(second_entry.get('rate', second_entry.get('price')))
+                - expected_total_second, 5)),
             0.00001,
         )
         self.assertLessEqual(

@@ -65,7 +65,7 @@ class FakeElasticsearchClient(client.ElasticsearchClient):
         return len(output), output
 
     def total(self, begin, end, metric_types, filters, groupby,
-              offset=0, limit=1000, paginate=True):
+              custom_fields=None, offset=0, limit=1000, paginate=True):
         filter_func = functools.partial(
             self.__filter_func, begin, end, filters, metric_types)
         docs = list(filter(filter_func, self._docs))

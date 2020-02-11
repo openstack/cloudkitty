@@ -127,28 +127,31 @@ class V1StorageAdapter(storage_v2.BaseStorage):
             if end:
                 elem['end'] = tzutils.utc_to_local(end)
 
-    def total(self, groupby=None,
-              begin=None, end=None,
-              metric_types=None,
-              filters=None,
-              offset=0, limit=100, paginate=True):
-        tenant_id = filters.get('project_id') if filters else None
+    def total(self, **arguments):
+        filters = arguments.pop('filters', None)
+        if filters:
+            tenant_id = filters.get('project_id')
 
-        storage_gby = []
-        if groupby:
-            for elem in set(groupby):
-                if elem == 'type':
-                    storage_gby.append('res_type')
-                elif elem == 'project_id':
-                    storage_gby.append('tenant_id')
-        storage_gby = ','.join(storage_gby) if storage_gby else None
-        metric_types = self._check_metric_types(metric_types)
-        total = self.storage.get_total(
-            tzutils.local_to_utc(begin, naive=True),
-            tzutils.local_to_utc(end, naive=True),
-            tenant_id=tenant_id,
-            service=metric_types,
-            groupby=storage_gby)
+            arguments['tenant_id'] = tenant_id
+        else:
+            tenant_id = None
+
+        groupby = arguments.get('groupby')
+        storage_gby = self.get_storage_groupby(groupby)
+
+        metric_types = arguments.pop('metric_types', None)
+        if metric_types:
+            metric_types = self._check_metric_types(metric_types)
+            arguments['service'] = metric_types
+
+        arguments['begin'] = tzutils.local_to_utc(
+            arguments['begin'], naive=True)
+        arguments['end'] = tzutils.local_to_utc(
+            arguments['end'], naive=True)
+
+        arguments['groupby'] = storage_gby
+
+        total = self.storage.get_total(**arguments)
 
         for t in total:
             if t.get('tenant_id') is None:
@@ -165,9 +168,19 @@ class V1StorageAdapter(storage_v2.BaseStorage):
             'results': total,
         }
 
+    @staticmethod
+    def get_storage_groupby(groupby):
+        storage_gby = []
+        if groupby:
+            for elem in set(groupby):
+                if elem == 'type':
+                    storage_gby.append('res_type')
+                elif elem == 'project_id':
+                    storage_gby.append('tenant_id')
+        return ','.join(storage_gby) if storage_gby else None
+
     def get_tenants(self, begin, end):
-        tenants = self.storage.get_tenants(begin, end)
-        return tenants
+        return self.storage.get_tenants(begin, end)
 
     def get_state(self, tenant_id=None):
         return self.storage.get_state(tenant_id)

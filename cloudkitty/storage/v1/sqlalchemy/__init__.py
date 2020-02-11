@@ -82,8 +82,8 @@ class SQLAlchemyStorage(storage.BaseStorage):
         if r:
             return r.begin
 
-    def get_total(self, begin=None, end=None, tenant_id=None,
-                  service=None, groupby=None):
+    def get_total(self, begin=None, end=None, tenant_id=None, service=None,
+                  groupby=None):
         session = db.get_session()
         querymodels = [
             sqlalchemy.func.sum(self.frame_model.rate).label('rate')

@@ -25,7 +25,6 @@ from cloudkitty.utils import tz as tzutils
 
 LOG = log.getLogger(__name__)
 
-
 CONF = cfg.CONF
 
 ELASTICSEARCH_STORAGE_GROUP = 'storage_elasticsearch'
@@ -34,7 +33,7 @@ elasticsearch_storage_opts = [
     cfg.StrOpt(
         'host',
         help='Elasticsearch host, along with port and protocol. '
-        'Defaults to http://localhost:9200',
+             'Defaults to http://localhost:9200',
         default='http://localhost:9200'),
     cfg.StrOpt(
         'index_name',
@@ -42,21 +41,20 @@ elasticsearch_storage_opts = [
         default='cloudkitty'),
     cfg.BoolOpt('insecure',
                 help='Set to true to allow insecure HTTPS '
-                'connections to Elasticsearch',
+                     'connections to Elasticsearch',
                 default=False),
     cfg.StrOpt('cafile',
                help='Path of the CA certificate to trust for '
-               'HTTPS connections.',
+                    'HTTPS connections.',
                default=None),
     cfg.IntOpt('scroll_duration',
                help="Duration (in seconds) for which the ES scroll contexts "
-               "should be kept alive.",
+                    "should be kept alive.",
                advanced=True,
                default=30, min=0, max=300),
 ]
 
 CONF.register_opts(elasticsearch_storage_opts, ELASTICSEARCH_STORAGE_GROUP)
-
 
 CLOUDKITTY_INDEX_MAPPING = {
     "dynamic_templates": [
@@ -190,16 +188,16 @@ class ElasticsearchStorage(v2_storage.BaseStorage):
                 output[key] = value
         return output
 
-    def total(self, groupby=None,
-              begin=None, end=None,
-              metric_types=None,
-              filters=None,
-              offset=0, limit=1000, paginate=True):
+    def total(self, groupby=None, begin=None, end=None, metric_types=None,
+              filters=None, custom_fields=None, offset=0, limit=1000,
+              paginate=True):
         begin, end = self._local_to_utc(begin or tzutils.get_month_start(),
                                         end or tzutils.get_next_month())
-        total, docs = self._conn.total(
-            begin, end, metric_types, filters, groupby,
-            offset=offset, limit=limit, paginate=paginate)
+
+        total, docs = self._conn.total(begin, end, metric_types, filters,
+                                       groupby, custom_fields=custom_fields,
+                                       offset=offset, limit=limit,
+                                       paginate=paginate)
         return {
             'total': total,
             'results': [self._doc_to_total_result(doc, begin, end)

@@ -17,6 +17,7 @@ Get a rating summary for one or several tenants.
    - end: end
    - groupby: groupby
    - filters: filters
+   - custom_fields: custom_fields
 
 Status codes
 ------------

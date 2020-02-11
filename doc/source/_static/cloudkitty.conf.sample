@@ -1046,6 +1046,15 @@
 # (string value)
 #ssl_cafile =
 
+# Client certificate PEM file used for authentication. (string value)
+#ssl_client_cert_file =
+
+# Client key PEM file used for authentication. (string value)
+#ssl_client_key_file =
+
+# Client key password file used for authentication. (string value)
+#ssl_client_key_password =
+
 
 [oslo_messaging_notifications]
 

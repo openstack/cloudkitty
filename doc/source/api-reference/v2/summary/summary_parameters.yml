@@ -5,6 +5,30 @@ begin: &begin
   type: iso8601 timestamp
   required: false
 
+custom_fields:
+  in: query
+  description: |
+    Optional attributes to customize the summary GET API response. When
+    using this parameter, users can create custom reports. The default
+    behavior is to list the sum of the quantity and the sum of the price,
+    which is projected as ``rate`` field. The default value for the
+    ``custom_fields`` parameter is ``SUM(qty) AS qty, SUM(price) AS rate``.
+    One can customize this field as they wish with InfluxDB queries. The
+    following statements ``"select", "from", "drop", "delete", "create",
+    "alter", "insert", "update"`` are not allowed though. For instance, if
+    one wants to retrieve the quantity field as the last value of the
+    quantity, and not the sum (this is quite interesting when generating
+    reports for storage values), the user can send the parameter as ``last(qty)
+    AS qty, SUM(price) AS rate``. To discover all possible fields that one
+    can work with, the user can also use ``*`` as a parameter.
+
+    ``Currently this feature only works for Influx storage backend.`` It
+    (the feature) depends on the storage backend driver to support it. If
+    the user tries to set this configuration while using other storage
+    backends, it will be ignored.
+  type: list of strings
+  required: false
+
 end: &end
   in: query
   description: |
