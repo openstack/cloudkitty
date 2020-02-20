@@ -14,6 +14,7 @@
 #    under the License.
 #
 from datetime import timedelta
+import requests
 import six
 
 from gnocchiclient import auth as gauth
@@ -30,6 +31,7 @@ from voluptuous import Required
 from voluptuous import Schema
 
 from cloudkitty import collector
+from cloudkitty.common import custom_session
 from cloudkitty import dataframe
 from cloudkitty import utils as ck_utils
 from cloudkitty.utils import tz as tzutils
@@ -67,6 +69,12 @@ collector_gnocchi_opts = [
         default='RegionOne',
         help='Region Name',
     ),
+    cfg.IntOpt(
+        'http_pool_maxsize',
+        default=requests.adapters.DEFAULT_POOLSIZE,
+        help='If the value is not defined, we use the value defined by '
+             'requests.adapters.DEFAULT_POOLSIZE',
+    )
 ]
 
 ks_loading.register_session_conf_options(cfg.CONF, COLLECTOR_GNOCCHI_OPTS)
@@ -150,7 +158,9 @@ class GnocchiCollector(collector.BaseCollector):
 
         self._conn = gclient.Client(
             '1',
-            session_options={'auth': auth_plugin, 'verify': verify},
+            session=custom_session.create_custom_session(
+                {'auth': auth_plugin, 'verify': verify},
+                CONF.collector_gnocchi.http_pool_maxsize),
             adapter_options=adapter_options,
         )
 
