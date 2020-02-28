@@ -145,6 +145,7 @@ class PrometheusCollector(collector.BaseCollector):
                 self.conf[metric_name]['factor'],
                 self.conf[metric_name]['offset'],
             )
+            qty = ck_utils.mutate(qty, self.conf[metric_name]['mutate'])
 
         return metadata, groupby, qty
 
