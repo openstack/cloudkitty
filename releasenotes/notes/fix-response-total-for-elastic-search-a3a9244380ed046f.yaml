@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fix response format ``total`` for v2 dataframes API. The response for v2
+    dataframes is ``{"total": 3}``. However, for Elasticsearch search response,
+    the ``"hits.total"`` in the response body is ``{"value": 3, "relation":
+    "eq"}``, which does not match the API response schema.

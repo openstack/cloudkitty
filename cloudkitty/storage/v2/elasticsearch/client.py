@@ -308,7 +308,14 @@ class ElasticsearchClient(object):
 
         scroll_id = resp['_scroll_id']
         self._scroll_ids.add(scroll_id)
-        total = resp['hits']['total']
+        total_hits = resp['hits']['total']
+
+        if isinstance(total_hits, dict):
+            LOG.debug("Total hits [%s] is a dict. Therefore, we only extract "
+                      "the 'value' attribute as the total option.", total_hits)
+            total_hits = total_hits.get("value")
+
+        total = total_hits
         chunk = resp['hits']['hits']
 
         output = chunk[offset:offset+limit if paginate else len(chunk)]
