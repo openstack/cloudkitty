@@ -14,8 +14,7 @@
 #    under the License.
 #
 from decimal import Decimal
-
-import mock
+from unittest import mock
 
 from cloudkitty import collector
 from cloudkitty.collector import exceptions

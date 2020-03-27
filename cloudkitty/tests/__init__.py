@@ -14,9 +14,9 @@
 #    under the License.
 #
 import decimal
+from unittest import mock
 
 from keystoneauth1 import session as ks_sess
-import mock
 from oslo_config import fixture as config_fixture
 from oslotest import base
 import testscenarios

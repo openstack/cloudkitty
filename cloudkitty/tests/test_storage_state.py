@@ -12,14 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections import Iterable
+from collections import abc
 from datetime import datetime
 import itertools
-
-import mock
+from unittest import mock
 
 from cloudkitty import storage_state
 from cloudkitty import tests
@@ -37,7 +33,7 @@ class StateManagerTest(tests.TestCase):
         def __init__(self, output, *args, **kwargs):
             super(StateManagerTest.QueryMock, self).__init__(*args, **kwargs)
             self.first_called = 0
-            if not isinstance(output, Iterable):
+            if not isinstance(output, abc.Iterable):
                 output = (output, )
             self.output = itertools.cycle(output)
 

@@ -13,8 +13,8 @@
 #    under the License.
 #
 import datetime
+from unittest import mock
 
-import mock
 import testscenarios
 
 from cloudkitty import storage

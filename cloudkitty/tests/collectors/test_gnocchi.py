@@ -14,9 +14,9 @@
 #    under the License.
 #
 import datetime
+from unittest import mock
 
 from dateutil import tz
-import mock
 
 from cloudkitty.collector import gnocchi
 from cloudkitty import tests

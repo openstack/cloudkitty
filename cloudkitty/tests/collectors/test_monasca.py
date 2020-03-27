@@ -13,8 +13,7 @@
 #    under the License.
 #
 import datetime
-
-import mock
+from unittest import mock
 
 from cloudkitty.collector import monasca as mon_collector
 from cloudkitty import tests

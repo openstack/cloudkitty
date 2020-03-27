@@ -13,8 +13,7 @@
 #    under the License.
 #
 import unittest
-
-import mock
+from unittest import mock
 
 from cloudkitty.api.v2.summary import summary
 from cloudkitty.utils import tz as tzutils

@@ -14,9 +14,9 @@
 #
 import datetime
 import unittest
+from unittest import mock
 
 from dateutil import tz
-import mock
 from oslo_utils import timeutils
 
 from cloudkitty import utils

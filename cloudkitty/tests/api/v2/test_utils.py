@@ -12,8 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+from unittest import mock
+
 import flask
-import mock
 import voluptuous
 from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import BadRequest

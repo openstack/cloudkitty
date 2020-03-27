@@ -17,9 +17,9 @@ import copy
 from datetime import datetime
 from datetime import timedelta
 import unittest
+from unittest import mock
 
 from dateutil import tz
-import mock
 
 from cloudkitty import dataframe
 from cloudkitty.storage.v2 import influx
