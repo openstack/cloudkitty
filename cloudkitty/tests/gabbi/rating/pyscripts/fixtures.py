@@ -18,7 +18,7 @@ from cloudkitty.tests.gabbi.fixtures import *  # noqa
 from cloudkitty.rating.pyscripts.db import api as pyscripts_db
 
 
-class PyScriptsConfigFixture(ConfigFixture):
+class PyScriptsConfigFixture(ConfigFixture):  # noqa: F405
     def start_fixture(self):
         super(PyScriptsConfigFixture, self).start_fixture()
         self.conn = pyscripts_db.get_instance()

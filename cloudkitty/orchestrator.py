@@ -390,13 +390,13 @@ class Orchestrator(cotyledon.Service):
 
                 lock_name, lock = get_lock(self.coord, tenant_id)
                 LOG.debug(
-                    '[Worker: {w}] Trying to acquire lock "{l}" ...'.format(
-                        w=self._worker_id, l=lock_name)
+                    '[Worker: {w}] Trying to acquire lock "{lck}" ...'.format(
+                        w=self._worker_id, lck=lock_name)
                 )
                 if lock.acquire(blocking=False):
                     LOG.debug(
-                        '[Worker: {w}] Acquired lock "{l}" ...'.format(
-                            w=self._worker_id, l=lock_name)
+                        '[Worker: {w}] Acquired lock "{lck}" ...'.format(
+                            w=self._worker_id, lck=lock_name)
                     )
                     state = self._check_state(tenant_id)
                     if state:

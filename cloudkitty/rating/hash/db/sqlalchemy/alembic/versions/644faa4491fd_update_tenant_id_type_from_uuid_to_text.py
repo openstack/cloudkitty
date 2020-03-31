@@ -25,8 +25,8 @@ Create Date: 2018-10-29 17:25:37.901136
 revision = '644faa4491fd'
 down_revision = '4da82e1c11c8'
 
-from alembic import op
-import sqlalchemy as sa
+from alembic import op  # noqa: E402
+import sqlalchemy as sa  # noqa: E402
 
 
 CONSTRAINT_MAP = {

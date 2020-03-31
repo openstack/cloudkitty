@@ -23,8 +23,8 @@ Create Date: 2015-05-28 16:44:32.936076
 revision = '54cc17accf2c'
 down_revision = '4fa888fd7eda'
 
-from alembic import op
-import sqlalchemy as sa
+from alembic import op  # noqa: E402
+import sqlalchemy as sa  # noqa: E402
 
 
 def create_table(is_old=False):

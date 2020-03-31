@@ -22,12 +22,12 @@ Create Date: 2016-05-18 18:08:19.331412
 # revision identifiers, used by Alembic.
 revision = 'f8c799db4aa0'
 down_revision = '10d2738b67df'
-import copy
+import copy  # noqa: E402
 
-from alembic import op
-import six
+from alembic import op  # noqa: E402
+import six  # noqa: E402
 
-from cloudkitty.rating.hash.db.sqlalchemy.alembic.models import (
+from cloudkitty.rating.hash.db.sqlalchemy.alembic.models import (  # noqa: E402
     f8c799db4aa0_fix_unnamed_constraints as models)
 
 OPS = {
