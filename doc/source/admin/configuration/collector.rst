@@ -279,6 +279,17 @@ Gnocchi
   used for metric aggregations. Else, the lowest available granularity will be
   used (meaning the granularity covering the longest period).
 
+* ``use_all_resource_revisions``: Defaults to ``True``. This option is useful
+  when using Gnocchi with the patch introduced via https://github
+  .com/gnocchixyz/gnocchi/pull/1059. That patch can cause queries to return
+  more than one entry per granularity (timespan), according to the revisions a
+  resource has. This can be problematic when using the 'mutate' option
+  of Cloudkitty. This option to allow operators to discard all datapoints
+  returned from Gnocchi, but the last one in the granularity queried by
+  CloudKitty for a resource id. The default behavior is maintained, which
+  means, CloudKitty always use all of the data points returned.
+
+
 Monasca
 ~~~~~~~
 

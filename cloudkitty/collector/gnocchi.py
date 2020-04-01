@@ -15,6 +15,7 @@
 #
 from datetime import timedelta
 import requests
+
 import six
 
 from gnocchiclient import auth as gauth
@@ -35,7 +36,6 @@ from cloudkitty.common import custom_session
 from cloudkitty import dataframe
 from cloudkitty import utils as ck_utils
 from cloudkitty.utils import tz as tzutils
-
 
 LOG = logging.getLogger(__name__)
 
@@ -115,6 +115,7 @@ GNOCCHI_EXTRA_SCHEMA = {
         Required('re_aggregation_method', default='max'):
             In(BASIC_AGGREGATION_METHODS),
         Required('force_granularity', default=3600): All(int, Range(min=0)),
+        Required('use_all_resource_revisions', default=True): All(bool),
     },
 }
 
@@ -413,6 +414,9 @@ class GnocchiCollector(collector.BaseCollector):
             q_filter=q_filter,
         )
 
+        data = GnocchiCollector.filter_unecessary_measurements(
+            data, met, metric_name)
+
         resources_info = None
         if met['metadata']:
             resources_info = self._fetch_resources(
@@ -422,9 +426,13 @@ class GnocchiCollector(collector.BaseCollector):
                 project_id=project_id,
                 q_filter=q_filter
             )
+
         formated_resources = list()
         for d in data:
             # Only if aggregates have been found
+            LOG.debug("Processing entry [%s] for [%s] in timestamp ["
+                      "start=%s, end=%s] and project id [%s]", d,
+                      metric_name, start, end, project_id)
             if d['measures']['measures']['aggregated']:
                 try:
                     metadata, groupby, qty = self._format_data(
@@ -444,3 +452,40 @@ class GnocchiCollector(collector.BaseCollector):
                     metadata,
                 ))
         return formated_resources
+
+    @staticmethod
+    def filter_unecessary_measurements(data, met, metric_name):
+        """Filter unecessary measurements if not 'use_all_resource_revisions'
+
+        The option 'use_all_resource_revisions' is useful when using Gnocchi
+        with the patch introduced in
+        https://github.com/gnocchixyz/gnocchi/pull/1059.
+
+        That patch can cause queries to return more than one entry per
+        granularity (timespan), according to the revisions a resource has.
+        This can be problematic when using the 'mutate' option of Cloudkitty.
+        Therefore, this option ('use_all_resource_revisions') allows operators
+        to discard all datapoints returned from Gnocchi, but the last one in
+        the granularity queried by CloudKitty. The default behavior is
+        maintained, which means, CloudKitty always use all of the data
+        points returned.
+        """
+
+        use_all_resource_revisions = \
+            met['extra_args']['use_all_resource_revisions']
+        LOG.debug("Configuration use_all_resource_revisions set to [%s] for "
+                  "%s", use_all_resource_revisions, metric_name)
+
+        if data and not use_all_resource_revisions:
+            data.sort(
+                key=lambda x: (x["group"]["id"], x["group"]["revision_start"]),
+                reverse=False)
+
+            # We just care about the oldest entry per resource ID in the
+            # given time slice (configured granularity in Cloudkitty).
+            single_entries_per_id = {d["group"]["id"]: d for d in
+                                     data}.values()
+            LOG.debug("Replaced list of data points [%s] with [%s] for "
+                      "metric [%s]", data, single_entries_per_id, metric_name)
+            data = single_entries_per_id
+        return data
