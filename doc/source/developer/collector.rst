@@ -43,6 +43,7 @@ Implementation
 Each collector must implement the following class:
 
 .. autoclass:: cloudkitty.collector.BaseCollector
+   :noindex:
    :members: fetch_all, check_configuration
 
 The ``retrieve`` method of the ``BaseCollector`` class is called by the
@@ -59,6 +60,7 @@ each metric type, for each scope, for each collect period. It has the
 following prototype:
 
 .. autoclass:: cloudkitty.collector.BaseCollector
+   :noindex:
    :members: fetch_all
 
 This method is supposed to return a list of
@@ -127,6 +129,7 @@ If you need to extend the metric configuration (add parameters to the
 ``check_configuration`` method of the base collector:
 
 .. autoclass:: cloudkitty.collector.BaseCollector
+   :noindex:
    :members: check_configuration
 
 This method uses `voluptuous`_ for data validation. The base schema for each
