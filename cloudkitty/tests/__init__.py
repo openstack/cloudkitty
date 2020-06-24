@@ -16,6 +16,7 @@
 import decimal
 from unittest import mock
 
+import flask
 from keystoneauth1 import session as ks_sess
 from oslo_config import fixture as config_fixture
 from oslotest import base
@@ -84,9 +85,13 @@ class TestCase(testscenarios.TestWithScenarios, base.BaseTestCase):
             return_value=ks_sess.Session())
         session.start()
         self.session = session
+        self.app = flask.Flask('cloudkitty')
+        self.app_context = self.app.test_request_context()
+        self.app_context.push()
 
     def tearDown(self):
         db.get_engine().dispose()
         self.auth.stop()
         self.session.stop()
+        self.app_context.pop()
         super(TestCase, self).tearDown()
