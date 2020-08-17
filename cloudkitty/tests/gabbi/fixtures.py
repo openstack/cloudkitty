@@ -18,10 +18,10 @@ import collections
 import datetime
 import decimal
 import os
+from unittest import mock
 
 from dateutil import tz
 from gabbi import fixture
-import mock
 from oslo_config import cfg
 from oslo_config import fixture as conf_fixture
 from oslo_db.sqlalchemy import utils

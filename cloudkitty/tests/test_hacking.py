@@ -14,9 +14,9 @@
 
 import sys
 import textwrap
+from unittest import mock
 
 import ddt
-import mock
 import pep8
 
 from cloudkitty.hacking import checks

@@ -14,8 +14,8 @@
 #    under the License.
 #
 import datetime
+from unittest import mock
 
-import mock
 from oslo_messaging import conffixture
 from stevedore import extension
 from tooz import coordination

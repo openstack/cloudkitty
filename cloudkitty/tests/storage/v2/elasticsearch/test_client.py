@@ -15,9 +15,9 @@
 import collections
 import datetime
 import unittest
+from unittest import mock
 
 from dateutil import tz
-import mock
 
 from cloudkitty import dataframe
 from cloudkitty.storage.v2.elasticsearch import client

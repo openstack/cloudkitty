@@ -18,8 +18,8 @@ import decimal
 import fractions
 import itertools
 import unittest
+from unittest import mock
 
-import mock
 from oslo_utils import timeutils
 
 from cloudkitty import utils as ck_utils

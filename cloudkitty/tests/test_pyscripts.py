@@ -16,9 +16,9 @@
 import copy
 import decimal
 import hashlib
+from unittest import mock
 import zlib
 
-import mock
 from oslo_utils import uuidutils
 import six
 
