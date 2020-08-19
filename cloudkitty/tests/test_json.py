@@ -28,6 +28,6 @@ class JSONEncoderTest(tests.TestCase):
         self.assertEqual(json.dumps(obj), '{"nb": 42.0}')
 
     def test_encode_datetime(self):
-        obj = {'date': datetime.datetime(2019, 1, 1, tzinfo=tz.UTC)}
+        obj = {'date': datetime.datetime(2019, 1, 1, tzinfo=tz.tzutc())}
         self.assertEqual(json.dumps(obj),
                          '{"date": "2019-01-01T00:00:00+00:00"}')

@@ -38,8 +38,8 @@ class TestElasticsearchClient(unittest.TestCase):
         self.assertEqual(self.client._build_must(None, None, None, None), [])
 
     def test_build_must_with_start_end(self):
-        start = datetime.datetime(2019, 8, 30, tzinfo=tz.UTC)
-        end = datetime.datetime(2019, 8, 31, tzinfo=tz.UTC)
+        start = datetime.datetime(2019, 8, 30, tzinfo=tz.tzutc())
+        end = datetime.datetime(2019, 8, 31, tzinfo=tz.tzutc())
         self.assertEqual(
             self.client._build_must(start, end, None, None),
             [{'range': {'start': {'gte': '2019-08-30T00:00:00+00:00'}}},

@@ -154,8 +154,8 @@ class TestDataPoint(unittest.TestCase):
 class TestDataFrame(unittest.TestCase):
 
     def test_dataframe_add_points(self):
-        start = datetime.datetime(2019, 3, 4, 1, tzinfo=tz.UTC)
-        end = datetime.datetime(2019, 3, 4, 2, tzinfo=tz.UTC)
+        start = datetime.datetime(2019, 3, 4, 1, tzinfo=tz.tzutc())
+        end = datetime.datetime(2019, 3, 4, 2, tzinfo=tz.tzutc())
         df = dataframe.DataFrame(start=start, end=end)
         a_points = [dataframe.DataPoint(**TestDataPoint.default_params)
                     for _ in range(2)]
@@ -183,15 +183,15 @@ class TestDataFrame(unittest.TestCase):
         })
 
     def test_properties(self):
-        start = datetime.datetime(2019, 6, 1, tzinfo=tz.UTC)
-        end = datetime.datetime(2019, 6, 1, 1, tzinfo=tz.UTC)
+        start = datetime.datetime(2019, 6, 1, tzinfo=tz.tzutc())
+        end = datetime.datetime(2019, 6, 1, 1, tzinfo=tz.tzutc())
         df = dataframe.DataFrame(start=start, end=end)
         self.assertEqual(df.start, start)
         self.assertEqual(df.end, end)
 
     def test_json(self):
-        start = datetime.datetime(2019, 3, 4, 1, tzinfo=tz.UTC)
-        end = datetime.datetime(2019, 3, 4, 2, tzinfo=tz.UTC)
+        start = datetime.datetime(2019, 3, 4, 1, tzinfo=tz.tzutc())
+        end = datetime.datetime(2019, 3, 4, 2, tzinfo=tz.tzutc())
         df = dataframe.DataFrame(start=start, end=end)
         a_points = [dataframe.DataPoint(**TestDataPoint.default_params)
                     for _ in range(2)]
@@ -217,8 +217,8 @@ class TestDataFrame(unittest.TestCase):
         })))
 
     def test_from_dict_valid_dict(self):
-        start = datetime.datetime(2019, 1, 2, 12, tzinfo=tz.UTC)
-        end = datetime.datetime(2019, 1, 2, 13, tzinfo=tz.UTC)
+        start = datetime.datetime(2019, 1, 2, 12, tzinfo=tz.tzutc())
+        end = datetime.datetime(2019, 1, 2, 13, tzinfo=tz.tzutc())
         point = dataframe.DataPoint(
             'unit', 0, 0, {'g_one': 'one'}, {'m_two': 'two'})
         usage = {'metric_x': [point]}
@@ -232,8 +232,8 @@ class TestDataFrame(unittest.TestCase):
         )
 
     def test_from_dict_valid_dict_date_as_str(self):
-        start = datetime.datetime(2019, 1, 2, 12, tzinfo=tz.UTC)
-        end = datetime.datetime(2019, 1, 2, 13, tzinfo=tz.UTC)
+        start = datetime.datetime(2019, 1, 2, 12, tzinfo=tz.tzutc())
+        end = datetime.datetime(2019, 1, 2, 13, tzinfo=tz.tzutc())
         point = dataframe.DataPoint(
             'unit', 0, 0, {'g_one': 'one'}, {'m_two': 'two'})
         usage = {'metric_x': [point]}
@@ -251,8 +251,8 @@ class TestDataFrame(unittest.TestCase):
             ValueError, dataframe.DataFrame.from_dict, {'usage': None})
 
     def test_repr(self):
-        start = datetime.datetime(2019, 3, 4, 1, tzinfo=tz.UTC)
-        end = datetime.datetime(2019, 3, 4, 2, tzinfo=tz.UTC)
+        start = datetime.datetime(2019, 3, 4, 1, tzinfo=tz.tzutc())
+        end = datetime.datetime(2019, 3, 4, 2, tzinfo=tz.tzutc())
         df = dataframe.DataFrame(start=start, end=end)
         points = [dataframe.DataPoint(**TestDataPoint.default_params)
                   for _ in range(4)]
@@ -262,8 +262,8 @@ class TestDataFrame(unittest.TestCase):
         self.assertEqual(str(df), "DataFrame(metrics=[metric_x,metric_y])")
 
     def test_iterpoints(self):
-        start = datetime.datetime(2019, 3, 4, 1, tzinfo=tz.UTC)
-        end = datetime.datetime(2019, 3, 4, 2, tzinfo=tz.UTC)
+        start = datetime.datetime(2019, 3, 4, 1, tzinfo=tz.tzutc())
+        end = datetime.datetime(2019, 3, 4, 2, tzinfo=tz.tzutc())
         df = dataframe.DataFrame(start=start, end=end)
         points = [dataframe.DataPoint(**TestDataPoint.default_params)
                   for _ in range(4)]

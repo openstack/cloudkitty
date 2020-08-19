@@ -42,7 +42,7 @@ class TestInfluxDBStorage(TestCase):
             'two': '2',
             '1': 'one',
             '2': 'two',
-            'time': datetime(2019, 1, 1, tzinfo=tz.UTC).isoformat(),
+            'time': datetime(2019, 1, 1, tzinfo=tz.tzutc()).isoformat(),
         }
 
     def test_point_to_dataframe_entry_valid_point(self):
@@ -81,10 +81,11 @@ class TestInfluxDBStorage(TestCase):
         self.assertEqual(len(dataframes), 3)
 
         for idx, frame in enumerate(dataframes):
-            self.assertEqual(frame.start, datetime(2019, 1, 1, tzinfo=tz.UTC))
+            self.assertEqual(
+                frame.start, datetime(2019, 1, 1, tzinfo=tz.tzutc()))
             delta = timedelta(seconds=(idx + 1) * 100)
             self.assertEqual(frame.end,
-                             datetime(2019, 1, 1, tzinfo=tz.UTC) + delta)
+                             datetime(2019, 1, 1, tzinfo=tz.tzutc()) + delta)
             typelist = list(frame.itertypes())
             self.assertEqual(len(typelist), 1)
             type_, points = typelist[0]

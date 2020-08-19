@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    The use of ``tz.UTC`` from the ``dateutil`` package was removed, bringing
+    compatibility with the version available in RHEL and CentOS 8.
