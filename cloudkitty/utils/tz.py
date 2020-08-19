@@ -47,9 +47,9 @@ def local_to_utc(dt, naive=False):
     # applied to a naive datetime object. In python3 however, the naive object
     # is considered as being in the system's time.
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=tz.UTC)
+        dt = dt.replace(tzinfo=tz.tzutc())
 
-    output = dt.astimezone(tz.UTC)
+    output = dt.astimezone(tz.tzutc())
     if naive:
         output = output.replace(tzinfo=None)
     return output
@@ -65,7 +65,7 @@ def utc_to_local(dt):
     :rtype: datetime.datetime
     """
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=tz.UTC)
+        dt = dt.replace(tzinfo=tz.tzutc())
     return dt.astimezone(_LOCAL_TZ)
 
 
@@ -81,7 +81,7 @@ def dt_from_iso(time_str, as_utc=False):
     :rtype: datetime.datetime
     """
     return timeutils.parse_isotime(time_str).astimezone(
-        tz.UTC if as_utc else _LOCAL_TZ).replace(microsecond=0)
+        tz.tzutc() if as_utc else _LOCAL_TZ).replace(microsecond=0)
 
 
 def dt_from_ts(ts, as_utc=False):
@@ -89,7 +89,8 @@ def dt_from_ts(ts, as_utc=False):
 
     Returns the object as being from the local timezone.
     """
-    return datetime.datetime.fromtimestamp(ts, tz.UTC if as_utc else _LOCAL_TZ)
+    return datetime.datetime.fromtimestamp(
+        ts, tz.tzutc() if as_utc else _LOCAL_TZ)
 
 
 def add_delta(dt, delta):
@@ -134,7 +135,7 @@ def get_month_start(dt=None, naive=False):
     if not dt:
         dt = localized_now()
     if not dt.tzinfo:
-        dt = dt.replace(tzinfo=tz.UTC).astimezone(_LOCAL_TZ)
+        dt = dt.replace(tzinfo=tz.tzutc()).astimezone(_LOCAL_TZ)
     if naive:
         dt = local_to_utc(dt, naive=True)
     return datetime.datetime(dt.year, dt.month, 1, tzinfo=dt.tzinfo)

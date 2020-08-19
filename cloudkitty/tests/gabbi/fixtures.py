@@ -54,7 +54,7 @@ from cloudkitty import utils as ck_utils
 from cloudkitty.utils import tz as tzutils
 
 
-INITIAL_DT = datetime.datetime(2015, 1, 1, tzinfo=tz.UTC)
+INITIAL_DT = datetime.datetime(2015, 1, 1, tzinfo=tz.tzutc())
 
 
 class UUIDFixture(fixture.GabbiFixture):
@@ -377,7 +377,7 @@ class StorageDataFixture(BaseStorageDataFixture):
 
 class NowStorageDataFixture(BaseStorageDataFixture):
     def initialize_data(self):
-        dt = tzutils.get_month_start(naive=True).replace(tzinfo=tz.UTC)
+        dt = tzutils.get_month_start(naive=True).replace(tzinfo=tz.tzutc())
         hour_delta = datetime.timedelta(seconds=3600)
         limit = dt + hour_delta * 12
         while dt < limit:
@@ -501,7 +501,7 @@ class InfluxStorageDataFixture(StorageDataFixture):
 class UTCFixture(fixture.GabbiFixture):
     """Set the local timezone to UTC"""
     def start_fixture(self):
-        self._tzmock = mock.patch('cloudkitty.utils.tz._LOCAL_TZ', tz.UTC)
+        self._tzmock = mock.patch('cloudkitty.utils.tz._LOCAL_TZ', tz.tzutc())
         self._tzmock.start()
 
     def stop_fixture(self):
