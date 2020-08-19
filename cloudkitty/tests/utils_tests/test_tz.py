@@ -31,7 +31,7 @@ class TestTZUtils(unittest.TestCase):
 
     def test_localized_now(self):
         self.assertEqual(
-            self.local_now.astimezone(tz.UTC).replace(tzinfo=None),
+            self.local_now.astimezone(tz.tzutc()).replace(tzinfo=None),
             self.naive_now)
         self.assertIsNotNone(self.local_now.tzinfo)
 
@@ -63,15 +63,15 @@ class TestTZUtils(unittest.TestCase):
 
     def _test_add_substract_delta(self, obj, tzone):
         delta = datetime.timedelta(seconds=3600)
-        naive = obj.astimezone(tz.UTC).replace(tzinfo=None)
+        naive = obj.astimezone(tz.tzutc()).replace(tzinfo=None)
 
         self.assertEqual(
             tzutils.add_delta(obj, delta).astimezone(tzone),
-            (naive + delta).replace(tzinfo=tz.UTC).astimezone(tzone),
+            (naive + delta).replace(tzinfo=tz.tzutc()).astimezone(tzone),
         )
         self.assertEqual(
             tzutils.substract_delta(obj, delta).astimezone(tzone),
-            (naive - delta).replace(tzinfo=tz.UTC).astimezone(tzone),
+            (naive - delta).replace(tzinfo=tz.tzutc()).astimezone(tzone),
         )
 
     def test_add_substract_delta_summertime(self):
@@ -118,13 +118,13 @@ class TestTZUtils(unittest.TestCase):
         self.assertEqual(tzutils.diff_seconds(two, one), 30)
 
     def test_diff_seconds_positive_arg_aware_objects(self):
-        one = datetime.datetime(2019, 1, 1, 1, 1, 30, tzinfo=tz.UTC)
-        two = datetime.datetime(2019, 1, 1, 1, 1, tzinfo=tz.UTC)
+        one = datetime.datetime(2019, 1, 1, 1, 1, 30, tzinfo=tz.tzutc())
+        two = datetime.datetime(2019, 1, 1, 1, 1, tzinfo=tz.tzutc())
         self.assertEqual(tzutils.diff_seconds(one, two), 30)
 
     def test_diff_seconds_negative_arg_aware_objects(self):
-        one = datetime.datetime(2019, 1, 1, 1, 1, 30, tzinfo=tz.UTC)
-        two = datetime.datetime(2019, 1, 1, 1, 1, tzinfo=tz.UTC)
+        one = datetime.datetime(2019, 1, 1, 1, 1, 30, tzinfo=tz.tzutc())
+        two = datetime.datetime(2019, 1, 1, 1, 1, tzinfo=tz.tzutc())
         self.assertEqual(tzutils.diff_seconds(two, one), 30)
 
     def test_diff_seconds_negative_arg_aware_objects_on_summer_change(self):
@@ -136,7 +136,7 @@ class TestTZUtils(unittest.TestCase):
 
     def test_cloudkitty_dt_from_ts_as_utc(self):
         ts = 1569902400
-        dt = datetime.datetime(2019, 10, 1, 4, tzinfo=tz.UTC)
+        dt = datetime.datetime(2019, 10, 1, 4, tzinfo=tz.tzutc())
         self.assertEqual(dt, tzutils.dt_from_ts(ts, as_utc=True))
 
     def test_cloudkitty_dt_from_ts_local_tz(self):

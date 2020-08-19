@@ -157,8 +157,8 @@ class GnocchiCollectorAggregationOperationTest(tests.TestCase):
     def setUp(self):
         super(GnocchiCollectorAggregationOperationTest, self).setUp()
         self.conf.set_override('collector', 'gnocchi', 'collect')
-        self.start = datetime.datetime(2019, 1, 1, tzinfo=tz.UTC)
-        self.end = datetime.datetime(2019, 1, 1, 1, tzinfo=tz.UTC)
+        self.start = datetime.datetime(2019, 1, 1, tzinfo=tz.tzutc())
+        self.end = datetime.datetime(2019, 1, 1, 1, tzinfo=tz.tzutc())
 
     def do_test(self, expected_op, extra_args=None):
         conf = {
