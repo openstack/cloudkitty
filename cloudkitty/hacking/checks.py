@@ -16,7 +16,7 @@
 import ast
 import re
 
-import pep8
+from hacking import core
 import six
 
 
@@ -100,6 +100,7 @@ class BaseASTChecker(ast.NodeVisitor):
         return False
 
 
+@core.flake8ext
 def no_translate_logs(logical_line, filename):
     """Check for 'LOG.*(_('
 
@@ -125,6 +126,9 @@ class CheckLoggingFormatArgs(BaseASTChecker):
     The format arguments should not be a tuple as it is easy to miss.
 
     """
+
+    name = "check_logging_format_args"
+    version = "1.0"
 
     CHECK_DESC = 'C310 Log method arguments should not be a tuple.'
     LOG_METHODS = [
@@ -181,6 +185,7 @@ class CheckLoggingFormatArgs(BaseASTChecker):
         return super(CheckLoggingFormatArgs, self).generic_visit(node)
 
 
+@core.flake8ext
 def check_explicit_underscore_import(logical_line, filename):
     """Check for explicit import of the _ function
 
@@ -211,6 +216,9 @@ class CheckForStrUnicodeExc(BaseASTChecker):
     used on an exception created in the same scope, this does not
     catch it.
     """
+
+    name = "check_for_str_unicode_exc"
+    version = "1.0"
 
     CHECK_DESC = ('C314 str() and unicode() cannot be used on an '
                   'exception.  Remove or use six.text_type()')
@@ -257,6 +265,9 @@ class CheckForTransAdd(BaseASTChecker):
     string to give the translators the most information.
     """
 
+    name = "check_for_trans_add"
+    version = "1.0"
+
     CHECK_DESC = ('C315 Translated messages cannot be concatenated.  '
                   'String should be included in translated message.')
 
@@ -271,12 +282,13 @@ class CheckForTransAdd(BaseASTChecker):
         super(CheckForTransAdd, self).generic_visit(node)
 
 
-def check_oslo_namespace_imports(logical_line, physical_line, filename):
+@core.flake8ext
+def check_oslo_namespace_imports(logical_line, noqa):
     """'oslo_' should be used instead of 'oslo.'
 
     C317
     """
-    if pep8.noqa(physical_line):
+    if noqa:
         return
     if re.match(oslo_namespace_imports, logical_line):
         msg = ("C317: '%s' must be used instead of '%s'.") % (
@@ -285,6 +297,7 @@ def check_oslo_namespace_imports(logical_line, physical_line, filename):
         yield(0, msg)
 
 
+@core.flake8ext
 def dict_constructor_with_list_copy(logical_line):
     """Use a dict comprehension instead of a dict constructor
 
@@ -297,6 +310,7 @@ def dict_constructor_with_list_copy(logical_line):
         yield (0, msg)
 
 
+@core.flake8ext
 def no_xrange(logical_line):
     """Ensure to not use xrange()
 
@@ -306,6 +320,7 @@ def no_xrange(logical_line):
         yield(0, "C319: Do not use xrange().")
 
 
+@core.flake8ext
 def validate_assertTrue(logical_line):
     """Use assertTrue instead of assertEqual
 
@@ -317,6 +332,7 @@ def validate_assertTrue(logical_line):
         yield(0, msg)
 
 
+@core.flake8ext
 def validate_assertIsNone(logical_line):
     """Use assertIsNone instead of assertEqual
 
@@ -328,6 +344,7 @@ def validate_assertIsNone(logical_line):
         yield(0, msg)
 
 
+@core.flake8ext
 def no_log_warn_check(logical_line):
     """Disallow 'LOG.warn'
 
@@ -336,17 +353,3 @@ def no_log_warn_check(logical_line):
     msg = ("C320: LOG.warn is deprecated, please use LOG.warning!")
     if re.match(no_log_warn, logical_line):
         yield(0, msg)
-
-
-def factory(register):
-    register(check_explicit_underscore_import)
-    register(no_translate_logs)
-    register(CheckForStrUnicodeExc)
-    register(CheckLoggingFormatArgs)
-    register(CheckForTransAdd)
-    register(check_oslo_namespace_imports)
-    register(dict_constructor_with_list_copy)
-    register(no_xrange)
-    register(validate_assertTrue)
-    register(validate_assertIsNone)
-    register(no_log_warn_check)

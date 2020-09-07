@@ -93,8 +93,7 @@ VOLUME_RESOURCE = {
     'size': '1',
     "project_id": "f1873b13951542268bf7eed7cf971e52",
     "resource_id": "08017fbc-b13a-4d8d-b002-4eb4eff54cd4",
-    "source": "openstack",
-    "user_id": "None"}
+    "source": "openstack"}
 
 NETWORK_BW_IN = {
     "type": "network.bw.in",
@@ -398,9 +397,9 @@ class VolumeGenerator(BaseGenerator):
     def init_mapper(self):
         self.volumes = {
             '2bed6a3d-468a-459b-802b-44930016c0a3': {
-            'size': '10'},
+                'size': '10'},
             '4fd33321-6a5f-4351-94ca-db398cd708e9': {
-            'size': '20'}}
+                'size': '20'}}
 
     def generate_name(self, *args):
         basename = 'volume{}'

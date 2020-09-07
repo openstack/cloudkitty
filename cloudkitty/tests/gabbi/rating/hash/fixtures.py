@@ -18,7 +18,7 @@ from cloudkitty.tests.gabbi.fixtures import *  # noqa
 from cloudkitty.rating.hash.db import api as hashmap_db
 
 
-class HashMapConfigFixture(ConfigFixture):
+class HashMapConfigFixture(ConfigFixture):  # noqa: F405
     def start_fixture(self):
         super(HashMapConfigFixture, self).start_fixture()
         self.conn = hashmap_db.get_instance()

@@ -40,8 +40,9 @@ class FakeElasticsearchClient(client.ElasticsearchClient):
 
     @staticmethod
     def __filter_func(begin, end, filters, mtypes, doc):
-        type_filter = lambda doc: doc['type'] in mtypes if mtypes else True
-        time_filter = lambda doc: (
+        type_filter = lambda doc: (  # noqa: E731
+            doc['type'] in mtypes if mtypes else True)
+        time_filter = lambda doc: (  # noqa: E731
             (doc['start'] >= begin if begin else True)
             and (doc['start'] < end if end else True))
 
@@ -77,7 +78,7 @@ class FakeElasticsearchClient(client.ElasticsearchClient):
             }]
 
         output = []
-        key_func = lambda d: tuple(
+        key_func = lambda d: tuple(  # noqa: E731
             d['type'] if g == 'type' else d['groupby'][g] for g in groupby)
         docs.sort(key=key_func)
 
