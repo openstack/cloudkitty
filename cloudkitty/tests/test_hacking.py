@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sys
 import textwrap
 from unittest import mock
 
@@ -146,7 +145,7 @@ class HackingTestCase(tests.TestCase):
                       "climbing.", ('volume1', 500))
                """
         self._assert_has_errors(code.format(log_method), checker,
-                                expected_errors=[(4, 21, 'C310')])
+                                expected_errors=[(4, mock.ANY, 'C310')])
 
     def test_str_on_exception(self):
 
@@ -159,7 +158,7 @@ class HackingTestCase(tests.TestCase):
                        p = str(e)
                    return p
                """
-        errors = [(5, 16, 'C314')]
+        errors = [(5, mock.ANY, 'C314')]
         self._assert_has_errors(code, checker, expected_errors=errors)
 
     def test_no_str_unicode_on_exception(self):
@@ -184,7 +183,7 @@ class HackingTestCase(tests.TestCase):
                        p = unicode(e)
                    return p
                """
-        errors = [(5, 20, 'C314')]
+        errors = [(5, mock.ANY, 'C314')]
         self._assert_has_errors(code, checker, expected_errors=errors)
 
     def test_str_on_multiple_exceptions(self):
@@ -201,7 +200,7 @@ class HackingTestCase(tests.TestCase):
                        p = e
                    return p
                """
-        errors = [(8, 20, 'C314'), (8, 29, 'C314')]
+        errors = [(8, mock.ANY, 'C314'), (8, mock.ANY, 'C314')]
         self._assert_has_errors(code, checker, expected_errors=errors)
 
     def test_str_unicode_on_multiple_exceptions(self):
@@ -218,7 +217,9 @@ class HackingTestCase(tests.TestCase):
                        p = str(e)
                    return p
                """
-        errors = [(8, 20, 'C314'), (8, 33, 'C314'), (9, 16, 'C314')]
+        errors = [(8, mock.ANY, 'C314'),
+                  (8, mock.ANY, 'C314'),
+                  (9, mock.ANY, 'C314')]
         self._assert_has_errors(code, checker, expected_errors=errors)
 
     def test_trans_add(self):
@@ -238,13 +239,9 @@ class HackingTestCase(tests.TestCase):
                    return msg
                """
 
-        # Python 3.4.0 introduced a change to the column calculation during AST
-        # parsing. This was reversed in Python 3.4.3, hence the version-based
-        # expected value calculation. See #1499743 for more background.
-        if sys.version_info < (3, 4, 0) or sys.version_info >= (3, 4, 3):
-            errors = [(9, 10, 'C315'), (10, 24, 'C315')]
-        else:
-            errors = [(9, 11, 'C315'), (10, 25, 'C315')]
+        # We don't assert on specific column numbers since there is a small
+        # change in calculation between <py38 and >=py38
+        errors = [(9, mock.ANY, 'C315'), (10, mock.ANY, 'C315')]
         self._assert_has_errors(code, checker, expected_errors=errors)
 
         code = """

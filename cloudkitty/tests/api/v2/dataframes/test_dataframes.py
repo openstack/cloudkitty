@@ -12,14 +12,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-import unittest
 from unittest import mock
 
 from cloudkitty.api.v2.dataframes import dataframes
+from cloudkitty import tests
+
 from cloudkitty.utils import tz as tzutils
 
 
-class TestDataframeListEndpoint(unittest.TestCase):
+class TestDataframeListEndpoint(tests.TestCase):
 
     def setUp(self):
         super(TestDataframeListEndpoint, self).setUp()

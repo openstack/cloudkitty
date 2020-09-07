@@ -12,14 +12,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-import unittest
 from unittest import mock
 
 from cloudkitty.api.v2.summary import summary
+from cloudkitty import tests
+
 from cloudkitty.utils import tz as tzutils
 
 
-class TestSummaryEndpoint(unittest.TestCase):
+class TestSummaryEndpoint(tests.TestCase):
 
     def setUp(self):
         super(TestSummaryEndpoint, self).setUp()
