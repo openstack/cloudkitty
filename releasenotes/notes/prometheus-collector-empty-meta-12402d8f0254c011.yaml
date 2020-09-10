@@ -1,0 +1,5 @@
+---
+issues:
+  - |
+    Fixes exceptions in Prometheus collector when metadata defined in
+    ``metrics.yml`` is not present on metrics retrieved from Prometheus.

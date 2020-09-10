@@ -130,7 +130,7 @@ class PrometheusCollector(collector.BaseCollector):
         """
         metadata = {}
         for meta in self.conf[metric_name]['metadata']:
-            metadata[meta] = data['metric'][meta]
+            metadata[meta] = data['metric'].get(meta, '')
 
         groupby = {scope_key: scope_id}
         for meta in self.conf[metric_name]['groupby']:
