@@ -13,12 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import requests
+
 from gnocchiclient import auth as gauth
 from gnocchiclient import client as gclient
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_log import log
 
+from cloudkitty.common import custom_session
 from cloudkitty import fetcher
 
 
@@ -61,6 +64,12 @@ gfetcher_opts = [
         default='RegionOne',
         help='Region Name',
     ),
+    cfg.IntOpt(
+        'http_pool_maxsize',
+        default=requests.adapters.DEFAULT_POOLSIZE,
+        help='If the value is not defined, we use the value defined by '
+             'requests.adapters.DEFAULT_POOLSIZE',
+    )
 ]
 
 
@@ -105,7 +114,9 @@ class GnocchiFetcher(fetcher.BaseFetcher):
 
         self._conn = gclient.Client(
             '1',
-            session_options={'auth': auth_plugin, 'verify': verify},
+            session=custom_session.create_custom_session(
+                {'auth': auth_plugin, 'verify': verify},
+                CONF.fetcher_gnocchi.http_pool_maxsize),
             adapter_options=adapter_options,
         )
 

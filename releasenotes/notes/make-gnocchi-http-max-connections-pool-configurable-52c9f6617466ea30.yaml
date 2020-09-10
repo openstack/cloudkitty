@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Adds a new configuration ``http_pool_maxsize`` that defines the maximum
+    size of Gnocchi's fetcher and collector HTTP connection pools.
+
+    The default value of this new configuration is defined by the ``requests``
+    library in the ``requests.adapters.DEFAULT_POOLSIZE`` global variable.
