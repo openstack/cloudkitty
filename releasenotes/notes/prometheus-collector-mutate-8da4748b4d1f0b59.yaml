@@ -1,0 +1,4 @@
+---
+issues:
+  - |
+    The Prometheus collector now applies quantity mutation on metrics.
