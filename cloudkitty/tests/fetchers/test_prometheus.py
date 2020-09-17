@@ -89,7 +89,7 @@ class PrometheusFetcherTest(tests.TestCase):
 
         with response:
             scopes = self.fetcher.get_tenants()
-            self.assertItemsEqual(scopes, [
+            self.assertCountEqual(scopes, [
                 'scope_id1', 'scope_id2', 'scope_id3',
             ])
 
