@@ -218,6 +218,10 @@
 # option. (string value)
 #control_exchange = openstack
 
+# Add an endpoint to answer to ping calls. Endpoint is named
+# oslo_rpc_server_ping (boolean value)
+#rpc_ping_enabled = false
+
 
 [api]
 
@@ -278,6 +282,10 @@
 
 # Region Name (string value)
 #region_name = RegionOne
+
+# If the value is not defined, we use the value defined by
+# requests.adapters.DEFAULT_POOLSIZE (integer value)
+#http_pool_maxsize = 10
 
 
 [collector_monasca]
@@ -497,6 +505,10 @@
 # Region Name (string value)
 #region_name = RegionOne
 
+# If the value is not defined, we use the value defined by
+# requests.adapters.DEFAULT_POOLSIZE (integer value)
+#http_pool_maxsize = 10
+
 # Authentication type to load (string value)
 # Deprecated group/name - [fetcher_gnocchi]/auth_plugin
 #auth_type = <None>
@@ -595,8 +607,8 @@
 #auth_version = <None>
 
 # Interface to use for the Identity API endpoint. Valid values are
-# "public", "internal" or "admin"(default). (string value)
-#interface = admin
+# "public", "internal" (default) or "admin". (string value)
+#interface = internal
 
 # Do not handle authorization requests within the middleware, but
 # delegate the authorization decision to downstream WSGI components.
@@ -1046,6 +1058,15 @@
 # (string value)
 #ssl_cafile =
 
+# Client certificate PEM file used for authentication. (string value)
+#ssl_client_cert_file =
+
+# Client key PEM file used for authentication. (string value)
+#ssl_client_key_file =
+
+# Client key password file used for authentication. (string value)
+#ssl_client_key_password =
+
 
 [oslo_messaging_notifications]
 
@@ -1193,6 +1214,10 @@
 # is raised in case the client queue does not exist. (integer value)
 #direct_mandatory_flag = True
 
+# Enable x-cancel-on-ha-failover flag so that rabbitmq server will
+# cancel and notify consumerswhen queue is down (boolean value)
+#enable_cancel_on_failover = false
+
 
 [oslo_middleware]
 
@@ -1218,6 +1243,15 @@
 # If ``False``, a message will be logged informing operators that
 # policies are being invoked with mismatching scope. (boolean value)
 #enforce_scope = false
+
+# This option controls whether or not to use old deprecated defaults
+# when evaluating policies. If ``True``, the old deprecated defaults
+# are not going to be evaluated. This means if any existing token is
+# allowed for old defaults but is disallowed for new defaults, it will
+# be disallowed. It is encouraged to enable this flag along with the
+# ``enforce_scope`` flag so that you can get the benefits of new
+# defaults and ``scope_type`` together (boolean value)
+#enforce_new_defaults = false
 
 # The relative or absolute path of a file that maps roles to
 # permissions for a given service. Relative paths must be specified in
