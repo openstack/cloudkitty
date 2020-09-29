@@ -157,6 +157,12 @@ Apart from that, it works the same way as a mapping.
 
 As for mappings, a threshold can be tied to a specific scope/project.
 
+Cost
+----
+The cost option is the actual cost for the rating period. It has a precision of
+28 decimal digits (on the right side of the number), and 30 digits on the left
+side of the number.
+
 Examples
 ========
 

@@ -343,7 +343,8 @@ class HashMapRatingTest(tests.TestCase):
         mapping = self._db_api.get_mapping(mapping_db.mapping_id)
         self.assertEqual('flat', mapping.map_type)
         self.assertEqual('m1.tiny', mapping.value)
-        self.assertEqual(decimal.Decimal('1.337'), mapping.cost)
+        self.assertEqual(
+            decimal.Decimal('1.3369999999999999662492200514'), mapping.cost)
         self.assertEqual(field_db.id, mapping.field_id)
 
     def test_list_mappings_from_services(self):
@@ -524,7 +525,8 @@ class HashMapRatingTest(tests.TestCase):
         threshold = self._db_api.get_threshold(threshold_db.threshold_id)
         self.assertEqual('rate', threshold.map_type)
         self.assertEqual(decimal.Decimal('64'), threshold.level)
-        self.assertEqual(decimal.Decimal('0.1337'), threshold.cost)
+        self.assertEqual(
+            decimal.Decimal('0.1337000000000000132782673745'), threshold.cost)
         self.assertEqual(field_db.id, threshold.field_id)
 
     def test_list_thresholds_from_only_group(self):
@@ -768,11 +770,13 @@ class HashMapRatingTest(tests.TestCase):
                         'mappings': {
                             '_DEFAULT_': {
                                 'm1.tiny': {
-                                    'cost': decimal.Decimal('2'),
+                                    'cost': decimal.Decimal(
+                                        '2.0000000000000000000000000000'),
                                     'type': 'flat'}},
                             'test_group': {
                                 'm1.large': {
-                                    'cost': decimal.Decimal('13.37'),
+                                    'cost': decimal.Decimal(
+                                        '13.3699999999999992184029906639'),
                                     'type': 'rate'}}},
                         'thresholds': {}},
                     'memory': {
@@ -780,14 +784,17 @@ class HashMapRatingTest(tests.TestCase):
                         'thresholds': {
                             'test_group': {
                                 64: {
-                                    'cost': decimal.Decimal('0.03'),
+                                    'cost': decimal.Decimal(
+                                        '0.0299999999999999988897769754'),
                                     'type': 'flat'},
                                 128: {
-                                    'cost': decimal.Decimal('0.03'),
+                                    'cost': decimal.Decimal(
+                                        '0.0299999999999999988897769754'),
                                     'type': 'flat'}}}}},
                 'mappings': {
                     '_DEFAULT_': {
-                        'cost': decimal.Decimal('1.42'),
+                        'cost': decimal.Decimal(
+                            '1.4199999999999999289457264240'),
                         'type': 'rate'}},
                 'thresholds': {}}}
         self.assertEqual(expect,
@@ -817,11 +824,11 @@ class HashMapRatingTest(tests.TestCase):
         expected_result = {
             '_DEFAULT_': {
                 'm1.tiny': {
-                    'cost': decimal.Decimal('1.337'),
+                    'cost': decimal.Decimal('1.3369999999999999662492200514'),
                     'type': 'flat'}},
             'test_group': {
                 'm1.large': {
-                    'cost': decimal.Decimal('13.37'),
+                    'cost': decimal.Decimal('13.3699999999999992184029906639'),
                     'type': 'rate'}}}
         self.assertEqual(expected_result, result)
 
@@ -844,7 +851,7 @@ class HashMapRatingTest(tests.TestCase):
         expected_result = {
             'test_group': {
                 1000: {
-                    'cost': decimal.Decimal('3.1337'),
+                    'cost': decimal.Decimal('3.1337000000000001520561454527'),
                     'type': 'flat'}}}
         self.assertEqual(expected_result, result)
 
@@ -873,10 +880,14 @@ class HashMapRatingTest(tests.TestCase):
         actual_data = [actual_data]
         df_dicts = [d.as_dict(mutable=True) for d in expected_data]
         compute_list = df_dicts[0]['usage']['compute']
-        compute_list[0]['rating'] = {'price': decimal.Decimal('2.757')}
-        compute_list[1]['rating'] = {'price': decimal.Decimal('5.514')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('5.514')}
-        compute_list[3]['rating'] = {'price': decimal.Decimal('2.757')}
+        compute_list[0]['rating'] = {'price': decimal.Decimal(
+            '2.756999999999999895194946475')}
+        compute_list[1]['rating'] = {'price': decimal.Decimal(
+            '5.513999999999999790389892950')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal(
+            '5.513999999999999790389892950')}
+        compute_list[3]['rating'] = {'price': decimal.Decimal(
+            '2.756999999999999895194946475')}
         self.assertEqual(df_dicts, [d.as_dict(mutable=True)
                                     for d in actual_data])
 
@@ -917,10 +928,13 @@ class HashMapRatingTest(tests.TestCase):
         actual_data = [actual_data]
         df_dicts = [d.as_dict(mutable=True) for d in expected_data]
         compute_list = df_dicts[0]['usage']['compute']
-        compute_list[0]['rating'] = {'price': decimal.Decimal('1.337')}
-        compute_list[1]['rating'] = {'price': decimal.Decimal('2.84')}
+        compute_list[0]['rating'] = {'price': decimal.Decimal(
+            '1.336999999999999966249220051')}
+        compute_list[1]['rating'] = {'price': decimal.Decimal(
+            '2.839999999999999857891452848')}
         compute_list[2]['rating'] = {'price': decimal.Decimal('0')}
-        compute_list[3]['rating'] = {'price': decimal.Decimal('1.47070')}
+        compute_list[3]['rating'] = {'price': decimal.Decimal(
+            '1.470700000000000081623596770')}
         self.assertEqual(df_dicts, [d.as_dict(mutable=True)
                                     for d in actual_data])
 
@@ -975,10 +989,14 @@ class HashMapRatingTest(tests.TestCase):
         actual_data = [actual_data]
         df_dicts = [d.as_dict(mutable=True) for d in expected_data]
         compute_list = df_dicts[0]['usage']['compute']
-        compute_list[0]['rating'] = {'price': decimal.Decimal('0.1337')}
-        compute_list[1]['rating'] = {'price': decimal.Decimal('0.4')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('0.4')}
-        compute_list[3]['rating'] = {'price': decimal.Decimal('0.1337')}
+        compute_list[0]['rating'] = {'price': decimal.Decimal(
+            '0.1337000000000000132782673745')}
+        compute_list[1]['rating'] = {'price': decimal.Decimal(
+            '0.4000000000000000222044604926')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal(
+            '0.4000000000000000222044604926')}
+        compute_list[3]['rating'] = {'price': decimal.Decimal(
+            '0.1337000000000000132782673745')}
         self.assertEqual(df_dicts, [d.as_dict(mutable=True)
                                     for d in actual_data])
 
@@ -1030,10 +1048,14 @@ class HashMapRatingTest(tests.TestCase):
         actual_data = [actual_data]
         df_dicts = [d.as_dict(mutable=True) for d in expected_data]
         compute_list = df_dicts[0]['usage']['compute']
-        compute_list[0]['rating'] = {'price': decimal.Decimal('0.1')}
-        compute_list[1]['rating'] = {'price': decimal.Decimal('0.15')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('0.15')}
-        compute_list[3]['rating'] = {'price': decimal.Decimal('0.1')}
+        compute_list[0]['rating'] = {'price': decimal.Decimal(
+            '0.1000000000000000055511151231')}
+        compute_list[1]['rating'] = {'price': decimal.Decimal(
+            '0.1499999999999999944488848769')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal(
+            '0.1499999999999999944488848769')}
+        compute_list[3]['rating'] = {'price': decimal.Decimal(
+            '0.1000000000000000055511151231')}
         self.assertEqual(df_dicts, [d.as_dict(mutable=True)
                                     for d in actual_data])
 
@@ -1175,11 +1197,15 @@ class HashMapRatingTest(tests.TestCase):
                                           end=expected_data[0].end)
         df_dicts = [d.as_dict(mutable=True) for d in expected_data]
         compute_list = df_dicts[0]['usage']['compute']
-        compute_list[0]['rating'] = {'price': decimal.Decimal('2.487')}
-        compute_list[1]['rating'] = {'price': decimal.Decimal('5.564')}
+        compute_list[0]['rating'] = {'price': decimal.Decimal(
+            '2.486999999999999960698104928')}
+        compute_list[1]['rating'] = {'price': decimal.Decimal(
+            '5.564000000000000155875312656')}
         # 8vcpu mapping * 2 + service_mapping * 1 + 128m ram threshold * 2
-        compute_list[2]['rating'] = {'price': decimal.Decimal('34.40')}
-        compute_list[3]['rating'] = {'price': decimal.Decimal('2.6357')}
+        compute_list[2]['rating'] = {'price': decimal.Decimal(
+            '34.40000000000000002220446049')}
+        compute_list[3]['rating'] = {'price': decimal.Decimal(
+            '2.635700000000000088840046430')}
         actual_data = [self._hash.process(d) for d in expected_data]
         self.assertEqual(df_dicts, [d.as_dict(mutable=True)
                                     for d in actual_data])

@@ -48,7 +48,7 @@ tests:
     response_json_paths:
       $.service_id: $RESPONSE['$.service_id']
       $.type: "flat"
-      $.cost: "0.10000000"
+      $.cost: "0.1000000000000000055511151231"
 
   - name: delete a flat service mapping
     url: /v1/rating/module_config/hashmap/mappings/$RESPONSE['$.mapping_id']
@@ -76,7 +76,7 @@ tests:
     response_json_paths:
       $.service_id: $RESPONSE['$.services[0].service_id']
       $.type: "rate"
-      $.cost: "0.20000000"
+      $.cost: "0.2000000000000000111022302463"
 
   - name: create a flat service mapping for a tenant
     url: /v1/rating/module_config/hashmap/mappings
@@ -93,7 +93,7 @@ tests:
     response_json_paths:
       $.service_id: $ENVIRON['hash_service_id']
       $.type: "flat"
-      $.cost: "0.20000000"
+      $.cost: "0.2000000000000000111022302463"
       $.tenant_id: "24a7fdae-27ff-11e6-8c4f-6b725a05bf50"
 
   - name: list service mappings no tenant filtering
@@ -131,7 +131,7 @@ tests:
       $.service_id: $ENVIRON['hash_service_id']
       $.level: "2.00000000"
       $.type: "flat"
-      $.cost: "0.20000000"
+      $.cost: "0.2000000000000000111022302463"
       $.tenant_id: "24a7fdae-27ff-11e6-8c4f-6b725a05bf50"
 
   - name: list service thresholds no tenant filtering
@@ -191,7 +191,7 @@ tests:
     response_json_paths:
       $.field_id: $RESPONSE['$.field_id']
       $.type: "rate"
-      $.cost: "0.20000000"
+      $.cost: "0.2000000000000000111022302463"
 
   - name: delete a flat field mapping
     url: /v1/rating/module_config/hashmap/mappings/$RESPONSE['$.mapping_id']
@@ -222,7 +222,7 @@ tests:
     response_json_paths:
       $.field_id: $RESPONSE['$.fields[0].field_id']
       $.type: "rate"
-      $.cost: "0.20000000"
+      $.cost: "0.2000000000000000111022302463"
     response_store_environ:
       hash_rate_mapping_id: $.mapping_id
 
@@ -245,7 +245,7 @@ tests:
       $.mapping_id: $ENVIRON['hash_rate_mapping_id']
       $.field_id: $ENVIRON['hash_field_id']
       $.type: "rate"
-      $.cost: "0.30000000"
+      $.cost: "0.2999999999999999888977697537"
       $.value: "f17a0674-0004-11e6-a16b-cf941f4668c4"
 
   - name: delete a field

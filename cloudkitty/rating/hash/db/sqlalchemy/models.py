@@ -230,7 +230,7 @@ class HashMapMapping(Base, HashMapBase):
         sqlalchemy.String(255),
         nullable=True)
     cost = sqlalchemy.Column(
-        sqlalchemy.Numeric(20, 8),
+        sqlalchemy.Numeric(30, 28),
         nullable=False)
     map_type = sqlalchemy.Column(
         sqlalchemy.Enum(
@@ -309,7 +309,7 @@ class HashMapThreshold(Base, HashMapBase):
         sqlalchemy.Numeric(20, 8),
         nullable=True)
     cost = sqlalchemy.Column(
-        sqlalchemy.Numeric(20, 8),
+        sqlalchemy.Numeric(30, 28),
         nullable=False)
     map_type = sqlalchemy.Column(
         sqlalchemy.Enum(

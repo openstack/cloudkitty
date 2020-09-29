@@ -28,13 +28,13 @@ tests:
     data:
       service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       type: "flat"
-      cost: "0.10000000"
+      cost: "0.1000000000000000055511151231"
     status: 201
     response_json_paths:
       $.mapping_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.type: "flat"
-      $.cost: "0.10000000"
+      $.cost: "0.1000000000000000055511151231"
     response_headers:
       location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
 
@@ -60,7 +60,7 @@ tests:
       $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.level: "2.00000000"
       $.type: "flat"
-      $.cost: "0.10000000"
+      $.cost: "0.1000000000000000055511151231"
     response_headers:
       location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
 
@@ -103,7 +103,7 @@ tests:
       $.field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.value: "04774238-fcad-11e5-a90e-6391fd56aab2"
       $.type: "flat"
-      $.cost: "0.10000000"
+      $.cost: "0.1000000000000000055511151231"
     response_headers:
       location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
 
@@ -124,7 +124,7 @@ tests:
       $.field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
       $.level: "2.00000000"
       $.type: "flat"
-      $.cost: "0.10000000"
+      $.cost: "0.1000000000000000055511151231"
     response_headers:
       location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
 
