@@ -383,8 +383,8 @@ class Orchestrator(cotyledon.Service):
         while True:
             self.tenants = self.fetcher.get_tenants()
             random.shuffle(self.tenants)
-            LOG.info('[Worker: {w}] Tenants loaded for fetcher {f}'.format(
-                w=self._worker_id, f=self.fetcher.name))
+            LOG.info('[Worker: {w}] {n} tenants loaded for fetcher {f}'.format(
+                w=self._worker_id, n=len(self.tenants), f=self.fetcher.name))
 
             for tenant_id in self.tenants:
 
