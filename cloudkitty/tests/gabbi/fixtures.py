@@ -202,7 +202,7 @@ class ConfigFixture(fixture.GabbiFixture):
         conf.set_override('auth_strategy', self.auth_strategy)
         conf.set_override('connection', 'sqlite:///', 'database')
         conf.set_override('policy_file',
-                          os.path.abspath('etc/cloudkitty/policy.json'),
+                          os.path.abspath('etc/cloudkitty/policy.yaml'),
                           group='oslo_policy')
         conf.set_override('api_paste_config',
                           os.path.abspath(

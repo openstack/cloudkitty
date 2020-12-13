@@ -24,7 +24,7 @@ Install sample configuration files::
     mkdir /etc/cloudkitty
     tox -e genconfig
     cp etc/cloudkitty/cloudkitty.conf.sample /etc/cloudkitty/cloudkitty.conf
-    cp etc/cloudkitty/policy.json /etc/cloudkitty
+    cp etc/cloudkitty/policy.yaml /etc/cloudkitty
     cp etc/cloudkitty/api_paste.ini /etc/cloudkitty
 
 Create the log directory::
