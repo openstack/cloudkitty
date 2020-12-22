@@ -71,7 +71,7 @@ class MetricConfigValidationTest(tests.TestCase):
         expected_output['metric_one']['extra_args'] = {
             'aggregation_method': 'max', 're_aggregation_method': 'max',
             'force_granularity': 3600, 'resource_type': 'res',
-            'resource_key': 'id'}
+            'resource_key': 'id', 'use_all_resource_revisions': True}
 
         self.assertEqual(
             collector.gnocchi.GnocchiCollector.check_configuration(data),

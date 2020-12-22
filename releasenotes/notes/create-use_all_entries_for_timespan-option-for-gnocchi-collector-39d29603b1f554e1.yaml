@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Create the option 'use_all_resource_revisions' for Gnocchi collector.

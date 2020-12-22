@@ -215,3 +215,50 @@ class GnocchiCollectorAggregationOperationTest(tests.TestCase):
             ["metric", "metric_one", "rate:mean"],
         ]
         self.do_test(expected_op, extra_args=extra_args)
+
+    def test_filter_unecessary_measurements_use_all_datapoints(self):
+        data = [
+            {"group":
+                {
+                    "id": "id-1",
+                    "revision_start": datetime.datetime(
+                        2020, 1, 1, tzinfo=tz.tzutc())}},
+            {"group":
+                {"id": "id-1",
+                 "revision_start": datetime.datetime(
+                     2020, 1, 1, 1, 10, 0, tzinfo=tz.tzutc())}}
+        ]
+
+        expected_data = data.copy()
+        metric_name = 'test_metric'
+        metric = {
+            'name': metric_name,
+            'extra_args': {'use_all_resource_revisions': True}}
+
+        data_filtered = gnocchi.GnocchiCollector.\
+            filter_unecessary_measurements(data, metric, metric_name)
+
+        self.assertEqual(expected_data, data_filtered)
+
+    def test_filter_unecessary_measurements_use_only_last_datapoint(self):
+        expected_data = {"group": {"id": "id-1",
+                                   "revision_start": datetime.datetime(
+                                       2020, 1, 1, 1, 10, 0, tzinfo=tz.tzutc())
+                                   }}
+
+        data = [
+            {"group": {"id": "id-1", "revision_start": datetime.datetime(
+                     2020, 1, 1, tzinfo=tz.tzutc())}},
+            expected_data
+        ]
+
+        metric_name = 'test_metric'
+        metric = {'name': metric_name, 'extra_args': {
+            'use_all_resource_revisions': False}}
+
+        data_filtered = gnocchi.GnocchiCollector.\
+            filter_unecessary_measurements(data, metric, metric_name)
+
+        data_filtered = list(data_filtered)
+        self.assertEqual(1, len(data_filtered))
+        self.assertEqual(expected_data, data_filtered[0])
