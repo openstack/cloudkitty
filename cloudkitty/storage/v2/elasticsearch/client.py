@@ -349,7 +349,12 @@ class ElasticsearchClient(object):
         return self._req(self._sess.post, url, data, None)
 
     def total(self, begin, end, metric_types, filters, groupby,
-              offset=0, limit=1000, paginate=True):
+              custom_fields=None, offset=0, limit=1000, paginate=True):
+
+        if custom_fields:
+            LOG.warning("'custom_fields' are not implemented yet for "
+                        "ElasticSearch. Therefore, the custom fields [%s] "
+                        "informed by the user will be ignored.", custom_fields)
         if not paginate:
             offset = 0
 

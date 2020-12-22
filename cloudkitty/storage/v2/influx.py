@@ -187,8 +187,12 @@ class InfluxClient(object):
                                  for mtype in types)
         return ' AND (' + type_query + ')'
 
-    def get_total(self, types, begin, end, groupby=None, filters=None):
-        query = 'SELECT SUM(qty) AS qty, SUM(price) AS price FROM "dataframes"'
+    def get_total(self, types, begin, end, custom_fields,
+                  groupby=None, filters=None):
+
+        self.validate_custom_fields(custom_fields)
+
+        query = 'SELECT %s FROM "dataframes"' % custom_fields
         query += self._get_time_query(begin, end)
         query += self._get_filter_query(filters)
         query += self._get_type_query(types)
@@ -204,7 +208,21 @@ class InfluxClient(object):
             query += ' GROUP BY ' + groupby_query
 
         query += ';'
-        return self._conn.query(query)
+        total = self._conn.query(query)
+        LOG.debug(
+            "Data [%s] received when executing query [%s].", total, query)
+        return total
+
+    @staticmethod
+    def validate_custom_fields(custom_fields):
+        forbidden_clauses = ["select", "from", "drop", "delete", "create",
+                             "alter", "insert", "update"]
+        for field in custom_fields.split(","):
+            if field.lower() in forbidden_clauses:
+                raise RuntimeError("Clause [%s] is not allowed in custom"
+                                   " fields summary get report. The following"
+                                   " clauses are not allowed [%s].",
+                                   field, forbidden_clauses)
 
     def retrieve(self,
                  types,
@@ -349,24 +367,25 @@ class InfluxStorage(v2_storage.BaseStorage):
         output = {
             'begin': begin,
             'end': end,
-            'qty': point['qty'],
-            'rate': point['price'],
         }
+
+        for key in point.keys():
+            if "time" != key:
+                output[key] = point[key]
+
         if groupby:
             for group in _sanitized_groupby(groupby):
                 output[group] = series_groupby.get(group, '')
         return output
 
-    def total(self, groupby=None,
-              begin=None, end=None,
-              metric_types=None,
-              filters=None,
-              offset=0, limit=1000, paginate=True):
+    def total(self, groupby=None, begin=None, end=None, metric_types=None,
+              filters=None, offset=0, limit=1000, paginate=True,
+              custom_fields="SUM(qty) AS qty, SUM(price) AS rate"):
 
         begin, end = self._check_begin_end(begin, end)
 
-        total = self._conn.get_total(
-            metric_types, begin, end, groupby, filters)
+        total = self._conn.get_total(metric_types, begin, end,
+                                     custom_fields, groupby, filters)
 
         output = []
         for (series_name, series_groupby), points in total.items():
@@ -374,7 +393,12 @@ class InfluxStorage(v2_storage.BaseStorage):
                 # NOTE(peschk_l): InfluxDB returns all timestamps for a given
                 # period and interval, even those with no data. This filters
                 # out periods with no data
-                if point['qty'] is not None and point['price'] is not None:
+
+                # NOTE (rafaelweingartner): the summary get API is allowing
+                # users to customize the report. Therefore, we only ignore
+                # data points, if all of the entries have None values.
+                # Otherwise, they are presented to the user.
+                if [k for k in point.keys() if point[k]]:
                     output.append(self._get_total_elem(
                         tzutils.utc_to_local(begin),
                         tzutils.utc_to_local(end),
@@ -385,6 +409,7 @@ class InfluxStorage(v2_storage.BaseStorage):
         groupby = _sanitized_groupby(groupby)
         if groupby:
             output.sort(key=lambda x: [x[group] for group in groupby])
+
         return {
             'total': len(output),
             'results': output[offset:offset + limit] if paginate else output,

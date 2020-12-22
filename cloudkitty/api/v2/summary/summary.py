@@ -26,6 +26,7 @@ class Summary(base.BaseResource):
 
     @api_utils.paginated
     @api_utils.add_input_schema('query', {
+        voluptuous.Optional('custom_fields'): api_utils.SingleQueryParam(str),
         voluptuous.Optional('groupby'): api_utils.MultiQueryParam(str),
         voluptuous.Optional('filters'):
             api_utils.SingleDictQueryParam(str, str),
@@ -34,9 +35,8 @@ class Summary(base.BaseResource):
         voluptuous.Optional('end'): api_utils.SingleQueryParam(
             tzutils.dt_from_iso),
     })
-    def get(self, groupby=None, filters={},
-            begin=None, end=None,
-            offset=0, limit=100):
+    def get(self, custom_fields=None, groupby=None, filters={}, begin=None,
+            end=None, offset=0, limit=100):
         policy.authorize(
             flask.request.context,
             'summary:get_summary',
@@ -55,15 +55,20 @@ class Summary(base.BaseResource):
             filters['project_id'] = flask.request.context.project_id
 
         metric_types = [filters.pop('type')] if 'type' in filters else None
-        total = self._storage.total(
-            begin=begin, end=end,
-            groupby=groupby,
-            filters=filters,
-            metric_types=metric_types,
-            offset=offset,
-            limit=limit,
-            paginate=True,
-        )
+        arguments = {
+            'begin': begin,
+            'end': end,
+            'groupby': groupby,
+            'filters': filters,
+            'metric_types': metric_types,
+            'offset': offset,
+            'limit': limit,
+            'paginate': True
+        }
+        if custom_fields:
+            arguments['custom_fields'] = custom_fields
+
+        total = self._storage.total(**arguments)
         columns = []
         if len(total['results']) > 0:
             columns = list(total['results'][0].keys())

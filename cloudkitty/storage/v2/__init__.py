@@ -100,11 +100,9 @@ class BaseStorage(object):
         """
 
     @abc.abstractmethod
-    def total(self, groupby=None,
-              begin=None, end=None,
-              metric_types=None,
-              filters=None,
-              offset=0, limit=1000, paginate=True):
+    def total(self, groupby=None, begin=None, end=None, metric_types=None,
+              filters=None, custom_fields=None, offset=0, limit=1000,
+              paginate=True):
         """Returns a grouped total for given groupby.
 
         :param groupby: Attributes on which to group by. These attributes must
@@ -116,10 +114,14 @@ class BaseStorage(object):
         :type begin: datetime
         :param end: End date
         :type end: datetime
-        :param filters: Attributes to filter on. ex: {'flavor_id': '42'}
-        :type filters: dict
         :param metric_types: Metric type to filter on.
         :type metric_types: str or list
+        :param custom_fields: the custom fields that one desires to add in
+                              the summary reporting. Each driver must handle
+                              these values by themselves.
+        :type: custom_fields: list of strings
+        :param filters: Attributes to filter on. ex: {'flavor_id': '42'}
+        :type filters: dict
         :param offset: Offset for pagination
         :type offset: int
         :param limit: Maximum amount of elements to return
@@ -127,6 +129,7 @@ class BaseStorage(object):
         :param paginate: Defaults to True. If False, all found results
                          will be returned.
         :type paginate: bool
+
         :rtype: dict
 
         Returns a dict with the following format::
