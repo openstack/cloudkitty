@@ -14,7 +14,6 @@
 #    under the License.
 #
 import pecan
-import six
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import types as ck_types
@@ -60,7 +59,7 @@ class HashMapFieldsController(rating.RatingRestControllerBase):
             field_db = hashmap.get_field(uuid=field_id)
             return field_models.Field(**field_db.export_model())
         except db_api.NoSuchField as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])
 
     @wsme_pecan.wsexpose(field_models.Field,
                          body=field_models.Field,
@@ -82,9 +81,9 @@ class HashMapFieldsController(rating.RatingRestControllerBase):
             return field_models.Field(
                 **field_db.export_model())
         except db_api.FieldAlreadyExists as e:
-            pecan.abort(409, six.text_type(e))
+            pecan.abort(409, e.args[0])
         except db_api.ClientHashMapError as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(400, e.args[0])
 
     @wsme_pecan.wsexpose(None,
                          ck_types.UuidType(),
@@ -98,4 +97,4 @@ class HashMapFieldsController(rating.RatingRestControllerBase):
         try:
             hashmap.delete_field(uuid=field_id)
         except db_api.NoSuchField as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])

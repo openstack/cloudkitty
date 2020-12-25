@@ -18,9 +18,6 @@ try:
 except ImportError:
     from collections import Iterable
 import functools
-
-import six
-
 import voluptuous
 
 
@@ -95,4 +92,4 @@ class IterableValuesDict(DictTypeValidator):
 
 def get_string_type():
     """Returns ``basestring`` in python2 and ``str`` in python3."""
-    return six.string_types[0]
+    return str

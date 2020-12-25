@@ -17,7 +17,6 @@ import ast
 import re
 
 from hacking import core
-import six
 
 
 """
@@ -150,7 +149,7 @@ class CheckLoggingFormatArgs(BaseASTChecker):
             if obj_name is None:
                 return None
             return obj_name + '.' + method_name
-        elif isinstance(node, six.string_types):
+        elif isinstance(node, str):
             return node
         else:  # could be Subscript, Call or many more
             return None
@@ -221,7 +220,7 @@ class CheckForStrUnicodeExc(BaseASTChecker):
     version = "1.0"
 
     CHECK_DESC = ('C314 str() and unicode() cannot be used on an '
-                  'exception.  Remove or use six.text_type()')
+                  'exception.  Remove it.')
 
     def __init__(self, tree, filename):
         super(CheckForStrUnicodeExc, self).__init__(tree, filename)

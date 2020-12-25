@@ -13,11 +13,10 @@
 #    under the License.
 #
 import datetime
-
 import influxdb
+
 from oslo_config import cfg
 from oslo_log import log
-import six
 
 from cloudkitty import dataframe
 from cloudkitty.storage import v2 as v2_storage
@@ -162,9 +161,9 @@ class InfluxClient(object):
     @staticmethod
     def _get_filter(key, value):
         format_string = ''
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             format_string = """"{}"='{}'"""
-        elif isinstance(value, (six.integer_types, float)):
+        elif isinstance(value, (int, float)):
             format_string = """"{}"={}"""
         return format_string.format(key, value)
 

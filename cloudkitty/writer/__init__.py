@@ -15,14 +15,11 @@
 #
 import abc
 
-import six
-
 from cloudkitty import state
 from cloudkitty import utils as ck_utils
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseReportWriter(object):
+class BaseReportWriter(object, metaclass=abc.ABCMeta):
     """Base report writer."""
     report_type = None
 

@@ -14,7 +14,6 @@
 #    under the License.
 #
 import pecan
-import six
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
@@ -36,7 +35,7 @@ class PyScriptsScriptsController(rating.RatingRestControllerBase):
         """
         if data == wtypes.Unset:
             return ''
-        if not isinstance(data, six.binary_type):
+        if not isinstance(data, bytes):
             data = data.encode('utf-8')
         return data
 
@@ -71,7 +70,7 @@ class PyScriptsScriptsController(rating.RatingRestControllerBase):
             script_db = pyscripts.get_script(uuid=script_id)
             return script_models.Script(**script_db.export_model())
         except db_api.NoSuchScript as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])
 
     @wsme_pecan.wsexpose(script_models.Script,
                          body=script_models.Script,
@@ -92,7 +91,7 @@ class PyScriptsScriptsController(rating.RatingRestControllerBase):
             return script_models.Script(
                 **script_db.export_model())
         except db_api.ScriptAlreadyExists as e:
-            pecan.abort(409, six.text_type(e))
+            pecan.abort(409, e.args[0])
 
     @wsme_pecan.wsexpose(script_models.Script,
                          ck_types.UuidType(),
@@ -117,7 +116,7 @@ class PyScriptsScriptsController(rating.RatingRestControllerBase):
             return script_models.Script(
                 **script_db.export_model())
         except db_api.NoSuchScript as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])
 
     @wsme_pecan.wsexpose(None, ck_types.UuidType(), status_code=204)
     def delete(self, script_id):
@@ -129,4 +128,4 @@ class PyScriptsScriptsController(rating.RatingRestControllerBase):
         try:
             pyscripts.delete_script(uuid=script_id)
         except db_api.NoSuchScript as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])

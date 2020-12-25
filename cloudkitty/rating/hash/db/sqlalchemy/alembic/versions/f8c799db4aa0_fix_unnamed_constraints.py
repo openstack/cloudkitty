@@ -25,7 +25,6 @@ down_revision = '10d2738b67df'
 import copy  # noqa: E402
 
 from alembic import op  # noqa: E402
-import six  # noqa: E402
 
 from cloudkitty.rating.hash.db.sqlalchemy.alembic.models import (  # noqa: E402
     f8c799db4aa0_fix_unnamed_constraints as models)
@@ -154,7 +153,7 @@ POST_OPS = {
 def upgrade_sqlite():
     # NOTE(sheeprine): Batch automatically recreates tables,
     # use it as a lazy way to recreate tables and transfer data automagically.
-    for name, table in six.iteritems(models.Base.metadata.tables):
+    for name, table in models.Base.metadata.tables.items():
         with op.batch_alter_table(name, copy_from=table) as batch_op:
             # NOTE(sheeprine): Dummy operation to force recreate.
             # Easier than delete and create.
@@ -168,13 +167,13 @@ def upgrade_mysql():
     tables['hashmap_fields'].constraints = set()
     tables['hashmap_mappings'].constraints = set()
     tables['hashmap_thresholds'].constraints = set()
-    for name, table in six.iteritems(tables):
+    for name, table in tables.items():
         with op.batch_alter_table(name,
                                   copy_from=table,
                                   recreate='always') as batch_op:
             batch_op.alter_column('id')
     # Final copy with constraints
-    for name, table in six.iteritems(models.Base.metadata.tables):
+    for name, table in models.Base.metadata.tables.items():
         with op.batch_alter_table(name,
                                   copy_from=table,
                                   recreate='always') as batch_op:
@@ -208,8 +207,8 @@ def upgrade_postgresql():
         ops_list = [POST_OPS]
     for cur_ops in ops_list:
         for constraint_type in ('foreignkey', 'unique', 'primary'):
-            for table_name, constraints in six.iteritems(
-                    cur_ops.get(constraint_type, dict())):
+            for table_name, constraints in cur_ops.get(constraint_type,
+                                                       dict()).items():
                 for constraint in constraints:
                     old_name = constraint[0]
                     translate_op(
@@ -218,8 +217,8 @@ def upgrade_postgresql():
                         old_name,
                         table_name)
         for constraint_type in ('primary', 'unique', 'foreignkey'):
-            for table_name, constraints in six.iteritems(
-                    cur_ops.get(constraint_type, dict())):
+            for table_name, constraints in cur_ops.get(constraint_type,
+                                                       dict()).items():
                 for constraint in constraints:
                     new_name = constraint[1]
                     params = constraint[2]

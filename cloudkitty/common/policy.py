@@ -23,7 +23,6 @@ from oslo_log import log as logging
 from oslo_policy import opts as policy_opts
 from oslo_policy import policy
 from oslo_utils import excutils
-import six
 
 from cloudkitty.common import policies
 
@@ -49,7 +48,7 @@ class PolicyNotAuthorized(Exception):
         super(PolicyNotAuthorized, self).__init__(self.msg)
 
     def __unicode__(self):
-        return six.text_type(self.msg)
+        return str(self.msg)
 
 
 def reset():

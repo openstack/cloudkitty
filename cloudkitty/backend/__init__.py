@@ -15,11 +15,8 @@
 #
 import abc
 
-import six
 
-
-@six.add_metaclass(abc.ABCMeta)
-class BaseIOBackend(object):
+class BaseIOBackend(object, metaclass=abc.ABCMeta):
     def __init__(self, path):
         self.open(path)
 

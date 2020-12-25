@@ -28,7 +28,6 @@ from oslo_db.sqlalchemy import utils
 import oslo_messaging
 from oslo_messaging import conffixture
 from oslo_policy import opts as policy_opts
-import six
 from stevedore import driver
 from stevedore import extension
 import webob.dec
@@ -70,8 +69,7 @@ class UUIDFixture(fixture.GabbiFixture):
         self.patcher.stop()
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseExtensionFixture(fixture.GabbiFixture):
+class BaseExtensionFixture(fixture.GabbiFixture, metaclass=abc.ABCMeta):
     klass = None
     namespace = None
     stevedore_mgr = None

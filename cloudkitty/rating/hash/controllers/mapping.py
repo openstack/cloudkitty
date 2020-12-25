@@ -14,7 +14,6 @@
 #    under the License.
 #
 import pecan
-import six
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import types as ck_types
@@ -45,7 +44,7 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
                 uuid=mapping_id)
             return group_models.Group(**group_db.export_model())
         except db_api.MappingHasNoGroup as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])
 
     @wsme_pecan.wsexpose(mapping_models.MappingCollection,
                          ck_types.UuidType(),
@@ -105,7 +104,7 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
             return mapping_models.Mapping(
                 **mapping_db.export_model())
         except db_api.NoSuchMapping as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])
 
     @wsme_pecan.wsexpose(mapping_models.Mapping,
                          body=mapping_models.Mapping,
@@ -132,9 +131,9 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
             return mapping_models.Mapping(
                 **mapping_db.export_model())
         except db_api.MappingAlreadyExists as e:
-            pecan.abort(409, six.text_type(e))
+            pecan.abort(409, e.args[0])
         except db_api.ClientHashMapError as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(400, e.args[0])
 
     @wsme_pecan.wsexpose(None,
                          ck_types.UuidType(),
@@ -158,11 +157,11 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
                 tenant_id=mapping.tenant_id)
             pecan.response.headers['Location'] = pecan.request.path
         except db_api.MappingAlreadyExists as e:
-            pecan.abort(409, six.text_type(e))
+            pecan.abort(409, e.args[0])
         except db_api.NoSuchMapping as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])
         except db_api.ClientHashMapError as e:
-            pecan.abort(400, six.text_type(e))
+            pecan.abort(400, e.args[0])
 
     @wsme_pecan.wsexpose(None,
                          ck_types.UuidType(),
@@ -176,4 +175,4 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
         try:
             hashmap.delete_mapping(uuid=mapping_id)
         except db_api.NoSuchMapping as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])

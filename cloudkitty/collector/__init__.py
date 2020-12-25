@@ -18,7 +18,6 @@ import fractions
 
 from oslo_config import cfg
 from oslo_log import log as logging
-import six
 from stevedore import driver
 from voluptuous import All
 from voluptuous import Any
@@ -153,8 +152,7 @@ class NoDataCollected(Exception):
         self.resource = resource
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseCollector(object):
+class BaseCollector(object, metaclass=abc.ABCMeta):
     collector_name = None
 
     def __init__(self, **kwargs):

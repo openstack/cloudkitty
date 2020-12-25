@@ -17,7 +17,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import pecan
 from pecan import rest
-import six
 import voluptuous
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
@@ -70,7 +69,7 @@ def get_one_metric(metric_name):
     policy.authorize(pecan.request.context, 'info:get_metric_info', {})
     metric = _find_metric(metric_name, metrics_conf)
     if not metric:
-        pecan.abort(404, six.text_type(metric_name))
+        pecan.abort(404, str(metric_name))
     info = metric.copy()
     info['metric_id'] = info['alt_name']
     return info_models.CloudkittyMetricInfo(**info)

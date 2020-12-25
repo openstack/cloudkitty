@@ -17,9 +17,9 @@ import contextlib
 import datetime
 import decimal
 import fractions
+import importlib
 import math
 import shutil
-import six
 from string import Template
 import sys
 import tempfile
@@ -27,7 +27,6 @@ import yaml
 
 from oslo_log import log as logging
 from oslo_utils import timeutils
-from six import moves
 from stevedore import extension
 
 from cloudkitty.utils import tz as tzutils
@@ -192,7 +191,7 @@ def refresh_stevedore(namespace=None):
         # python2, do nothing
         pass
     # Force working_set reload
-    moves.reload_module(sys.modules['pkg_resources'])
+    importlib.reload(sys.modules['pkg_resources'])
     # Clear stevedore cache
     cache = extension.ExtensionManager.ENTRY_POINT_CACHE
     if namespace:
@@ -249,8 +248,7 @@ def tempdir(**kwargs):
         try:
             shutil.rmtree(tmpdir)
         except OSError as e:
-            LOG.debug('Could not remove tmpdir: %s',
-                      six.text_type(e))
+            LOG.debug('Could not remove tmpdir: %s', e)
 
 
 def mutate(value, mode='NONE'):

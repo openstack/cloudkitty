@@ -22,7 +22,6 @@ from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import uuidutils
-import six
 
 from cloudkitty.collector import validate_conf
 from cloudkitty.storage.v1.hybrid.backends import BaseHybridBackend
@@ -47,7 +46,7 @@ gnocchi_storage_opts = [
     # The archive policy definition MUST include the collect period granularity
     cfg.StrOpt('archive_policy_definition',
                default='[{"granularity": '
-                       + six.text_type(CONF.collect.period) +
+                       + str(CONF.collect.period) +
                        ', "timespan": "90 days"}, '
                        '{"granularity": 86400, "timespan": "360 days"}, '
                        '{"granularity": 2592000, "timespan": "1800 days"}]',
@@ -398,7 +397,7 @@ class GnocchiStorage(BaseHybridBackend):
         price_dict = {'price': float(price)}
 
         # Getting vol
-        if isinstance(res_type_info['qty_metric'], six.string_types):
+        if isinstance(res_type_info['qty_metric'], str):
             try:
                 qty = self._conn.metric.get_measures(
                     resource['metrics'][res_type_info['qty_metric']],

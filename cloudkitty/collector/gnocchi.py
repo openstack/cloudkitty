@@ -16,8 +16,6 @@
 from datetime import timedelta
 import requests
 
-import six
-
 from gnocchiclient import auth as gauth
 from gnocchiclient import client as gclient
 from gnocchiclient import exceptions as gexceptions
@@ -93,7 +91,7 @@ for agg in list(BASIC_AGGREGATION_METHODS):
     BASIC_AGGREGATION_METHODS.add("rate:%s" % agg)
 
 EXTRA_AGGREGATION_METHODS_FOR_ARCHIVE_POLICY = set(
-    (str(i) + 'pct' for i in six.moves.range(1, 100)))
+    (str(i) + 'pct' for i in range(1, 100)))
 
 for agg in list(EXTRA_AGGREGATION_METHODS_FOR_ARCHIVE_POLICY):
     EXTRA_AGGREGATION_METHODS_FOR_ARCHIVE_POLICY.add("rate:%s" % agg)
@@ -321,7 +319,7 @@ class GnocchiCollector(collector.BaseCollector):
             # FIXME(peschk_l): gnocchiclient seems to be raising a BadRequest
             # when it should be raising MetricNotFound
             if isinstance(e, gexceptions.BadRequest):
-                if 'Metrics not found' not in six.text_type(e):
+                if 'Metrics not found' not in e.args[0]:
                     raise
             LOG.warning('[{scope}] Skipping this metric for the '
                         'current cycle.'.format(scope=project_id, err=e))

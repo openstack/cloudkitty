@@ -17,7 +17,6 @@ import abc
 
 from oslo_config import cfg
 from oslo_db import api as db_api
-import six
 
 from cloudkitty.i18n import _
 
@@ -195,8 +194,7 @@ class ThresholdHasNoGroup(ClientHashMapError):
         self.uuid = uuid
 
 
-@six.add_metaclass(abc.ABCMeta)
-class HashMap(object):
+class HashMap(object, metaclass=abc.ABCMeta):
     """Base class for hashmap configuration."""
 
     @abc.abstractmethod

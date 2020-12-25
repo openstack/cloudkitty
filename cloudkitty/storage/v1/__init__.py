@@ -18,16 +18,13 @@ from datetime import timedelta
 
 from oslo_config import cfg
 from oslo_log import log as logging
-import six
-
 
 LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseStorage(object):
+class BaseStorage(object, metaclass=abc.ABCMeta):
     """Base Storage class:
 
         Handle incoming data from the global orchestrator, and store them.
