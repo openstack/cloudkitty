@@ -71,10 +71,10 @@ def upgrade():
         if dialect != 'postgresql':
             with op.batch_alter_table('hashmap_thresholds') as batch_op:
                 batch_op.drop_constraint(
-                    u'uniq_field_mapping',
+                    'uniq_field_mapping',
                     type_='unique')
                 batch_op.drop_constraint(
-                    u'uniq_service_mapping',
+                    'uniq_service_mapping',
                     type_='unique')
                 batch_op.create_unique_constraint(
                     'uniq_field_threshold',
@@ -95,11 +95,11 @@ def upgrade():
             op.rename_table('tmig_hashmap_thresholds', 'hashmap_thresholds')
         else:
             op.drop_constraint(
-                u'uniq_field_mapping',
+                'uniq_field_mapping',
                 'hashmap_thresholds',
                 type_='unique')
             op.drop_constraint(
-                u'uniq_service_mapping',
+                'uniq_service_mapping',
                 'hashmap_thresholds',
                 type_='unique')
             op.create_unique_constraint(

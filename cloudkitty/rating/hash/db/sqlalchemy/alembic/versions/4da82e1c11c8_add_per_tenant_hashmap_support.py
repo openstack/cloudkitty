@@ -28,17 +28,17 @@ import sqlalchemy as sa  # noqa: E402
 
 CONSTRAINT_MAP = {
     'hashmap_mappings': {
-        u'uniq_field_mapping': (
+        'uniq_field_mapping': (
             ['value', 'field_id', 'tenant_id'],
             ['value', 'field_id']),
-        u'uniq_service_mapping': (
+        'uniq_service_mapping': (
             ['value', 'service_id', 'tenant_id'],
             ['value', 'service_id'])},
     'hashmap_thresholds': {
-        u'uniq_field_threshold': (
+        'uniq_field_threshold': (
             ['level', 'field_id', 'tenant_id'],
             ['level', 'field_id']),
-        u'uniq_service_threshold': (
+        'uniq_service_threshold': (
             ['level', 'service_id', 'tenant_id'],
             ['level', 'service_id'])}}
 

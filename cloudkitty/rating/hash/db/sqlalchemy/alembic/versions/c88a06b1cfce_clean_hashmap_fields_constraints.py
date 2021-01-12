@@ -42,7 +42,7 @@ def upgrade():
                     name='fk_hashmap_fields_service_id_hashmap_services'),
                 nullable=False)]) as batch_op:
         batch_op.drop_constraint(
-            u'uniq_field',
+            'uniq_field',
             type_='unique')
         batch_op.create_unique_constraint(
             'uniq_field_per_service',
