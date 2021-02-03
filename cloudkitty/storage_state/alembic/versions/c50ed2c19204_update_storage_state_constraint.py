@@ -37,7 +37,7 @@ def upgrade():
 
             with op.batch_alter_table(name,
                                       copy_from=table,
-                                      recreate='always') as batch_op:
+                                      recreate='auto') as batch_op:
                 batch_op.alter_column('identifier')
                 batch_op.create_unique_constraint(
                     'uq_cloudkitty_storage_states_identifier',
