@@ -186,6 +186,9 @@ Four values are accepted for this parameter:
 
 * ``NUMBOOL``: If the collected qty equals 0, leave it at 0. Else, set it to 1.
 
+* ``NOTNUMBOOL``: If the collected qty equals 0, set it to 1. Else, set it to
+  0.
+
 .. warning::
 
    Quantity mutation is done **after** conversion. Example::
@@ -209,6 +212,21 @@ then defined based on the instance metadata. Example:
      cpu:
        unit: instance
        mutate: NUMBOOL
+       groupby:
+         - id
+       metadata:
+         - flavor_id
+
+The ``NOTNUMBOOL`` mutator is useful for status-like metrics where 0 denotes
+the billable state. For example the following Prometheus metric has value of 0
+when the instance is in ACTIVE state but 4 if the instance is in ERROR state:
+
+.. code-block:: yaml
+
+   metrics:
+     openstack_nova_server_status:
+       unit: instance
+       mutate: NOTNUMBOOL
        groupby:
          - id
        metadata:

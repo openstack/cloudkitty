@@ -257,6 +257,9 @@ def mutate(value, mode='NONE'):
     if mode == 'NUMBOOL':
         return float(value != 0.0)
 
+    if mode == 'NOTNUMBOOL':
+        return float(value == 0.0)
+
     if mode == 'FLOOR':
         return math.floor(value)
 
