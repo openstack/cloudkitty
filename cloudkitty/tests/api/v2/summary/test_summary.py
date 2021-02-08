@@ -16,6 +16,7 @@ import flask
 import uuid
 
 from unittest import mock
+import voluptuous
 
 from cloudkitty.api.v2.summary import summary
 from cloudkitty import tests
@@ -52,3 +53,45 @@ class TestSummaryEndpoint(tests.TestCase):
                     limit=100,
                     paginate=True,
                 )
+
+    def test_invalid_response_type(self):
+        self.assertRaises(voluptuous.Invalid, self.endpoint.get,
+                          response_format="INVALID_RESPONSE_TYPE")
+
+    def test_generate_response_table_response_type(self):
+        objects = [{"a1": "obj1", "a2": "value1"},
+                   {"a1": "obj2", "a2": "value2"}]
+
+        total = {'total': len(objects),
+                 'results': objects}
+
+        response = self.endpoint.generate_response(
+            summary.TABLE_RESPONSE_FORMAT, total)
+
+        self.assertIn('total', response)
+        self.assertIn('results', response)
+        self.assertIn('columns', response)
+
+        self.assertEqual(len(objects), response['total'])
+        self.assertEqual(list(objects[0].keys()), response['columns'])
+        self.assertEqual(
+            [list(res.values()) for res in objects], response['results'])
+        self.assertEqual(summary.TABLE_RESPONSE_FORMAT, response['format'])
+
+    def test_generate_response_object_response_type(self):
+        objects = [{"a1": "obj1", "a2": "value1"},
+                   {"a1": "obj2", "a2": "value2"}]
+
+        total = {'total': len(objects),
+                 'results': objects}
+
+        response = self.endpoint.generate_response(
+            summary.OBJECT_RESPONSE_FORMAT, total)
+
+        self.assertIn('total', response)
+        self.assertIn('results', response)
+        self.assertNotIn('columns', response)
+
+        self.assertEqual(len(objects), response['total'])
+        self.assertEqual(objects, response['results'])
+        self.assertEqual(summary.OBJECT_RESPONSE_FORMAT, response['format'])

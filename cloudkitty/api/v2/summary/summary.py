@@ -20,12 +20,19 @@ from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty.common import policy
 from cloudkitty.utils import tz as tzutils
 
+TABLE_RESPONSE_FORMAT = "table"
+OBJECT_RESPONSE_FORMAT = "object"
+
+ALL_RESPONSE_FORMATS = [TABLE_RESPONSE_FORMAT, OBJECT_RESPONSE_FORMAT]
+
 
 class Summary(base.BaseResource):
     """Resource allowing to retrieve a rating summary."""
 
     @api_utils.paginated
     @api_utils.add_input_schema('query', {
+        voluptuous.Optional('response_format'):
+            api_utils.SingleQueryParam(str),
         voluptuous.Optional('custom_fields'): api_utils.SingleQueryParam(str),
         voluptuous.Optional('groupby'): api_utils.MultiQueryParam(str),
         voluptuous.Optional('filters'):
@@ -35,8 +42,15 @@ class Summary(base.BaseResource):
         voluptuous.Optional('end'): api_utils.SingleQueryParam(
             tzutils.dt_from_iso),
     })
-    def get(self, custom_fields=None, groupby=None, filters={}, begin=None,
-            end=None, offset=0, limit=100):
+    def get(self, response_format=TABLE_RESPONSE_FORMAT, custom_fields=None,
+            groupby=None, filters={}, begin=None, end=None, offset=0,
+            limit=100):
+
+        if response_format not in ALL_RESPONSE_FORMATS:
+            raise voluptuous.Invalid("Invalid response format [%s]. Valid "
+                                     "format are [%s]."
+                                     % (response_format, ALL_RESPONSE_FORMATS))
+
         policy.authorize(
             flask.request.context,
             'summary:get_summary',
@@ -69,12 +83,23 @@ class Summary(base.BaseResource):
             arguments['custom_fields'] = custom_fields
 
         total = self._storage.total(**arguments)
-        columns = []
-        if len(total['results']) > 0:
-            columns = list(total['results'][0].keys())
 
-        return {
-            'total': total['total'],
-            'columns': columns,
-            'results': [list(res.values()) for res in total['results']]
-        }
+        return self.generate_response(response_format, total)
+
+    @staticmethod
+    def generate_response(response_format, total):
+        response = {'total': total['total']}
+        if response_format == TABLE_RESPONSE_FORMAT:
+            columns = []
+            if len(total['results']) > 0:
+                columns = list(total['results'][0].keys())
+
+            response['columns'] = columns
+            response['results'] = [list(res.values())
+                                   for res in total['results']]
+
+        elif response_format == OBJECT_RESPONSE_FORMAT:
+            response['results'] = total['results']
+
+        response['format'] = response_format
+        return response

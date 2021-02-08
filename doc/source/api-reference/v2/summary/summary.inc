@@ -18,6 +18,7 @@ Get a rating summary for one or several tenants.
    - groupby: groupby
    - filters: filters
    - custom_fields: custom_fields
+   - response_format: response_format
 
 Status codes
 ------------
@@ -35,7 +36,7 @@ Status codes
 Response
 --------
 
-The response has the following format:
+The response has the following default format (response_format='table'):
 
 .. code-block:: javascript
 
@@ -65,6 +66,25 @@ The response has the following format:
 the columns for each element of ``results``. The columns are the four mandatory ones
 (``begin``, ``end``, ``qty``, ``rate``) along with each attribute the result is
 grouped by.
+
+``format`` is the response format. It can be "table" or "object". The default
+response structure is "table", which is presented above. The object structure
+uses the following pattern.
+
+.. code-block:: javascript
+
+   {
+       "results": [
+           {"begin": "2019-06-01T00:00:00Z",
+            "end": "2019-07-01T00:00:00Z",
+            "qty": 2590.421676635742,
+            "rate": 1295.210838317871,
+            "group1": "group1",
+            "group2": "group2",
+           },
+       ],
+       "total": 4
+   }
 
 .. note:: It is also possible to group data by time, in order to obtain timeseries.
           In order to do this, group by ``time``. No extra column will be added,

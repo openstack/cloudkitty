@@ -191,7 +191,9 @@ class InfluxClient(object):
 
         self.validate_custom_fields(custom_fields)
 
-        query = 'SELECT %s FROM "dataframes"' % custom_fields
+        # We validate the SQL statements. Therefore, we can ignore this
+        # bandit warning here.
+        query = 'SELECT %s FROM "dataframes"' % custom_fields  # nosec
         query += self._get_time_query(begin, end)
         query += self._get_filter_query(filters)
         query += self._get_type_query(types)

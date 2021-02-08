@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Introduce ``response_format`` option for the V2 summary API, which can
+    facilitate parsing the response.

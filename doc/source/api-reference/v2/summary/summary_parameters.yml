@@ -64,6 +64,28 @@ offset: &offset
   type: int
   required: false
 
+response_format:
+  in: query
+  description: |
+    Optional attribute to define the object structure used in the response.
+    Both responses will be JSON objects. Possible values are ``table`` or
+    ``object``.
+
+    The default value is ``table`` object structure, where one has the
+    attributes `total`, which indicates the total number of entries in the
+    response; `results`, which is a list of lists, where the nested list
+    contains the values of each entry; and, `columns`, which is the attribute
+    that describes all of the available columns. Then, each index in this
+    list (`columns`) corresponds to the metadata of the values in the `results`
+    list.
+
+    The structure for the `object` option uses a dictionary. The response still
+    has the `total` attribute. However, in the `results` attribute, one will
+    find a list of objects, instead of a list of lists of values that we see
+    in the `table` option. This facilitates the processing of some use cases.
+  type: string
+  required: false
+
 begin_resp:
   <<: *begin
   required: true
