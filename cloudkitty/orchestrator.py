@@ -174,14 +174,15 @@ class ScopeEndpoint(object):
                         lock_name,
                     )
                 )
-                state_dt = tzutils.dt_from_iso(res_data['state'])
+                last_processed_timestamp = tzutils.dt_from_iso(
+                    res_data['last_processed_timestamp'])
                 try:
-                    self._storage.delete(begin=state_dt, end=None, filters={
-                        scope['scope_key']: scope['scope_id'],
-                    })
-                    self._state.set_state(
+                    self._storage.delete(
+                        begin=last_processed_timestamp, end=None, filters={
+                            scope['scope_key']: scope['scope_id']})
+                    self._state.set_last_processed_timestamp(
                         scope['scope_id'],
-                        state_dt,
+                        last_processed_timestamp,
                         fetcher=scope['fetcher'],
                         collector=scope['collector'],
                         scope_key=scope['scope_key'],

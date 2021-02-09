@@ -78,7 +78,8 @@ class StateManager(object):
         session.close()
 
         for item in r:
-            item.state = tzutils.utc_to_local(item.state)
+            item.last_processed_timestamp = tzutils.utc_to_local(
+                item.last_processed_timestamp)
 
         return r
 
@@ -119,12 +120,26 @@ class StateManager(object):
 
     def set_state(self, identifier, state,
                   fetcher=None, collector=None, scope_key=None):
-        """Set the state of a scope.
+        """Set the last processed timestamp of a scope.
+
+        This method is deprecated, consider using
+        "set_last_processed_timestamp".
+        """
+        LOG.warning("The method 'set_state' is deprecated."
+                    "Consider using the new method "
+                    "'set_last_processed_timestamp'.")
+        self.set_last_processed_timestamp(
+            identifier, state, fetcher, collector, scope_key)
+
+    def set_last_processed_timestamp(
+            self, identifier, last_processed_timestamp, fetcher=None,
+            collector=None, scope_key=None):
+        """Set the last processed timestamp of a scope.
 
         :param identifier: Identifier of the scope
         :type identifier: str
-        :param state: state of the scope
-        :type state: datetime.datetime
+        :param last_processed_timestamp: last processed timestamp of the scope
+        :type last_processed_timestamp: datetime.datetime
         :param fetcher: Fetcher associated to the scope
         :type fetcher: str
         :param collector: Collector associated to the scope
@@ -132,20 +147,21 @@ class StateManager(object):
         :param scope_key: scope_key associated to the scope
         :type scope_key: str
         """
-        state = tzutils.local_to_utc(state, naive=True)
+        last_processed_timestamp = tzutils.local_to_utc(
+            last_processed_timestamp, naive=True)
         session = db.get_session()
         session.begin()
         r = self._get_db_item(
             session, identifier, fetcher, collector, scope_key)
 
         if r:
-            if r.state != state:
-                r.state = state
+            if r.last_processed_timestamp != last_processed_timestamp:
+                r.last_processed_timestamp = last_processed_timestamp
                 session.commit()
         else:
             state_object = self.model(
                 identifier=identifier,
-                state=state,
+                last_processed_timestamp=last_processed_timestamp,
                 fetcher=fetcher,
                 collector=collector,
                 scope_key=scope_key,
@@ -157,7 +173,15 @@ class StateManager(object):
 
     def get_state(self, identifier,
                   fetcher=None, collector=None, scope_key=None):
-        """Get the state of a scope.
+        LOG.warning("The method 'get_state' is deprecated."
+                    "Consider using the new method"
+                    "'get_last_processed_timestamp'.")
+        return self.get_last_processed_timestamp(
+            identifier, fetcher, collector, scope_key)
+
+    def get_last_processed_timestamp(self, identifier, fetcher=None,
+                                     collector=None, scope_key=None):
+        """Get the last processed timestamp of a scope.
 
         :param identifier: Identifier of the scope
         :type identifier: str
@@ -174,7 +198,7 @@ class StateManager(object):
         r = self._get_db_item(
             session, identifier, fetcher, collector, scope_key)
         session.close()
-        return tzutils.utc_to_local(r.state) if r else None
+        return tzutils.utc_to_local(r.last_processed_timestamp) if r else None
 
     def init(self):
         migration.upgrade('head')

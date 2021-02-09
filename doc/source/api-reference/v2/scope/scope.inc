@@ -40,6 +40,7 @@ Response
    - collector: collector_resp
    - fetcher: fetcher_resp
    - state: state
+   - last_processed_timestamp: last_processed_timestamp
    - scope_id: scope_id_resp
    - scope_key: scope_key_resp
 
@@ -60,6 +61,7 @@ Reset the status of several scopes.
 .. rest_parameters:: scope/scope_parameters.yml
 
    - state: state
+   - last_processed_timestamp: last_processed_timestamp
    - collector: collector_body
    - fetcher: fetcher_body
    - scope_id: scope_id_body

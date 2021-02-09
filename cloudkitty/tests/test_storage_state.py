@@ -56,12 +56,12 @@ class StateManagerTest(tests.TestCase):
         return output, mock.Mock(return_value=output)
 
     @staticmethod
-    def _get_r_mock(scope_key, collector, fetcher, state):
+    def _get_r_mock(scope_key, collector, fetcher, last_processed_timestamp):
         r_mock = mock.Mock()
         r_mock.scope_key = scope_key
         r_mock.collector = collector
         r_mock.fetcher = fetcher
-        r_mock.state = state
+        r_mock.last_processed_timestamp = last_processed_timestamp
         return r_mock
 
     def _test_x_state_does_update_columns(self, func):
@@ -127,6 +127,6 @@ class StateManagerTest(tests.TestCase):
             sm.return_value = session_mock = mock.MagicMock()
             self.assertNotEqual(r_mock.state, new_state)
             self._state.set_state('fake_identifier', new_state)
-            self.assertEqual(r_mock.state, new_state)
+            self.assertEqual(r_mock.last_processed_timestamp, new_state)
             session_mock.commit.assert_called_once()
             session_mock.add.assert_not_called()

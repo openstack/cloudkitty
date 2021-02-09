@@ -66,6 +66,13 @@ fetcher_resp:
   description: Fetcher for the given scope
   in: body
 
+last_processed_timestamp:
+  in: body
+  description: |
+    It represents the last processed timestamp for the storage state element.
+  type: iso8601 timestamp
+  required: true
+
 scope_id_body:
   <<: *scope_id
   in: body
@@ -89,6 +96,9 @@ scope_key_resp:
 state:
   in: body
   description: |
-    State of the scope.
+    State of the scope. This variable represents the last processed
+    timestamp for the storage state element. It is DEPRECATED, and it will
+    be removed in upcoming releases. The alternative is
+    `last_processed_timestamp`.
   type: iso8601 timestamp
   required: true

@@ -156,8 +156,6 @@ class StorageUnitTest(TestCase):
     def test_get_total_one_scope_one_period(self):
         expected_total, expected_qty, _ = self._expected_total_qty_len(
             [self.data[0]], self._project_id)
-        expected_total, expected_qty, _ = self._expected_total_qty_len(
-            [self.data[0]], self._project_id)
 
         begin = datetime.datetime(2018, 1, 1)
         end = datetime.datetime(2018, 1, 1, 1)

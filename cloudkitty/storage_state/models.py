@@ -52,5 +52,5 @@ class IdentifierState(Base, models.ModelBase):
     collector = sqlalchemy.Column(sqlalchemy.String(40),
                                   nullable=True,
                                   unique=False)
-    state = sqlalchemy.Column(sqlalchemy.DateTime,
-                              nullable=False)
+    last_processed_timestamp = sqlalchemy.Column(
+        sqlalchemy.DateTime, nullable=False)

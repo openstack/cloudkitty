@@ -54,8 +54,9 @@ class ScopeEndpointTest(tests.TestCase):
 
         storage_delete_patch = mock.patch.object(
             influx.InfluxStorage, 'delete')
+
         state_set_patch = mock.patch.object(
-            storage_state.StateManager, 'set_state')
+            storage_state.StateManager, 'set_last_processed_timestamp')
 
         with coord_start_patch, lock_acquire_patch, \
                 storage_delete_patch as sd, state_set_patch as ss:
@@ -76,7 +77,7 @@ class ScopeEndpointTest(tests.TestCase):
                         'fetcher': 'gnocchi',
                     },
                 ],
-                'state': '20190716T085501Z',
+                'last_processed_timestamp': '20190716T085501Z',
             })
 
             sd.assert_has_calls([

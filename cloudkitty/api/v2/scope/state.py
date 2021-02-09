@@ -24,6 +24,10 @@ from cloudkitty import storage_state
 from cloudkitty.utils import tz as tzutils
 from cloudkitty.utils import validation as vutils
 
+from oslo_log import log
+
+LOG = log.getLogger(__name__)
+
 
 class ScopeState(base.BaseResource):
 
@@ -49,7 +53,10 @@ class ScopeState(base.BaseResource):
         voluptuous.Required('scope_key'): vutils.get_string_type(),
         voluptuous.Required('fetcher'): vutils.get_string_type(),
         voluptuous.Required('collector'): vutils.get_string_type(),
-        voluptuous.Required('state'): vutils.get_string_type(),
+        voluptuous.Optional(
+            'last_processed_timestamp'): vutils.get_string_type(),
+        # This "state" property should be removed in the next release.
+        voluptuous.Optional('state'): vutils.get_string_type(),
     }]})
     def get(self,
             offset=0,
@@ -81,7 +88,9 @@ class ScopeState(base.BaseResource):
                 'scope_key': r.scope_key,
                 'fetcher': r.fetcher,
                 'collector': r.collector,
-                'state': r.state.isoformat(),
+                'state': r.last_processed_timestamp.isoformat(),
+                'last_processed_timestamp':
+                    r.last_processed_timestamp.isoformat(),
             } for r in results]
         }
 
@@ -96,7 +105,10 @@ class ScopeState(base.BaseResource):
             api_utils.MultiQueryParam(str),
         voluptuous.Optional('collector', default=[]):
             api_utils.MultiQueryParam(str),
-        voluptuous.Required('state'):
+        voluptuous.Optional('last_processed_timestamp'):
+            voluptuous.Coerce(tzutils.dt_from_iso),
+        # This "state" property should be removed in the next release.
+        voluptuous.Optional('state'):
             voluptuous.Coerce(tzutils.dt_from_iso),
     })
     def put(self,
@@ -105,6 +117,7 @@ class ScopeState(base.BaseResource):
             scope_key=None,
             fetcher=None,
             collector=None,
+            last_processed_timestamp=None,
             state=None):
 
         policy.authorize(
@@ -116,6 +129,15 @@ class ScopeState(base.BaseResource):
         if not all_scopes and scope_id is None:
             raise http_exceptions.BadRequest(
                 "Either all_scopes or a scope_id should be specified.")
+
+        if not state and not last_processed_timestamp:
+            raise http_exceptions.BadRequest(
+                "Variables 'state' and 'last_processed_timestamp' cannot be "
+                "empty/None. We expect at least one of them.")
+        if state:
+            LOG.warning("The use of 'state' variable is deprecated, and will "
+                        "be removed in the next upcomming release. You should "
+                        "consider using 'last_processed_timestamp' variable.")
 
         results = self._storage_state.get_all(
             identifier=scope_id,
@@ -135,8 +157,11 @@ class ScopeState(base.BaseResource):
             'collector': r.collector,
         } for r in results]
 
+        if not last_processed_timestamp:
+            last_processed_timestamp = state
         self._client.cast({}, 'reset_state', res_data={
-            'scopes': serialized_results, 'state': state.isoformat(),
+            'scopes': serialized_results,
+            'last_processed_timestamp': last_processed_timestamp.isoformat()
         })
 
         return {}, 202
