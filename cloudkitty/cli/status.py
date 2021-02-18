@@ -15,6 +15,7 @@
 import sys
 
 from oslo_config import cfg
+from oslo_upgradecheck import common_checks
 from oslo_upgradecheck import upgradecheck
 
 from cloudkitty.i18n import _
@@ -38,6 +39,8 @@ class CloudkittyUpgradeChecks(upgradecheck.UpgradeCommands):
 
     _upgrade_checks = (
         (_('Storage version'), _storage_version),
+        (_("Policy File JSON to YAML Migration"),
+         (common_checks.check_policy_json, {'conf': CONF})),
     )
 
 
