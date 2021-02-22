@@ -17,7 +17,6 @@ import abc
 
 from oslo_config import cfg
 from oslo_db import api as db_api
-import six
 
 _BACKEND_MAPPING = {'sqlalchemy': 'cloudkitty.db.sqlalchemy.api'}
 IMPL = db_api.DBAPI.from_config(cfg.CONF,
@@ -30,8 +29,7 @@ def get_instance():
     return IMPL
 
 
-@six.add_metaclass(abc.ABCMeta)
-class State(object):
+class State(object, metaclass=abc.ABCMeta):
     """Base class for state tracking."""
 
     @abc.abstractmethod
@@ -68,8 +66,7 @@ class State(object):
         """
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ModuleInfo(object):
+class ModuleInfo(object, metaclass=abc.ABCMeta):
     """Base class for module info management."""
 
     @abc.abstractmethod
@@ -114,8 +111,7 @@ class NoSuchMapping(Exception):
         self.service = service
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ServiceToCollectorMapping(object):
+class ServiceToCollectorMapping(object, metaclass=abc.ABCMeta):
     """Base class for service to collector mapping."""
 
     @abc.abstractmethod

@@ -17,7 +17,6 @@ import abc
 import datetime
 
 from oslo_config import cfg
-import six
 
 from cloudkitty import storage_state
 
@@ -35,8 +34,7 @@ CONF = cfg.CONF
 CONF.register_opts(storage_opts, 'storage')
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseStorage(object):
+class BaseStorage(object, metaclass=abc.ABCMeta):
     """Abstract class for v2 storage objects."""
 
     def __init__(self, *args, **kwargs):

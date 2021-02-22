@@ -20,7 +20,6 @@ from unittest import mock
 import zlib
 
 from oslo_utils import uuidutils
-import six
 
 from cloudkitty.rating import pyscripts
 from cloudkitty.rating.pyscripts.db import api
@@ -220,7 +219,7 @@ class PyScriptsRatingTest(tests.TestCase):
             '<PyScripts Script[{uuid}]: name={name}>'.format(
                 uuid=script_db.script_id,
                 name=script_db.name),
-            six.text_type(script_db))
+            str(script_db))
 
     # Checksum tests
     def test_validate_checksum(self):

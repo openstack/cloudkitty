@@ -20,7 +20,6 @@ Create Date: 2019-05-15 17:02:56.595274
 
 """
 from alembic import op
-import six
 
 from cloudkitty.storage_state import models
 
@@ -32,7 +31,7 @@ depends_on = None
 
 
 def upgrade():
-    for name, table in six.iteritems(models.Base.metadata.tables):
+    for name, table in models.Base.metadata.tables.items():
         if name == 'cloudkitty_storage_states':
 
             with op.batch_alter_table(name,

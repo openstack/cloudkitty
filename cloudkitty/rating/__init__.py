@@ -17,15 +17,13 @@ import abc
 
 import pecan
 from pecan import rest
-import six
 
 from cloudkitty.common import policy
 from cloudkitty.db import api as db_api
 from cloudkitty import messaging
 
 
-@six.add_metaclass(abc.ABCMeta)
-class RatingProcessorBase(object):
+class RatingProcessorBase(object, metaclass=abc.ABCMeta):
     """Provides the Cloudkitty integration code to the rating processors.
 
     Every rating processor should subclass this and override at least
@@ -142,6 +140,6 @@ class RatingRestControllerBase(rest.RestController):
         try:
             policy.authorize(request.context, 'rating:module_config', {})
         except policy.PolicyNotAuthorized as e:
-            pecan.abort(403, six.text_type(e))
+            pecan.abort(403, e.args[0])
 
         return super(RatingRestControllerBase, self)._route(args, request)

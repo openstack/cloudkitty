@@ -16,7 +16,6 @@
 from oslo_log import log as logging
 import pecan
 from pecan import rest
-import six
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
@@ -47,7 +46,7 @@ class MappingController(rest.RestController):
             return collector_models.ServiceToCollectorMapping(
                 **mapping.as_dict())
         except db_api.NoSuchMapping as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])
 
     @wsme_pecan.wsexpose(collector_models.ServiceToCollectorMappingCollection,
                          wtypes.text)
@@ -94,7 +93,7 @@ class MappingController(rest.RestController):
         try:
             self._db.delete_mapping(service)
         except db_api.NoSuchMapping as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])
 
 
 class CollectorStateController(rest.RestController):

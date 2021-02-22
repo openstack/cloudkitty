@@ -14,7 +14,6 @@
 #    under the License.
 #
 import abc
-import six
 
 from oslo_config import cfg
 
@@ -27,8 +26,7 @@ fetcher_opts = [
 cfg.CONF.register_opts(fetcher_opts, 'fetcher')
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseFetcher(object):
+class BaseFetcher(object, metaclass=abc.ABCMeta):
     """CloudKitty tenants fetcher.
 
     Provides Cloudkitty integration with a backend announcing ratable scopes.

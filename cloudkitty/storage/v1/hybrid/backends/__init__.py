@@ -15,11 +15,8 @@
 #
 import abc
 
-import six
 
-
-@six.add_metaclass(abc.ABCMeta)
-class BaseHybridBackend(object):
+class BaseHybridBackend(object, metaclass=abc.ABCMeta):
     """Base Backend class for the Hybrid Storage.
 
     This is the interface that all backends for the hybrid storage

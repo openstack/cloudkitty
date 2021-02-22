@@ -14,7 +14,6 @@
 #    under the License.
 #
 import pecan
-import six
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import types as ck_types
@@ -60,7 +59,7 @@ class HashMapServicesController(rating.RatingRestControllerBase):
             service_db = hashmap.get_service(uuid=service_id)
             return service_models.Service(**service_db.export_model())
         except db_api.NoSuchService as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])
 
     @wsme_pecan.wsexpose(service_models.Service,
                          body=service_models.Service,
@@ -80,7 +79,7 @@ class HashMapServicesController(rating.RatingRestControllerBase):
             return service_models.Service(
                 **service_db.export_model())
         except db_api.ServiceAlreadyExists as e:
-            pecan.abort(409, six.text_type(e))
+            pecan.abort(409, e.args[0])
 
     @wsme_pecan.wsexpose(None, ck_types.UuidType(), status_code=204)
     def delete(self, service_id):
@@ -92,4 +91,4 @@ class HashMapServicesController(rating.RatingRestControllerBase):
         try:
             hashmap.delete_service(uuid=service_id)
         except db_api.NoSuchService as e:
-            pecan.abort(404, six.text_type(e))
+            pecan.abort(404, e.args[0])
