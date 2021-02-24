@@ -43,6 +43,7 @@ Response
    - last_processed_timestamp: last_processed_timestamp
    - scope_id: scope_id_resp
    - scope_key: scope_key_resp
+   - active: active_key_resp
 
 Response Example
 ----------------
@@ -81,3 +82,53 @@ Status codes
    - 403
    - 404
    - 405
+
+Patch a scope
+================================
+
+Patches/updates a scope.
+
+.. rest_method::  PATCH /v2/scope
+
+.. rest_parameters:: scope/scope_parameters.yml
+
+   - collector: collector
+   - fetcher: fetcher
+   - limit: limit
+   - offset: offset
+   - scope_id: scope_id
+   - scope_key: scope_key
+   - active: active_body
+
+Status codes
+------------
+
+.. rest_status_code:: success http_status.yml
+
+   - 200
+
+.. rest_status_code:: error http_status.yml
+
+   - 400
+   - 403
+   - 404
+   - 405
+
+Response
+--------
+
+.. rest_parameters:: scope/scope_parameters.yml
+
+   - collector: collector_resp
+   - fetcher: fetcher_resp
+   - state: state
+   - scope_id: scope_id_resp
+   - scope_key: scope_key_resp
+   - active: active_key_resp
+
+
+Response Example
+----------------
+
+.. literalinclude:: ./api_samples/scope/scope_get.json
+   :language: javascript

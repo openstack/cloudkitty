@@ -30,6 +30,13 @@ scope_policies = [
         description='Reset the state of one or several scopes',
         operations=[{'path': '/v2/scope',
                      'method': 'PUT'}]),
+    policy.DocumentedRuleDefault(
+        name='scope:patch_state',
+        check_str=base.ROLE_ADMIN,
+        description='Enables operators to patch a storage scope',
+        operations=[{'path': '/v2/scope',
+                     'method': 'PATCH'}]),
+
 ]
 
 

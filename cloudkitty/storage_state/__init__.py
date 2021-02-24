@@ -33,6 +33,20 @@ CONF.import_opt('collector', 'cloudkitty.collector', 'collect')
 CONF.import_opt('scope_key', 'cloudkitty.collector', 'collect')
 
 
+def to_list_if_needed(value):
+    if not isinstance(value, list):
+        value = [value]
+    return value
+
+
+def apply_offset_and_limit(limit, offset, q):
+    if offset:
+        q = q.offset(offset)
+    if limit:
+        q = q.limit(limit)
+    return q
+
+
 class StateManager(object):
     """Class allowing state management in CloudKitty"""
 
@@ -43,7 +57,9 @@ class StateManager(object):
                 fetcher=None,
                 collector=None,
                 scope_key=None,
-                limit=100, offset=0):
+                active=1,
+                limit=100,
+                offset=0):
         """Returns the state of all scopes.
 
         This function returns the state of all scopes with support for optional
@@ -59,20 +75,33 @@ class StateManager(object):
         :type fetcher: list
         :param scope_key: optional scope_keys to filter on
         :type scope_key: list
+        :param active: optional active to filter scopes by status
+                       (active/deactivated)
+        :type active: int
+        :param limit: optional to restrict the projection
+        :type limit: int
+        :param offset: optional to shift the projection
+        :type offset: int
         """
         session = db.get_session()
         session.begin()
 
         q = utils.model_query(self.model, session)
         if identifier:
-            q = q.filter(self.model.identifier.in_(identifier))
+            q = q.filter(
+                self.model.identifier.in_(to_list_if_needed(identifier)))
         if fetcher:
-            q = q.filter(self.model.fetcher.in_(fetcher))
+            q = q.filter(
+                self.model.fetcher.in_(to_list_if_needed(fetcher)))
         if collector:
-            q = q.filter(self.model.collector.in_(collector))
+            q = q.filter(
+                self.model.collector.in_(to_list_if_needed(collector)))
         if scope_key:
-            q = q.filter(self.model.scope_key.in_(scope_key))
-        q = q.offset(offset).limit(limit)
+            q = q.filter(
+                self.model.scope_key.in_(to_list_if_needed(scope_key)))
+        if active is not None and active != []:
+            q = q.filter(self.model.active.in_(to_list_if_needed(active)))
+        q = apply_offset_and_limit(limit, offset, q)
 
         r = q.all()
         session.close()
@@ -80,7 +109,8 @@ class StateManager(object):
         for item in r:
             item.last_processed_timestamp = tzutils.utc_to_local(
                 item.last_processed_timestamp)
-
+            item.scope_activation_toggle_date = tzutils.utc_to_local(
+                item.scope_activation_toggle_date)
         return r
 
     def _get_db_item(self, session, identifier,
@@ -211,3 +241,65 @@ class StateManager(object):
         q = utils.model_query(self.model, session)
         session.close()
         return [tenant.identifier for tenant in q]
+
+    def update_storage_scope(self, storage_scope_to_update, scope_key=None,
+                             fetcher=None, collector=None, active=None):
+        """Update storage scope data.
+
+        :param storage_scope_to_update: The storage scope to update in the DB
+        :type storage_scope_to_update: object
+        :param fetcher: Fetcher associated to the scope
+        :type fetcher: str
+        :param collector: Collector associated to the scope
+        :type collector: str
+        :param scope_key: scope_key associated to the scope
+        :type scope_key: str
+        :param active: indicates if the storage scope is active for processing
+        :type active: bool
+        """
+        session = db.get_session()
+        session.begin()
+
+        db_scope = self._get_db_item(session,
+                                     storage_scope_to_update.identifier,
+                                     storage_scope_to_update.fetcher,
+                                     storage_scope_to_update.collector,
+                                     storage_scope_to_update.scope_key)
+
+        if scope_key:
+            db_scope.scope_key = scope_key
+        if fetcher:
+            db_scope.fetcher = fetcher
+        if collector:
+            db_scope.collector = collector
+        if active is not None and active != db_scope.active:
+            db_scope.active = active
+
+            now = tzutils.localized_now()
+            db_scope.scope_activation_toggle_date = tzutils.local_to_utc(
+                now, naive=True)
+
+        session.commit()
+        session.close()
+
+    def is_storage_scope_active(self, identifier, fetcher=None,
+                                collector=None, scope_key=None):
+        """Checks if a storage scope is active
+
+        :param identifier: Identifier of the scope
+        :type identifier: str
+        :param fetcher: Fetcher associated to the scope
+        :type fetcher: str
+        :param collector: Collector associated to the scope
+        :type collector: str
+        :param scope_key: scope_key associated to the scope
+        :type scope_key: str
+        :rtype: datetime.datetime
+        """
+        session = db.get_session()
+        session.begin()
+        r = self._get_db_item(
+            session, identifier, fetcher, collector, scope_key)
+        session.close()
+
+        return r.active
