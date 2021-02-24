@@ -14,6 +14,7 @@ metrics:
     extra_args:
       aggregation_method: mean
       resource_type: instance
+      force_granularity: 300
 
   image.size:
     unit: MiB
@@ -40,6 +41,7 @@ metrics:
     extra_args:
       aggregation_method: mean
       resource_type: volume
+      force_granularity: 300
 
   network.outgoing.bytes.rate:
     unit: MB

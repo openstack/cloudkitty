@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    A new directive ``force_granularity: 300`` was added to the default
+    ``metrics.yml`` file for ``cpu`` and ``volume.size``, to match the defaults
+    of ceilometer and avoid logging errors in ``cloudkitty-processor`` with the
+    default setup.
