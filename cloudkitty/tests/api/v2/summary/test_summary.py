@@ -47,7 +47,7 @@ class TestSummaryEndpoint(tests.TestCase):
                     begin=tzutils.get_month_start(),
                     end=tzutils.get_next_month(),
                     groupby=None,
-                    filters={'a': 'b'},
+                    filters={'a': ['b']},
                     metric_types=['awesome'],
                     offset=0,
                     limit=100,

@@ -160,6 +160,12 @@ class InfluxClient(object):
 
     @staticmethod
     def _get_filter(key, value):
+        if isinstance(value, list):
+            if len(value) == 1:
+                return InfluxClient._get_filter(key, value[0])
+            return "(" + " OR ".join('"{}"=\'{}\''.format(key, v)
+                                     for v in value) + ")"
+
         format_string = ''
         if isinstance(value, str):
             format_string = """"{}"='{}'"""
@@ -182,9 +188,7 @@ class InfluxClient(object):
     def _get_type_query(types):
         if not types:
             return ''
-        type_query = ' OR '.join("type='{}'".format(mtype)
-                                 for mtype in types)
-        return ' AND (' + type_query + ')'
+        return " AND " + InfluxClient._get_filter("type", types)
 
     def get_total(self, types, begin, end, custom_fields,
                   groupby=None, filters=None):
@@ -209,6 +213,8 @@ class InfluxClient(object):
             query += ' GROUP BY ' + groupby_query
 
         query += ';'
+
+        LOG.debug("Executing query [%s].", query)
         total = self._conn.query(query)
         LOG.debug(
             "Data [%s] received when executing query [%s].", total, query)

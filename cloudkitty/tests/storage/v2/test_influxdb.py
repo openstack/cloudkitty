@@ -150,11 +150,11 @@ class TestInfluxClient(unittest.TestCase):
             "SELECT COUNT(groupby) FROM \"dataframes\""
             " WHERE time >= '{0}'"
             " AND time < '{1}'"
-            " AND (type='foo' OR type='bar');"
+            " AND (\"type\"='foo' OR \"type\"='bar');"
             "SELECT * FROM \"dataframes\""
             " WHERE time >= '{0}'"
             " AND time < '{1}'"
-            " AND (type='foo' OR type='bar')"
+            " AND (\"type\"='foo' OR \"type\"='bar')"
             " LIMIT 1000 OFFSET 0;".format(
                 self.period_begin, self.period_end,
             ))

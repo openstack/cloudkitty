@@ -36,7 +36,7 @@ class Summary(base.BaseResource):
         voluptuous.Optional('custom_fields'): api_utils.SingleQueryParam(str),
         voluptuous.Optional('groupby'): api_utils.MultiQueryParam(str),
         voluptuous.Optional('filters'):
-            api_utils.SingleDictQueryParam(str, str),
+            api_utils.MultiDictQueryParam(str, str),
         voluptuous.Optional('begin'): api_utils.SingleQueryParam(
             tzutils.dt_from_iso),
         voluptuous.Optional('end'): api_utils.SingleQueryParam(
@@ -68,7 +68,10 @@ class Summary(base.BaseResource):
                 }
             filters['project_id'] = flask.request.context.project_id
 
-        metric_types = [filters.pop('type')] if 'type' in filters else None
+        metric_types = filters.pop('type', [])
+        if not isinstance(metric_types, list):
+            metric_types = [metric_types]
+
         arguments = {
             'begin': begin,
             'end': end,

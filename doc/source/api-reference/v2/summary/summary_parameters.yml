@@ -39,7 +39,13 @@ end: &end
 filters:
   in: query
   description: |
-    Optional filters.
+    Optional filters. These filters accept multiple query parameters. To use
+    this option with multiple parameters, repeat it as many time as desired in
+    the query string. For instance, to restrict the result to only two
+    projects, add to the query string
+    ``filters=project_id:<project_id_one>&filters=project_id:<project_id_two>``.
+    Bear in mind that this string must be URL escaped. Therefore, it becomes
+    ``filters=project_id%3A<project_id_one>&filters=project_id%3A<project_id_two>``.
   type: dict
   required: false
 
