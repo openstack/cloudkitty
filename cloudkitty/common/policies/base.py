@@ -25,7 +25,9 @@ rules = [
         check_str='role:admin'),
     policy.RuleDefault(
         name='admin_or_owner',
-        check_str='is_admin:True or project_id:%(project_id)s'),
+        check_str='is_admin:True or '
+                  '(role:admin and is_admin_project:True) or '
+                  'project_id:%(project_id)s'),
     policy.RuleDefault(
         name='default',
         check_str=UNPROTECTED)
