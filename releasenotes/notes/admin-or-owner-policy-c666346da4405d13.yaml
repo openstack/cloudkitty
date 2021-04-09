@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fix the definition of the ``admin_or_owner`` policy expression, which was
+    preventing even admins from using the ``get_summary`` endpoint with
+    ``all_tenants=True`` or ``tenant_id`` parameters.
