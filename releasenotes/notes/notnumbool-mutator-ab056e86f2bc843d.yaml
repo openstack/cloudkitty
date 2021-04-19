@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    The new "NOTNUMBOOL" mutator has been added. This mutator is, essentially,
+    an opposite of the "NUMBOOL" mutator as it returns 1.0 when quantity is 0
+    and 0.0 otherwise.

@@ -89,10 +89,11 @@ METRIC_BASE_SCHEMA = {
     Required('metadata', default=list): [
         All(str, Length(min=1))
     ],
-    # Mutate collected value. May be any of (NONE, NUMBOOL, FLOOR, CEIL).
+    # Mutate collected value. May be any of:
+    # (NONE, NUMBOOL, NOTNUMBOOL, FLOOR, CEIL).
     # Defaults to NONE
     Required('mutate', default='NONE'):
-        In(['NONE', 'NUMBOOL', 'FLOOR', 'CEIL']),
+        In(['NONE', 'NUMBOOL', 'NOTNUMBOOL', 'FLOOR', 'CEIL']),
     # Collector-specific args. Should be overriden by schema provided for
     # the given collector
     Optional('extra_args'): dict,
