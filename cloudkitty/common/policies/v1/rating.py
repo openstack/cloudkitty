@@ -21,7 +21,7 @@ rating_policies = [
     policy.DocumentedRuleDefault(
         name='rating:list_modules',
         check_str=base.ROLE_ADMIN,
-        description='Reture the list of loaded modules in Cloudkitty.',
+        description='Return the list of loaded modules in Cloudkitty.',
         operations=[{'path': '/v1/rating/modules',
                      'method': 'LIST'}]),
     policy.DocumentedRuleDefault(
