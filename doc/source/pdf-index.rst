@@ -33,6 +33,14 @@ Developer
 
    developer/index
 
+Contributors
+------------
+
+.. toctree::
+   :maxdepth: 2
+
+   contributor/contributing
+
 API Reference
 -------------
 

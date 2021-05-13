@@ -35,6 +35,13 @@ Documentation contents
 
           developer/index
 
+   * - **Contributors**
+
+     - .. toctree::
+          :maxdepth: 2
+
+          contributor/contributing
+
    * - **API Reference**
      - .. toctree::
           :maxdepth: 2

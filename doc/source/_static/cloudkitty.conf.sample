@@ -94,7 +94,7 @@
 #use_eventlog = false
 
 # The amount of time before the log files are rotated. This option is
-# ignored unless log_rotation_type is setto "interval". (integer
+# ignored unless log_rotation_type is set to "interval". (integer
 # value)
 #log_rotate_interval = 1
 
@@ -402,8 +402,6 @@
 
 # Maximum number of SQL connections to keep open in a pool. Setting a
 # value of 0 indicates no limit. (integer value)
-# Deprecated group/name - [DEFAULT]/sql_max_pool_size
-# Deprecated group/name - [DATABASE]/sql_max_pool_size
 #max_pool_size = 5
 
 # Maximum number of database connection retries during startup. Set to
@@ -1212,10 +1210,17 @@
 # heartbeat. (integer value)
 #heartbeat_rate = 2
 
-# Enable/Disable the RabbitMQ mandatory flag for direct send. The
-# direct send is used as reply, so the MessageUndeliverable exception
-# is raised in case the client queue does not exist. (integer value)
-#direct_mandatory_flag = True
+# DEPRECATED: (DEPRECATED) Enable/Disable the RabbitMQ mandatory flag
+# for direct send. The direct send is used as reply, so the
+# MessageUndeliverable exception is raised in case the client queue
+# does not exist.MessageUndeliverable exception will be used to loop
+# for a timeout to lets a chance to sender to recover.This flag is
+# deprecated and it will not be possible to deactivate this
+# functionality anymore (boolean value)
+# This option is deprecated for removal.
+# Its value may be silently ignored in the future.
+# Reason: Mandatory flag no longer deactivable.
+#direct_mandatory_flag = true
 
 # Enable x-cancel-on-ha-failover flag so that rabbitmq server will
 # cancel and notify consumerswhen queue is down (boolean value)
