@@ -20,11 +20,8 @@ import flask_restful
 from oslo_config import cfg
 from oslo_log import log
 from paste import deploy
-try:
-    from werkzeug.middleware import dispatcher
-# In case we have werkzeug<0.15
-except ImportError:
-    from werkzeug import wsgi as dispatcher
+
+from werkzeug.middleware import dispatcher
 
 from cloudkitty.api import root as api_root
 from cloudkitty.api.v1 import get_api_app as get_v1_app
