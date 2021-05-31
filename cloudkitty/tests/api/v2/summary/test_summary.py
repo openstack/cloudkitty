@@ -12,6 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import flask
+import uuid
+
 from unittest import mock
 
 from cloudkitty.api.v2.summary import summary
@@ -28,10 +31,15 @@ class TestSummaryEndpoint(tests.TestCase):
 
     def test_type_filter_is_passed_separately(self):
         policy_mock = mock.patch('cloudkitty.common.policy.authorize')
+
+        flask.request.context = mock.Mock()
+        flask.request.context.project_id = str(uuid.uuid4())
+        flask.request.context.is_admin = True
+
         with mock.patch.object(self.endpoint._storage, 'total') as total_mock:
-            with policy_mock, mock.patch('flask.request') as fmock:
+            with policy_mock, mock.patch('flask.request.args.lists') as fmock:
                 total_mock.return_value = {'total': 0, 'results': []}
-                fmock.args.lists.return_value = [
+                fmock.return_value = [
                     ('filters', 'a:b,type:awesome')]
                 self.endpoint.get()
                 total_mock.assert_called_once_with(

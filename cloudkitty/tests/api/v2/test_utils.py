@@ -243,12 +243,12 @@ class AddInputSchemaTest(tests.TestCase):
         self.assertEqual(
             list(test_func.input_schema.schema.keys())[0], 'arg_one')
 
-        with mock.patch('flask.request') as m:
-            m.get_json.return_value = {}
+        with mock.patch('flask.request.get_json') as m:
+            m.return_value = {}
             test_func(self)
 
-        with mock.patch('flask.request') as m:
-            m.get_json.return_value = {'arg_one': 'one'}
+        with mock.patch('flask.request.get_json') as m:
+            m.return_value = {'arg_one': 'one'}
             test_func(self)
 
     def _test_multiple_add_input_schema_x(self, location):

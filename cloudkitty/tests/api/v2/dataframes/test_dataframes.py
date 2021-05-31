@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import flask
+
 from unittest import mock
 
 from cloudkitty.api.v2.dataframes import dataframes
@@ -28,12 +30,15 @@ class TestDataframeListEndpoint(tests.TestCase):
 
     def test_non_admin_request_is_filtered_on_project_id(self):
         policy_mock = mock.patch('cloudkitty.common.policy.authorize')
+
+        flask.request.context = mock.Mock()
+        flask.request.context.project_id = 'test-project'
+        flask.request.context.is_admin = False
+
         with mock.patch.object(self.endpoint._storage, 'retrieve') as ret_mock:
-            with policy_mock, mock.patch('flask.request') as fmock:
+            with policy_mock, mock.patch('flask.request.args.lists') as fmock:
                 ret_mock.return_value = {'total': 42, 'dataframes': []}
-                fmock.args.lists.return_value = []
-                fmock.context.is_admin = False
-                fmock.context.project_id = 'test-project'
+                fmock.return_value = []
                 self.endpoint.get()
                 ret_mock.assert_called_once_with(
                     begin=tzutils.get_month_start(),
