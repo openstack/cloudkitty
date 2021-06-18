@@ -12,7 +12,7 @@ with Cloudkitty.
 
 Communication
 ~~~~~~~~~~~~~
-* IRC channel #cloudkitty at FreeNode
+* IRC channel #cloudkitty at `OFTC <http://oftc.net>`_
 * Mailing list (prefix subjects with ``[cloudkitty]`` for faster responses)
   http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-discuss
 
