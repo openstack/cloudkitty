@@ -319,7 +319,7 @@ class GnocchiCollector(collector.BaseCollector):
             # FIXME(peschk_l): gnocchiclient seems to be raising a BadRequest
             # when it should be raising MetricNotFound
             if isinstance(e, gexceptions.BadRequest):
-                if 'Metrics not found' not in e.args[0]:
+                if 'Metrics not found' not in e.message["cause"]:
                     raise
             LOG.warning('[{scope}] Skipping this metric for the '
                         'current cycle.'.format(scope=project_id, err=e))
