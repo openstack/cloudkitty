@@ -78,7 +78,8 @@ def get_reflect(table):
                 'flat',
                 'rate',
                 name='enum_{}map_type'.format(
-                    'hash' if table == 'hashmap_thresholds' else '')),
+                    'hash' if table == 'hashmap_thresholds' else ''),
+                create_constraint=True),
             nullable=False)]
     return reflect_args
 

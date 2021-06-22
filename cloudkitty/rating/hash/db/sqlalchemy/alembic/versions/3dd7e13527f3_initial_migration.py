@@ -75,8 +75,8 @@ def upgrade():
         sa.Column('cost', sa.Numeric(20, 8), nullable=False),
         sa.Column(
             'map_type',
-            sa.Enum('flat', 'rate', name='enum_map_type'),
-            nullable=False),
+            sa.Enum('flat', 'rate', name='enum_map_type',
+                    create_constraint=True), nullable=False),
         sa.Column('service_id', sa.Integer(), nullable=True),
         sa.Column('field_id', sa.Integer(), nullable=True),
         sa.Column('group_id', sa.Integer(), nullable=True),

@@ -45,7 +45,7 @@ class State(api.State):
                     models.StateInfo,
                     session)
                 q = q.filter(models.StateInfo.name == name)
-                q = q.with_lockmode('update')
+                q = q.with_for_update()
                 db_state = q.one()
                 db_state.state = state
             except sqlalchemy.orm.exc.NoResultFound:
@@ -70,7 +70,7 @@ class State(api.State):
                     models.StateInfo,
                     session)
                 q = q.filter(models.StateInfo.name == name)
-                q = q.with_lockmode('update')
+                q = q.with_for_update()
                 db_state = q.one()
                 db_state.s_metadata = metadata
             except sqlalchemy.orm.exc.NoResultFound:
@@ -103,7 +103,7 @@ class ModuleInfo(api.ModuleInfo):
                     session)
                 q = q.filter(
                     models.ModuleStateInfo.name == name)
-                q = q.with_lockmode('update')
+                q = q.with_for_update()
                 db_state = q.one()
                 db_state.priority = priority
             except sqlalchemy.orm.exc.NoResultFound:
@@ -132,7 +132,7 @@ class ModuleInfo(api.ModuleInfo):
                     models.ModuleStateInfo,
                     session)
                 q = q.filter(models.ModuleStateInfo.name == name)
-                q = q.with_lockmode('update')
+                q = q.with_for_update()
                 db_state = q.one()
                 db_state.state = state
             except sqlalchemy.orm.exc.NoResultFound:
@@ -165,7 +165,7 @@ class ServiceToCollectorMapping(object):
                     session)
                 q = q.filter(
                     models.ServiceToCollectorMapping.service == service)
-                q = q.with_lockmode('update')
+                q = q.with_for_update()
                 db_mapping = q.one()
                 db_mapping.collector = collector
             except sqlalchemy.orm.exc.NoResultFound:

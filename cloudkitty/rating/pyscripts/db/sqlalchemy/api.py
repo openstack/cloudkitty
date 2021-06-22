@@ -80,7 +80,7 @@ class PyScripts(api.PyScripts):
                 q = q.filter(
                     models.PyScriptsScript.script_id == uuid
                 )
-                script_db = q.with_lockmode('update').one()
+                script_db = q.with_for_update().one()
                 if kwargs:
                     excluded_cols = ['script_id']
                     for col in excluded_cols:

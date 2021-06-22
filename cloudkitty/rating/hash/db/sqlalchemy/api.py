@@ -401,7 +401,7 @@ class HashMap(api.HashMap):
                 q = session.query(models.HashMapMapping)
                 q = q.filter(
                     models.HashMapMapping.mapping_id == uuid)
-                mapping_db = q.with_lockmode('update').one()
+                mapping_db = q.with_for_update().one()
                 if kwargs:
                     # NOTE(sheeprine): We want to check that value is not set
                     # to a None value.
@@ -448,7 +448,7 @@ class HashMap(api.HashMap):
                 q = session.query(models.HashMapThreshold)
                 q = q.filter(
                     models.HashMapThreshold.threshold_id == uuid)
-                threshold_db = q.with_lockmode('update').one()
+                threshold_db = q.with_for_update().one()
                 if kwargs:
                     # Resolve FK
                     if 'group_id' in kwargs:
@@ -516,7 +516,7 @@ class HashMap(api.HashMap):
         q = q.filter(models.HashMapGroup.group_id == uuid)
         with session.begin():
             try:
-                r = q.with_lockmode('update').one()
+                r = q.with_for_update().one()
             except sqlalchemy.orm.exc.NoResultFound:
                 raise api.NoSuchGroup(uuid=uuid)
             if recurse:

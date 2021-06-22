@@ -238,7 +238,7 @@ class HashMapMapping(Base, HashMapBase):
         sqlalchemy.Enum(
             'flat',
             'rate',
-            name='enum_map_type'),
+            name='enum_map_type', create_constraint=True),
         nullable=False)
     service_id = sqlalchemy.Column(
         sqlalchemy.Integer,
@@ -310,7 +310,7 @@ class HashMapThreshold(Base, HashMapBase):
         sqlalchemy.Enum(
             'flat',
             'rate',
-            name='enum_hashmap_type'),
+            name='enum_hashmap_type', create_constraint=True),
         nullable=False)
     service_id = sqlalchemy.Column(
         sqlalchemy.Integer,

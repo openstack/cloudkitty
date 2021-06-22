@@ -40,8 +40,8 @@ def create_table(is_old=False):
         sa.Column('cost', sa.Numeric(precision=20, scale=8), nullable=False),
         sa.Column(
             'map_type',
-            sa.Enum('flat', 'rate', name='enum_map_type'),
-            nullable=False),
+            sa.Enum('flat', 'rate', name='enum_map_type',
+                    create_constraint=True), nullable=False),
         sa.Column('service_id', sa.Integer(), nullable=True),
         sa.Column('field_id', sa.Integer(), nullable=True),
         sa.Column('group_id', sa.Integer(), nullable=True),
