@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import copy
+
 from datetime import timedelta
 import decimal
 import functools
@@ -57,9 +59,15 @@ orchestrator_opts = [
         'max_workers',
         default=multiprocessing.cpu_count(),
         sample_default=4,
-        min=1,
-        help='Maximal number of workers to run. Defaults to the number of '
-        'available CPUs'),
+        min=0,
+        help='Max number of workers to execute the rating process. Defaults '
+             'to the number of available CPU cores.'),
+    cfg.IntOpt(
+        'max_workers_reprocessing',
+        default=multiprocessing.cpu_count(),
+        min=0,
+        help='Max number of workers to execute the reprocessing. Defaults to '
+             'the number of available CPU cores.'),
     cfg.IntOpt('max_threads',
                # NOTE(peschk_l): This is the futurist default
                default=multiprocessing.cpu_count() * 5,
@@ -272,17 +280,18 @@ def _check_state(obj, period, tenant_id):
 
 class Worker(BaseWorker):
     def __init__(self, collector, storage, tenant_id, worker_id):
+        super(Worker, self).__init__(tenant_id)
+
         self._collector = collector
         self._storage = storage
         self._period = CONF.collect.period
         self._wait_time = CONF.collect.wait_periods * self._period
-        self._tenant_id = tenant_id
         self._worker_id = worker_id
         self._log_prefix = '[scope: {scope}, worker: {worker}] '.format(
             scope=self._tenant_id, worker=self._worker_id)
         self._conf = ck_utils.load_conf(CONF.collect.metrics_conf)
         self._state = state.StateManager()
-        self._check_state = functools.partial(
+        self.next_timestamp_to_process = functools.partial(
             _check_state, self, self._period, self._tenant_id)
 
         super(Worker, self).__init__(self._tenant_id)
@@ -295,10 +304,10 @@ class Worker(BaseWorker):
             metric,
             start_timestamp,
             next_timestamp,
-            self._tenant_id,
+            self._tenant_id
         )
         if not data:
-            raise collector.NoDataCollected
+            raise collector.NoDataCollected(self._collector, metric)
 
         return name, data
 
@@ -366,63 +375,179 @@ class Worker(BaseWorker):
         return dict(filter(lambda x: x[1] is not None, results))
 
     def run(self):
-        while True:
-            timestamp = self._check_state()
-            LOG.debug("Processing timestamp [%s] for storage scope [%s].",
-                      timestamp, self._tenant_id)
+        should_continue_processing = self.execute_worker_processing()
+        while should_continue_processing:
+            should_continue_processing = self.execute_worker_processing()
 
-            if not timestamp:
-                break
-
-            if self._state.get_state(self._tenant_id):
-                if not self._state.is_storage_scope_active(self._tenant_id):
-                    LOG.debug("Skipping processing for storage scope [%s] "
-                              "because it is marked as inactive.",
-                              self._tenant_id)
-                    break
-            else:
-                LOG.debug("No need to check if [%s] is de-activated. "
-                          "We have never processed it before.")
-
+    def execute_worker_processing(self):
+        timestamp = self.next_timestamp_to_process()
+        LOG.debug("Processing timestamp [%s] for storage scope [%s].",
+                  timestamp, self._tenant_id)
+        if not timestamp:
+            LOG.debug("Worker [%s] finished processing storage scope [%s].",
+                      self._worker_id, self._tenant_id)
+            return False
+        if self._state.get_state(self._tenant_id):
             if not self._state.is_storage_scope_active(self._tenant_id):
-                LOG.debug("Skipping processing for storage scope [%s] because "
-                          "it is marked as inactive.", self._tenant_id)
-                break
+                LOG.debug("Skipping processing for storage scope [%s] "
+                          "because it is marked as inactive.",
+                          self._tenant_id)
+                return False
+        else:
+            LOG.debug("No need to check if [%s] is de-activated. "
+                      "We have never processed it before.")
+        self.do_execute_scope_processing(timestamp)
+        return True
 
-            metrics = list(self._conf['metrics'].keys())
+    def do_execute_scope_processing(self, timestamp):
+        metrics = list(self._conf['metrics'].keys())
+        # Collection
+        metrics = sorted(metrics)
+        usage_data = self._do_collection(metrics, timestamp)
 
-            # Collection
-            usage_data = self._do_collection(metrics, timestamp)
-            LOG.debug("Usage data [%s] found for storage scope [%s] in "
-                      "timestamp [%s].", usage_data, self._tenant_id,
-                      timestamp)
+        LOG.debug("Usage data [%s] found for storage scope [%s] in "
+                  "timestamp [%s].", usage_data, self._tenant_id,
+                  timestamp)
+        start_time = timestamp
+        end_time = tzutils.add_delta(timestamp,
+                                     timedelta(seconds=self._period))
+        # No usage records found in
+        if not usage_data:
+            LOG.warning("No usage data for storage scope [%s] on "
+                        "timestamp [%s]. You might want to consider "
+                        "de-activating it.", self._tenant_id, timestamp)
 
-            start_time = timestamp
-            end_time = tzutils.add_delta(timestamp,
-                                         timedelta(seconds=self._period))
+        else:
+            frame = self.execute_measurements_rating(end_time, start_time,
+                                                     usage_data)
+            self.persist_rating_data(end_time, frame, start_time)
 
-            frame = dataframe.DataFrame(
-                start=start_time,
-                end=end_time,
-                usage=usage_data,
-            )
-            # Rating
-            for processor in self._processors:
-                frame = processor.obj.process(frame)
+        self.update_scope_processing_state_db(timestamp)
 
-            # Writing
-            LOG.debug("Persisting processed frames [%s] for tenant [%s] and "
-                      "time [start=%s,end=%s]", frame, self._tenant_id,
-                      start_time, end_time)
+    def persist_rating_data(self, end_time, frame, start_time):
+        LOG.debug("Persisting processed frames [%s] for scope [%s] and time "
+                  "[start=%s,end=%s]", frame, self._tenant_id, start_time,
+                  end_time)
 
-            self._storage.push([frame], self._tenant_id)
-            self._state.set_state(self._tenant_id, timestamp)
+        self._storage.push([frame], self._tenant_id)
+
+    def execute_measurements_rating(self, end_time, start_time, usage_data):
+        frame = dataframe.DataFrame(
+            start=start_time,
+            end=end_time,
+            usage=usage_data,
+        )
+
+        for processor in self._processors:
+            original_data = copy.deepcopy(frame)
+            frame = processor.obj.process(frame)
+            LOG.debug("Results [%s] for processing [%s] of data points [%s].",
+                      frame, processor.obj.process, original_data)
+        return frame
+
+    def update_scope_processing_state_db(self, timestamp):
+        self._state.set_state(self._tenant_id, timestamp)
 
 
-class Orchestrator(cotyledon.Service):
+class ReprocessingWorker(Worker):
+    def __init__(self, collector, storage, tenant_id, worker_id):
+        self.scope = tenant_id
+        self.scope_key = None
+
+        super(ReprocessingWorker, self).__init__(
+            collector, storage, self.scope.identifier, worker_id)
+
+        self.reprocessing_scheduler_db = state.ReprocessingSchedulerDb()
+        self.next_timestamp_to_process = self._next_timestamp_to_process
+
+        self.load_scope_key()
+
+    def load_scope_key(self):
+        scope_from_db = self._state.get_all(self._tenant_id)
+
+        if len(scope_from_db) < 1:
+            raise Exception("Scope [%s] scheduled for reprocessing does not "
+                            "seem to exist anymore." % self.scope)
+
+        if len(scope_from_db) > 1:
+            raise Exception("Unexpected number of storage state entries found "
+                            "for scope [%s]." % self.scope)
+
+        self.scope_key = scope_from_db[0].scope_key
+
+    def _next_timestamp_to_process(self):
+        db_item = self.reprocessing_scheduler_db.get_from_db(
+            identifier=self.scope.identifier,
+            start_reprocess_time=self.scope.start_reprocess_time,
+            end_reprocess_time=self.scope.end_reprocess_time)
+
+        if not db_item:
+            LOG.info("It seems that the processing for schedule [%s] was "
+                     "finished by other worker.", self.scope)
+            return None
+
+        return ReprocessingWorker.generate_next_timestamp(
+            db_item, self._period)
+
+    @staticmethod
+    def generate_next_timestamp(db_item, processing_period_interval):
+        new_timestamp = db_item.start_reprocess_time
+        if db_item.current_reprocess_time:
+            period_delta = timedelta(seconds=processing_period_interval)
+
+            new_timestamp = db_item.current_reprocess_time + period_delta
+
+            LOG.debug("Current reprocessed time is [%s], therefore, the next "
+                      "one to process is [%s] based on the processing "
+                      "interval [%s].", db_item.start_reprocess_time,
+                      new_timestamp, processing_period_interval)
+        else:
+            LOG.debug("There is no reprocessing for the schedule [%s]. "
+                      "Therefore, we use the start time [%s] as the first "
+                      "time to process.", db_item, new_timestamp)
+        if new_timestamp <= db_item.end_reprocess_time:
+            return tzutils.local_to_utc(new_timestamp)
+        else:
+            LOG.debug("No need to keep reprocessing schedule [%s] as we "
+                      "processed all requested timestamps.", db_item)
+            return None
+
+    def do_execute_scope_processing(self, timestamp):
+        end_of_this_processing = timestamp + timedelta(seconds=self._period)
+
+        end_of_this_processing = tzutils.local_to_utc(end_of_this_processing)
+
+        LOG.debug("Cleaning backend [%s] data for reprocessing scope [%s] "
+                  "for timeframe[start=%s, end=%s].",
+                  self._storage, self.scope, timestamp, end_of_this_processing)
+
+        self._storage.delete(
+            begin=timestamp, end=end_of_this_processing,
+            filters={self.scope_key: self._tenant_id})
+
+        LOG.debug("Executing the reprocessing of scope [%s] for "
+                  "timeframe[start=%s, end=%s].", self.scope, timestamp,
+                  end_of_this_processing)
+
+        super(ReprocessingWorker, self).do_execute_scope_processing(timestamp)
+
+    def update_scope_processing_state_db(self, timestamp):
+        LOG.debug("After data is persisted in the storage backend [%s], we "
+                  "will update the scope [%s] current processing time to "
+                  "[%s].", self._storage, self.scope, timestamp)
+        self.reprocessing_scheduler_db.update_reprocessing_time(
+            identifier=self.scope.identifier,
+            start_reprocess_time=self.scope.start_reprocess_time,
+            end_reprocess_time=self.scope.end_reprocess_time,
+            new_current_time_stamp=timestamp)
+
+
+class CloudKittyProcessor(cotyledon.Service):
     def __init__(self, worker_id):
         self._worker_id = worker_id
-        super(Orchestrator, self).__init__(self._worker_id)
+        super(CloudKittyProcessor, self).__init__(self._worker_id)
+
+        self.tenants = []
 
         self.fetcher = driver.DriverManager(
             FETCHERS_NAMESPACE,
@@ -445,8 +570,15 @@ class Orchestrator(cotyledon.Service):
             CONF.orchestrator.coordination_url,
             uuidutils.generate_uuid().encode('ascii'))
         self.coord.start(start_heart=True)
-        self._check_state = functools.partial(
+        self.next_timestamp_to_process = functools.partial(
             _check_state, self, CONF.collect.period)
+
+        self.worker_class = Worker
+        self.log_worker_initiated()
+
+    def log_worker_initiated(self):
+        LOG.info("Processor worker ID [%s] is initiated as CloudKitty "
+                 "rating processor.", self._worker_id)
 
     def _init_messaging(self):
         target = oslo_messaging.Target(topic='cloudkitty',
@@ -469,51 +601,125 @@ class Orchestrator(cotyledon.Service):
     def run(self):
         LOG.debug('Started worker {}.'.format(self._worker_id))
         while True:
-            self.tenants = self.fetcher.get_tenants()
-            random.shuffle(self.tenants)
-            LOG.info('[Worker: {w}] {n} tenants loaded for fetcher {f}'.format(
-                w=self._worker_id, n=len(self.tenants), f=self.fetcher.name))
-
-            for tenant_id in self.tenants:
-
-                lock_name, lock = get_lock(self.coord, tenant_id)
-                LOG.debug(
-                    '[Worker: {w}] Trying to acquire lock "{lck}" ...'.format(
-                        w=self._worker_id, lck=lock_name)
-                )
-                if lock.acquire(blocking=False):
-                    LOG.debug(
-                        '[Worker: {w}] Acquired lock "{lck}" ...'.format(
-                            w=self._worker_id, lck=lock_name)
-                    )
-                    state = self._check_state(tenant_id)
-                    LOG.debug("Next timestamp [%s] found for processing for "
-                              "storage scope [%s].", state, tenant_id)
-                    if state:
-                        worker = Worker(
-                            self.collector,
-                            self.storage,
-                            tenant_id,
-                            self._worker_id,
-                        )
-                        worker.run()
-
-                    lock.release()
-
-            LOG.debug("Finished processing all storage scopes.")
-
-            # FIXME(sheeprine): We may cause a drift here
-            time.sleep(CONF.collect.period)
+            self.internal_run()
 
     def terminate(self):
-        LOG.debug('Terminating worker {}...'.format(self._worker_id))
+        LOG.debug('Terminating worker {}.'.format(self._worker_id))
         self.coord.stop()
         LOG.debug('Terminated worker {}.'.format(self._worker_id))
 
+    def internal_run(self):
+        self.load_scopes_to_process()
+        for tenant_id in self.tenants:
+            lock_name, lock = get_lock(
+                self.coord, self.generate_lock_base_name(tenant_id))
 
-class OrchestratorServiceManager(cotyledon.ServiceManager):
+            LOG.debug('[Worker: {w}] Trying to acquire lock "{lock_name}".'
+                      .format(w=self._worker_id, lock_name=lock_name))
+
+            lock_acquired = lock.acquire(blocking=False)
+            if lock_acquired:
+                LOG.debug('[Worker: {w}] Acquired lock "{lock_name}".'.format(
+                    w=self._worker_id, lock_name=lock_name))
+
+                try:
+                    self.process_scope(tenant_id)
+                finally:
+                    lock.release()
+
+                LOG.debug("Finished processing scopes [%s].", tenant_id)
+            else:
+                LOG.debug("Could not acquire lock [%s] for processing "
+                          "scope [%s] with worker [%s].", lock_name,
+                          tenant_id, self.worker_class)
+        LOG.debug("Finished processing all storage scopes with worker "
+                  "[worker_id=%s, class=%s].",
+                  self._worker_id, self.worker_class)
+        # FIXME(sheeprine): We may cause a drift here
+        time.sleep(CONF.collect.period)
+
+    def process_scope(self, scope_to_process):
+        timestamp = self.next_timestamp_to_process(scope_to_process)
+        LOG.debug("Next timestamp [%s] found for processing for "
+                  "storage scope [%s].", state, scope_to_process)
+
+        if not timestamp:
+            LOG.debug("There is no next timestamp to process for scope [%s]",
+                      scope_to_process)
+            return
+
+        worker = self.worker_class(
+            self.collector,
+            self.storage,
+            scope_to_process,
+            self._worker_id,
+        )
+        worker.run()
+
+    def generate_lock_base_name(self, tenant_id):
+        return tenant_id
+
+    def load_scopes_to_process(self):
+        self.tenants = self.fetcher.get_tenants()
+        random.shuffle(self.tenants)
+
+        LOG.info('[Worker: {w}] Tenants loaded for fetcher {f}'.format(
+            w=self._worker_id, f=self.fetcher.name))
+
+
+class CloudKittyReprocessor(CloudKittyProcessor):
+    def __init__(self, worker_id):
+        super(CloudKittyReprocessor, self).__init__(worker_id)
+
+        self.next_timestamp_to_process = self._next_timestamp_to_process
+        self.worker_class = ReprocessingWorker
+
+        self.reprocessing_scheduler_db = state.ReprocessingSchedulerDb()
+
+    def log_worker_initiated(self):
+        LOG.info("Processor worker ID [%s] is initiated as CloudKitty "
+                 "rating reprocessor.", self._worker_id)
+
+    def _next_timestamp_to_process(self, scope):
+        scope_db = self.reprocessing_scheduler_db.get_from_db(
+            identifier=scope.identifier,
+            start_reprocess_time=scope.start_reprocess_time,
+            end_reprocess_time=scope.end_reprocess_time)
+
+        if scope_db:
+            return ReprocessingWorker.generate_next_timestamp(
+                scope_db, CONF.collect.period)
+        else:
+            LOG.debug("It seems that the processing for schedule [%s] was "
+                      "finished by other CloudKitty reprocessor.", scope)
+            return None
+
+    def load_scopes_to_process(self):
+        self.tenants = self.reprocessing_scheduler_db.get_all()
+        random.shuffle(self.tenants)
+
+        LOG.info('Reprocessing worker [%s] loaded [%s] schedules to process.',
+                 self._worker_id, len(self.tenants))
+
+    def generate_lock_base_name(self, scope):
+        return "%s-id=%s-start=%s-end=%s-current=%s" % (
+            self.worker_class, scope.identifier, scope.start_reprocess_time,
+            scope.end_reprocess_time, scope.current_reprocess_time)
+
+
+class CloudKittyServiceManager(cotyledon.ServiceManager):
 
     def __init__(self):
-        super(OrchestratorServiceManager, self).__init__()
-        self.service_id = self.add(Orchestrator,
-                                   workers=CONF.orchestrator.max_workers)
+        super(CloudKittyServiceManager, self).__init__()
+        if CONF.orchestrator.max_workers:
+            self.cloudkitty_processor_service_id = self.add(
+                CloudKittyProcessor, workers=CONF.orchestrator.max_workers)
+        else:
+            LOG.info("No worker configured for CloudKitty processing.")
+
+        if CONF.orchestrator.max_workers_reprocessing:
+            self.cloudkitty_reprocessor_service_id = self.add(
+                CloudKittyReprocessor,
+                workers=CONF.orchestrator.max_workers_reprocessing)
+        else:
+            LOG.info("No worker configured for CloudKitty reprocessing.")

@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Introduce the reprocessing schedule API, which allows operators to
+    schedule reprocessing tasks to reprocess scopes in given timeframes.

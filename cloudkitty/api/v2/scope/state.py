@@ -196,7 +196,7 @@ class ScopeState(base.BaseResource):
             'scope:patch_state',
             {'tenant_id': scope_id or flask.request.context.project_id}
         )
-        results = self._storage_state.get_all(identifier=scope_id)
+        results = self._storage_state.get_all(identifier=scope_id, active=None)
 
         if len(results) < 1:
             raise http_exceptions.NotFound(
@@ -217,7 +217,8 @@ class ScopeState(base.BaseResource):
                                                  collector=collector,
                                                  active=active)
 
-        storage_scopes = self._storage_state.get_all(identifier=scope_id)
+        storage_scopes = self._storage_state.get_all(
+            identifier=scope_id, active=active)
         update_storage_scope = storage_scopes[0]
         return {
             'scope_id': update_storage_scope.identifier,

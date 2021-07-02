@@ -16,6 +16,8 @@
 from oslo_config import cfg
 from oslo_db.sqlalchemy import utils
 from oslo_log import log
+from sqlalchemy import or_ as or_operation
+from sqlalchemy import sql
 
 from cloudkitty import db
 from cloudkitty.storage_state import migration
@@ -303,3 +305,140 @@ class StateManager(object):
         session.close()
 
         return r.active
+
+
+class ReprocessingSchedulerDb(object):
+    """Class to access and operator the reprocessing scheduler in the DB"""
+
+    model = models.ReprocessingScheduler
+
+    def get_all(self, identifier=None, remove_finished=True,
+                limit=100, offset=0, order="desc"):
+        """Returns all schedules for reprocessing for a given resource
+
+        :param identifier: Identifiers of the scopes
+        :type identifier: str
+        :param remove_finished: option to remove from the projection the
+                                reprocessing scheduled that already finished.
+        :type remove_finished: bool
+        :param limit: optional to restrict the projection
+        :type limit: int
+        :param offset: optional to shift the projection
+        :type offset: int
+        :param order: optional parameter to indicate the order of the
+                      projection. The ordering field will be the `id`.
+        :type order: str
+        """
+        session = db.get_session()
+        session.begin()
+
+        query = utils.model_query(self.model, session)
+
+        if identifier:
+            query = query.filter(self.model.identifier.in_(identifier))
+        if remove_finished:
+            query = self.remove_finished_processing_schedules(query)
+        if order:
+            query = query.order_by(sql.text("id %s" % order))
+
+        query = apply_offset_and_limit(limit, offset, query)
+
+        result_set = query.all()
+
+        session.close()
+        return result_set
+
+    def remove_finished_processing_schedules(self, query):
+        return query.filter(or_operation(
+            self.model.current_reprocess_time.is_(None),
+            self.model.current_reprocess_time < self.model.end_reprocess_time
+        ))
+
+    def persist(self, reprocessing_scheduler):
+        """Persists the reprocessing_schedule
+
+        :param reprocessing_scheduler: reprocessing schedule that we want to
+                                       persist in the database.
+        :type reprocessing_scheduler: models.ReprocessingScheduler
+        """
+
+        session = db.get_session()
+        session.begin()
+
+        session.add(reprocessing_scheduler)
+        session.commit()
+
+        session.close()
+
+    def get_from_db(self, identifier=None, start_reprocess_time=None,
+                    end_reprocess_time=None):
+        """Get the reprocessing schedule from DB
+
+        :param identifier: Identifier of the scope
+        :type identifier: str
+        :param start_reprocess_time: the start time used in the
+                                     reprocessing schedule
+        :type start_reprocess_time: datetime.datetime
+        :param end_reprocess_time: the end time used in the
+                                     reprocessing schedule
+        :type end_reprocess_time: datetime.datetime
+        """
+        session = db.get_session()
+        session.begin()
+
+        result_set = self._get_db_item(
+            end_reprocess_time, identifier, session, start_reprocess_time)
+        session.close()
+
+        return result_set
+
+    def _get_db_item(self, end_reprocess_time, identifier, session,
+                     start_reprocess_time):
+
+        query = utils.model_query(self.model, session)
+        query = query.filter(self.model.identifier == identifier)
+        query = query.filter(
+            self.model.start_reprocess_time == start_reprocess_time)
+        query = query.filter(
+            self.model.end_reprocess_time == end_reprocess_time)
+        query = self.remove_finished_processing_schedules(query)
+
+        return query.first()
+
+    def update_reprocessing_time(self, identifier=None,
+                                 start_reprocess_time=None,
+                                 end_reprocess_time=None,
+                                 new_current_time_stamp=None):
+        """Update current processing time for a reprocessing schedule
+
+        :param identifier: Identifier of the scope
+        :type identifier: str
+        :param start_reprocess_time: the start time used in the
+                                     reprocessing schedule
+        :type start_reprocess_time: datetime.datetime
+        :param end_reprocess_time: the end time used in the
+                                     reprocessing schedule
+        :type end_reprocess_time: datetime.datetime
+        :param new_current_time_stamp: the new current timestamp to set
+        :type new_current_time_stamp: datetime.datetime
+        """
+
+        session = db.get_session()
+        session.begin()
+
+        result_set = self._get_db_item(
+            end_reprocess_time, identifier, session, start_reprocess_time)
+
+        if not result_set:
+            LOG.warning("Trying to update current time to [%s] for identifier "
+                        "[%s] and reprocessing range [start=%, end=%s], but "
+                        "we could not find a this task in the database.",
+                        new_current_time_stamp, identifier,
+                        start_reprocess_time, end_reprocess_time)
+            return
+        new_current_time_stamp = tzutils.local_to_utc(
+            new_current_time_stamp, naive=True)
+
+        result_set.current_reprocess_time = new_current_time_stamp
+        session.commit()
+        session.close()

@@ -105,3 +105,11 @@
 # GET  /v2/summary
 #"summary:get_summary": "rule:admin_or_owner"
 
+# Schedule a scope for reprocessing
+# POST  /v2/task/reprocesses
+#"schedule:task_reprocesses": "role:admin"
+
+# Get reprocessing schedule tasks for scopes.
+# GET  /v2/task/reprocesses
+#"schedule:get_task_reprocesses": "role:admin"
+

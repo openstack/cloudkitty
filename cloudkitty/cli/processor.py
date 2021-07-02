@@ -25,7 +25,7 @@ def main():
     # before the prepare_service(), making cfg.CONF returning default values
     # systematically.
     from cloudkitty import orchestrator
-    orchestrator.OrchestratorServiceManager().run()
+    orchestrator.CloudKittyServiceManager().run()
 
 
 if __name__ == '__main__':

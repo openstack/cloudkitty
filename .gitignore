@@ -22,6 +22,7 @@ var/
 *.egg
 cloudkitty.egg-info
 .idea/
+.python-version
 
 # Configuration file
 etc/cloudkitty/cloudkitty.conf.sample

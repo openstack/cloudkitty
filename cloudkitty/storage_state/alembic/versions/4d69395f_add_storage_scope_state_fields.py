@@ -38,7 +38,6 @@ def upgrade():
             with op.batch_alter_table(name,
                                       copy_from=table,
                                       recreate='always') as batch_op:
-                batch_op.alter_column('identifier')
                 batch_op.add_column(
                     sqlalchemy.Column('scope_activation_toggle_date',
                                       sqlalchemy.DateTime, nullable=False,

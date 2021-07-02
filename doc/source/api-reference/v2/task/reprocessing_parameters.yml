@@ -1,0 +1,56 @@
+path_scope_id:
+  in: path
+  description: |
+    The scope ID to retrieve.
+  type: string
+  required: true
+
+limit:
+  in: query
+  description: |
+    For pagination. The maximum number of results to return.
+  type: int
+  required: false
+
+offset:
+  in: query
+  description: |
+    For pagination. The index of the first element that should be returned.
+  type: int
+  required: false
+
+scope_ids_query: &scope_ids_query
+  in: query
+  description: |
+    The scope IDs one wants to retrieve the reprocessing tasks of. If not
+    informed, all reprocessing tasks, for all scopes are retrieved.
+  required: false
+  type: string
+
+end_reprocess_time:
+  in: body
+  description: |
+    The end date for the reprocessing task.
+  type: iso8601 timestamp
+  required: true
+
+reason:
+  in: body
+  description: |
+    The reason for the reprocessing to take place.
+  type: string
+  required: true
+
+scope_ids:
+  <<: *scope_ids_query
+  in: body
+  description: |
+    The scope IDs to reprocess. Must be comma-separated to schedule more than one.
+  required: true
+
+start_reprocess_time:
+  in: body
+  description: |
+    The start date for the reprocessing task.
+  type: iso8601 timestamp
+  required: true

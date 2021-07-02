@@ -24,6 +24,7 @@ from cloudkitty.common.policies.v1 import storage as v1_storage
 from cloudkitty.common.policies.v2 import dataframes as v2_dataframes
 from cloudkitty.common.policies.v2 import scope as v2_scope
 from cloudkitty.common.policies.v2 import summary as v2_summary
+from cloudkitty.common.policies.v2 import tasks as v2_tasks
 
 
 def list_rules():
@@ -37,4 +38,5 @@ def list_rules():
         v2_dataframes.list_rules(),
         v2_scope.list_rules(),
         v2_summary.list_rules(),
+        v2_tasks.list_rules()
     )

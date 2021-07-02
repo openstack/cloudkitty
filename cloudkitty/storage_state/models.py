@@ -20,6 +20,14 @@ from sqlalchemy.ext import declarative
 Base = declarative.declarative_base()
 
 
+def to_string_selected_fields(object_to_print, fields=[]):
+    object_to_return = {}
+    if object_to_print:
+        object_to_return = {
+            a: y for a, y in object_to_print.items() if a in fields}
+    return str(object_to_return)
+
+
 class IdentifierState(Base, models.ModelBase):
     """Represents the state of a given identifier."""
 
@@ -57,3 +65,39 @@ class IdentifierState(Base, models.ModelBase):
         server_default=sqlalchemy.sql.func.now())
     active = sqlalchemy.Column('active', sqlalchemy.Boolean, nullable=False,
                                default=True)
+
+    def __str__(self):
+        return to_string_selected_fields(
+            self, ['id', 'identifier', 'state', 'active'])
+
+
+class ReprocessingScheduler(Base, models.ModelBase):
+    """Represents the reprocessing scheduler table."""
+
+    @declarative.declared_attr
+    def __table_args__(cls):
+        return (
+            sqlalchemy.schema.PrimaryKeyConstraint('id'),
+        )
+
+    __tablename__ = 'storage_scope_reprocessing_schedule'
+
+    id = sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True)
+    reason = sqlalchemy.Column("reason", sqlalchemy.Text, nullable=False)
+
+    identifier = sqlalchemy.Column("identifier", sqlalchemy.String(256),
+                                   nullable=False, unique=False)
+    start_reprocess_time = sqlalchemy.Column("start_reprocess_time",
+                                             sqlalchemy.DateTime,
+                                             nullable=False)
+    end_reprocess_time = sqlalchemy.Column("end_reprocess_time",
+                                           sqlalchemy.DateTime,
+                                           nullable=False)
+    current_reprocess_time = sqlalchemy.Column("current_reprocess_time",
+                                               sqlalchemy.DateTime,
+                                               nullable=True)
+
+    def __str__(self):
+        return to_string_selected_fields(
+            self, ['id', 'identifier', 'start_reprocess_time',
+                   'end_reprocess_time', 'current_reprocess_time'])

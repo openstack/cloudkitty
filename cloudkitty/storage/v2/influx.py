@@ -275,6 +275,10 @@ class InfluxClient(object):
         else:
             query += filter_query
         query += ';'
+
+        LOG.debug("InfluxDB query to delete elements filtering by [%s] and "
+                  "with [begin=%s, end=%s]: [%].", filters, begin, end, query)
+
         self._conn.query(query)
 
 

@@ -753,14 +753,20 @@
 # Coordination backend URL (string value)
 #coordination_url = file:///var/lib/cloudkitty/locks
 
-# Maximal number of workers to run. Defaults to the number of
-# available CPUs (integer value)
-# Minimum value: 1
+# Max number of workers to execute the rating process. Defaults to the
+# number of available CPU cores. (integer value)
+# Minimum value: 0
+
 #
 # This option has a sample default set, which means that
 # its actual default value may vary from the one documented
 # below.
 #max_workers = 4
+
+# Max number of workers to execute the reprocessing. Defaults to the
+# number of available CPU cores. (integer value)
+# Minimum value: 0
+#max_workers_reprocessing = 8
 
 # Maximal number of threads to use per worker. Defaults to 5 times the
 # number of available CPUs (integer value)
