@@ -241,7 +241,7 @@ class ElasticsearchClient(object):
         :param instruction: instruction to execute for each term
         :type instruction: dict
         :param terms: list of terms for which instruction should be executed
-        :type terms: collections.Iterable
+        :type terms: collections.abc.Iterable
         :rtype: requests.models.Response
         """
         instruction = json.dumps(instruction)
@@ -256,7 +256,7 @@ class ElasticsearchClient(object):
         """Indexes each of the documents in 'terms'
 
         :param terms: list of documents to index
-        :type terms: collections.Iterable
+        :type terms: collections.abc.Iterable
         """
         LOG.debug("Indexing {} documents".format(len(terms)))
         return self.bulk_with_instruction({"index": {}}, terms)
