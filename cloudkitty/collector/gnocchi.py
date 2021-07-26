@@ -114,6 +114,21 @@ GNOCCHI_EXTRA_SCHEMA = {
             In(BASIC_AGGREGATION_METHODS),
         Required('force_granularity', default=3600): All(int, Range(min=0)),
         Required('use_all_resource_revisions', default=True): All(bool),
+        # Provide means for operators to customize the aggregation query
+        # executed against Gnocchi. By default we use the following:
+        #
+        # '(aggregate RE_AGGREGATION_METHOD
+        #   (metric METRIC_NAME AGGREGATION_METHOD))'
+        #
+        # Therefore, this option enables operators to take full advantage of
+        # operations available in Gnocchi, such as any arithmetic operations,
+        # logical operations and many others.
+        #
+        # When using a custom aggregation query, you can keep the placeholders
+        # 'RE_AGGREGATION_METHOD', 'AGGREGATION_METHOD', and 'METRIC_NAME':
+        # they will be replaced at runtime by values from the metric
+        # configuration.
+        Required('custom_query', default=''): All(str),
     },
 }
 
@@ -369,9 +384,32 @@ class GnocchiCollector(collector.BaseCollector):
     def build_operation_command(self, metric_name):
         extra_args = self.conf[metric_name]['extra_args']
 
-        re_aggregation_method = extra_args['re_aggregation_method']
+        op = self.generate_aggregation_operation(extra_args, metric_name)
+
+        LOG.debug("Aggregation operation [%s] used to retrieve metric [%s].",
+                  op, metric_name)
+        return op
+
+    @staticmethod
+    def generate_aggregation_operation(extra_args, metric_name):
+        aggregation_method = extra_args['aggregation_method']
+        re_aggregation_method = aggregation_method
+
+        if 're_aggregation_method' in extra_args:
+            re_aggregation_method = extra_args['re_aggregation_method']
+
         op = ["aggregate", re_aggregation_method,
-              ["metric", metric_name, extra_args['aggregation_method']]]
+              ["metric", metric_name, aggregation_method]]
+
+        custom_gnocchi_query = extra_args.get('custom_query')
+        if custom_gnocchi_query:
+            LOG.debug("Using custom Gnocchi query [%s] with metric [%s].",
+                      custom_gnocchi_query, metric_name)
+            op = custom_gnocchi_query.replace(
+                'RE_AGGREGATION_METHOD', re_aggregation_method).replace(
+                'AGGREGATION_METHOD', aggregation_method).replace(
+                'METRIC_NAME', metric_name)
+
         return op
 
     def _format_data(self, metconf, data, resources_info=None):

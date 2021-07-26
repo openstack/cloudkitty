@@ -262,3 +262,41 @@ class GnocchiCollectorAggregationOperationTest(tests.TestCase):
         data_filtered = list(data_filtered)
         self.assertEqual(1, len(data_filtered))
         self.assertEqual(expected_data, data_filtered[0])
+
+    def test_generate_aggregation_operation_same_reaggregation(self):
+        metric_name = "test"
+        extra_args = {"aggregation_method": 'mean'}
+
+        expected_op = ["aggregate", 'mean', ["metric", "test", 'mean']]
+
+        op = gnocchi.GnocchiCollector.generate_aggregation_operation(
+            extra_args, metric_name)
+
+        self.assertEqual(expected_op, op)
+
+    def test_generate_aggregation_operation_different_reaggregation(self):
+        metric_name = "test"
+        extra_args = {"aggregation_method": 'mean',
+                      "re_aggregation_method": 'max'}
+
+        expected_op = ["aggregate", 'max', ["metric", "test", 'mean']]
+
+        op = gnocchi.GnocchiCollector.generate_aggregation_operation(
+            extra_args, metric_name)
+
+        self.assertEqual(expected_op, op)
+
+    def test_generate_aggregation_operation_custom_query(self):
+        metric_name = "test"
+        extra_args = {"aggregation_method": 'mean',
+                      "re_aggregation_method": 'max',
+                      "custom_query":
+                          "(* (aggregate RE_AGGREGATION_METHOD (metric "
+                          "METRIC_NAME AGGREGATION_METHOD)) -1)"}
+
+        expected_op = "(* (aggregate max (metric test mean)) -1)"
+
+        op = gnocchi.GnocchiCollector.generate_aggregation_operation(
+            extra_args, metric_name)
+
+        self.assertEqual(expected_op, op)

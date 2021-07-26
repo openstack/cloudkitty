@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Enable using custom queries with the Gnocchi collector. This option enables
+    operators to take full advantage of the operations that are available on
+    Gnocchi such as any arithmetic operation, logical operation and many
+    others.

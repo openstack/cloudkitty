@@ -1,3 +1,4 @@
+
 =========================
  Collector configuration
 =========================
@@ -307,6 +308,24 @@ Gnocchi
   CloudKitty for a resource id. The default behavior is maintained, which
   means, CloudKitty always use all of the data points returned.
 
+* ``custom_query``: Provide means for operators to customize the aggregation
+  query executed against Gnocchi. By default we use the following ``(aggregate
+  RE_AGGREGATION_METHOD (metric METRIC_NAME AGGREGATION_METHOD))``. Therefore,
+  this option enables operators to take full advantage of operations available
+  in Gnocchi such as any arithmetic operations, logical operations and many
+  others. When using a custom aggregation query, you can keep the placeholders
+  ``RE_AGGREGATION_METHOD``, ``AGGREGATION_METHOD``, and ``METRIC_NAME``: they
+  will be replaced at runtime by values from the metric configuration.
+
+  One example use case is metrics that are supposed to be always growing
+  values, such as RadosGW usage data. The usage data is affected by usage data
+  trimming on RadosGW, which can lead to swaps (meaning, that the right side
+  value of the series is smaller than the left side value) in the data series
+  in Gnocchi. Therefore, to handle this situation one could, for instance, use
+  the following custom query: ``(div (+ (aggregate RE_AGGREGATION_METHOD
+  (metric METRIC_NAME AGGREGATION_METHOD)) (abs (aggregate
+  RE_AGGREGATION_METHOD (metric METRIC_NAME AGGREGATION_METHOD)))) 2)``: this
+  custom query would return ``0`` when the value of the series swap.
 
 Monasca
 ~~~~~~~
