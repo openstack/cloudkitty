@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixes the quote API method. See story 2009022
+    <https://storyboard.openstack.org/#!/story/2009022>`_ for more details.

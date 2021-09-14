@@ -14,6 +14,7 @@
 #    under the License.
 #
 from oslo_concurrency import lockutils
+from oslo_log import log
 import pecan
 from pecan import rest
 from stevedore import extension
@@ -25,6 +26,8 @@ from cloudkitty.common import policy
 from cloudkitty import utils as ck_utils
 
 PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
+
+LOG = log.getLogger(__name__)
 
 
 class RatingModulesMixin(object):
@@ -202,7 +205,8 @@ class RatingController(rest.RestController):
             json_data = res.to_json()
             res_dict[res.service].extend(json_data[res.service])
 
-        res = client.call({}, 'quote', res_data=[{'usage': res_dict}])
+        LOG.debug("Calling quote method with data: [%s].", res_dict)
+        res = client.call({}, 'quote', res_data={'usage': res_dict})
         return res
 
     @wsme_pecan.wsexpose(None)
