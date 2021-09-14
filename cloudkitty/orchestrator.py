@@ -115,9 +115,41 @@ class RatingEndpoint(object):
             return module_list
 
     def quote(self, ctxt, res_data):
-        LOG.debug('Received quote from RPC.')
+        LOG.debug('Received quote request [%s] from RPC.', res_data)
         worker = APIWorker()
-        return str(worker.quote(res_data))
+
+        start = tzutils.localized_now()
+        end = tzutils.add_delta(start, timedelta(seconds=CONF.collect.period))
+
+        # Need to prepare data to support the V2 processing format
+        usage = {}
+        for k in res_data['usage']:
+            all_data_points_for_metric = []
+            all_quote_data_entries = res_data['usage'][k]
+            for p in all_quote_data_entries:
+                vol = p['vol']
+                desc = p.get('desc', {})
+
+                data_point = dataframe.DataPoint(
+                    vol['unit'],
+                    vol['qty'],
+                    0,
+                    desc.get('groupby', []),
+                    desc.get('metadata', []),
+                )
+                all_data_points_for_metric.append(data_point)
+            usage[k] = all_data_points_for_metric
+
+        frame = dataframe.DataFrame(
+            start=start,
+            end=end,
+            usage=usage,
+        )
+
+        quote_result = worker.quote(frame)
+        LOG.debug("Quote result [%s] for input data [%s].",
+                  quote_result, res_data)
+        return str(quote_result)
 
     def reload_modules(self, ctxt):
         LOG.info('Received reload modules command.')
@@ -219,15 +251,13 @@ class APIWorker(BaseWorker):
         super(APIWorker, self).__init__(tenant_id)
 
     def quote(self, res_data):
+        quote_result = res_data
         for processor in self._processors:
-            processor.obj.quote(res_data)
+            quote_result = processor.obj.quote(quote_result)
 
         price = decimal.Decimal(0)
-        for res in res_data:
-            for res_usage in res['usage'].values():
-                for data in res_usage:
-                    price += data.get('rating', {}).get('price',
-                                                        decimal.Decimal(0))
+        for _, point in quote_result.iterpoints():
+            price += point.price
         return price
 
 
