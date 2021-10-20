@@ -59,6 +59,13 @@ If ``auth_section`` option is not defined then you can configure Keystone
 fetcher using regular Keystone authentication options as found here:
 :doc:`configuration`.
 
+* ``ignore_rating_role``: if set to true, the Keystone fetcher will not check
+  if a project has the rating role; thus, CloudKitty will execute rating for
+  every project it finds. Defaults to false.
+
+* ``ignore_disabled_tenants``: if set to true, Cloudkitty will not rate
+  projects that are disabled in Keystone. Defaults to false.
+
 
 Monasca
 -------

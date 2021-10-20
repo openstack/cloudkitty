@@ -19,9 +19,9 @@ from keystoneclient import client as kclient
 from keystoneclient import discover
 from keystoneclient import exceptions
 from oslo_config import cfg
+from oslo_log import log as logging
 
 from cloudkitty import fetcher
-
 
 FETCHER_KEYSTONE_OPTS = 'fetcher_keystone'
 
@@ -31,6 +31,16 @@ fetcher_keystone_opts = [
         default='3',
         help='Keystone version to use.',
     ),
+    cfg.BoolOpt(
+        'ignore_rating_role',
+        default=False,
+        help='Skip rating role check for cloudkitty user',
+    ),
+    cfg.BoolOpt(
+        'ignore_disabled_tenants',
+        default=False,
+        help='Stop rating disabled tenants',
+    ),
 ]
 
 ks_loading.register_session_conf_options(cfg.CONF, FETCHER_KEYSTONE_OPTS)
@@ -38,6 +48,8 @@ ks_loading.register_auth_conf_options(cfg.CONF, FETCHER_KEYSTONE_OPTS)
 cfg.CONF.register_opts(fetcher_keystone_opts, FETCHER_KEYSTONE_OPTS)
 
 CONF = cfg.CONF
+
+LOG = logging.getLogger(__name__)
 
 
 class KeystoneFetcher(fetcher.BaseFetcher):
@@ -73,10 +85,21 @@ class KeystoneFetcher(fetcher.BaseFetcher):
         tenant_attr, tenants_attr, role_func = auth_version_mapping
         tenant_list = getattr(self.admin_ks, tenants_attr).list()
         my_user_id = self.session.get_user_id()
+        ignore_rating_role = CONF.fetcher_keystone.ignore_rating_role
+        ignore_disabled_tenants = CONF.fetcher_keystone.ignore_disabled_tenants
+        LOG.debug('Total number of tenants : %s', len(tenant_list))
         for tenant in tenant_list[:]:
-            roles = getattr(self.admin_ks.roles, role_func)(
-                **{'user': my_user_id,
-                   tenant_attr: tenant})
-            if 'rating' not in [role.name for role in roles]:
-                tenant_list.remove(tenant)
+            if ignore_disabled_tenants:
+                if not tenant.enabled:
+                    tenant_list.remove(tenant)
+                    LOG.debug('Disabled tenant name %s with id %s skipped.',
+                              tenant.name, tenant.id)
+                    continue
+            if not ignore_rating_role:
+                roles = getattr(self.admin_ks.roles, role_func)(
+                    **{'user': my_user_id,
+                       tenant_attr: tenant})
+                if 'rating' not in [role.name for role in roles]:
+                    tenant_list.remove(tenant)
+        LOG.debug('Number of tenants to rate : %s', len(tenant_list))
         return [tenant.id for tenant in tenant_list]
