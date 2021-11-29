@@ -47,6 +47,8 @@ class ScopeState(base.BaseResource):
             api_utils.MultiQueryParam(str),
         voluptuous.Optional('collector', default=[]):
             api_utils.MultiQueryParam(str),
+        voluptuous.Optional('active', default=[]):
+            api_utils.MultiQueryParam(int),
     })
     @api_utils.add_output_schema({'results': [{
         voluptuous.Required('scope_id'): vutils.get_string_type(),
@@ -57,14 +59,12 @@ class ScopeState(base.BaseResource):
             'last_processed_timestamp'): vutils.get_string_type(),
         # This "state" property should be removed in the next release.
         voluptuous.Optional('state'): vutils.get_string_type(),
+        voluptuous.Required('active'): bool,
+        voluptuous.Optional('scope_activation_toggle_date'):
+            vutils.get_string_type(),
     }]})
-    def get(self,
-            offset=0,
-            limit=100,
-            scope_id=None,
-            scope_key=None,
-            fetcher=None,
-            collector=None):
+    def get(self, offset=0, limit=100, scope_id=None, scope_key=None,
+            fetcher=None, collector=None, active=None):
 
         policy.authorize(
             flask.request.context,
@@ -72,13 +72,9 @@ class ScopeState(base.BaseResource):
             {'project_id': scope_id or flask.request.context.project_id}
         )
         results = self._storage_state.get_all(
-            identifier=scope_id,
-            scope_key=scope_key,
-            fetcher=fetcher,
-            collector=collector,
-            offset=offset,
-            limit=limit,
-        )
+            identifier=scope_id, scope_key=scope_key, fetcher=fetcher,
+            collector=collector, offset=offset, limit=limit, active=active)
+
         if len(results) < 1:
             raise http_exceptions.NotFound(
                 "No resource found for provided filters.")
@@ -91,6 +87,10 @@ class ScopeState(base.BaseResource):
                 'state': r.last_processed_timestamp.isoformat(),
                 'last_processed_timestamp':
                     r.last_processed_timestamp.isoformat(),
+                'active': r.active,
+                'scope_activation_toggle_date':
+                    r.scope_activation_toggle_date.isoformat() if
+                    r.scope_activation_toggle_date else None
             } for r in results]
         }
 
@@ -165,3 +165,67 @@ class ScopeState(base.BaseResource):
         })
 
         return {}, 202
+
+    @api_utils.add_input_schema('body', {
+        voluptuous.Required('scope_id'):
+            api_utils.SingleQueryParam(str),
+        voluptuous.Optional('scope_key'):
+            api_utils.SingleQueryParam(str),
+        voluptuous.Optional('fetcher'):
+            api_utils.SingleQueryParam(str),
+        voluptuous.Optional('collector'):
+            api_utils.SingleQueryParam(str),
+        voluptuous.Optional('active'):
+            api_utils.SingleQueryParam(bool),
+    })
+    @api_utils.add_output_schema({
+        voluptuous.Required('scope_id'): vutils.get_string_type(),
+        voluptuous.Required('scope_key'): vutils.get_string_type(),
+        voluptuous.Required('fetcher'): vutils.get_string_type(),
+        voluptuous.Required('collector'): vutils.get_string_type(),
+        voluptuous.Required('state'): vutils.get_string_type(),
+        voluptuous.Required('active'): bool,
+        voluptuous.Required('scope_activation_toggle_date'):
+            vutils.get_string_type()
+    })
+    def patch(self, scope_id, scope_key=None, fetcher=None,
+              collector=None, active=None):
+
+        policy.authorize(
+            flask.request.context,
+            'scope:patch_state',
+            {'tenant_id': scope_id or flask.request.context.project_id}
+        )
+        results = self._storage_state.get_all(identifier=scope_id)
+
+        if len(results) < 1:
+            raise http_exceptions.NotFound(
+                "No resource found for provided filters.")
+
+        if len(results) > 1:
+            LOG.debug("Too many resources found with the same scope_id [%s], "
+                      "scopes found: [%s].", scope_id, results)
+            raise http_exceptions.NotFound("Too many resources found with "
+                                           "the same scope_id: %s." % scope_id)
+
+        scope_to_update = results[0]
+        LOG.debug("Executing update of storage scope: [%s].", scope_to_update)
+
+        self._storage_state.update_storage_scope(scope_to_update,
+                                                 scope_key=scope_key,
+                                                 fetcher=fetcher,
+                                                 collector=collector,
+                                                 active=active)
+
+        storage_scopes = self._storage_state.get_all(identifier=scope_id)
+        update_storage_scope = storage_scopes[0]
+        return {
+            'scope_id': update_storage_scope.identifier,
+            'scope_key': update_storage_scope.scope_key,
+            'fetcher': update_storage_scope.fetcher,
+            'collector': update_storage_scope.collector,
+            'state': update_storage_scope.state.isoformat(),
+            'active': update_storage_scope.active,
+            'scope_activation_toggle_date':
+                update_storage_scope.scope_activation_toggle_date.isoformat()
+        }

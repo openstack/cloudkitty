@@ -16,8 +16,6 @@
 from oslo_db.sqlalchemy import models
 import sqlalchemy
 from sqlalchemy.ext import declarative
-from sqlalchemy import schema
-
 
 Base = declarative.declarative_base()
 
@@ -28,7 +26,7 @@ class IdentifierState(Base, models.ModelBase):
     @declarative.declared_attr
     def __table_args__(cls):
         return (
-            schema.UniqueConstraint(
+            sqlalchemy.schema.UniqueConstraint(
                 'identifier',
                 'scope_key',
                 'collector',
@@ -54,3 +52,8 @@ class IdentifierState(Base, models.ModelBase):
                                   unique=False)
     last_processed_timestamp = sqlalchemy.Column(
         sqlalchemy.DateTime, nullable=False)
+    scope_activation_toggle_date = sqlalchemy.Column(
+        'scope_activation_toggle_date', sqlalchemy.DateTime, nullable=False,
+        server_default=sqlalchemy.sql.func.now())
+    active = sqlalchemy.Column('active', sqlalchemy.Boolean, nullable=False,
+                               default=True)

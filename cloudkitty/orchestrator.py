@@ -309,18 +309,42 @@ class Worker(BaseWorker):
     def run(self):
         while True:
             timestamp = self._check_state()
+            LOG.debug("Processing timestamp [%s] for storage scope [%s].",
+                      timestamp, self._tenant_id)
+
             if not timestamp:
+                break
+
+            if self._state.get_state(self._tenant_id):
+                if not self._state.is_storage_scope_active(self._tenant_id):
+                    LOG.debug("Skipping processing for storage scope [%s] "
+                              "because it is marked as inactive.",
+                              self._tenant_id)
+                    break
+            else:
+                LOG.debug("No need to check if [%s] is de-activated. "
+                          "We have never processed it before.")
+
+            if not self._state.is_storage_scope_active(self._tenant_id):
+                LOG.debug("Skipping processing for storage scope [%s] because "
+                          "it is marked as inactive.", self._tenant_id)
                 break
 
             metrics = list(self._conf['metrics'].keys())
 
             # Collection
             usage_data = self._do_collection(metrics, timestamp)
+            LOG.debug("Usage data [%s] found for storage scope [%s] in "
+                      "timestamp [%s].", usage_data, self._tenant_id,
+                      timestamp)
+
+            start_time = timestamp
+            end_time = tzutils.add_delta(timestamp,
+                                         timedelta(seconds=self._period))
 
             frame = dataframe.DataFrame(
-                start=timestamp,
-                end=tzutils.add_delta(timestamp,
-                                      timedelta(seconds=self._period)),
+                start=start_time,
+                end=end_time,
                 usage=usage_data,
             )
             # Rating
@@ -328,6 +352,10 @@ class Worker(BaseWorker):
                 frame = processor.obj.process(frame)
 
             # Writing
+            LOG.debug("Persisting processed frames [%s] for tenant [%s] and "
+                      "time [start=%s,end=%s]", frame, self._tenant_id,
+                      start_time, end_time)
+
             self._storage.push([frame], self._tenant_id)
             self._state.set_state(self._tenant_id, timestamp)
 
@@ -400,6 +428,8 @@ class Orchestrator(cotyledon.Service):
                             w=self._worker_id, lck=lock_name)
                     )
                     state = self._check_state(tenant_id)
+                    LOG.debug("Next timestamp [%s] found for processing for "
+                              "storage scope [%s].", state, tenant_id)
                     if state:
                         worker = Worker(
                             self.collector,
@@ -410,6 +440,8 @@ class Orchestrator(cotyledon.Service):
                         worker.run()
 
                     lock.release()
+
+            LOG.debug("Finished processing all storage scopes.")
 
             # FIXME(sheeprine): We may cause a drift here
             time.sleep(CONF.collect.period)

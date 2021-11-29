@@ -40,6 +40,21 @@ scope_key: &scope_key
   type: string
   required: false
 
+active_anchor_query: &active_query
+  in: body
+  description: |
+    Defines if a scope should be processed or not; `True` means that
+    CloudKitty must process the scope.
+  type: bool
+  required: true
+
+active_body:
+  <<: *active_query
+  required: false
+
+active_key_resp:
+  <<: *active_query
+
 all_scopes: &all_scopes
   in: body
   description: |

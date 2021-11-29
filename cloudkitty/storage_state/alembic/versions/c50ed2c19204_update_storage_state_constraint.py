@@ -20,10 +20,11 @@ Create Date: 2019-05-15 17:02:56.595274
 
 """
 from alembic import op
-from sqlalchemy.ext import declarative
 
 from oslo_db.sqlalchemy import models
+
 import sqlalchemy
+from sqlalchemy.ext import declarative
 
 # revision identifiers, used by Alembic.
 revision = 'c50ed2c19204'
