@@ -155,7 +155,7 @@ class StateManager(object):
         This method is deprecated, consider using
         "set_last_processed_timestamp".
         """
-        LOG.warning("The method 'set_state' is deprecated."
+        LOG.warning("The method 'set_state' is deprecated. "
                     "Consider using the new method "
                     "'set_last_processed_timestamp'.")
         self.set_last_processed_timestamp(
