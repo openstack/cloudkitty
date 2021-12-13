@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Two new options ``ignore_disabled_tenants`` and ``ignore_rating_role``
+    were added in the ``fetcher_keystone`` section. ``ignore_disabled_tenants``
+    skips disabled tenants when doing the rating. ``ignore_rating_role``
+    rates everyone, without reading the rating role for each project, which
+    can be resource consuming.
