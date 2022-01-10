@@ -135,6 +135,8 @@ class MetricConfigValidationTest(tests.TestCase):
         expected_output['metric_one']['groupby'].append('project_id')
         expected_output['metric_one']['extra_args'] = {
             'aggregation_method': 'max',
+            'query_prefix': '',
+            'query_suffix': '',
         }
         self.assertEqual(
             collector.prometheus.PrometheusCollector.check_configuration(data),
@@ -147,6 +149,8 @@ class MetricConfigValidationTest(tests.TestCase):
         expected_output['metric_one']['groupby'].append('project_id')
         expected_output['metric_one']['extra_args'] = {
             'aggregation_method': 'max',
+            'query_prefix': '',
+            'query_suffix': '',
         }
         self.assertEqual(
             collector.prometheus.PrometheusCollector.check_configuration(data),
@@ -158,6 +162,8 @@ class MetricConfigValidationTest(tests.TestCase):
         data['metrics']['metric_one']['extra_args'] = {
             'aggregation_method': 'max',
             'query_function': 'abs',
+            'query_prefix': 'custom_prefix',
+            'query_suffix': 'custom_suffix',
             'range_function': 'delta',
         }
         expected_output = copy.deepcopy(self.base_output)
@@ -165,6 +171,8 @@ class MetricConfigValidationTest(tests.TestCase):
         expected_output['metric_one']['extra_args'] = {
             'aggregation_method': 'max',
             'query_function': 'abs',
+            'query_prefix': 'custom_prefix',
+            'query_suffix': 'custom_suffix',
             'range_function': 'delta',
         }
 
