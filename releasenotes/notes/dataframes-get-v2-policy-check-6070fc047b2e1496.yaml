@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixes policy check when getting dataframes using the v2 API, causing the
+    operation to fail when run by a non-admin user. See story 2009879
+    <https://storyboard.openstack.org/#!/story/2009879>`_ for more details.
