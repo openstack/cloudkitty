@@ -72,7 +72,7 @@ class DataFrameList(base.BaseResource):
         policy.authorize(
             flask.request.context,
             'dataframes:get',
-            {'tenant_id': flask.request.context.project_id},
+            {'project_id': flask.request.context.project_id},
         )
 
         begin = begin or tzutils.get_month_start()
