@@ -393,11 +393,6 @@
 # Connections which have been present in the connection pool longer
 # than this number of seconds will be replaced with a new one the next
 # time they are checked out from the pool. (integer value)
-# Deprecated group/name - [DATABASE]/idle_timeout
-# Deprecated group/name - [database]/idle_timeout
-# Deprecated group/name - [DEFAULT]/sql_idle_timeout
-# Deprecated group/name - [DATABASE]/sql_idle_timeout
-# Deprecated group/name - [sql]/idle_timeout
 #connection_recycle_time = 3600
 
 # Maximum number of SQL connections to keep open in a pool. Setting a
@@ -525,6 +520,12 @@
 
 # Keystone version to use. (string value)
 #keystone_version = 3
+
+# Skip rating role check for cloudkitty user (boolean value)
+#ignore_rating_role = false
+
+# Stop rating disabled tenants (boolean value)
+#ignore_disabled_tenants = false
 
 
 [fetcher_prometheus]
@@ -696,8 +697,8 @@
 #memcache_pool_conn_get_timeout = 10
 
 # (Optional) Use the advanced (eventlet safe) memcached client pool.
-# The advanced pool will only work under python 2.x. (boolean value)
-#memcache_use_advanced_pool = false
+# (boolean value)
+#memcache_use_advanced_pool = true
 
 # (Optional) Indicate whether to set the X-Service-Catalog header. If
 # False, middleware will not ask for service catalog on token
@@ -1130,14 +1131,12 @@
 # Deprecated group/name - [oslo_messaging_rabbit]/kombu_ssl_ca_certs
 #ssl_ca_file =
 
-# DEPRECATED: Run the health check heartbeat thread through a native
-# python thread by default. If this option is equal to False then the
-# health check heartbeat will inherit the execution model from the
-# parent process. For example if the parent process has monkey patched
-# the stdlib by using eventlet/greenlet then the heartbeat will be run
-# through a green thread. (boolean value)
-# This option is deprecated for removal.
-# Its value may be silently ignored in the future.
+# Run the health check heartbeat thread through a native python thread
+# by default. If this option is equal to False then the health check
+# heartbeat will inherit the execution model from the parent process.
+# For example if the parent process has monkey patched the stdlib by
+# using eventlet/greenlet then the heartbeat will be run through a
+# green thread. (boolean value)
 #heartbeat_in_pthread = true
 
 # How long to wait before reconnecting in response to an AMQP consumer
@@ -1258,7 +1257,10 @@
 # allowed for old defaults but is disallowed for new defaults, it will
 # be disallowed. It is encouraged to enable this flag along with the
 # ``enforce_scope`` flag so that you can get the benefits of new
-# defaults and ``scope_type`` together (boolean value)
+# defaults and ``scope_type`` together. If ``False``, the deprecated
+# policy check string is logically OR'd with the new policy check
+# string, allowing for a graceful upgrade experience between releases
+# with new policies, which is the default behavior. (boolean value)
 #enforce_new_defaults = false
 
 # The relative or absolute path of a file that maps roles to
