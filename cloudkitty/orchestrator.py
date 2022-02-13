@@ -51,14 +51,15 @@ orchestrator_opts = [
     cfg.StrOpt(
         'coordination_url',
         secret=True,
-        help='Coordination driver URL',
+        help='Coordination backend URL',
         default='file:///var/lib/cloudkitty/locks'),
     cfg.IntOpt(
         'max_workers',
         default=multiprocessing.cpu_count(),
         sample_default=4,
         min=1,
-        help='Max nb of workers to run. Defaults to the nb of available CPUs'),
+        help='Maximal number of workers to run. Defaults to the number of '
+        'available CPUs'),
     cfg.IntOpt('max_threads',
                # NOTE(peschk_l): This is the futurist default
                default=multiprocessing.cpu_count() * 5,
@@ -67,7 +68,7 @@ orchestrator_opts = [
                deprecated_name='max_greenthreads',
                advanced=True,
                help='Maximal number of threads to use per worker. Defaults to '
-               '5 times the nb of available CPUs'),
+               '5 times the number of available CPUs'),
 ]
 
 CONF.register_opts(orchestrator_opts, group='orchestrator')

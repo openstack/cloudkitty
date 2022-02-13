@@ -750,11 +750,11 @@
 # From cloudkitty.common.config
 #
 
-# Coordination driver URL (string value)
+# Coordination backend URL (string value)
 #coordination_url = file:///var/lib/cloudkitty/locks
 
-# Max nb of workers to run. Defaults to the nb of available CPUs
-# (integer value)
+# Maximal number of workers to run. Defaults to the number of
+# available CPUs (integer value)
 # Minimum value: 1
 #
 # This option has a sample default set, which means that
@@ -763,7 +763,7 @@
 #max_workers = 4
 
 # Maximal number of threads to use per worker. Defaults to 5 times the
-# nb of available CPUs (integer value)
+# number of available CPUs (integer value)
 # Minimum value: 1
 # Deprecated group/name - [orchestrator]/max_greenthreads
 # Advanced Option: intended for advanced users and not used
