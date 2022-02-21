@@ -324,17 +324,45 @@ class Worker(BaseWorker):
                 # system in workers
                 sys.exit(1)
 
-        with futurist.ThreadPoolExecutor(
-                max_workers=CONF.orchestrator.max_threads) as tpool:
-            futs = [tpool.submit(_get_result, metric) for metric in metrics]
-            LOG.debug(self._log_prefix +
-                      'Collecting {} metrics.'.format(len(metrics)))
-            results = [r.result() for r in waiters.wait_for_all(futs).done]
-            LOG.debug(self._log_prefix + 'Collecting {} metrics took {}s '
-                      'total, with {}s average'.format(
-                          tpool.statistics.executed,
-                          tpool.statistics.runtime,
-                          tpool.statistics.average_runtime))
+        return self._do_execute_collection(_get_result, metrics)
+
+    def _do_execute_collection(self, _get_result, metrics):
+        """Execute the metric measurement collection
+
+        When executing this method a ZeroDivisionError might be raised.
+        This happens when no executions have happened in the
+        `futurist.ThreadPoolExecutor`; then, when calling the
+        `average_runtime`, the exception is thrown. In such a case, there is
+         no need for further actions, and we can ignore the error.
+
+        :param _get_result: the method to execute and get the metrics
+        :param metrics: the list of metrics to be collected
+        :return: the metrics measurements
+        """
+        results = []
+        try:
+            with futurist.ThreadPoolExecutor(
+                    max_workers=CONF.orchestrator.max_threads) as tpool:
+
+                futs = [tpool.submit(_get_result, metric)
+                        for metric in metrics]
+
+                LOG.debug(self._log_prefix +
+                          'Collecting [{}] metrics.'.format(metrics))
+
+                results = [r.result() for r in waiters.wait_for_all(futs).done]
+
+                log_message = self._log_prefix + \
+                    "Collecting {} metrics took {}s total, with {}s average"
+
+                LOG.debug(log_message.format(tpool.statistics.executed,
+                                             tpool.statistics.runtime,
+                                             tpool.statistics.average_runtime))
+
+        except ZeroDivisionError as zeroDivisionError:
+            LOG.debug("Ignoring ZeroDivisionError for metrics [%s]: [%s].",
+                      metrics, zeroDivisionError)
+
         return dict(filter(lambda x: x[1] is not None, results))
 
     def run(self):
