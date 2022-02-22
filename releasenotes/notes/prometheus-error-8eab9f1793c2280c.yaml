@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Raises a ``CollectError`` exception with error details when a Prometheus
+    query returns an error status.
