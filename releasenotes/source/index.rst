@@ -22,6 +22,7 @@ Contents
    :maxdepth: 2
 
    unreleased
+   yoga
    xena
    wallaby
    victoria
