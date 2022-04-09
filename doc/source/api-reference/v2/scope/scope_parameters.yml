@@ -88,6 +88,14 @@ last_processed_timestamp:
   type: iso8601 timestamp
   required: true
 
+scope_activation_toggle_date:
+  in: body
+  description: |
+    It represents the last time the scope was activated/deactivated via the
+    PATCH API.
+  type: iso8601 timestamp
+  required: true
+
 scope_id_body:
   <<: *scope_id
   in: body
