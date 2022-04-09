@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    Allow rating rules that have more than 2 digits in integer part.
+
+    Currently, CloudKitty only allows creating rating rules as
+    ``99.999999999999999999999999``. Therefore, for prices equal to or higher
+    than 100, we would not be able to use them. This patch will enable
+    operators to use any value between ``0`` and ``999999999999`` (in the
+    integer part of the number), which will provide more flexibility.
