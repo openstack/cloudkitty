@@ -120,7 +120,6 @@
 - project:
     queue: cloudkitty
     templates:
-      - openstack-lower-constraints-jobs
       - check-requirements
       - openstack-cover-jobs
       - openstack-python3-xena-jobs
