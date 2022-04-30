@@ -119,7 +119,6 @@
 
 - project:
     templates:
-      - openstack-lower-constraints-jobs
       - check-requirements
       - openstack-cover-jobs
       - openstack-python3-zed-jobs
