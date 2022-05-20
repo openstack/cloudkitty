@@ -118,6 +118,7 @@
       - ^cloudkitty/tests/unittests/.*$
 
 - project:
+    queue: cloudkitty
     templates:
       - check-requirements
       - openstack-cover-jobs
@@ -134,7 +135,6 @@
         - cloudkitty-tox-bandit:
             voting: false
     gate:
-      queue: cloudkitty
       jobs:
         - cloudkitty-tempest-full-v2-storage-influxdb
         - cloudkitty-tempest-full-v1-storage-sqlalchemy
