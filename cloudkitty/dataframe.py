@@ -161,9 +161,9 @@ class DataPoint(_DataPointBase):
 DATAFRAME_SCHEMA = voluptuous.Schema({
     voluptuous.Required('period'): {
         voluptuous.Required('begin'): voluptuous.Any(
-            datetime.datetime, voluptuous.Coerce(tzutils.dt_from_iso)),
+            datetime.datetime, tzutils.dt_from_iso),
         voluptuous.Required('end'): voluptuous.Any(
-            datetime.datetime, voluptuous.Coerce(tzutils.dt_from_iso)),
+            datetime.datetime, tzutils.dt_from_iso),
     },
     voluptuous.Required('usage'): vutils.IterableValuesDict(
         str, DataPoint.from_dict),
