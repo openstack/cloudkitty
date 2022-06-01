@@ -219,6 +219,11 @@ class PrometheusCollector(collector.BaseCollector):
         except PrometheusResponseError as e:
             raise CollectError(*e.args)
 
+        if res['status'] == 'error':
+            error_type = res['errorType']
+            error_msg = res['error']
+            raise CollectError("%s: %s" % (error_type, error_msg))
+
         # If the query returns an empty dataset,
         # return an empty list
         if not res['data']['result']:
