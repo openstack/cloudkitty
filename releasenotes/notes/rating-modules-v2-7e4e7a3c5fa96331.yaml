@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Add rating modules GET endpoints to v2 API.

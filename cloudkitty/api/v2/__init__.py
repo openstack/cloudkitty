@@ -34,7 +34,8 @@ API_MODULES = [
     'cloudkitty.api.v2.scope',
     'cloudkitty.api.v2.dataframes',
     'cloudkitty.api.v2.summary',
-    'cloudkitty.api.v2.task'
+    'cloudkitty.api.v2.task',
+    'cloudkitty.api.v2.rating',
 ]
 
 

@@ -1,0 +1,49 @@
+description:
+  in: body
+  description: |
+    A quick description of the module
+  type: string
+  required: true
+
+enabled: &enabled
+  in: body
+  description: |
+    Boolean representing if the module is enabled
+  type: bool
+  required: true
+
+enabled_opt:
+  <<: *enabled
+  required: false
+
+hot_config:
+  in: body
+  description: |
+    Boolean representing if the module supports hot-config
+  type: bool
+  required: true
+
+module_id:
+  in: body
+  description: |
+    The id of the module
+  type: string
+  required: true
+
+modules_list:
+  in: body
+  description: |
+    List of modules.
+  type: list
+  required: true
+
+priority: &priority
+  in: body
+  description: |
+    Priority of the module, relative to other modules
+  type: int
+  required: true
+
+priority_opt:
+  <<: *priority
+  required: false
