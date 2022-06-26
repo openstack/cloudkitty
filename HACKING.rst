@@ -23,6 +23,7 @@ Cloudkitty Specific Commandments
 - [C320] Do not use LOG.warn as it's deprecated.
 - [C321] Ensure that the _() function is explicitly imported to ensure
   proper translations.
+- [C322] Check for usage of deprecated assertRaisesRegexp
 
 LOG Translations
 ----------------

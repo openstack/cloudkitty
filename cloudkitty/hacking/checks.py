@@ -52,6 +52,7 @@ assert_no_xrange_re = re.compile(r"\s*xrange\s*\(")
 assert_True = re.compile(r".*assertEqual\(True, .*\)")
 assert_None = re.compile(r".*assertEqual\(None, .*\)")
 no_log_warn = re.compile(r".*LOG.warn\(.*\)")
+asse_raises_regexp = re.compile(r"assertRaisesRegexp\(")
 
 
 class BaseASTChecker(ast.NodeVisitor):
@@ -352,3 +353,15 @@ def no_log_warn_check(logical_line):
     msg = ("C320: LOG.warn is deprecated, please use LOG.warning!")
     if re.match(no_log_warn, logical_line):
         yield(0, msg)
+
+
+@core.flake8ext
+def assert_raises_regexp(logical_line):
+    """Check for usage of deprecated assertRaisesRegexp
+
+    C322
+    """
+    res = asse_raises_regexp.search(logical_line)
+    if res:
+        yield (0, "C322: assertRaisesRegex must be used instead "
+                  "of assertRaisesRegexp")

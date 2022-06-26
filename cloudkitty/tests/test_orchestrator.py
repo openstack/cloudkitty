@@ -544,7 +544,7 @@ class WorkerTest(tests.TestCase):
                            "resource 'metric1'"
         expected_message = re.escape(expected_message)
 
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             collector.NoDataCollected, expected_message, self.worker._collect,
             metric, timestamp_now)
 
@@ -921,8 +921,8 @@ class ReprocessingWorkerTest(tests.TestCase):
                            "does not seem to exist anymore."
         expected_message = re.escape(expected_message)
 
-        self.assertRaisesRegexp(Exception, expected_message,
-                                self.reprocessing_worker.load_scope_key)
+        self.assertRaisesRegex(Exception, expected_message,
+                               self.reprocessing_worker.load_scope_key)
 
         self.state_manager_get_all_mock.assert_has_calls([
             mock.call(self.reprocessing_worker._tenant_id)])
@@ -935,8 +935,8 @@ class ReprocessingWorkerTest(tests.TestCase):
                            "found for scope [toStringMock]."
         expected_message = re.escape(expected_message)
 
-        self.assertRaisesRegexp(Exception, expected_message,
-                                self.reprocessing_worker.load_scope_key)
+        self.assertRaisesRegex(Exception, expected_message,
+                               self.reprocessing_worker.load_scope_key)
 
         self.state_manager_get_all_mock.assert_has_calls([
             mock.call(self.reprocessing_worker._tenant_id)])

@@ -48,9 +48,9 @@ class TestReprocessSchedulerPostApi(tests.TestCase):
             "a reprocessing."
         expected_message = re.escape(expected_message)
 
-        self.assertRaisesRegexp(http_exceptions.BadRequest, expected_message,
-                                self.endpoint.validate_scope_ids,
-                                self.scope_ids)
+        self.assertRaisesRegex(http_exceptions.BadRequest, expected_message,
+                               self.endpoint.validate_scope_ids,
+                               self.scope_ids)
 
         self.scope_ids.remove('ALL')
         self.endpoint.validate_scope_ids(self.scope_ids)
@@ -63,12 +63,12 @@ class TestReprocessSchedulerPostApi(tests.TestCase):
             "a previously processed timestamp."
         expected_message = re.escape(expected_message)
 
-        self.assertRaisesRegexp(http_exceptions.BadRequest, expected_message,
-                                self.endpoint.validate_inputs,
-                                self.end_reprocess_time, "", self.scope_ids,
-                                self.start_reprocess_time)
+        self.assertRaisesRegex(http_exceptions.BadRequest, expected_message,
+                               self.endpoint.validate_inputs,
+                               self.end_reprocess_time, "", self.scope_ids,
+                               self.start_reprocess_time)
 
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             http_exceptions.BadRequest, expected_message,
             self.endpoint.validate_inputs, self.end_reprocess_time,
             "  ", self.scope_ids, self.start_reprocess_time)
@@ -90,10 +90,10 @@ class TestReprocessSchedulerPostApi(tests.TestCase):
 
         expected_message = re.escape(expected_message)
 
-        self.assertRaisesRegexp(http_exceptions.BadRequest, expected_message,
-                                self.endpoint.validate_inputs,
-                                self.end_reprocess_time, self.reason,
-                                self.scope_ids, self.start_reprocess_time)
+        self.assertRaisesRegex(http_exceptions.BadRequest, expected_message,
+                               self.endpoint.validate_inputs,
+                               self.end_reprocess_time, self.reason,
+                               self.scope_ids, self.start_reprocess_time)
 
         self.end_reprocess_time = original_end_reprocess_time
         self.endpoint.validate_inputs(
@@ -113,7 +113,7 @@ class TestReprocessSchedulerPostApi(tests.TestCase):
 
         expected_message = re.escape(expected_message)
 
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             http_exceptions.BadRequest, expected_message,
             self.endpoint.check_if_there_are_invalid_scopes, all_scopes,
             self.end_reprocess_time, self.scope_ids, self.start_reprocess_time)
@@ -206,7 +206,7 @@ class TestReprocessSchedulerPostApi(tests.TestCase):
 
         expected_message = re.escape(expected_message)
 
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             http_exceptions.BadRequest, expected_message,
             self.endpoint.validate_reprocessing_schedules_overlaps,
             self.generate_all_scopes_object(),
@@ -244,7 +244,7 @@ class TestReprocessSchedulerPostApi(tests.TestCase):
                                                  self.start_reprocess_time)
         expected_message = re.escape(expected_message)
 
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             http_exceptions.BadRequest, expected_message,
             self.endpoint.validate_start_end_for_reprocessing, all_scopes,
             self.end_reprocess_time, start_reprocess_time)
@@ -261,7 +261,7 @@ class TestReprocessSchedulerPostApi(tests.TestCase):
                                                  self.end_reprocess_time)
         expected_message = re.escape(expected_message)
 
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             http_exceptions.BadRequest, expected_message,
             self.endpoint.validate_start_end_for_reprocessing, all_scopes,
             end_processing_time, self.start_reprocess_time)
