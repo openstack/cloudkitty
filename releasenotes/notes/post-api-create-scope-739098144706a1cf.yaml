@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Introduce an API to create scopes with a POST request. This is useful for
+    operators to register scopes before they are created as resources in the
+    collected backend and disable their processing without waiting for the
+    scopes to be discovered by CloudKitty.

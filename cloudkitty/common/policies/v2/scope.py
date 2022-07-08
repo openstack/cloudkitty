@@ -36,7 +36,12 @@ scope_policies = [
         description='Enables operators to patch a storage scope',
         operations=[{'path': '/v2/scope',
                      'method': 'PATCH'}]),
-
+    policy.DocumentedRuleDefault(
+        name='scope:post_state',
+        check_str=base.ROLE_ADMIN,
+        description='Enables operators to create a storage scope',
+        operations=[{'path': '/v2/scope',
+                     'method': 'POST'}]),
 ]
 
 

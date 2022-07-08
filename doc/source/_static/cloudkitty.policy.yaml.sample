@@ -109,6 +109,10 @@
 # PATCH  /v2/scope
 #"scope:patch_state": "role:admin"
 
+# Enables operators to create a storage scope
+# POST  /v2/scope
+#"scope:post_state": "role:admin"
+
 # Get a rating summary
 # GET  /v2/summary
 #"summary:get_summary": "rule:admin_or_owner"

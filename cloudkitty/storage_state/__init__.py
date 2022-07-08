@@ -168,6 +168,8 @@ class StateManager(object):
             collector=None, scope_key=None):
         """Set the last processed timestamp of a scope.
 
+        If the scope does not exist yet in the database, it will create it.
+
         :param identifier: Identifier of the scope
         :type identifier: str
         :param last_processed_timestamp: last processed timestamp of the scope
@@ -191,17 +193,51 @@ class StateManager(object):
                 r.last_processed_timestamp = last_processed_timestamp
                 session.commit()
         else:
-            state_object = self.model(
-                identifier=identifier,
-                last_processed_timestamp=last_processed_timestamp,
-                fetcher=fetcher,
-                collector=collector,
-                scope_key=scope_key,
-            )
-            session.add(state_object)
-            session.commit()
-
+            self.create_scope(identifier, last_processed_timestamp,
+                              fetcher=fetcher, collector=collector,
+                              scope_key=scope_key)
         session.close()
+
+    def create_scope(self, identifier, last_processed_timestamp, fetcher=None,
+                     collector=None, scope_key=None, active=True,
+                     session=None):
+        """Creates a scope in the database.
+
+        :param identifier: Identifier of the scope
+        :type identifier: str
+        :param last_processed_timestamp: last processed timestamp of the scope
+        :type last_processed_timestamp: datetime.datetime
+        :param fetcher: Fetcher associated to the scope
+        :type fetcher: str
+        :param collector: Collector associated to the scope
+        :type collector: str
+        :param scope_key: scope_key associated to the scope
+        :type scope_key: str
+        :param active: indicates if the scope is active
+        :type active: bool
+        :param session: the current database session to be reused
+        :type session: object
+        """
+
+        is_session_reused = True
+        if not session:
+            session = db.get_session()
+            session.begin()
+            is_session_reused = False
+
+        state_object = self.model(
+            identifier=identifier,
+            last_processed_timestamp=last_processed_timestamp,
+            fetcher=fetcher,
+            collector=collector,
+            scope_key=scope_key,
+            active=active
+        )
+        session.add(state_object)
+        session.commit()
+
+        if not is_session_reused:
+            session.close()
 
     def get_state(self, identifier,
                   fetcher=None, collector=None, scope_key=None):

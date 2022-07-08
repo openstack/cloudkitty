@@ -183,7 +183,10 @@ class ScopeState(base.BaseResource):
         voluptuous.Required('scope_key'): vutils.get_string_type(),
         voluptuous.Required('fetcher'): vutils.get_string_type(),
         voluptuous.Required('collector'): vutils.get_string_type(),
+        # This "state" property should be removed in the next release.
         voluptuous.Required('state'): vutils.get_string_type(),
+        voluptuous.Optional('last_processed_timestamp'):
+            voluptuous.Coerce(tzutils.dt_from_iso),
         voluptuous.Required('active'): bool,
         voluptuous.Required('scope_activation_toggle_date'):
             vutils.get_string_type()
@@ -226,6 +229,79 @@ class ScopeState(base.BaseResource):
             'fetcher': update_storage_scope.fetcher,
             'collector': update_storage_scope.collector,
             'state': update_storage_scope.state.isoformat(),
+            'last_processed_timestamp':
+                update_storage_scope.last_processed_timestamp.isoformat(),
+            'active': update_storage_scope.active,
+            'scope_activation_toggle_date':
+                update_storage_scope.scope_activation_toggle_date.isoformat()
+        }
+
+    @api_utils.add_input_schema('body', {
+        voluptuous.Required('scope_id'):
+            api_utils.SingleQueryParam(str),
+        voluptuous.Optional('scope_key'):
+            api_utils.SingleQueryParam(str),
+        voluptuous.Optional('fetcher'):
+            api_utils.SingleQueryParam(str),
+        voluptuous.Optional('collector'):
+            api_utils.SingleQueryParam(str),
+        voluptuous.Optional('active'):
+            api_utils.SingleQueryParam(bool),
+    })
+    @api_utils.add_output_schema({
+        voluptuous.Required('scope_id'): vutils.get_string_type(),
+        voluptuous.Required('scope_key'): vutils.get_string_type(),
+        voluptuous.Required('fetcher'): vutils.get_string_type(),
+        voluptuous.Required('collector'): vutils.get_string_type(),
+        # This "state" property should be removed in the next release.
+        voluptuous.Required('state'): vutils.get_string_type(),
+        voluptuous.Optional('last_processed_timestamp'):
+            voluptuous.Coerce(tzutils.dt_from_iso),
+        voluptuous.Required('active'): bool,
+        voluptuous.Required('scope_activation_toggle_date'):
+            vutils.get_string_type()
+    })
+    def post(self, scope_id, scope_key=None, fetcher=None, collector=None,
+             active=None):
+
+        policy.authorize(
+            flask.request.context,
+            'scope:post_state',
+            {'tenant_id': scope_id or flask.request.context.project_id}
+        )
+        results = self._storage_state.get_all(identifier=scope_id)
+
+        if len(results) >= 1:
+            LOG.debug("There is already a scope with ID [%s], "
+                      "scopes found: [%s].", scope_id, results)
+            raise http_exceptions.NotFound("Cannot create a scope with an "
+                                           "already existing scope_id: %s."
+                                           % scope_id)
+
+        LOG.debug("Creating storage scope with data: [scope_id=%s, "
+                  "scope_key=%s, fetcher=%s, collector=%s, active=%s].",
+                  scope_id, scope_key, fetcher, collector, active)
+
+        self._storage_state.create_scope(scope_id, None, fetcher=fetcher,
+                                         collector=collector,
+                                         scope_key=scope_key, active=active)
+
+        storage_scopes = self._storage_state.get_all(
+            identifier=scope_id)
+
+        update_storage_scope = storage_scopes[0]
+        last_processed_timestamp = None
+        if update_storage_scope.last_processed_timestamp.isoformat():
+            last_processed_timestamp =\
+                update_storage_scope.last_processed_timestamp.isoformat()
+
+        return {
+            'scope_id': update_storage_scope.identifier,
+            'scope_key': update_storage_scope.scope_key,
+            'fetcher': update_storage_scope.fetcher,
+            'collector': update_storage_scope.collector,
+            'state': last_processed_timestamp,
+            'last_processed_timestamp': last_processed_timestamp,
             'active': update_storage_scope.active,
             'scope_activation_toggle_date':
                 update_storage_scope.scope_activation_toggle_date.isoformat()

@@ -132,3 +132,53 @@ Response Example
 
 .. literalinclude:: ./api_samples/scope/scope_get.json
    :language: javascript
+
+Create a scope
+================================
+
+Create a scope.
+
+.. rest_method::  POST /v2/scope
+
+.. rest_parameters:: scope/scope_parameters.yml
+
+   - collector: collector
+   - fetcher: fetcher
+   - scope_id: scope_id
+   - scope_key: scope_key
+   - active: active_body
+
+Status codes
+------------
+
+.. rest_status_code:: success http_status.yml
+
+   - 200
+
+.. rest_status_code:: error http_status.yml
+
+   - 400
+   - 403
+   - 404
+   - 405
+
+Response
+--------
+
+.. rest_parameters:: scope/scope_parameters.yml
+
+   - scope_id: scope_id_resp
+   - scope_key: scope_key_resp
+   - fetcher: fetcher_resp
+   - collector: collector_resp
+   - state: state
+   - last_processed_timestamp: last_processed_timestamp
+   - active: active_key_resp
+   - scope_activation_toggle_date: scope_activation_toggle_date
+
+
+Response Example
+----------------
+
+.. literalinclude:: ./api_samples/scope/scope_get.json
+   :language: javascript
