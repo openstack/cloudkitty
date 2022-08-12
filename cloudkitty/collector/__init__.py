@@ -93,7 +93,9 @@ METRIC_BASE_SCHEMA = {
     # (NONE, NUMBOOL, NOTNUMBOOL, FLOOR, CEIL).
     # Defaults to NONE
     Required('mutate', default='NONE'):
-        In(['NONE', 'NUMBOOL', 'NOTNUMBOOL', 'FLOOR', 'CEIL']),
+        In(['NONE', 'NUMBOOL', 'NOTNUMBOOL', 'FLOOR', 'CEIL', 'MAP']),
+    # Map dict used if mutate == 'MAP'
+    Optional('mutate_map'): dict,
     # Collector-specific args. Should be overriden by schema provided for
     # the given collector
     Optional('extra_args'): dict,
@@ -270,6 +272,22 @@ def check_duplicates(metric_name, metric):
     return metric
 
 
+def validate_map_mutator(metric_name, metric):
+    """Validates MAP mutator"""
+    mutate = metric.get('mutate')
+    mutate_map = metric.get('mutate_map')
+
+    if mutate == 'MAP' and mutate_map is None:
+        raise InvalidConfiguration(
+            'Metric {} uses MAP mutator but mutate_map is missing: {}'.format(
+                metric_name, metric))
+
+    if mutate != 'MAP' and mutate_map is not None:
+        raise InvalidConfiguration(
+            'Metric {} not using MAP mutator but mutate_map is present: '
+            '{}'.format(metric_name, metric))
+
+
 def validate_conf(conf):
     """Validates the provided configuration."""
     collector = get_collector_without_invoke()
@@ -278,4 +296,5 @@ def validate_conf(conf):
         if 'alt_name' not in metric.keys():
             metric['alt_name'] = metric_name
         check_duplicates(metric_name, metric)
+        validate_map_mutator(metric_name, metric)
     return output

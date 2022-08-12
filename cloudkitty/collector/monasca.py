@@ -199,7 +199,9 @@ class MonascaCollector(collector.BaseCollector):
         qty = data['statistics'][0][1]
         converted_qty = ck_utils.convert_unit(
             qty, metconf['factor'], metconf['offset'])
-        mutated_qty = ck_utils.mutate(converted_qty, metconf['mutate'])
+        mutate_map = metconf.get('mutate_map')
+        mutated_qty = ck_utils.mutate(converted_qty, metconf['mutate'],
+                                      mutate_map=mutate_map)
         return metadata, groupby, mutated_qty
 
     def fetch_all(self, metric_name, start, end,

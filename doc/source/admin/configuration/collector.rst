@@ -177,7 +177,7 @@ Quantity mutation
 ~~~~~~~~~~~~~~~~~
 
 It is also possible to mutate the collected qty with the ``mutate`` option.
-Four values are accepted for this parameter:
+Five values are accepted for this parameter:
 
 * ``NONE``: This is the default. The collected data is not modifed.
 
@@ -189,6 +189,11 @@ Four values are accepted for this parameter:
 
 * ``NOTNUMBOOL``: If the collected qty equals 0, set it to 1. Else, set it to
   0.
+
+* ``MAP``: Map arbritrary values to new values as defined through the
+  ``mutate_map`` option (dictionary). If the value is not found in
+  ``mutate_map``, set it to 0. If ``mutate_map`` is not defined or is empty,
+  all values are set to 0.
 
 .. warning::
 
@@ -228,6 +233,26 @@ when the instance is in ACTIVE state but 4 if the instance is in ERROR state:
      openstack_nova_server_status:
        unit: instance
        mutate: NOTNUMBOOL
+       groupby:
+         - id
+       metadata:
+         - flavor_id
+
+The ``MAP`` mutator is useful when multiple statuses should be billabled. For
+example, the following Prometheus metric has a value of 0 when the instance is
+in ACTIVE state, but operators may want to rate other non-zero states:
+
+.. code-block:: yaml
+
+   metrics:
+     openstack_nova_server_status:
+       unit: instance
+       mutate: MAP
+       mutate_map:
+         0.0: 1.0  # ACTIVE
+         11.0: 1.0 # SHUTOFF
+         12.0: 1.0 # SUSPENDED
+         16.0: 1.0 # PAUSED
        groupby:
          - id
        metadata:

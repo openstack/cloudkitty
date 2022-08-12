@@ -188,3 +188,26 @@ class MetricConfigValidationTest(tests.TestCase):
             self.assertRaises(
                 collector.InvalidConfiguration,
                 collector.check_duplicates, metric_name, metric)
+
+    def test_validate_map_mutator(self):
+        data = copy.deepcopy(self.base_data)
+
+        # Check that validation succeeds when MAP mutator is not used
+        for metric_name, metric in data['metrics'].items():
+            collector.validate_map_mutator(metric_name, metric)
+
+        # Check that validation raises an exception when mutate_map is missing
+        for metric_name, metric in data['metrics'].items():
+            metric['mutate'] = 'MAP'
+            self.assertRaises(
+                collector.InvalidConfiguration,
+                collector.validate_map_mutator, metric_name, metric)
+
+        data = copy.deepcopy(self.base_data)
+        # Check that validation raises an exception when mutate_map is present
+        # but MAP mutator is not used
+        for metric_name, metric in data['metrics'].items():
+            metric['mutate_map'] = {}
+            self.assertRaises(
+                collector.InvalidConfiguration,
+                collector.validate_map_mutator, metric_name, metric)

@@ -251,8 +251,8 @@ def tempdir(**kwargs):
             LOG.debug('Could not remove tmpdir: %s', e)
 
 
-def mutate(value, mode='NONE'):
-    """Mutate value according provided mode."""
+def mutate(value, mode='NONE', mutate_map=None):
+    """Mutate value according to provided mode."""
 
     if mode == 'NUMBOOL':
         return float(value != 0.0)
@@ -265,6 +265,12 @@ def mutate(value, mode='NONE'):
 
     if mode == 'CEIL':
         return math.ceil(value)
+
+    if mode == 'MAP':
+        ret = 0.0
+        if mutate_map is not None:
+            ret = mutate_map.get(value, 0.0)
+        return ret
 
     return value
 

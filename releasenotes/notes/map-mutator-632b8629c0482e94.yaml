@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Adds a ``MAP`` mutator to map arbitrary values to new values. This is
+    useful with metrics reporting resource status as their value, but multiple
+    statuses are billable.
