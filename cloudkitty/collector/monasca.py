@@ -24,7 +24,6 @@ from voluptuous import Schema
 
 from cloudkitty import collector
 from cloudkitty.common import monasca_client as mon_client_utils
-from cloudkitty import dataframe
 from cloudkitty import utils as ck_utils
 
 LOG = logging.getLogger(__name__)
@@ -231,11 +230,8 @@ class MonascaCollector(collector.BaseCollector):
             if len(d['statistics']):
                 metadata, groupby, qty = self._format_data(
                     met, d, resources_info)
-                formated_resources.append(dataframe.DataPoint(
-                    met['unit'],
-                    qty,
-                    0,
-                    groupby,
-                    metadata,
-                ))
+
+                point = self._create_data_point(
+                    met['unit'], qty, 0, groupby, metadata, start)
+                formated_resources.append(point)
         return formated_resources

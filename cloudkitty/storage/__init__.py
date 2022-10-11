@@ -177,6 +177,9 @@ class V1StorageAdapter(storage_v2.BaseStorage):
                     storage_gby.append('res_type')
                 elif elem == 'project_id':
                     storage_gby.append('tenant_id')
+                else:
+                    LOG.warning("The groupby [%s] is not supported by MySQL "
+                                "storage backend.", elem)
         return ','.join(storage_gby) if storage_gby else None
 
     def get_tenants(self, begin, end):

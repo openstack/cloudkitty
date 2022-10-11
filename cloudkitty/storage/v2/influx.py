@@ -394,6 +394,7 @@ class InfluxStorage(v2_storage.BaseStorage):
               custom_fields="SUM(qty) AS qty, SUM(price) AS rate"):
 
         begin, end = self._check_begin_end(begin, end)
+        groupby = self.parse_groupby_syntax_to_groupby_elements(groupby)
 
         total = self._conn.get_total(metric_types, begin, end,
                                      custom_fields, groupby, filters)

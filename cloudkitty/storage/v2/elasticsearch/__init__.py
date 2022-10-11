@@ -194,6 +194,7 @@ class ElasticsearchStorage(v2_storage.BaseStorage):
         begin, end = self._local_to_utc(begin or tzutils.get_month_start(),
                                         end or tzutils.get_next_month())
 
+        groupby = self.parse_groupby_syntax_to_groupby_elements(groupby)
         total, docs = self._conn.total(begin, end, metric_types, filters,
                                        groupby, custom_fields=custom_fields,
                                        offset=offset, limit=limit,
