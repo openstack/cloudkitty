@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Extends the Gnocchi collector to allow operators
+    to create multiple rating types for the same metric in Gnocchi.
+    The Gnocchi collector is now accepting a list of configs for each
+    metric entry, instead of accepting only one configuration.

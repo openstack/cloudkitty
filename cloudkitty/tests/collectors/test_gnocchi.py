@@ -67,6 +67,34 @@ class GnocchiCollectorTest(tests.TestCase):
             }}]}
         self.assertEqual(expected, actual)
 
+    def test_collector_retrieve_metrics(self):
+        expected_data = {"group": {"id": "id-1",
+                                   "revision_start": datetime.datetime(
+                                       2020, 1, 1, 1, 10, 0, tzinfo=tz.tzutc())
+                                   }}
+
+        data = [
+            {"group": {"id": "id-1", "revision_start": datetime.datetime(
+                2020, 1, 1, tzinfo=tz.tzutc())}},
+            expected_data
+        ]
+
+        no_response = mock.patch(
+
+            'cloudkitty.collector.gnocchi.GnocchiCollector.fetch_all',
+            return_value=data,
+        )
+
+        for c in self.collector.conf:
+            with no_response:
+                actual_name, actual_data = self.collector.retrieve(
+                    metric_name=c,
+                    start=samples.FIRST_PERIOD_BEGIN,
+                    end=samples.FIRST_PERIOD_END,
+                    project_id=samples.TENANT,
+                    q_filter=None,
+                )
+
     def test_generate_two_fields_filter_different_operations(self):
         actual = self.collector.gen_filter(
             cop='>=',
@@ -160,8 +188,8 @@ class GnocchiCollectorAggregationOperationTest(tests.TestCase):
         self.start = datetime.datetime(2019, 1, 1, tzinfo=tz.tzutc())
         self.end = datetime.datetime(2019, 1, 1, 1, tzinfo=tz.tzutc())
 
-    def do_test(self, expected_op, extra_args=None):
-        conf = {
+    def do_test(self, expected_op, extra_args=None, conf=None):
+        conf = conf or {
             'metrics': {
                 'metric_one': {
                     'unit': 'GiB',
@@ -172,16 +200,38 @@ class GnocchiCollectorAggregationOperationTest(tests.TestCase):
         }
 
         coll = gnocchi.GnocchiCollector(period=3600, conf=conf)
-        with mock.patch.object(coll._conn.aggregates, 'fetch') as fetch_mock:
-            coll._fetch_metric('metric_one', self.start, self.end)
-            fetch_mock.assert_called_once_with(
-                expected_op,
-                groupby=['project_id', 'id'],
-                resource_type='resource_x',
-                search={'=': {'type': 'resource_x'}},
-                start=self.start, stop=self.end,
-                granularity=3600
-            )
+
+        for c in coll.conf:
+            with mock.patch.object(coll._conn.aggregates,
+                                   'fetch') as fetch_mock:
+                coll._fetch_metric(c, self.start, self.end)
+                fetch_mock.assert_called_once_with(
+                    expected_op,
+                    groupby=['project_id', 'id'],
+                    resource_type='resource_x',
+                    search={'=': {'type': 'resource_x'}},
+                    start=self.start, stop=self.end,
+                    granularity=3600
+                )
+
+    def test_multiple_confs(self):
+        conf = {
+            'metrics': {
+                'metric_one': [{
+                    'alt_name': 'foo',
+                    'unit': 'GiB',
+                    'groupby': ['project_id'],
+                    'extra_args': {'resource_type': 'resource_x'},
+                }, {
+                    'alt_name': 'bar',
+                    'unit': 'GiB',
+                    'groupby': ['project_id'],
+                    'extra_args': {'resource_type': 'resource_x'},
+                }]
+            }
+        }
+        expected_op = ["aggregate", "max", ["metric", "metric_one", "max"]]
+        self.do_test(expected_op, conf=conf)
 
     def test_no_agg_no_re_agg(self):
         extra_args = {'resource_type': 'resource_x'}
