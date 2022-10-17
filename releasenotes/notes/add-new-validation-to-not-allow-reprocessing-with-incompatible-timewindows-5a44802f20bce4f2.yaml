@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Add a validation to not allow users to schedule reprocesses via
+    ``POST`` request on ``/v2/task/reprocesses`` using a time window not
+    compatible with the configured ``period`` in the collector.

@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+from datetime import timedelta
 from datetimerange import DateTimeRange
 import flask
 from oslo_log import log
@@ -24,6 +25,7 @@ from cloudkitty import storage_state
 from cloudkitty.storage_state.models import ReprocessingScheduler
 from cloudkitty.utils import tz as tzutils
 from cloudkitty.utils import validation as validation_utils
+from oslo_config import cfg
 
 
 LOG = log.getLogger(__name__)
@@ -92,6 +94,29 @@ class ReprocessSchedulerPostApi(base.BaseResource):
         return {}, 202
 
     @staticmethod
+    def get_date_period_overflow(date):
+        return int(date.timestamp() % cfg.CONF.collect.period)
+
+    @staticmethod
+    def get_valid_period_date(date):
+        return date - timedelta(
+            seconds=ReprocessSchedulerPostApi.get_date_period_overflow(date))
+
+    @staticmethod
+    def get_overflow_from_dates(start, end):
+        start_overflow = ReprocessSchedulerPostApi.get_date_period_overflow(
+            start)
+        end_overflow = ReprocessSchedulerPostApi.get_date_period_overflow(end)
+        if start_overflow or end_overflow:
+            valid_start = ReprocessSchedulerPostApi.get_valid_period_date(
+                start)
+            valid_end = ReprocessSchedulerPostApi.get_valid_period_date(end)
+            if valid_start == valid_end:
+                valid_end += timedelta(seconds=cfg.CONF.collect.period)
+
+            return [str(valid_start), str(valid_end)]
+
+    @staticmethod
     def validate_inputs(
             end_reprocess_time, reason, scope_ids, start_reprocess_time):
         ReprocessSchedulerPostApi.validate_scope_ids(scope_ids)
@@ -106,6 +131,14 @@ class ReprocessSchedulerPostApi(base.BaseResource):
                 "End reprocessing timestamp [%s] cannot be less than "
                 "start reprocessing timestamp [%s]."
                 % (start_reprocess_time, end_reprocess_time))
+
+        periods_overflows = ReprocessSchedulerPostApi.get_overflow_from_dates(
+            start_reprocess_time, end_reprocess_time)
+        if periods_overflows:
+            raise http_exceptions.BadRequest(
+                "The provided reprocess time window does not comply with "
+                "the configured collector period. A valid time window "
+                "near the provided one is %s" % periods_overflows)
 
     @staticmethod
     def validate_scope_ids(scope_ids):

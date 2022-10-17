@@ -31,9 +31,10 @@ class TestReprocessSchedulerPostApi(tests.TestCase):
         self.scope_ids = ["some-other-scope-id",
                           "5e56cb64-4980-4466-9fce-d0133c0c221e"]
 
-        self.start_reprocess_time = tzutils.localized_now()
-        self.end_reprocess_time =\
-            self.start_reprocess_time + datetime.timedelta(hours=1)
+        self.start_reprocess_time = self.endpoint.get_valid_period_date(
+            tzutils.localized_now())
+        self.end_reprocess_time = self.endpoint.get_valid_period_date(
+            self.start_reprocess_time + datetime.timedelta(hours=1))
 
         self.reason = "We are testing the reprocess API."
 
@@ -99,6 +100,54 @@ class TestReprocessSchedulerPostApi(tests.TestCase):
         self.endpoint.validate_inputs(
             self.end_reprocess_time, self.reason, self.scope_ids,
             self.start_reprocess_time)
+
+    def test_validate_inputs_different_from_configured_period(self):
+        original_end_reprocess_time = self.end_reprocess_time
+
+        self.end_reprocess_time += datetime.timedelta(seconds=1)
+
+        expected_message = "400 Bad Request: The provided reprocess time " \
+                           "window does not comply with the configured" \
+                           " collector period. A valid time window near " \
+                           "the provided one is ['%s', '%s']" % (
+                               self.start_reprocess_time,
+                               original_end_reprocess_time)
+
+        expected_message = re.escape(expected_message)
+
+        self.assertRaisesRegex(http_exceptions.BadRequest, expected_message,
+                               self.endpoint.validate_inputs,
+                               self.end_reprocess_time, self.reason,
+                               self.scope_ids, self.start_reprocess_time)
+
+        self.end_reprocess_time = original_end_reprocess_time
+        self.endpoint.validate_inputs(
+            self.end_reprocess_time, self.reason, self.scope_ids,
+            self.start_reprocess_time)
+
+    def test_validate_time_window_smaller_than_configured_period(self):
+        start = datetime.datetime(year=2022, day=22, month=2, hour=10,
+                                  minute=10, tzinfo=tzutils._LOCAL_TZ)
+        end = datetime.datetime(year=2022, day=22, month=2, hour=10,
+                                minute=20, tzinfo=tzutils._LOCAL_TZ)
+        expected_start = datetime.datetime(year=2022, day=22, month=2, hour=10,
+                                           tzinfo=tzutils._LOCAL_TZ)
+        expected_end = datetime.datetime(year=2022, day=22, month=2, hour=11,
+                                         tzinfo=tzutils._LOCAL_TZ)
+
+        expected_message = "400 Bad Request: The provided reprocess time " \
+                           "window does not comply with the configured" \
+                           " collector period. A valid time window near " \
+                           "the provided one is ['%s', '%s']" % (
+                               expected_start,
+                               expected_end)
+
+        expected_message = re.escape(expected_message)
+
+        self.assertRaisesRegex(http_exceptions.BadRequest, expected_message,
+                               self.endpoint.validate_inputs,
+                               end, self.reason,
+                               self.scope_ids, start)
 
     def test_check_if_there_are_invalid_scopes(self):
         all_scopes = self.generate_all_scopes_object()
