@@ -44,12 +44,12 @@ DATAPOINT_SCHEMA = voluptuous.Schema({
 
 _DataPointBase = collections.namedtuple(
     "DataPoint",
-    field_names=("unit", "qty", "price", "groupby", "metadata"))
+    field_names=("unit", "qty", "price", "groupby", "metadata", "description"))
 
 
 class DataPoint(_DataPointBase):
 
-    def __new__(cls, unit, qty, price, groupby, metadata):
+    def __new__(cls, unit, qty, price, groupby, metadata, description=None):
         return _DataPointBase.__new__(
             cls,
             unit or "undefined",
@@ -58,6 +58,7 @@ class DataPoint(_DataPointBase):
             decimal.Decimal(str(price) if isinstance(price, float) else price),
             datastructures.ImmutableDict(groupby),
             datastructures.ImmutableDict(metadata),
+            description
         )
 
     def set_price(self, price):

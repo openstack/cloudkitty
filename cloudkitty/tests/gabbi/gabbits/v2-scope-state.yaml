@@ -159,6 +159,8 @@ tests:
     url: /v2/scope
     method: PUT
     status: 400
+    request_headers:
+      content-type: application/json
 
   - name: Reset state with no results for parameters
     url: /v2/scope

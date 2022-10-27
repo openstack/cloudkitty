@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Add description option to a rating metric definition, which
+    can be used to create custom reports in the ``summary`` GET API.

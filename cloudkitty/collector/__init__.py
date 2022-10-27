@@ -70,6 +70,8 @@ def MetricDict(value):
 CONF_BASE_SCHEMA = {Required('metrics'): MetricDict}
 
 METRIC_BASE_SCHEMA = {
+    # Human-readable description for the CloudKitty rating type
+    Optional('description'): All(str, Length(min=1)),
     # Display unit
     Required('unit'): All(str, Length(min=1)),
     # Factor for unit converion
@@ -249,7 +251,8 @@ class BaseCollector(object, metaclass=abc.ABCMeta):
 
         return name, data
 
-    def _create_data_point(self, unit, qty, price, groupby, metadata, start):
+    def _create_data_point(self, metric, qty, price, groupby, metadata, start):
+        unit = metric['unit']
         if not start:
             start = datetime.datetime.now()
             LOG.debug("Collector [%s]. No start datetime defined for "
@@ -271,7 +274,8 @@ class BaseCollector(object, metaclass=abc.ABCMeta):
         groupby['month'] = month_of_the_year
         groupby['year'] = year
 
-        return DataPoint(unit, qty, price, groupby, metadata)
+        return DataPoint(unit, qty, price, groupby, metadata,
+                         metric.get('description'))
 
 
 class InvalidConfiguration(Exception):

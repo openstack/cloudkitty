@@ -231,7 +231,7 @@ class MonascaCollector(collector.BaseCollector):
                 metadata, groupby, qty = self._format_data(
                     met, d, resources_info)
 
-                point = self._create_data_point(
-                    met['unit'], qty, 0, groupby, metadata, start)
+                point = self._create_data_point(met, qty, 0, groupby,
+                                                metadata, start)
                 formated_resources.append(point)
         return formated_resources

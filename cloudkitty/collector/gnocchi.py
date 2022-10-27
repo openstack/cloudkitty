@@ -517,9 +517,10 @@ class GnocchiCollector(collector.BaseCollector):
                             project_id, start, end, e),
                     )
                     continue
-                point = self._create_data_point(
-                    met['unit'], qty, 0, groupby, metadata, start)
+                point = self._create_data_point(met, qty, 0, groupby,
+                                                metadata, start)
                 formated_resources.append(point)
+
         return formated_resources
 
     @staticmethod

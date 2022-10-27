@@ -280,6 +280,7 @@ class ElasticsearchClient(object):
             'end': end,
             'type': type_,
             'unit': point.unit,
+            'description': point.description,
             'qty': point.qty,
             'price': point.price,
             'groupby': point.groupby,

@@ -278,6 +278,40 @@ option does:
        metadata:
          - flavor_id
 
+Metric description
+~~~~~~~~~~~~~~~~~~
+
+Sometimes, you will want to use a more descriptive attribute to show more
+details about the configured rating type. For instance, to provide more
+details about the rating of operating system licenses or other software
+licenses configured in the cloud. For that, we have the option called
+``description``, which is a String like field (up to 64 kB) that can be
+used to provide more information for a rating of a metric. When configured,
+this option is persisted as rating metadata and it is available through the
+summary GET API.
+
+.. code-block:: yaml
+
+   metrics:
+     instance-status:
+       unit: license-hours
+       alt_name: license-hours
+       description: |
+                    Operating system licenses are charged as follows: (i)
+                    Linux distro will not be charged; (ii) All Windows up to
+                    version 8 are charged .01 every hour, and other versions
+                    .5; (iii) Any other operating systems will be charged .02
+       groupby:
+         - id
+         - operating_system_name
+         - operating_system_distro
+         - operating_system_version
+         - flavor_id
+         - flavor_name
+         - cores
+         - ram
+       metadata: []
+
 Collector-specific configuration
 --------------------------------
 

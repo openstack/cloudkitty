@@ -241,9 +241,8 @@ class PrometheusCollector(collector.BaseCollector):
                 end,
                 item,
             )
-
-            point = self._create_data_point(self.conf[metric_name]['unit'],
-                                            qty, 0, groupby, metadata, start)
+            point = self._create_data_point(self.conf[metric_name], qty,
+                                            0, groupby, metadata, start)
             formatted_resources.append(point)
 
         return formatted_resources

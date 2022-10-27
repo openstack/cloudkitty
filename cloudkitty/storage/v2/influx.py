@@ -138,6 +138,7 @@ class InfluxClient(object):
         measurement_fields['qty'] = float(point.qty)
         measurement_fields['price'] = float(point.price)
         measurement_fields['unit'] = point.unit
+        measurement_fields['description'] = point.description
         # Unfortunately, this seems to be the fastest way: Having several
         # measurements would imply a high client-side workload, and this allows
         # us to filter out unrequired keys
