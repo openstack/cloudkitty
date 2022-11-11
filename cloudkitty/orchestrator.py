@@ -627,7 +627,7 @@ class CloudKittyProcessor(cotyledon.Service):
                 finally:
                     lock.release()
 
-                LOG.debug("Finished processing scopes [%s].", tenant_id)
+                LOG.debug("Finished processing scope [%s].", tenant_id)
             else:
                 LOG.debug("Could not acquire lock [%s] for processing "
                           "scope [%s] with worker [%s].", lock_name,
