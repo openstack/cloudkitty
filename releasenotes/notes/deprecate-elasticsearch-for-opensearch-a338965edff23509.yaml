@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    Support for using Elasticsearch as a storage backend is being deprecated in
+    the Antelope release in favour of OpenSearch. We will try to keep
+    CloudKitty compatible with both solutions. However, we will only test with
+    OpenSearch.
