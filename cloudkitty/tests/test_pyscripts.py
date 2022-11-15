@@ -22,64 +22,85 @@ import zlib
 from oslo_utils import uuidutils
 import six
 
+from cloudkitty import dataframe
 from cloudkitty.rating import pyscripts
 from cloudkitty.rating.pyscripts.db import api
 from cloudkitty import tests
 
+from dateutil import parser
+
 
 FAKE_UUID = '6c1b8a30-797f-4b7e-ad66-9879b79059fb'
-CK_RESOURCES_DATA = [{
+CK_RESOURCES_DATA = {
     "period": {
         "begin": "2014-10-01T00:00:00",
         "end": "2014-10-01T01:00:00"},
     "usage": {
+        "instance_status": [
+            dataframe.DataPoint(
+                "instance", 1, 0,
+                {"availability_zone": "nova",
+                 "flavor": "m1.ultra",
+                 "image_id": "f5600101-8fa2-4864-899e-ebcb7ed6b568",
+                 "memory": "64",
+                 "name": "prod1",
+                 "project_id": "f266f30b11f246b589fd266f85eeec39",
+                 "user_id": "55b3379b949243009ee96972fbf51ed1",
+                 "vcpus": "1"
+                 },
+                {"farm": "prod"}),
+            dataframe.DataPoint(
+                "instance", 1, 0,
+                {"availability_zone": "nova",
+                 "flavor": "m1.not_so_ultra",
+                 "image_id": "f5600101-8fa2-4864-899e-ebcb7ed6b568",
+                 "memory": "64",
+                 "name": "prod1",
+                 "project_id": "f266f30b11f246b589fd266f85eeec39",
+                 "user_id": "55b3379b949243009ee96972fbf51ed1",
+                 "vcpus": "1"
+                 },
+                {"farm": "prod"})],
         "compute": [
-            {
-                "desc": {
-                    "availability_zone": "nova",
-                    "flavor": "m1.nano",
-                    "image_id": "f5600101-8fa2-4864-899e-ebcb7ed6b568",
-                    "memory": "64",
-                    "metadata": {
-                        "farm": "prod"},
-                    "name": "prod1",
-                    "project_id": "f266f30b11f246b589fd266f85eeec39",
-                    "user_id": "55b3379b949243009ee96972fbf51ed1",
-                    "vcpus": "1"},
-                "vol": {
-                    "qty": 1,
-                    "unit": "instance"}
-            },
-            {
-                "desc": {
-                    "availability_zone": "nova",
-                    "flavor": "m1.tiny",
-                    "image_id": "a41fba37-2429-4f15-aa00-b5bc4bf557bf",
-                    "memory": "512",
-                    "metadata": {
-                        "farm": "dev"},
-                    "name": "dev1",
-                    "project_id": "f266f30b11f246b589fd266f85eeec39",
-                    "user_id": "55b3379b949243009ee96972fbf51ed1",
-                    "vcpus": "1"},
-                "vol": {
-                    "qty": 2,
-                    "unit": "instance"}},
-            {
-                "desc": {
-                    "availability_zone": "nova",
-                    "flavor": "m1.nano",
-                    "image_id": "a41fba37-2429-4f15-aa00-b5bc4bf557bf",
-                    "memory": "64",
-                    "metadata": {
-                        "farm": "dev"},
-                    "name": "dev2",
-                    "project_id": "f266f30b11f246b589fd266f85eeec39",
-                    "user_id": "55b3379b949243009ee96972fbf51ed1",
-                    "vcpus": "1"},
-                "vol": {
-                    "qty": 1,
-                    "unit": "instance"}}]}}]
+            dataframe.DataPoint(
+                "instance", 1, 0,
+                {"availability_zone": "nova",
+                 "flavor": "m1.nano",
+                 "image_id": "f5600101-8fa2-4864-899e-ebcb7ed6b568",
+                 "memory": "64",
+                 "name": "prod1",
+                 "project_id": "f266f30b11f246b589fd266f85eeec39",
+                 "user_id": "55b3379b949243009ee96972fbf51ed1",
+                 "vcpus": "1"
+                 },
+                {"farm": "prod"}),
+            dataframe.DataPoint(
+                "instance", 2, 0,
+                {"availability_zone": "nova",
+                 "flavor": "m1.tiny",
+                 "image_id": "a41fba37-2429-4f15-aa00-b5bc4bf557bf",
+                 "memory": "512",
+                 "name": "dev1",
+                 "project_id": "f266f30b11f246b589fd266f85eeec39",
+                 "user_id": "55b3379b949243009ee96972fbf51ed1",
+                 "vcpus": "1"
+                 },
+                {"farm": "dev"}),
+            dataframe.DataPoint(
+                "instance", 1, 0,
+                {"availability_zone": "nova",
+                 "flavor": "m1.nano",
+                 "image_id": "a41fba37-2429-4f15-aa00-b5bc4bf557bf",
+                 "memory": "64",
+                 "name": "dev2",
+                 "project_id": "f266f30b11f246b589fd266f85eeec39",
+                 "user_id": "55b3379b949243009ee96972fbf51ed1",
+                 "vcpus": "1"
+                 },
+                {"farm": "dev"}),
+        ]
+    }
+}
 
 TEST_CODE1 = 'a = 1'.encode('utf-8')
 TEST_CODE1_CHECKSUM = hashlib.sha512(TEST_CODE1).hexdigest()
@@ -91,14 +112,89 @@ TEST_CODE3_CHECKSUM = hashlib.sha512(TEST_CODE3).hexdigest()
 COMPLEX_POLICY1 = """
 import decimal
 
+usage_data = data['usage']
+for service in usage_data.keys():
+    if service == 'compute':
+        all_points = usage_data.get(service, [])
+        for resource in all_points:
+            if resource['groupby'].get('flavor') == 'm1.nano':
+                resource['rating'] = {
+                    'price': decimal.Decimal(2.0)}
+    if service == 'instance_status':
+        all_points = usage_data.get(service, [])
+        for resource in all_points:
+            if resource['groupby'].get('flavor') == 'm1.ultra':
+                resource['rating'] = {
+                    'price': decimal.Decimal(
+                        resource['groupby'].get(
+                            'memory')) * decimal.Decimal(1.5)}
+""".encode('utf-8')
 
-for period in data:
-    for service, resources in period['usage'].items():
-        if service == 'compute':
-            for resource in resources:
-                if resource['desc'].get('flavor') == 'm1.nano':
-                    resource['rating'] = {
-                        'price': decimal.Decimal(1.0)}
+
+DOCUMENTATION_RATING_POLICY = """
+import decimal
+
+
+# Price for each flavor. These are equivalent to hashmap field mappings.
+flavors = {
+    'm1.micro': decimal.Decimal(0.65),
+    'm1.nano': decimal.Decimal(0.35),
+    'm1.large': decimal.Decimal(2.67)
+}
+
+# Price per MB / GB for images and volumes. These are equivalent to
+# hashmap service mappings.
+image_mb_price = decimal.Decimal(0.002)
+volume_gb_price = decimal.Decimal(0.35)
+
+# These functions return the price of a service usage on a collect period.
+# The price is always equivalent to the price per unit multiplied by
+# the quantity.
+def get_compute_price(item):
+    flavor_name = item['groupby']['flavor']
+    if not flavor_name in flavors:
+        return 0
+    else:
+        return (decimal.Decimal(item['vol']['qty']) * flavors[flavor_name])
+
+def get_image_price(item):
+    if not item['vol']['qty']:
+        return 0
+    else:
+        return decimal.Decimal(item['vol']['qty']) * image_mb_price
+
+
+def get_volume_price(item):
+    if not item['vol']['qty']:
+        return 0
+    else:
+        return decimal.Decimal(item['vol']['qty']) * volume_gb_price
+
+# Mapping each service to its price calculation function
+services = {
+    'compute': get_compute_price,
+    'volume': get_volume_price,
+    'image': get_image_price
+}
+
+def process(data):
+    # The 'data' is a dictionary with the usage entries for each service for
+    # each given period.
+    usage_data = data['usage']
+
+    for service_name, service_data in usage_data.items():
+        # Do not calculate the price if the service has no
+        # price calculation function
+        if service_name in services.keys():
+            # A service can have several items. For example,
+            # each running instance is an item of the compute service
+            for item in service_data:
+                item['rating'] = {'price': services[service_name](item)}
+    return data
+
+# 'data' is passed as a global variable. The script is supposed to set the
+# 'rating' element of each item in each service
+data = process(data)
 """.encode('utf-8')
 
 
@@ -109,6 +205,11 @@ class PyScriptsRatingTest(tests.TestCase):
         self._db_api = pyscripts.PyScripts.db_api
         self._db_api.get_migration().upgrade('head')
         self._pyscripts = pyscripts.PyScripts(self._tenant_id)
+
+        self.dataframe_for_tests = dataframe.DataFrame(
+            parser.parse(CK_RESOURCES_DATA['period']['begin']),
+            parser.parse(CK_RESOURCES_DATA['period']['end']),
+            CK_RESOURCES_DATA['usage'])
 
     # Scripts tests
     @mock.patch.object(uuidutils, 'generate_uuid',
@@ -296,16 +397,87 @@ class PyScriptsRatingTest(tests.TestCase):
         self._db_api.create_script('policy1', TEST_CODE1)
         self._db_api.create_script('policy2', TEST_CODE3)
         self._pyscripts.reload_config()
-        self.assertRaises(NameError, self._pyscripts.process, {})
+
+        self.assertEqual(2, len(self._pyscripts._scripts))
+        self.assertRaises(NameError, self._pyscripts.process,
+                          self.dataframe_for_tests)
 
     # Processing
     def test_process_rating(self):
         self._db_api.create_script('policy1', COMPLEX_POLICY1)
         self._pyscripts.reload_config()
-        actual_data = copy.deepcopy(CK_RESOURCES_DATA)
-        expected_data = copy.deepcopy(CK_RESOURCES_DATA)
-        compute_list = expected_data[0]['usage']['compute']
-        compute_list[0]['rating'] = {'price': decimal.Decimal('1')}
-        compute_list[2]['rating'] = {'price': decimal.Decimal('1')}
-        self._pyscripts.process(actual_data)
-        self.assertEqual(expected_data, actual_data)
+
+        data_output = self._pyscripts.process(self.dataframe_for_tests)
+        self.assertIsInstance(data_output, dataframe.DataFrame)
+
+        dict_output = data_output.as_dict()
+        for point in dict_output['usage']['compute']:
+            if point['groupby'].get('flavor') == 'm1.nano':
+                self.assertEqual(
+                    decimal.Decimal('2'),  point['rating']['price'])
+            else:
+                self.assertEqual(
+                    decimal.Decimal('0'), point['rating']['price'])
+        for point in dict_output['usage']['instance_status']:
+            if point['groupby'].get('flavor') == 'm1.ultra':
+                self.assertEqual(
+                    decimal.Decimal('96'),  point['rating']['price'])
+            else:
+                self.assertEqual(
+                    decimal.Decimal('0'), point['rating']['price'])
+
+    # Processing
+    def test_process_rating_with_documentation_rules(self):
+        self._db_api.create_script('policy1', DOCUMENTATION_RATING_POLICY)
+        self._pyscripts.reload_config()
+
+        dataframe_for_tests = copy.deepcopy(self.dataframe_for_tests)
+        dataframe_for_tests.add_point(
+            dataframe.DataPoint("GB", 5, 0, {"tag": "A"}, {}), "image")
+        dataframe_for_tests.add_point(
+            dataframe.DataPoint("GB", 15, 0, {"tag": "B"}, {}), "image")
+
+        dataframe_for_tests.add_point(
+            dataframe.DataPoint("GB", 500, 0, {"tag": "D"}, {}), "volume")
+        dataframe_for_tests.add_point(
+            dataframe.DataPoint("GB", 80, 0, {"tag": "E"}, {}), "volume")
+
+        data_output = self._pyscripts.process(dataframe_for_tests)
+        self.assertIsInstance(data_output, dataframe.DataFrame)
+
+        dict_output = data_output.as_dict()
+        for point in dict_output['usage']['compute']:
+            if point['groupby'].get('flavor') == 'm1.nano':
+                self.assertEqual(
+                    decimal.Decimal('0.3499999999999999777955395075'),
+                    point['rating']['price'])
+            else:
+                self.assertEqual(
+                    decimal.Decimal('0'), point['rating']['price'])
+        for point in dict_output['usage']['instance_status']:
+            if point['groupby'].get('flavor') == 'm1.ultra':
+                self.assertEqual(
+                    decimal.Decimal('0'),  point['rating']['price'])
+            else:
+                self.assertEqual(
+                    decimal.Decimal('0'), point['rating']['price'])
+
+        for point in dict_output['usage']['image']:
+            if point['groupby'].get('tag') == 'A':
+                self.assertEqual(
+                    decimal.Decimal('0.01000000000000000020816681712'),
+                    point['rating']['price'])
+            else:
+                self.assertEqual(
+                    decimal.Decimal('0.03000000000000000062450045135'),
+                    point['rating']['price'])
+
+        for point in dict_output['usage']['volume']:
+            if point['groupby'].get('tag') == 'D':
+                self.assertEqual(
+                    decimal.Decimal('174.9999999999999888977697537'),
+                    point['rating']['price'])
+            else:
+                self.assertEqual(
+                    decimal.Decimal('27.99999999999999822364316060'),
+                    point['rating']['price'])
