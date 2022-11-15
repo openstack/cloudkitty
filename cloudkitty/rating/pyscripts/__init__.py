@@ -13,9 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+from cloudkitty import dataframe
 from cloudkitty import rating
 from cloudkitty.rating.pyscripts.controllers import root as root_api
 from cloudkitty.rating.pyscripts.db import api as pyscripts_db_api
+
+from oslo_log import log as logging
+
+LOG = logging.getLogger(__name__)
 
 
 class PyScripts(rating.RatingProcessorBase):
@@ -33,20 +38,17 @@ class PyScripts(rating.RatingProcessorBase):
     db_api = pyscripts_db_api.get_instance()
 
     def __init__(self, tenant_id=None):
+        # current scripts loaded to memory
         self._scripts = {}
+
         self.load_scripts_in_memory()
         super(PyScripts, self).__init__(tenant_id)
 
     def load_scripts_in_memory(self):
         db = pyscripts_db_api.get_instance()
         scripts_uuid_list = db.list_scripts()
-        # Purge old entries
-        scripts_to_purge = []
-        for script_uuid in self._scripts.keys():
-            if script_uuid not in scripts_uuid_list:
-                scripts_to_purge.append(script_uuid)
-        for script_uuid in scripts_to_purge:
-            del self._scripts[script_uuid]
+        self.purge_removed_scripts(scripts_uuid_list)
+
         # Load or update script
         for script_uuid in scripts_uuid_list:
             script_db = db.get_script(uuid=script_uuid)
@@ -67,11 +69,31 @@ class PyScripts(rating.RatingProcessorBase):
                     'code': code,
                     'checksum': checksum})
 
+    def purge_removed_scripts(self, scripts_uuid_list):
+        scripts_to_purge = self.get_all_script_to_remove(scripts_uuid_list)
+        self.remove_purged_scripts(scripts_to_purge)
+
+    def get_all_script_to_remove(self, new_scripts_uuid_list):
+        scripts_to_purge = []
+        for script_uuid in self._scripts.keys():
+            if script_uuid not in new_scripts_uuid_list:
+                scripts_to_purge.append(script_uuid)
+        return scripts_to_purge
+
+    def remove_purged_scripts(self, scripts_to_purge):
+        for script_uuid in scripts_to_purge:
+            LOG.info("Removing script [%s] from the script list to execute.",
+                     self._scripts[script_uuid])
+
+            del self._scripts[script_uuid]
+
     def reload_config(self):
         """Reload the module's configuration.
 
         """
+        LOG.debug("Executing the reload of configurations.")
         self.load_scripts_in_memory()
+        LOG.debug("Configurations reloaded.")
 
     def start_script(self, code, data):
         context = {'data': data}
@@ -80,5 +102,14 @@ class PyScripts(rating.RatingProcessorBase):
 
     def process(self, data):
         for script in self._scripts.values():
-            data = self.start_script(script['code'], data)
+            data_dict = data.as_dict(mutable=True)
+            LOG.debug("Executing pyscript [%s] with data [%s].",
+                      script, data_dict)
+
+            data_output = self.start_script(script['code'], data_dict)
+
+            LOG.debug("Result [%s] for processing with pyscript [%s] with "
+                      "data [%s].", data_output, script, data_dict)
+
+            data = dataframe.DataFrame.from_dict(data_output)
         return data
