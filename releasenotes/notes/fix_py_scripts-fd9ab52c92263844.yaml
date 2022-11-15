@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fix failure to process rating using the PyScripts rating module.
