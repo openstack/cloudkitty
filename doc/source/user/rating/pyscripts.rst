@@ -74,18 +74,18 @@ Processing the data
 .. code-block:: python
 
     def process(data):
-        # The 'data' parameter is a list of dictionaries containing a
-        # "usage" and a "period" field
-        for d in data:
-            usage = d['usage']
-            for service_name, service_data in usage.items():
-                # Do not calculate the price if the service has no
-                # price calculation function
-                if service_name in services.keys():
-                    # A service can have several items. For example,
-                    # each running instance is an item of the compute service
-                    for item in service_data:
-                        item['rating'] = {'price': services[service_name](item)}
+        # The 'data' is a dictionary with the usage entries for each service
+        # in a given period.
+        usage_data = data['usage']
+
+        for service_name, service_data in usage_data.items():
+            # Do not calculate the price if the service has no
+            # price calculation function
+            if service_name in services.keys():
+                # A service can have several items. For example,
+                # each running instance is an item of the compute service
+                for item in service_data:
+                    item['rating'] = {'price': services[service_name](item)}
         return data
 
 
