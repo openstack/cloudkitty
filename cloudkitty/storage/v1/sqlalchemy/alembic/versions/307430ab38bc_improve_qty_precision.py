@@ -23,6 +23,7 @@ Create Date: 2016-09-05 18:37:26.714065
 revision = '307430ab38bc'
 down_revision = '792b438b663'
 
+
 from alembic import op  # noqa: E402
 import sqlalchemy as sa  # noqa: E402
 
