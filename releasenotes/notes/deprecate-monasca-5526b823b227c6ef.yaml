@@ -1,0 +1,6 @@
+---
+deprecations:
+  - |
+    Support for using Monasca as a fetcher and collector is being deprecated
+    in the Antelope release. The complete removal is going to take place
+    in B release.
