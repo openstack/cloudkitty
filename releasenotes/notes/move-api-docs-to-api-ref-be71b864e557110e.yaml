@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    API reference/docs have been moved to `api-ref/source/` and the original
+    path now contains a symlink to this directory.
