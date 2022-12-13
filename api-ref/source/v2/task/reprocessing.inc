@@ -53,7 +53,7 @@ Example
 -------
 .. code-block:: shell
 
-   curl -s -X POST "https://<cloudkitty_server_and_port_here>/v2/task/reprocess" -H "Accept: application/json" -H "User-Agent: python-keystoneclient" -H "X-Auth-Token: ${ACCESS_TOKEN_KEYSTONE}" -H "Content-Type: application/json" -d '{"reason": "Reprocessing test", "scope_ids": "<Some scope ID>", "start_reprocess_time": "2021-06-01 00:00:00+00:00", "end_reprocess_time": "2021-06-01 23:00:00+00:00"}'
+   curl -s -X POST "https://<cloudkitty_server_and_port_here>/v2/task/reprocesses" -H "Accept: application/json" -H "User-Agent: python-keystoneclient" -H "X-Auth-Token: ${ACCESS_TOKEN_KEYSTONE}" -H "Content-Type: application/json" -d '{"reason": "Reprocessing test", "scope_ids": "<Some scope ID>", "start_reprocess_time": "2021-06-01 00:00:00+00:00", "end_reprocess_time": "2021-06-01 23:00:00+00:00"}'
 
 
 The scope IDs can be retrieved via "/v2/scope" API, which is the API that one can use to list all scopes, and their status.
