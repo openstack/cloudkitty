@@ -68,6 +68,8 @@ tests:
     data:
       service_id: "371bcd08-009f-11e6-91de-8745729038b2"
       type: "fail"
+      start: "3000-01-01"
+      name: 'teste3'
       cost: "0.2"
     status: 400
     response_strings:
@@ -117,7 +119,7 @@ tests:
       - "No such mapping: 42"
 
   - name: create a field mapping to check updates
-    url: /v1/rating/module_config/hashmap/mappings
+    url: /v1/rating/module_config/hashmap/mappings?force=true
     method: POST
     request_headers:
         content-type: application/json
@@ -125,6 +127,9 @@ tests:
     data:
       field_id: $ENVIRON['hash_error_field_id']
       type: "flat"
+      start: "2014-01-01"
+      end: "2014-01-02"
+      name: 'teste4'
       cost: "0.2"
       value: "fail"
     status: 201
@@ -141,7 +146,7 @@ tests:
       value: ''
     status: 400
     response_strings:
-      - "You must specify a value for a field mapping."
+      - "Cannot update a rule that was already processed and has a defined end date."
 
   - name: create a service mapping with an invalid service_id
     url: /v1/rating/module_config/hashmap/mappings
@@ -152,6 +157,8 @@ tests:
     data:
       service_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
       type: "flat"
+      start: "3000-01-01"
+      name: 'teste5'
       cost: "0.2"
     status: 400
     response_strings:
@@ -167,6 +174,8 @@ tests:
       field_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
       type: "flat"
       cost: "0.2"
+      start: "3000-01-01"
+      name: 'teste6'
       value: "fail"
     status: 400
     response_strings:
@@ -212,6 +221,8 @@ tests:
       service_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
       field_id: "de23e3fe-0097-11e6-a44d-2b09512e61d9"
       type: "flat"
+      start: "3000-01-01"
+      name: 'teste7'
       cost: "0.2"
     status: 400
     response_strings:
@@ -225,6 +236,8 @@ tests:
         x-roles: admin
     data:
       type: "flat"
+      start: "3000-01-01"
+      name: 'teste8'
       cost: "0.2"
       value: "fail"
     status: 400
@@ -240,6 +253,8 @@ tests:
     data:
       field_id: $ENVIRON['hash_error_field_id']
       type: "flat"
+      start: "3000-01-01"
+      name: 'teste9'
       cost: "0.2"
     status: 400
     response_strings:

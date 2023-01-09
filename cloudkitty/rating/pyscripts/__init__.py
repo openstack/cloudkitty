@@ -44,9 +44,9 @@ class PyScripts(rating.RatingProcessorBase):
         self.load_scripts_in_memory()
         super(PyScripts, self).__init__(tenant_id)
 
-    def load_scripts_in_memory(self):
+    def load_scripts_in_memory(self, start=None):
         db = pyscripts_db_api.get_instance()
-        scripts_uuid_list = db.list_scripts()
+        scripts_uuid_list = db.list_scripts(is_active=start or True)
         self.purge_removed_scripts(scripts_uuid_list)
 
         # Load or update script
@@ -87,12 +87,12 @@ class PyScripts(rating.RatingProcessorBase):
 
             del self._scripts[script_uuid]
 
-    def reload_config(self):
+    def reload_config(self, start=None):
         """Reload the module's configuration.
 
         """
         LOG.debug("Executing the reload of configurations.")
-        self.load_scripts_in_memory()
+        self.load_scripts_in_memory(start)
         LOG.debug("Configurations reloaded.")
 
     def start_script(self, code, data):

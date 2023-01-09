@@ -139,6 +139,8 @@ class HashMapRatingTest(tests.TestCase):
                                              'flavor')
         group_db = self._db_api.create_group('test_group')
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
@@ -156,6 +158,8 @@ class HashMapRatingTest(tests.TestCase):
                                              'flavor')
         group_db = self._db_api.create_group('test_group')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
@@ -173,11 +177,15 @@ class HashMapRatingTest(tests.TestCase):
         service_db = self._db_api.create_service('compute')
         group_db = self._db_api.create_group('test_group')
         mapping_tiny = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             cost='1.337',
             map_type='flat',
             service_id=service_db.service_id,
             group_id=group_db.group_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             cost='42',
             map_type='flat',
             service_id=service_db.service_id)
@@ -191,18 +199,24 @@ class HashMapRatingTest(tests.TestCase):
                                              'flavor')
         group_db = self._db_api.create_group('test_group')
         mapping_tiny = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
             field_id=field_db.field_id,
             group_id=group_db.group_id)
         mapping_small = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.small',
             cost='3.1337',
             map_type='flat',
             field_id=field_db.field_id,
             group_id=group_db.group_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.large',
             cost='42',
             map_type='flat',
@@ -219,18 +233,24 @@ class HashMapRatingTest(tests.TestCase):
                                              'flavor')
         group_db = self._db_api.create_group('test_group')
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
             field_id=field_db.field_id,
             group_id=group_db.group_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.small',
             cost='3.1337',
             map_type='flat',
             field_id=field_db.field_id,
             group_id=group_db.group_id)
         mapping_no_group = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.large',
             cost='42',
             map_type='flat',
@@ -324,6 +344,8 @@ class HashMapRatingTest(tests.TestCase):
         field_db = self._db_api.create_field(service_db.service_id,
                                              'flavor')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
@@ -336,6 +358,8 @@ class HashMapRatingTest(tests.TestCase):
         field_db = self._db_api.create_field(service_db.service_id,
                                              'flavor')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
@@ -350,6 +374,8 @@ class HashMapRatingTest(tests.TestCase):
     def test_list_mappings_from_services(self):
         service_db = self._db_api.create_service('compute')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             cost='1.337',
             map_type='flat',
             service_id=service_db.service_id)
@@ -362,6 +388,8 @@ class HashMapRatingTest(tests.TestCase):
         field_db = self._db_api.create_field(service_db.service_id,
                                              'flavor')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
@@ -398,6 +426,8 @@ class HashMapRatingTest(tests.TestCase):
         field_db = self._db_api.create_field(service_db.service_id,
                                              'flavor')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
@@ -414,6 +444,8 @@ class HashMapRatingTest(tests.TestCase):
         field_db = self._db_api.create_field(service_db.service_id,
                                              'flavor')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
@@ -433,6 +465,8 @@ class HashMapRatingTest(tests.TestCase):
         field_db = self._db_api.create_field(service_db.service_id,
                                              'flavor')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
@@ -447,6 +481,8 @@ class HashMapRatingTest(tests.TestCase):
             service_db.service_id,
             'flavor')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
@@ -464,12 +500,16 @@ class HashMapRatingTest(tests.TestCase):
             service_db.service_id,
             'flavor')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
             field_id=field_db.field_id,
             tenant_id=self._tenant_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.small',
             cost='1.337',
             map_type='flat',
@@ -485,11 +525,15 @@ class HashMapRatingTest(tests.TestCase):
             service_db.service_id,
             'flavor')
         mapping_db = self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.337',
             map_type='flat',
             field_id=field_db.field_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.small',
             cost='1.337',
             map_type='flat',
@@ -711,17 +755,23 @@ class HashMapRatingTest(tests.TestCase):
         group_db = self._db_api.create_group('test_group')
         mapping_list.append(
             self._db_api.create_mapping(
+                name=uuidutils.generate_uuid(False),
+                created_by='1',
                 cost='1.42',
                 map_type='rate',
                 service_id=service_db.service_id))
         mapping_list.append(
             self._db_api.create_mapping(
+                name=uuidutils.generate_uuid(False),
+                created_by='1',
                 value='m1.tiny',
                 cost='1.337',
                 map_type='flat',
                 field_id=flavor_field.field_id))
         mapping_list.append(
             self._db_api.create_mapping(
+                name=uuidutils.generate_uuid(False),
+                created_by='1',
                 value='m1.large',
                 cost='13.37',
                 map_type='rate',
@@ -730,6 +780,8 @@ class HashMapRatingTest(tests.TestCase):
         # Per tenant override
         mapping_list.append(
             self._db_api.create_mapping(
+                name=uuidutils.generate_uuid(False),
+                created_by='1',
                 value='m1.tiny',
                 cost='2',
                 map_type='flat',
@@ -808,12 +860,16 @@ class HashMapRatingTest(tests.TestCase):
         group_db = self._db_api.create_group('test_group')
         mapping_list.append(
             self._db_api.create_mapping(
+                name=uuidutils.generate_uuid(False),
+                created_by='1',
                 value='m1.tiny',
                 cost='1.337',
                 map_type='flat',
                 field_id=field_db.field_id))
         mapping_list.append(
             self._db_api.create_mapping(
+                name=uuidutils.generate_uuid(False),
+                created_by='1',
                 value='m1.large',
                 cost='13.37',
                 map_type='rate',
@@ -859,11 +915,17 @@ class HashMapRatingTest(tests.TestCase):
         service_db = self._db_api.create_service('compute')
         group_db = self._db_api.create_group('test_group')
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             cost='1.337',
+            start=datetime.datetime(2014, 1, 1),
             map_type='flat',
             service_id=service_db.service_id,
             group_id=group_db.group_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
+            start=datetime.datetime(2014, 1, 3),
             cost='1.42',
             map_type='flat',
             service_id=service_db.service_id)
@@ -899,18 +961,24 @@ class HashMapRatingTest(tests.TestCase):
                                                 'image_id')
         group_db = self._db_api.create_group('test_group')
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.nano',
             cost='1.337',
             map_type='flat',
             field_id=flavor_field.field_id,
             group_id=group_db.group_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='a41fba37-2429-4f15-aa00-b5bc4bf557bf',
             cost='1.10',
             map_type='rate',
             field_id=image_field.field_id,
             group_id=group_db.group_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.42',
             map_type='flat',
@@ -943,6 +1011,8 @@ class HashMapRatingTest(tests.TestCase):
         flavor_field = self._db_api.create_field(service_db.service_id,
                                                  'flavor')
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='non-existent',
             cost='1.337',
             map_type='flat',
@@ -1148,22 +1218,30 @@ class HashMapRatingTest(tests.TestCase):
         group_db = self._db_api.create_group('test_group')
         second_group_db = self._db_api.create_group('second_test_group')
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             cost='1.00',
             map_type='flat',
             service_id=service_db.service_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.nano',
             cost='1.337',
             map_type='flat',
             field_id=flavor_db.field_id,
             group_id=group_db.group_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='m1.tiny',
             cost='1.42',
             map_type='flat',
             field_id=flavor_db.field_id,
             group_id=group_db.group_id)
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='8',
             cost='16.0',
             map_type='flat',
@@ -1172,6 +1250,8 @@ class HashMapRatingTest(tests.TestCase):
         image_db = self._db_api.create_field(service_db.service_id,
                                              'image_id')
         self._db_api.create_mapping(
+            name=uuidutils.generate_uuid(False),
+            created_by='1',
             value='a41fba37-2429-4f15-aa00-b5bc4bf557bf',
             cost='1.10',
             map_type='rate',

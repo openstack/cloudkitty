@@ -123,7 +123,7 @@ class RatingProcessorBase(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def reload_config(self):
+    def reload_config(self, start=None):
         """Trigger configuration reload
 
         """

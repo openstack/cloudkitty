@@ -35,7 +35,7 @@ tests:
       $.name: "cpu"
 
   - name: create a flat service mapping
-    url: /v1/rating/module_config/hashmap/mappings
+    url: /v1/rating/module_config/hashmap/mappings?force=true
     method: POST
     request_headers:
         content-type: application/json
@@ -43,6 +43,8 @@ tests:
     data:
       service_id: $RESPONSE['$.service_id']
       type: "flat"
+      start: "2014-01-01"
+      name: 'teste10'
       cost: "0.10000000"
     status: 201
     response_json_paths:
@@ -63,7 +65,7 @@ tests:
       $.services[0].name: "cpu"
 
   - name: create a rate service mapping
-    url: /v1/rating/module_config/hashmap/mappings
+    url: /v1/rating/module_config/hashmap/mappings?force=true
     method: POST
     request_headers:
         content-type: application/json
@@ -71,6 +73,8 @@ tests:
     data:
       service_id: $RESPONSE['$.services[0].service_id']
       type: "rate"
+      start: "2014-01-01"
+      name: 'teste11'
       cost: "0.2"
     status: 201
     response_json_paths:
@@ -79,7 +83,7 @@ tests:
       $.cost: "0.2000000000000000111022302463"
 
   - name: create a flat service mapping for a tenant
-    url: /v1/rating/module_config/hashmap/mappings
+    url: /v1/rating/module_config/hashmap/mappings?force=true
     method: POST
     request_headers:
         content-type: application/json
@@ -87,6 +91,8 @@ tests:
     data:
       service_id: $ENVIRON['hash_service_id']
       type: "flat"
+      start: "2014-01-01"
+      name: 'teste12'
       cost: "0.2"
       tenant_id: "24a7fdae-27ff-11e6-8c4f-6b725a05bf50"
     status: 201
@@ -177,7 +183,7 @@ tests:
       $.field_id: $RESPONSE['$.field_id']
 
   - name: create a flat field mapping
-    url: /v1/rating/module_config/hashmap/mappings
+    url: /v1/rating/module_config/hashmap/mappings?force=true
     method: POST
     request_headers:
         content-type: application/json
@@ -185,6 +191,8 @@ tests:
     data:
       field_id: $RESPONSE['$.field_id']
       type: "rate"
+      start: "2014-01-01"
+      name: 'teste13'
       cost: "0.2"
       value: "e2083e22-0004-11e6-82bd-2f02489b068b"
     status: 201
@@ -208,7 +216,7 @@ tests:
       $.fields[0].name: "flavor_id"
 
   - name: create a rate field mapping
-    url: /v1/rating/module_config/hashmap/mappings
+    url: /v1/rating/module_config/hashmap/mappings?force=true
     method: POST
     request_headers:
         content-type: application/json
@@ -216,6 +224,8 @@ tests:
     data:
       field_id: $RESPONSE['$.fields[0].field_id']
       type: "rate"
+      start: "2014-01-01"
+      name: 'teste14'
       cost: "0.2"
       value: "f17a0674-0004-11e6-a16b-cf941f4668c4"
     status: 201
@@ -236,7 +246,9 @@ tests:
       type: "rate"
       cost: "0.3"
       value: "f17a0674-0004-11e6-a16b-cf941f4668c4"
-    status: 302
+    status: 400
+    response_json_paths:
+      $.faultstring: "You are allowed to update only the attribute [end] as this rule is already running as it started on [2014-01-01 00:00:00]"
 
   - name: check updated mapping
     url: /v1/rating/module_config/hashmap/mappings/$ENVIRON['hash_rate_mapping_id']
@@ -245,7 +257,7 @@ tests:
       $.mapping_id: $ENVIRON['hash_rate_mapping_id']
       $.field_id: $ENVIRON['hash_field_id']
       $.type: "rate"
-      $.cost: "0.2999999999999999888977697537"
+      $.cost: "0.2000000000000000111022302463"
       $.value: "f17a0674-0004-11e6-a16b-cf941f4668c4"
 
   - name: delete a field
@@ -304,7 +316,7 @@ tests:
       hash_field_id: $.field_id
 
   - name: create a field mapping for recursive delete
-    url: /v1/rating/module_config/hashmap/mappings
+    url: /v1/rating/module_config/hashmap/mappings?force=true
     method: POST
     request_headers:
         content-type: application/json
@@ -312,6 +324,8 @@ tests:
     data:
       field_id: $RESPONSE['$.field_id']
       value: "flavor_id"
+      start: "2014-01-01"
+      name: 'teste15'
       cost: "0.1"
     status: 201
     response_store_environ:

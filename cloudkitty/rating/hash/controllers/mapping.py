@@ -13,11 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import datetime
 import pecan
 import wsmeext.pecan as wsme_pecan
 
 from cloudkitty.api.v1 import types as ck_types
+from cloudkitty.common.custom_session import get_request_user
 from cloudkitty import rating
+from cloudkitty.rating.common.validations import fields as field_validations
 from cloudkitty.rating.hash.datamodels import group as group_models
 from cloudkitty.rating.hash.datamodels import mapping as mapping_models
 from cloudkitty.rating.hash.db import api as db_api
@@ -53,6 +56,15 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
                          bool,
                          ck_types.UuidType(),
                          bool,
+                         bool,
+                         datetime.datetime,
+                         datetime.datetime,
+                         str,
+                         str,
+                         str,
+                         str,
+                         bool,
+                         bool,
                          status_code=200)
     def get_all(self,
                 service_id=None,
@@ -60,7 +72,16 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
                 group_id=None,
                 no_group=False,
                 tenant_id=None,
-                filter_tenant=False):
+                filter_tenant=False,
+                deleted=False,
+                start=None,
+                end=None,
+                updated_by=None,
+                created_by=None,
+                deleted_by=None,
+                description=None,
+                is_active=None,
+                all=True):
         """Get the mapping list
 
         :param service_id: Service UUID to filter on.
@@ -71,6 +92,15 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
         :param filter_tenant: Explicitly filter on tenant (default is to not
                               filter on tenant). Useful if you want to filter
                               on tenant being None.
+        :param deleted: Show deleted mappings.
+        :param start: Mappings with start after date.
+        :param end: Mappings with end before date.
+        :param updated_by: user uuid to filter on.
+        :param created_by: user uuid to filter on.
+        :param deleted_by: user uuid to filter on.
+        :param description: mapping that contains the text in description.
+        :param is_active: only active mappings.
+        :param: all: list all rules.
         :return: List of every mappings.
         """
         hashmap = db_api.get_instance()
@@ -83,6 +113,15 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
             field_uuid=field_id,
             group_uuid=group_id,
             no_group=no_group,
+            deleted=deleted,
+            start=start,
+            end=end,
+            updated_by=updated_by,
+            created_by=created_by,
+            deleted_by=deleted_by,
+            description=description,
+            is_active=is_active,
+            all=all,
             **search_opts)
         for mapping_uuid in mappings_uuid_list:
             mapping_db = hashmap.get_mapping(uuid=mapping_uuid)
@@ -107,15 +146,20 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
             pecan.abort(404, e.args[0])
 
     @wsme_pecan.wsexpose(mapping_models.Mapping,
+                         bool,
                          body=mapping_models.Mapping,
                          status_code=201)
-    def post(self, mapping_data):
+    def post(self, force=False, mapping_data=None):
         """Create a mapping.
 
+        :param force: Allows start and end in the past.
         :param mapping_data: Informations about the mapping to create.
         """
         hashmap = db_api.get_instance()
+        field_validations.validate_resource(
+            mapping_data, force=force)
         try:
+            created_by = get_request_user()
             mapping_db = hashmap.create_mapping(
                 value=mapping_data.value,
                 map_type=mapping_data.map_type,
@@ -123,7 +167,12 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
                 field_id=mapping_data.field_id,
                 group_id=mapping_data.group_id,
                 service_id=mapping_data.service_id,
-                tenant_id=mapping_data.tenant_id)
+                tenant_id=mapping_data.tenant_id,
+                created_by=created_by,
+                start=mapping_data.start,
+                end=mapping_data.end,
+                name=mapping_data.name,
+                description=mapping_data.description)
             pecan.response.location = pecan.request.path_url
             if pecan.response.location[-1] != '/':
                 pecan.response.location += '/'
@@ -147,14 +196,23 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
         """
         hashmap = db_api.get_instance()
         try:
-            hashmap.update_mapping(
-                mapping_id,
-                mapping_id=mapping.mapping_id,
-                value=mapping.value,
-                cost=mapping.cost,
-                map_type=mapping.map_type,
-                group_id=mapping.group_id,
-                tenant_id=mapping.tenant_id)
+            updated_by = get_request_user()
+            current_mapping = hashmap.get_mapping(mapping_id)
+            if field_validations.validate_update_allowing_only_end_date(
+                    current_mapping,
+                    mapping):
+                hashmap.update_mapping(
+                    mapping_id,
+                    end=mapping.end,
+                    updated_by=updated_by)
+            else:
+                hashmap.update_mapping(
+                    mapping_id,
+                    cost=mapping.cost,
+                    start=mapping.start,
+                    end=mapping.end,
+                    updated_by=updated_by,
+                    description=mapping.description)
             pecan.response.headers['Location'] = pecan.request.path
         except db_api.MappingAlreadyExists as e:
             pecan.abort(409, e.args[0])
@@ -172,7 +230,8 @@ class HashMapMappingsController(rating.RatingRestControllerBase):
         :param mapping_id: UUID of the mapping to delete.
         """
         hashmap = db_api.get_instance()
+        deleted_by = get_request_user()
         try:
-            hashmap.delete_mapping(uuid=mapping_id)
+            hashmap.delete_mapping(mapping_id, deleted_by=deleted_by)
         except db_api.NoSuchMapping as e:
             pecan.abort(404, e.args[0])

@@ -14,10 +14,10 @@ tests:
       name: "cpu"
     status: 201
     response_json_paths:
-      $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.service_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       $.name: "cpu"
     response_headers:
-      location: $SCHEME://$NETLOC/v1/rating/module_config/hashmap/services/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+      location: $SCHEME://$NETLOC/v1/rating/module_config/hashmap/services/6c1b8a30-797f-4b7e-ad66-000000000001
 
   - name: check redirect on service mapping creation
     url: /v1/rating/module_config/hashmap/mappings
@@ -26,20 +26,22 @@ tests:
         content-type: application/json
         x-roles: admin
     data:
-      service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      service_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       type: "flat"
+      start: "3000-01-01"
+      name: 'teste'
       cost: "0.1000000000000000055511151231"
     status: 201
     response_json_paths:
-      $.mapping_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
-      $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.mapping_id: "6c1b8a30-797f-4b7e-ad66-000000000002"
+      $.service_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       $.type: "flat"
       $.cost: "0.1000000000000000055511151231"
     response_headers:
-      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-000000000002'
 
   - name: delete test mapping
-    url: /v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+    url: /v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-000000000002
     method: DELETE
     status: 204
 
@@ -50,22 +52,22 @@ tests:
         content-type: application/json
         x-roles: admin
     data:
-      service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      service_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       level: "2"
       type: "flat"
       cost: "0.10000000"
     status: 201
     response_json_paths:
-      $.threshold_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
-      $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.threshold_id: "6c1b8a30-797f-4b7e-ad66-000000000003"
+      $.service_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       $.level: "2.00000000"
       $.type: "flat"
       $.cost: "0.1000000000000000055511151231"
     response_headers:
-      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-000000000003'
 
   - name: delete test threshold
-    url: /v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+    url: /v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-000000000003
     method: DELETE
     status: 204
 
@@ -76,15 +78,15 @@ tests:
         content-type: application/json
         x-roles: admin
     data:
-      service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      service_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       name: "flavor_id"
     status: 201
     response_json_paths:
-      $.service_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.service_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       $.name: "flavor_id"
-      $.field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.field_id: "6c1b8a30-797f-4b7e-ad66-000000000004"
     response_headers:
-      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/fields/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/fields/6c1b8a30-797f-4b7e-ad66-000000000004'
 
   - name: check redirect on field mapping creation
     url: /v1/rating/module_config/hashmap/mappings
@@ -93,19 +95,21 @@ tests:
         content-type: application/json
         x-roles: admin
     data:
-      field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      field_id: "6c1b8a30-797f-4b7e-ad66-000000000004"
       value: "04774238-fcad-11e5-a90e-6391fd56aab2"
       type: "flat"
+      start: "3000-01-01"
+      name: 'teste2'
       cost: "0.10000000"
     status: 201
     response_json_paths:
-      $.mapping_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
-      $.field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.mapping_id: "6c1b8a30-797f-4b7e-ad66-000000000005"
+      $.field_id: "6c1b8a30-797f-4b7e-ad66-000000000004"
       $.value: "04774238-fcad-11e5-a90e-6391fd56aab2"
       $.type: "flat"
       $.cost: "0.1000000000000000055511151231"
     response_headers:
-      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/mappings/6c1b8a30-797f-4b7e-ad66-000000000005'
 
   - name: check redirect on field threshold creation
     url: /v1/rating/module_config/hashmap/thresholds
@@ -114,19 +118,19 @@ tests:
         content-type: application/json
         x-roles: admin
     data:
-      field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      field_id: "6c1b8a30-797f-4b7e-ad66-000000000004"
       level: "2"
       type: "flat"
       cost: "0.10000000"
     status: 201
     response_json_paths:
-      $.threshold_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
-      $.field_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.threshold_id: "6c1b8a30-797f-4b7e-ad66-000000000006"
+      $.field_id: "6c1b8a30-797f-4b7e-ad66-000000000004"
       $.level: "2.00000000"
       $.type: "flat"
       $.cost: "0.1000000000000000055511151231"
     response_headers:
-      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/hashmap/thresholds/6c1b8a30-797f-4b7e-ad66-000000000006'
 
   - name: check redirect on group creation
     url: /v1/rating/module_config/hashmap/groups
@@ -138,7 +142,7 @@ tests:
       name: "compute_uptime"
     status: 201
     response_json_paths:
-      $.group_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.group_id: "6c1b8a30-797f-4b7e-ad66-000000000007"
       $.name: "compute_uptime"
     response_headers:
-      location: $SCHEME://$NETLOC/v1/rating/module_config/hashmap/groups/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+      location: $SCHEME://$NETLOC/v1/rating/module_config/hashmap/groups/6c1b8a30-797f-4b7e-ad66-000000000007

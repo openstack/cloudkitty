@@ -13,12 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import datetime
+
 from oslo_db import exception
 from oslo_db.sqlalchemy import utils
 from oslo_utils import uuidutils
 import sqlalchemy
 
 from cloudkitty import db
+from cloudkitty.rating.common.db.filters import get_filters
 from cloudkitty.rating.hash.db import api
 from cloudkitty.rating.hash.db.sqlalchemy import migration
 from cloudkitty.rating.hash.db.sqlalchemy import models
@@ -99,6 +102,18 @@ class HashMap(api.HashMap):
             except sqlalchemy.orm.exc.NoResultFound:
                 raise api.NoSuchMapping(uuid)
 
+    def get_mapping_by_name(self, name):
+        with db.session_for_read() as session:
+            try:
+                q = session.query(models.HashMapMapping)
+                q = q.filter(
+                    models.HashMapMapping.deleted == sqlalchemy.null(),
+                    models.HashMapMapping.name == name)
+                res = q.all()
+                return res
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.NoSuchMapping(name)
+
     def get_threshold(self, uuid):
         with db.session_for_read() as session:
             try:
@@ -165,6 +180,7 @@ class HashMap(api.HashMap):
                       field_uuid=None,
                       group_uuid=None,
                       no_group=False,
+                      all=False,
                       **kwargs):
 
         with db.session_for_read() as session:
@@ -178,13 +194,13 @@ class HashMap(api.HashMap):
                 q = q.join(
                     models.HashMapMapping.field)
                 q = q.filter(models.HashMapField.field_id == field_uuid)
-            elif not service_uuid and not field_uuid and not group_uuid:
+            elif not (service_uuid or field_uuid or group_uuid) and not all:
                 raise api.ClientHashMapError(
                     'You must specify either service_uuid,'
                     ' field_uuid or group_uuid.')
             if 'tenant_uuid' in kwargs:
                 q = q.filter(
-                    models.HashMapMapping.tenant_id == kwargs.get(
+                    models.HashMapMapping.tenant_id == kwargs.pop(
                         'tenant_uuid'))
             if group_uuid:
                 q = q.join(
@@ -192,6 +208,8 @@ class HashMap(api.HashMap):
                 q = q.filter(models.HashMapGroup.group_id == group_uuid)
             elif no_group:
                 q = q.filter(models.HashMapMapping.group_id == None)  # noqa
+
+            q = get_filters(q, models.HashMapMapping, **kwargs)
             res = q.values(
                 models.HashMapMapping.mapping_id)
             return [uuid[0] for uuid in res]
@@ -282,7 +300,14 @@ class HashMap(api.HashMap):
                        service_id=None,
                        field_id=None,
                        group_id=None,
-                       tenant_id=None):
+                       tenant_id=None,
+                       start=None,
+                       end=None,
+                       name=None,
+                       description=None,
+                       created_by=None):
+        if not name:
+            name = uuidutils.generate_uuid(False)
         if field_id and service_id:
             raise api.ClientHashMapError('You can only specify one parent.')
         elif not service_id and not field_id:
@@ -295,6 +320,11 @@ class HashMap(api.HashMap):
             raise api.ClientHashMapError(
                 'You must specify a value'
                 ' for a field mapping.')
+
+        created_at = datetime.datetime.now()
+        if not start:
+            start = created_at
+
         field_fk = None
         if field_id:
             field_db = self.get_field(uuid=field_id)
@@ -309,14 +339,89 @@ class HashMap(api.HashMap):
             group_fk = group_db.id
         try:
             with db.session_for_write() as session:
-                field_map = models.HashMapMapping(
+                map_model = models.HashMapMapping
+                q = session.query(map_model)
+                or_ = sqlalchemy.or_
+                and_ = sqlalchemy.and_
+                null_ = sqlalchemy.null()
+                filter_name = None
+                filter_value = None
+                if field_fk:
+                    filter_name = map_model.field_id
+                    filter_value = field_fk
+                if service_fk:
+                    filter_name = map_model.service_id
+                    filter_value = service_fk
+
+                q = q.filter(
+                    map_model.deleted == null_)
+
+                if end:
+                    date_filter = and_(
+                        map_model.start < end,
+                        or_(
+                            map_model.end >= start,
+                            map_model.end == null_
+                        )
+                    )
+                else:
+                    date_filter = or_(
+                        map_model.start > start,
+                        map_model.end == null_
+                    )
+
+                if filter_name:
+                    name_filter = or_(
+                        map_model.name == name,
+                        sqlalchemy.and_(
+                            date_filter,
+                            and_(
+                                map_model.value == value,
+                                map_model.tenant_id == tenant_id,
+                                filter_name == filter_value,
+                                map_model.group_id == group_fk
+                            )
+                        )
+                    )
+                else:
+                    name_filter = or_(
+                        map_model.name == name,
+                        date_filter
+                    )
+
+                q = q.filter(name_filter)
+                mapping_db = q.with_for_update().all()
+                if mapping_db:
+                    if field_id:
+                        puuid = field_id
+                        ptype = 'field'
+                    else:
+                        puuid = service_id
+                        ptype = 'service'
+                    raise api.MappingAlreadyExists(
+                        value,
+                        puuid,
+                        ptype,
+                        tenant_id=tenant_id)
+
+                field_map = map_model(
                     mapping_id=uuidutils.generate_uuid(),
                     value=value,
                     cost=cost,
                     field_id=field_fk,
                     service_id=service_fk,
                     map_type=map_type,
-                    tenant_id=tenant_id)
+                    tenant_id=tenant_id,
+                    created_at=created_at,
+                    start=start,
+                    end=end,
+                    name=name,
+                    description=description,
+                    deleted=None,
+                    created_by=created_by,
+                    updated_by=None,
+                    deleted_by=None
+                )
                 if group_fk:
                     field_map.group_id = group_fk
                 session.add(field_map)
@@ -396,7 +501,8 @@ class HashMap(api.HashMap):
             with db.session_for_write() as session:
                 q = session.query(models.HashMapMapping)
                 q = q.filter(
-                    models.HashMapMapping.mapping_id == uuid)
+                    models.HashMapMapping.mapping_id == uuid,
+                    models.HashMapMapping.deleted == sqlalchemy.null())
                 mapping_db = q.with_for_update().one()
                 if kwargs:
                     # NOTE(sheeprine): We want to check that value is not set
@@ -520,15 +626,18 @@ class HashMap(api.HashMap):
                     session.delete(threshold)
             q.delete()
 
-    def delete_mapping(self, uuid):
-        with db.session_for_write() as session:
-            q = utils.model_query(
-                models.HashMapMapping,
-                session)
-            q = q.filter(models.HashMapMapping.mapping_id == uuid)
-            r = q.delete()
-            if not r:
-                raise api.NoSuchMapping(uuid)
+    def delete_mapping(self, uuid, deleted_by=None):
+        try:
+            with db.session_for_write() as session:
+                q = session.query(models.HashMapMapping)
+                q = q.filter(
+                    models.HashMapMapping.mapping_id == uuid,
+                    models.HashMapMapping.deleted == sqlalchemy.null())
+                mapping_db = q.with_for_update().one()
+                mapping_db.deleted_by = deleted_by
+                mapping_db.deleted = datetime.datetime.now()
+        except sqlalchemy.orm.exc.NoResultFound:
+            raise api.NoSuchMapping(uuid)
 
     def delete_threshold(self, uuid):
         with db.session_for_write() as session:

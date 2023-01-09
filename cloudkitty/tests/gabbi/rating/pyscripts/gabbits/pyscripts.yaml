@@ -35,12 +35,12 @@ tests:
       data: "a = 0"
     status: 201
     response_json_paths:
-      $.script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.script_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       $.name: "policy1"
       $.data: "a = 0"
       $.checksum: "4c612e33c0e40b7bf53cf95fad47dbfbeab9dd62f9bc181a9d1c6f40a087782223c23f793e747b0466b9e6998c6ea54f4edbd20febd13edb13b55074b5ee1a5a"
     response_headers:
-      location: '$SCHEME://$NETLOC/v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-9879b79059fb'
+      location: '$SCHEME://$NETLOC/v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-000000000001'
 
   - name: create duplicate policy script
     url: /v1/rating/module_config/pyscripts/scripts
@@ -53,13 +53,13 @@ tests:
       data: "a = 0"
     status: 409
     response_strings:
-      - "Script policy1 already exists (UUID: 6c1b8a30-797f-4b7e-ad66-9879b79059fb)"
+      - "Script policy1 already exists (UUID: 6c1b8a30-797f-4b7e-ad66-000000000001)"
 
   - name: list scripts
     url: /v1/rating/module_config/pyscripts/scripts
     status: 200
     response_json_paths:
-      $.scripts[0].script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.scripts[0].script_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       $.scripts[0].name: "policy1"
       $.scripts[0].data: "a = 0"
       $.scripts[0].checksum: "4c612e33c0e40b7bf53cf95fad47dbfbeab9dd62f9bc181a9d1c6f40a087782223c23f793e747b0466b9e6998c6ea54f4edbd20febd13edb13b55074b5ee1a5a"
@@ -68,21 +68,21 @@ tests:
     url: /v1/rating/module_config/pyscripts/scripts?no_data=true
     status: 200
     response_json_paths:
-      $.scripts[0].script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.scripts[0].script_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       $.scripts[0].name: "policy1"
       $.scripts[0].checksum: "4c612e33c0e40b7bf53cf95fad47dbfbeab9dd62f9bc181a9d1c6f40a087782223c23f793e747b0466b9e6998c6ea54f4edbd20febd13edb13b55074b5ee1a5a"
 
   - name: get script
-    url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+    url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-000000000001
     status: 200
     response_json_paths:
-      $.script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.script_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       $.name: "policy1"
       $.data: "a = 0"
       $.checksum: "4c612e33c0e40b7bf53cf95fad47dbfbeab9dd62f9bc181a9d1c6f40a087782223c23f793e747b0466b9e6998c6ea54f4edbd20febd13edb13b55074b5ee1a5a"
 
   - name: modify script
-    url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+    url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-000000000001
     method: PUT
     request_headers:
         content-type: application/json
@@ -90,12 +90,9 @@ tests:
     data:
       name: "policy1"
       data: "a = 1"
-    status: 201
-    response_json_paths:
-      $.script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
-      $.name: "policy1"
-      $.data: "a = 1"
-      $.checksum: "acb3095e24b13960484e75bce070e13e8a7728760517c31b34929a6f732841c652e9d2cc4d186bd02ef2e7495fab3c4850673bedc945cee7c74fea85eabd542c"
+    status: 400
+    response_strings:
+      - "You are allowed to update only the attribute [end] as this rule is already running as it started on "
 
   - name: modify unknown script
     url: /v1/rating/module_config/pyscripts/scripts/42
@@ -111,19 +108,19 @@ tests:
       - "No such script: None (UUID: 42)"
 
   - name: check updated script
-    url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+    url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-000000000001
     request_headers:
         content-type: application/json
         x-roles: admin
     status: 200
     response_json_paths:
-      $.script_id: "6c1b8a30-797f-4b7e-ad66-9879b79059fb"
+      $.script_id: "6c1b8a30-797f-4b7e-ad66-000000000001"
       $.name: "policy1"
-      $.data: "a = 1"
-      $.checksum: "acb3095e24b13960484e75bce070e13e8a7728760517c31b34929a6f732841c652e9d2cc4d186bd02ef2e7495fab3c4850673bedc945cee7c74fea85eabd542c"
+      $.data: "a = 0"
+      $.checksum: "4c612e33c0e40b7bf53cf95fad47dbfbeab9dd62f9bc181a9d1c6f40a087782223c23f793e747b0466b9e6998c6ea54f4edbd20febd13edb13b55074b5ee1a5a"
 
   - name: delete script
-    url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-9879b79059fb
+    url: /v1/rating/module_config/pyscripts/scripts/6c1b8a30-797f-4b7e-ad66-000000000001
     method: DELETE
     status: 204
 

@@ -33,7 +33,7 @@ class Noop(rating.RatingProcessorBase):
     def priority(self):
         return 1
 
-    def reload_config(self):
+    def reload_config(self, start=None):
         pass
 
     def process(self, data):

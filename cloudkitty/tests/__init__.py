@@ -55,7 +55,7 @@ class FakeRatingModule(rating.RatingProcessorBase):
                         entry['rating'] = {'price': decimal.Decimal(0)}
         return data
 
-    def reload_config(self):
+    def reload_config(self, start=None):
         pass
 
     def notify_reload(self):
