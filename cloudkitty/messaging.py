@@ -57,7 +57,8 @@ def get_target():
 def get_client(version_cap=None):
     transport = get_transport()
     target = get_target()
-    return oslo_messaging.RPCClient(transport, target, version_cap=version_cap)
+    return oslo_messaging.get_rpc_client(
+        transport, target, version_cap=version_cap)
 
 
 def get_server(target=None, endpoints=None):
