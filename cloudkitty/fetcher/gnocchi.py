@@ -121,24 +121,42 @@ class GnocchiFetcher(fetcher.BaseFetcher):
         )
 
     def get_tenants(self):
-        resources = []
+        unique_scope_ids = set()
+        total_resources_navigated = 0
+
+        scope_attribute = CONF.fetcher_gnocchi.scope_attribute
         resource_types = CONF.fetcher_gnocchi.resource_types
         for resource_type in resource_types:
             marker = None
             while True:
                 resources_chunk = self._conn.resource.list(
-                    resource_type=resource_type,
-                    marker=marker,
-                    details=True)
-                if len(resources_chunk) < 1 or (
-                        len(resources) == 1 and resources[0]['id'] == marker):
-                    break
-                resources += resources_chunk
-                marker = resources_chunk[-1]['id']
+                    resource_type=resource_type, marker=marker, details=True)
 
-        scope_attribute = CONF.fetcher_gnocchi.scope_attribute
-        scope_ids = [
-            resource.get(scope_attribute, None) for resource in resources]
-        scope_ids = [s_id for s_id in scope_ids if s_id]
-        # Returning unique ids
-        return list(set(scope_ids))
+                chunk_len = len(resources_chunk)
+
+                is_last_chunk_equals_marker =\
+                    chunk_len > 0 and resources_chunk[
+                        chunk_len - 1]['id'] == marker
+
+                if chunk_len < 1 or (
+                        chunk_len == 1 and is_last_chunk_equals_marker):
+                    LOG.debug("Scopes IDs [%s] loaded. The total number of "
+                              "unique scope IDs loaded is [%s]. Total number "
+                              "of resources navigated [%s].", unique_scope_ids,
+                              len(unique_scope_ids), total_resources_navigated)
+                    break
+
+                marker = resources_chunk[-1]['id']
+                total_resources_navigated += chunk_len
+
+                scope_ids = [resource.get(
+                    scope_attribute, None) for resource in resources_chunk]
+                scope_ids = [s_id for s_id in scope_ids if s_id]
+                unique_scope_ids.update(set(scope_ids))
+                LOG.debug("Scopes IDs [%s] loaded. The total number of unique "
+                          "scopes IDs loaded so far is [%s]. Next chunk with "
+                          "Markers [%s]. Total number of resources navigated "
+                          "[%s].", scope_ids, len(scope_ids), marker,
+                          total_resources_navigated)
+
+        return list(unique_scope_ids)

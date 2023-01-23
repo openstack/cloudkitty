@@ -1,0 +1,5 @@
+---
+issues:
+  - |
+    Optimize Gnocchi fetcher to avoid consuming too much RAM when CloudKitty
+    runs in cloud environments with hundreds of thousands of resources.
