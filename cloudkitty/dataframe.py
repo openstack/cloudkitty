@@ -37,8 +37,8 @@ DATAPOINT_SCHEMA = voluptuous.Schema({
         voluptuous.Required('price', default=0):
         voluptuous.Coerce(str),
     },
-    voluptuous.Required('groupby'): vutils.DictTypeValidator(str, str),
-    voluptuous.Required('metadata'): vutils.DictTypeValidator(str, str),
+    voluptuous.Required('groupby'): voluptuous.Coerce(dict),
+    voluptuous.Required('metadata'): voluptuous.Coerce(dict),
 })
 
 

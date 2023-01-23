@@ -75,8 +75,8 @@ tests:
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "1.337"
       $.dataframes[0].resources[0].service: "cpu"
-      $.dataframes[0].resources[0].desc.dummy: 'True'
-      $.dataframes[0].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[0].resources[0].desc.dummy: True
+      $.dataframes[0].resources[0].desc.fake_meta: 1.0
       $.dataframes[1].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.dataframes[1].begin: "2015-01-04T13:00:00"
       $.dataframes[1].end: "2015-01-04T14:00:00"
@@ -84,8 +84,8 @@ tests:
       $.dataframes[1].resources[0].volume: "1"
       $.dataframes[1].resources[0].rating: "1.337"
       $.dataframes[1].resources[0].service: "cpu"
-      $.dataframes[1].resources[0].desc.dummy: 'True'
-      $.dataframes[1].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[1].resources[0].desc.dummy: True
+      $.dataframes[1].resources[0].desc.fake_meta: 1.0
       $.dataframes[2].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.dataframes[2].begin: "2015-01-04T13:00:00"
       $.dataframes[2].end: "2015-01-04T14:00:00"
@@ -93,8 +93,8 @@ tests:
       $.dataframes[2].resources[0].volume: "1"
       $.dataframes[2].resources[0].rating: "0.121"
       $.dataframes[2].resources[0].service: "image.size"
-      $.dataframes[2].resources[0].desc.dummy: 'True'
-      $.dataframes[2].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[2].resources[0].desc.dummy: True
+      $.dataframes[2].resources[0].desc.fake_meta: 1.0
       $.dataframes[3].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.dataframes[3].begin: "2015-01-04T13:00:00"
       $.dataframes[3].end: "2015-01-04T14:00:00"
@@ -102,8 +102,8 @@ tests:
       $.dataframes[3].resources[0].volume: "1"
       $.dataframes[3].resources[0].rating: "0.121"
       $.dataframes[3].resources[0].service: "image.size"
-      $.dataframes[3].resources[0].desc.dummy: 'True'
-      $.dataframes[3].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[3].resources[0].desc.dummy: True
+      $.dataframes[3].resources[0].desc.fake_meta: 1.0
 
   - name: fetch data for the second tenant
     url: /v1/storage/dataframes
@@ -121,8 +121,8 @@ tests:
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "1.337"
       $.dataframes[0].resources[0].service: "cpu"
-      $.dataframes[0].resources[0].desc.dummy: 'True'
-      $.dataframes[0].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[0].resources[0].desc.dummy: True
+      $.dataframes[0].resources[0].desc.fake_meta: 1.0
       $.dataframes[1].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.dataframes[1].begin: "2015-01-04T13:00:00"
       $.dataframes[1].end: "2015-01-04T14:00:00"
@@ -130,8 +130,8 @@ tests:
       $.dataframes[1].resources[0].volume: "1"
       $.dataframes[1].resources[0].rating: "1.337"
       $.dataframes[1].resources[0].service: "cpu"
-      $.dataframes[1].resources[0].desc.dummy: 'True'
-      $.dataframes[1].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[1].resources[0].desc.dummy: True
+      $.dataframes[1].resources[0].desc.fake_meta: 1.0
       $.dataframes[2].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.dataframes[2].begin: "2015-01-04T13:00:00"
       $.dataframes[2].end: "2015-01-04T14:00:00"
@@ -139,8 +139,8 @@ tests:
       $.dataframes[2].resources[0].volume: "1"
       $.dataframes[2].resources[0].rating: "0.121"
       $.dataframes[2].resources[0].service: "image.size"
-      $.dataframes[2].resources[0].desc.dummy: 'True'
-      $.dataframes[2].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[2].resources[0].desc.dummy: True
+      $.dataframes[2].resources[0].desc.fake_meta: 1.0
       $.dataframes[3].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.dataframes[3].begin: "2015-01-04T13:00:00"
       $.dataframes[3].end: "2015-01-04T14:00:00"
@@ -148,8 +148,8 @@ tests:
       $.dataframes[3].resources[0].volume: "1"
       $.dataframes[3].resources[0].rating: "0.121"
       $.dataframes[3].resources[0].service: "image.size"
-      $.dataframes[3].resources[0].desc.dummy: 'True'
-      $.dataframes[3].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[3].resources[0].desc.dummy: True
+      $.dataframes[3].resources[0].desc.fake_meta: 1.0
 
 
   - name: fetch data for multiple tenants
@@ -167,8 +167,8 @@ tests:
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "1.337"
       $.dataframes[0].resources[0].service: "cpu"
-      $.dataframes[0].resources[0].desc.dummy: 'True'
-      $.dataframes[0].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[0].resources[0].desc.dummy: True
+      $.dataframes[0].resources[0].desc.fake_meta: 1.0
       $.dataframes[1].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.dataframes[1].begin: "2015-01-04T13:00:00"
       $.dataframes[1].end: "2015-01-04T14:00:00"
@@ -176,8 +176,8 @@ tests:
       $.dataframes[1].resources[0].volume: "1"
       $.dataframes[1].resources[0].rating: "1.337"
       $.dataframes[1].resources[0].service: "cpu"
-      $.dataframes[1].resources[0].desc.dummy: 'True'
-      $.dataframes[1].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[1].resources[0].desc.dummy: True
+      $.dataframes[1].resources[0].desc.fake_meta: 1.0
       $.dataframes[2].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.dataframes[2].begin: "2015-01-04T13:00:00"
       $.dataframes[2].end: "2015-01-04T14:00:00"
@@ -185,8 +185,8 @@ tests:
       $.dataframes[2].resources[0].volume: "1"
       $.dataframes[2].resources[0].rating: "0.121"
       $.dataframes[2].resources[0].service: "image.size"
-      $.dataframes[2].resources[0].desc.dummy: 'True'
-      $.dataframes[2].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[2].resources[0].desc.dummy: True
+      $.dataframes[2].resources[0].desc.fake_meta: 1.0
       $.dataframes[3].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.dataframes[3].begin: "2015-01-04T13:00:00"
       $.dataframes[3].end: "2015-01-04T14:00:00"
@@ -194,8 +194,8 @@ tests:
       $.dataframes[3].resources[0].volume: "1"
       $.dataframes[3].resources[0].rating: "0.121"
       $.dataframes[3].resources[0].service: "image.size"
-      $.dataframes[3].resources[0].desc.dummy: 'True'
-      $.dataframes[3].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[3].resources[0].desc.dummy: True
+      $.dataframes[3].resources[0].desc.fake_meta: 1.0
       $.dataframes[0].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.dataframes[0].begin: "2015-01-04T13:00:00"
       $.dataframes[0].end: "2015-01-04T14:00:00"
@@ -203,8 +203,8 @@ tests:
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "1.337"
       $.dataframes[0].resources[0].service: "cpu"
-      $.dataframes[0].resources[0].desc.dummy: 'True'
-      $.dataframes[0].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[0].resources[0].desc.dummy: True
+      $.dataframes[0].resources[0].desc.fake_meta: 1.0
       $.dataframes[1].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.dataframes[1].begin: "2015-01-04T13:00:00"
       $.dataframes[1].end: "2015-01-04T14:00:00"
@@ -212,8 +212,8 @@ tests:
       $.dataframes[1].resources[0].volume: "1"
       $.dataframes[1].resources[0].rating: "1.337"
       $.dataframes[1].resources[0].service: "cpu"
-      $.dataframes[1].resources[0].desc.dummy: 'True'
-      $.dataframes[1].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[1].resources[0].desc.dummy: True
+      $.dataframes[1].resources[0].desc.fake_meta: 1.0
       $.dataframes[2].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.dataframes[2].begin: "2015-01-04T13:00:00"
       $.dataframes[2].end: "2015-01-04T14:00:00"
@@ -221,8 +221,8 @@ tests:
       $.dataframes[2].resources[0].volume: "1"
       $.dataframes[2].resources[0].rating: "0.121"
       $.dataframes[2].resources[0].service: "image.size"
-      $.dataframes[2].resources[0].desc.dummy: 'True'
-      $.dataframes[2].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[2].resources[0].desc.dummy: True
+      $.dataframes[2].resources[0].desc.fake_meta: 1.0
       $.dataframes[3].tenant_id: "8f82cc70-e50c-466e-8624-24bdea811375"
       $.dataframes[3].begin: "2015-01-04T13:00:00"
       $.dataframes[3].end: "2015-01-04T14:00:00"
@@ -230,8 +230,8 @@ tests:
       $.dataframes[3].resources[0].volume: "1"
       $.dataframes[3].resources[0].rating: "0.121"
       $.dataframes[3].resources[0].service: "image.size"
-      $.dataframes[3].resources[0].desc.dummy: 'True'
-      $.dataframes[3].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[3].resources[0].desc.dummy: True
+      $.dataframes[3].resources[0].desc.fake_meta: 1.0
 
   - name: fetch data filtering on cpu service and tenant
     url: /v1/storage/dataframes
@@ -250,8 +250,8 @@ tests:
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "1.337"
       $.dataframes[0].resources[0].service: "cpu"
-      $.dataframes[0].resources[0].desc.dummy: 'True'
-      $.dataframes[0].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[0].resources[0].desc.dummy: True
+      $.dataframes[0].resources[0].desc.fake_meta: 1.0
       $.dataframes[1].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.dataframes[1].begin: "2015-01-04T13:00:00"
       $.dataframes[1].end: "2015-01-04T14:00:00"
@@ -259,8 +259,8 @@ tests:
       $.dataframes[1].resources[0].volume: "1"
       $.dataframes[1].resources[0].rating: "1.337"
       $.dataframes[1].resources[0].service: "cpu"
-      $.dataframes[1].resources[0].desc.dummy: 'True'
-      $.dataframes[1].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[1].resources[0].desc.dummy: True
+      $.dataframes[1].resources[0].desc.fake_meta: 1.0
 
   - name: fetch data filtering on image service and tenant
     url: /v1/storage/dataframes
@@ -279,8 +279,8 @@ tests:
       $.dataframes[0].resources[0].volume: "1"
       $.dataframes[0].resources[0].rating: "0.121"
       $.dataframes[0].resources[0].service: "image.size"
-      $.dataframes[0].resources[0].desc.dummy: 'True'
-      $.dataframes[0].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[0].resources[0].desc.dummy: True
+      $.dataframes[0].resources[0].desc.fake_meta: 1.0
       $.dataframes[1].tenant_id: "7606a24a-b8ad-4ae0-be6c-3d7a41334a2e"
       $.dataframes[1].begin: "2015-01-04T13:00:00"
       $.dataframes[1].end: "2015-01-04T14:00:00"
@@ -288,8 +288,8 @@ tests:
       $.dataframes[1].resources[0].volume: "1"
       $.dataframes[1].resources[0].rating: "0.121"
       $.dataframes[1].resources[0].service: "image.size"
-      $.dataframes[1].resources[0].desc.dummy: 'True'
-      $.dataframes[1].resources[0].desc.fake_meta: '1.0'
+      $.dataframes[1].resources[0].desc.dummy: True
+      $.dataframes[1].resources[0].desc.fake_meta: 1.0
 
   - name: fetch data filtering on service with no data and tenant
     url: /v1/storage/dataframes
