@@ -1,0 +1,6 @@
+---
+issues:
+  - |
+    Optimize Gnocchi fetcher runtime to avoid taking too long to load scopes
+    when CloudKitty runs in cloud environments with hundreds of thousands of
+    resources.

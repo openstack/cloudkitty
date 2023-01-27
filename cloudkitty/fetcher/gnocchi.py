@@ -127,36 +127,42 @@ class GnocchiFetcher(fetcher.BaseFetcher):
         scope_attribute = CONF.fetcher_gnocchi.scope_attribute
         resource_types = CONF.fetcher_gnocchi.resource_types
         for resource_type in resource_types:
-            marker = None
             while True:
-                resources_chunk = self._conn.resource.list(
-                    resource_type=resource_type, marker=marker, details=True)
+                search_scopes_query = None
+                if unique_scope_ids:
+                    unique_scope_ids_list = list(unique_scope_ids)
+                    unique_scope_ids_list.sort()
 
+                    search_scopes_query = {"not": {
+                        "in": {scope_attribute: unique_scope_ids_list}}
+                    }
+
+                resources_chunk = self._conn.resource.search(
+                    resource_type=resource_type, details=True,
+                    query=search_scopes_query
+                )
                 chunk_len = len(resources_chunk)
 
-                is_last_chunk_equals_marker =\
-                    chunk_len > 0 and resources_chunk[
-                        chunk_len - 1]['id'] == marker
-
-                if chunk_len < 1 or (
-                        chunk_len == 1 and is_last_chunk_equals_marker):
+                if chunk_len < 1:
                     LOG.debug("Scopes IDs [%s] loaded. The total number of "
                               "unique scope IDs loaded is [%s]. Total number "
                               "of resources navigated [%s].", unique_scope_ids,
                               len(unique_scope_ids), total_resources_navigated)
                     break
 
-                marker = resources_chunk[-1]['id']
                 total_resources_navigated += chunk_len
 
-                scope_ids = [resource.get(
-                    scope_attribute, None) for resource in resources_chunk]
-                scope_ids = [s_id for s_id in scope_ids if s_id]
-                unique_scope_ids.update(set(scope_ids))
-                LOG.debug("Scopes IDs [%s] loaded. The total number of unique "
-                          "scopes IDs loaded so far is [%s]. Next chunk with "
-                          "Markers [%s]. Total number of resources navigated "
-                          "[%s].", scope_ids, len(scope_ids), marker,
-                          total_resources_navigated)
+                scope_ids = [
+                    resource.get(scope_attribute) for resource in
+                    resources_chunk if resource.get(scope_attribute)]
 
+                unique_scope_ids.update(set(scope_ids))
+
+                LOG.debug("Scopes IDs [%s] loaded. The total number of unique "
+                          "scopes IDs loaded so far is [%s]. Next chunk will "
+                          "be loaded filtering by resources not in scope "
+                          "attributes [%s] with values [%s]. Total number of "
+                          "resources navigated [%s].", scope_ids,
+                          len(scope_ids), scope_attribute, unique_scope_ids,
+                          total_resources_navigated)
         return list(unique_scope_ids)
