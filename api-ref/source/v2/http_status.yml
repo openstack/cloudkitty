@@ -20,7 +20,7 @@
   default: Forbidden operation for the authentified user.
 
 404:
-  default: Not found
+  default: Not found.
 
 405:
   default: The method is not allowed for the requested URL.
