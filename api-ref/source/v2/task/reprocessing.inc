@@ -113,6 +113,7 @@ one can retrieve all reprocessing tasks scheduled for a scope.
 .. rest_parameters:: task/reprocessing_parameters.yml
 
    - scope_ids: scope_ids_query
+   - order: scope_ids_order_query
 
 Status codes
 ------------
