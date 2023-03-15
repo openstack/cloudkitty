@@ -57,8 +57,6 @@ class ScopeState(base.BaseResource):
         voluptuous.Required('collector'): vutils.get_string_type(),
         voluptuous.Optional(
             'last_processed_timestamp'): vutils.get_string_type(),
-        # This "state" property should be removed in the next release.
-        voluptuous.Optional('state'): vutils.get_string_type(),
         voluptuous.Required('active'): bool,
         voluptuous.Optional('scope_activation_toggle_date'):
             vutils.get_string_type(),
@@ -84,7 +82,6 @@ class ScopeState(base.BaseResource):
                 'scope_key': r.scope_key,
                 'fetcher': r.fetcher,
                 'collector': r.collector,
-                'state': r.last_processed_timestamp.isoformat(),
                 'last_processed_timestamp':
                     r.last_processed_timestamp.isoformat(),
                 'active': r.active,
@@ -107,9 +104,6 @@ class ScopeState(base.BaseResource):
             api_utils.MultiQueryParam(str),
         voluptuous.Optional('last_processed_timestamp'):
             voluptuous.Coerce(tzutils.dt_from_iso),
-        # This "state" property should be removed in the next release.
-        voluptuous.Optional('state'):
-            voluptuous.Coerce(tzutils.dt_from_iso),
     })
     def put(self,
             all_scopes=False,
@@ -117,8 +111,7 @@ class ScopeState(base.BaseResource):
             scope_key=None,
             fetcher=None,
             collector=None,
-            last_processed_timestamp=None,
-            state=None):
+            last_processed_timestamp=None):
 
         policy.authorize(
             flask.request.context,
@@ -130,14 +123,9 @@ class ScopeState(base.BaseResource):
             raise http_exceptions.BadRequest(
                 "Either all_scopes or a scope_id should be specified.")
 
-        if not state and not last_processed_timestamp:
+        if not last_processed_timestamp:
             raise http_exceptions.BadRequest(
-                "Variables 'state' and 'last_processed_timestamp' cannot be "
-                "empty/None. We expect at least one of them.")
-        if state:
-            LOG.warning("The use of 'state' variable is deprecated, and will "
-                        "be removed in the next upcomming release. You should "
-                        "consider using 'last_processed_timestamp' variable.")
+                "Variable 'last_processed_timestamp' cannot be empty/None.")
 
         results = self._storage_state.get_all(
             identifier=scope_id,
@@ -157,8 +145,6 @@ class ScopeState(base.BaseResource):
             'collector': r.collector,
         } for r in results]
 
-        if not last_processed_timestamp:
-            last_processed_timestamp = state
         self._client.cast({}, 'reset_state', res_data={
             'scopes': serialized_results,
             'last_processed_timestamp': last_processed_timestamp.isoformat()
@@ -183,8 +169,6 @@ class ScopeState(base.BaseResource):
         voluptuous.Required('scope_key'): vutils.get_string_type(),
         voluptuous.Required('fetcher'): vutils.get_string_type(),
         voluptuous.Required('collector'): vutils.get_string_type(),
-        # This "state" property should be removed in the next release.
-        voluptuous.Required('state'): vutils.get_string_type(),
         voluptuous.Optional('last_processed_timestamp'):
             voluptuous.Coerce(tzutils.dt_from_iso),
         voluptuous.Required('active'): bool,
@@ -228,7 +212,6 @@ class ScopeState(base.BaseResource):
             'scope_key': update_storage_scope.scope_key,
             'fetcher': update_storage_scope.fetcher,
             'collector': update_storage_scope.collector,
-            'state': update_storage_scope.state.isoformat(),
             'last_processed_timestamp':
                 update_storage_scope.last_processed_timestamp.isoformat(),
             'active': update_storage_scope.active,
@@ -253,8 +236,6 @@ class ScopeState(base.BaseResource):
         voluptuous.Required('scope_key'): vutils.get_string_type(),
         voluptuous.Required('fetcher'): vutils.get_string_type(),
         voluptuous.Required('collector'): vutils.get_string_type(),
-        # This "state" property should be removed in the next release.
-        voluptuous.Required('state'): vutils.get_string_type(),
         voluptuous.Optional('last_processed_timestamp'):
             voluptuous.Coerce(tzutils.dt_from_iso),
         voluptuous.Required('active'): bool,
@@ -291,7 +272,7 @@ class ScopeState(base.BaseResource):
 
         update_storage_scope = storage_scopes[0]
         last_processed_timestamp = None
-        if update_storage_scope.last_processed_timestamp.isoformat():
+        if update_storage_scope.last_processed_timestamp:
             last_processed_timestamp =\
                 update_storage_scope.last_processed_timestamp.isoformat()
 
@@ -300,7 +281,6 @@ class ScopeState(base.BaseResource):
             'scope_key': update_storage_scope.scope_key,
             'fetcher': update_storage_scope.fetcher,
             'collector': update_storage_scope.collector,
-            'state': last_processed_timestamp,
             'last_processed_timestamp': last_processed_timestamp,
             'active': update_storage_scope.active,
             'scope_activation_toggle_date':
