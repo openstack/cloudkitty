@@ -46,11 +46,11 @@ class GnocchiFetcherTest(tests.TestCase):
 
     def test_get_tenants_marker_list_resource_last_call(self):
         with mock.patch.object(
-                self.fetcher._conn.resource, 'list') as resource_list:
+                self.fetcher._conn.resource, 'search') as resource_list:
             resource_list.side_effect = [
                 self.resource_list,
                 [{'id': "some_replicated_id",
-                  'project_id': 'some_replicated_id_project'}]]
+                  'project_id': 'some_replicated_id_project'}], []]
 
             all_scope_ids = self.fetcher.get_tenants()
             all_scope_ids.sort()
@@ -58,14 +58,24 @@ class GnocchiFetcherTest(tests.TestCase):
             self.assertEqual(self.unique_scope_ids, all_scope_ids)
 
             resource_list.assert_has_calls([
-                mock.call(resource_type="generic", marker=None, details=True),
-                mock.call(resource_type="generic", marker="some_replicated_id",
-                          details=True)
+                mock.call(resource_type='generic', details=True, query=None),
+                mock.call(resource_type='generic', details=True,
+                          query={'not': {'in': {'project_id': [
+                              'some_other_project_id',
+                              'some_other_project_id2',
+                              'some_other_project_id3',
+                              'some_replicated_id_project']}}}),
+                mock.call(resource_type='generic', details=True,
+                          query={'not': {'in': {'project_id': [
+                              'some_other_project_id',
+                              'some_other_project_id2',
+                              'some_other_project_id3',
+                              'some_replicated_id_project']}}})
             ])
 
     def test_get_tenants_empty_list_resource_last_call(self):
         with mock.patch.object(
-                self.fetcher._conn.resource, 'list') as resource_list:
+                self.fetcher._conn.resource, 'search') as resource_list:
             resource_list.side_effect = [
                 self.resource_list, self.resource_list, []]
 
@@ -75,15 +85,24 @@ class GnocchiFetcherTest(tests.TestCase):
             self.assertEqual(self.unique_scope_ids, all_scope_ids)
 
             resource_list.assert_has_calls([
-                mock.call(resource_type="generic", marker=None, details=True),
-                mock.call(resource_type="generic", marker="some_replicated_id",
-                          details=True),
-                mock.call(resource_type="generic", marker="some_replicated_id",
-                          details=True)], any_order=False)
+                mock.call(resource_type='generic', details=True, query=None),
+                mock.call(resource_type='generic', details=True,
+                          query={'not': {'in': {'project_id': [
+                              'some_other_project_id',
+                              'some_other_project_id2',
+                              'some_other_project_id3',
+                              'some_replicated_id_project']}}}),
+                mock.call(resource_type='generic', details=True,
+                          query={'not': {'in': {'project_id': [
+                              'some_other_project_id',
+                              'some_other_project_id2',
+                              'some_other_project_id3',
+                              'some_replicated_id_project']}}})],
+                any_order=False)
 
     def test_get_tenants_scope_id_as_none(self):
         with mock.patch.object(
-                self.fetcher._conn.resource, 'list') as resource_list:
+                self.fetcher._conn.resource, 'search') as resource_list:
             resource_list.side_effect = [
                 self.resource_list, self.resource_list,
                 [{"id": "test", "project_id": None}], []]
@@ -94,11 +113,23 @@ class GnocchiFetcherTest(tests.TestCase):
             self.assertEqual(self.unique_scope_ids, all_scope_ids)
 
             resource_list.assert_has_calls([
-                mock.call(resource_type="generic", marker=None, details=True),
-                mock.call(resource_type="generic", marker="some_replicated_id",
-                          details=True),
-                mock.call(resource_type="generic", marker="some_replicated_id",
-                          details=True),
-                mock.call(resource_type="generic", marker="test",
-                          details=True)
+                mock.call(resource_type='generic', details=True, query=None),
+                mock.call(resource_type='generic', details=True,
+                          query={'not': {'in': {'project_id': [
+                              'some_other_project_id',
+                              'some_other_project_id2',
+                              'some_other_project_id3',
+                              'some_replicated_id_project']}}}),
+                mock.call(resource_type='generic', details=True,
+                          query={'not': {'in': {'project_id': [
+                              'some_other_project_id',
+                              'some_other_project_id2',
+                              'some_other_project_id3',
+                              'some_replicated_id_project']}}}),
+                mock.call(resource_type='generic', details=True,
+                          query={'not': {'in': {'project_id': [
+                              'some_other_project_id',
+                              'some_other_project_id2',
+                              'some_other_project_id3',
+                              'some_replicated_id_project']}}})
             ], any_order=False)
