@@ -46,6 +46,7 @@ scope_ids:
   in: body
   description: |
     The scope IDs to reprocess. Must be comma-separated to schedule more than one.
+    One can use the keyword `ALL` to schedule all scopes to be reprocessed.
   required: true
 
 start_reprocess_time:
