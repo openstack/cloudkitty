@@ -19,6 +19,15 @@ offset:
   type: int
   required: false
 
+scope_ids_order_query: &scope_ids_order_query
+  in: query
+  description: |
+    The order in which reprocessing tasks are returned. By default, we
+    order reprocessing tasks ``desc`` by their insertion order in the
+    database. The possible values are ``desc`` or ``asc``.
+  required: false
+  type: string
+
 scope_ids_query: &scope_ids_query
   in: query
   description: |
