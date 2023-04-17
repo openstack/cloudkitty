@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The ``state`` field is removed from the scope API.
+    Use ``last_processed_timestamp`` instead.

@@ -119,7 +119,7 @@ tests:
     request_headers:
       content-type: application/json
     data:
-      state: 20190716T085501Z
+      last_processed_timestamp: 20190716T085501Z
       all_scopes: true
 
   - name: Reset one scope state
@@ -129,7 +129,7 @@ tests:
     request_headers:
       content-type: application/json
     data:
-      state: 20190716T085501Z
+      last_processed_timestamp: 20190716T085501Z
       scope_id: aaaa
 
   - name: Reset several scope states
@@ -139,7 +139,7 @@ tests:
     request_headers:
       content-type: application/json
     data:
-      state: 20190716T085501Z
+      last_processed_timestamp: 20190716T085501Z
       scope_id: aaaa
       scope_id: bbbb
 
@@ -151,7 +151,7 @@ tests:
       content-type: application/json
     data:
       scope_key: key1
-      state: 20190716T085501Z
+      last_processed_timestamp: 20190716T085501Z
     response_strings:
       - "Either all_scopes or a scope_id should be specified."
 
@@ -167,5 +167,5 @@ tests:
     request_headers:
       content-type: application/json
     data:
-      state: 20190716T085501Z
+      last_processed_timestamp: 20190716T085501Z
       scope_id: foobar
