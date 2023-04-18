@@ -27,6 +27,7 @@ the configuration file. The following options are available:
 
   - ``influxdb``
   - ``elasticsearch``
+  - ``opensearch``
 
 Driver-specific options
 =======================
@@ -75,7 +76,7 @@ Section: ``storage_influxdb``.
           regular exports of your data and create a custom retention policy on
           cloudkitty's database.
 
-ElasticSearch (v2)
+Elasticsearch (v2)
 ------------------
 
 Section ``storage_elasticsearch``:
@@ -90,5 +91,23 @@ Section ``storage_elasticsearch``:
 
 * ``cafile``: Path of the CA certificate to trust for HTTPS connections.
 
-* ``scroll_duration``: Defaults to 30. Duration (in seconds) for which the ES
-  scroll contexts should be kept alive.
+* ``scroll_duration``: Defaults to 30. Duration (in seconds) for which the
+  Elasticsearch scroll contexts should be kept alive.
+
+OpenSearch 2.x (v2)
+-------------------
+
+Section ``storage_opensearch``:
+
+* ``host``: Defaults to ``http://localhost:9200``. OpenSearch 2.x host, along
+  with port and protocol.
+
+* ``index_name``: Defaults to ``cloudkitty``. OpenSearch index to use.
+
+* ``insecure``: Defaults to ``false``. Set to true to allow insecure HTTPS
+  connections to OpenSearch.
+
+* ``cafile``: Path of the CA certificate to trust for HTTPS connections.
+
+* ``scroll_duration``: Defaults to 30. Duration (in seconds) for which the
+  OpenSearch scroll contexts should be kept alive.
