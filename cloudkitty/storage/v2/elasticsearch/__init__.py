@@ -86,9 +86,6 @@ class ElasticsearchStorage(v2_storage.BaseStorage):
     def __init__(self, *args, **kwargs):
         super(ElasticsearchStorage, self).__init__(*args, **kwargs)
 
-        LOG.warning('The Elasticsearch storage driver is experimental. '
-                    'DO NOT USE IT IN PRODUCTION.')
-
         verify = not CONF.storage_elasticsearch.insecure
         if verify and CONF.storage_elasticsearch.cafile:
             verify = CONF.storage_elasticsearch.cafile

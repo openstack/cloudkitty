@@ -86,9 +86,6 @@ class OpenSearchStorage(v2_storage.BaseStorage):
     def __init__(self, *args, **kwargs):
         super(OpenSearchStorage, self).__init__(*args, **kwargs)
 
-        LOG.warning('The OpenSearch storage driver is experimental. '
-                    'DO NOT USE IT IN PRODUCTION.')
-
         verify = not CONF.storage_opensearch.insecure
         if verify and CONF.storage_opensearch.cafile:
             verify = CONF.storage_opensearch.cafile
