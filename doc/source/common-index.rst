@@ -10,6 +10,9 @@ CloudKitty allows to do metric-based rating: it polls endpoints in order to
 retrieve measures and metadata about specific metrics, applies rating rules to
 the collected data and pushes the rated data to its storage backend.
 
+More details about concepts, expressions, and jargons can be found in the
+`documentation of CloudKitty concepts`_.
+
 CloudKitty is highly modular, which makes it easy to add new features.
 
 .. only:: html
@@ -20,6 +23,7 @@ CloudKitty is highly modular, which makes it easy to add new features.
       a look at the `developer documentation`_ .
 
 .. _developer documentation: developer/index.html
+.. _documentation of CloudKitty concepts: concepts/index.html
 
 What can be done with CloudKitty ? What can't ?
 ===============================================

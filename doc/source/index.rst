@@ -17,6 +17,12 @@ Documentation contents
    * - Documentation type
      - Table of contents
 
+   * - **Concepts**
+     - .. toctree::
+          :maxdepth: 3
+
+          concepts/index
+
    * - **End User**
      - .. toctree::
           :maxdepth: 3
