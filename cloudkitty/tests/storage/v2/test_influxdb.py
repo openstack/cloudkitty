@@ -209,3 +209,233 @@ class TestInfluxClient(unittest.TestCase):
         self._storage.delete(end=datetime(2019, 1, 2))
         m.assert_called_once_with("""DELETE FROM "dataframes" WHERE """
                                   """time < '2019-01-02T00:00:00';""")
+
+    def test_process_total(self):
+        begin = datetime(2019, 1, 2, 10)
+        end = datetime(2019, 1, 2, 11)
+        groupby = ['valA', 'time']
+        points_1 = [
+            {
+                'qty': 42,
+                'price': 1.0,
+                'time': begin.isoformat()
+            }
+        ]
+        series_groupby_1 = {
+            'valA': '1'
+        }
+        points_2 = [
+            {
+                'qty': 12,
+                'price': 2.0,
+                'time': begin.isoformat()
+            }
+        ]
+        series_groupby_2 = {
+            'valA': '2'
+        }
+        points_3 = [
+            {
+                'qty': None,
+                'price': None,
+                'time': None
+            }
+        ]
+        series_groupby_3 = {
+            'valA': None
+        }
+        series_name = 'dataframes'
+        items = [((series_name, series_groupby_1), points_1),
+                 ((series_name, series_groupby_2), points_2),
+                 ((series_name, series_groupby_3), points_3)]
+        total = FakeResultSet(items=items)
+        result = self.client.process_total(total=total, begin=begin, end=end,
+                                           groupby=groupby)
+        expected = [{'begin': tzutils.utc_to_local(begin),
+                     'end': tzutils.utc_to_local(end),
+                     'qty': 42,
+                     'price': 1.0,
+                     'valA': '1'},
+                    {'begin': tzutils.utc_to_local(begin),
+                     'end': tzutils.utc_to_local(end),
+                     'qty': 12,
+                     'price': 2.0,
+                     'valA': '2'}
+                    ]
+        self.assertEqual(expected, result)
+
+
+class TestInfluxClientV2(unittest.TestCase):
+
+    @mock.patch('cloudkitty.storage.v2.influx.InfluxDBClient')
+    def setUp(self, client_mock):
+        self.period_begin = tzutils.local_to_utc(
+            tzutils.get_month_start())
+        self.period_end = tzutils.local_to_utc(
+            tzutils.get_next_month())
+        self.client = influx.InfluxClientV2()
+
+    @mock.patch('cloudkitty.storage.v2.influx.requests')
+    def test_query(self, mock_request):
+        static_vals = ['', 'result', 'table', '_start', '_value']
+        custom_fields = 'last(f1) AS f1, last(f2) AS f2, last(f3) AS f3'
+        groups = ['g1', 'g2', 'g3']
+        data = [
+            static_vals + groups,
+            ['', 'f1', 0, 1, 1, 1, 2, 3],
+            ['', 'f2', 0, 1, 2, 1, 2, 3],
+            ['', 'f3', 0, 1, 3, 1, 2, 3],
+            static_vals + groups,
+            ['', 'f1', 0, 1, 3, 3, 1, 2],
+            ['', 'f2', 0, 1, 1, 3, 1, 2],
+            ['', 'f3', 0, 1, 2, 3, 1, 2],
+            static_vals + groups,
+            ['', 'f1', 0, 1, 2, 2, 3, 1],
+            ['', 'f2', 0, 1, 3, 2, 3, 1],
+            ['', 'f3', 0, 1, 1, 2, 3, 1]
+        ]
+
+        expected_value = [
+            {'f1': 1.0, 'f2': 2.0, 'f3': 3.0, 'begin': self.period_begin,
+             'end': self.period_end, 'g1': '1', 'g2': '2', 'g3': '3'},
+            {'f1': 3.0, 'f2': 1.0, 'f3': 2.0, 'begin': self.period_begin,
+             'end': self.period_end, 'g1': '3', 'g2': '1', 'g3': '2'},
+            {'f1': 2.0, 'f2': 3.0, 'f3': 1.0, 'begin': self.period_begin,
+             'end': self.period_end, 'g1': '2', 'g2': '3', 'g3': '1'}
+        ]
+
+        data_csv = '\n'.join([','.join(map(str, d)) for d in data])
+        mock_request.post.return_value = mock.Mock(text=data_csv)
+        response = self.client.get_total(
+            None, self.period_begin, self.period_end, custom_fields,
+            filters={}, groupby=groups)
+
+        result = self.client.process_total(
+            response, self.period_begin, self.period_end,
+            groups, custom_fields, {})
+
+        self.assertEqual(result, expected_value)
+
+    def test_query_build(self):
+        custom_fields = 'last(field1) AS F1, sum(field2) AS F2'
+        groupby = ['group1', 'group2', 'group3']
+        filters = {
+            'filter1': '10',
+            'filter2': 'filter2_filter'
+        }
+        beg = self.period_begin.isoformat()
+        end = self.period_end.isoformat()
+        expected = ('\n'
+                    '        from(bucket:"cloudkitty")\n'
+                    f'            |> range(start: {beg}, stop: {end})\n'
+                    '            |> filter(fn: (r) => r["_measurement"] == '
+                    '"dataframes")\n'
+                    '            |> filter(fn: (r) => r["_field"] == "field1"'
+                    '  and r.filter1==10 and r.filter2=="filter2_filter" )\n'
+                    '            |> group(columns: ["group1","group2",'
+                    '"group3"])\n'
+                    '            |> last()\n'
+                    '            |> keep(columns: ["group1", "group2",'
+                    ' "group3", "_field", "_value", "_start", "_stop"])\n'
+                    '            |> set(key: "_field", value: "F1")\n'
+                    '            |> yield(name: "F1")\n'
+                    '        \n'
+                    '        from(bucket:"cloudkitty")\n'
+                    f'            |> range(start: {beg}, stop: {end})\n'
+                    '            |> filter(fn: (r) => r["_measurement"] == '
+                    '"dataframes")\n'
+                    '            |> filter(fn: (r) => r["_field"] == "field2"'
+                    '  and r.filter1==10 and r.filter2=="filter2_filter" )\n'
+                    '            |> group(columns: ["group1","group2",'
+                    '"group3"])\n'
+                    '            |> sum()\n'
+                    '            |> keep(columns: ["group1", "group2", '
+                    '"group3", "_field", "_value", "_start", "_stop"])\n'
+                    '            |> set(key: "_field", value: "F2")\n'
+                    '            |> yield(name: "F2")\n'
+                    '        ')
+
+        query = self.client.get_query(begin=self.period_begin,
+                                      end=self.period_end,
+                                      custom_fields=custom_fields,
+                                      filters=filters,
+                                      groupby=groupby)
+
+        self.assertEqual(query, expected)
+
+    def test_query_build_no_custom_fields(self):
+        custom_fields = None
+        groupby = ['group1', 'group2', 'group3']
+        filters = {
+            'filter1': '10',
+            'filter2': 'filter2_filter'
+        }
+        beg = self.period_begin.isoformat()
+        end = self.period_end.isoformat()
+        self.maxDiff = None
+        expected = ('\n'
+                    '        from(bucket:"cloudkitty")\n'
+                    f'            |> range(start: {beg}, stop: {end})\n'
+                    '            |> filter(fn: (r) => r["_measurement"] == '
+                    '"dataframes")\n'
+                    '            |> filter(fn: (r) => r["_field"] == "price"'
+                    '  and r.filter1==10 and r.filter2=="filter2_filter" )\n'
+                    '            |> group(columns: ["group1","group2",'
+                    '"group3"])\n'
+                    '            |> sum()\n'
+                    '            |> keep(columns: ["group1", "group2",'
+                    ' "group3", "_field", "_value", "_start", "_stop"])\n'
+                    '            |> set(key: "_field", value: "price")\n'
+                    '            |> yield(name: "price")\n'
+                    '        \n'
+                    '        from(bucket:"cloudkitty")\n'
+                    f'            |> range(start: {beg}, stop: {end})\n'
+                    '            |> filter(fn: (r) => r["_measurement"] == '
+                    '"dataframes")\n'
+                    '            |> filter(fn: (r) => r["_field"] == "qty"'
+                    '  and r.filter1==10 and r.filter2=="filter2_filter" )\n'
+                    '            |> group(columns: ["group1","group2",'
+                    '"group3"])\n'
+                    '            |> sum()\n'
+                    '            |> keep(columns: ["group1", "group2", '
+                    '"group3", "_field", "_value", "_start", "_stop"])\n'
+                    '            |> set(key: "_field", value: "qty")\n'
+                    '            |> yield(name: "qty")\n'
+                    '        ')
+
+        query = self.client.get_query(begin=self.period_begin,
+                                      end=self.period_end,
+                                      custom_fields=custom_fields,
+                                      filters=filters,
+                                      groupby=groupby)
+
+        self.assertEqual(query, expected)
+
+    def test_query_build_all_custom_fields(self):
+        custom_fields = '*'
+        groupby = ['group1', 'group2', 'group3']
+        filters = {
+            'filter1': '10',
+            'filter2': 'filter2_filter'
+        }
+        beg = self.period_begin.isoformat()
+        end = self.period_end.isoformat()
+        expected = (f'''
+          from(bucket:"cloudkitty")
+              |> range(start: {beg}, stop: {end})
+              |> filter(fn: (r) => r["_measurement"] == "dataframes")
+              |> filter(fn: (r) => r.filter1==10 and r.filter2=="filter
+              2_filter")
+              |> group(columns: ["group1","group2","group3"])
+              |> drop(columns: ["_time"])
+              |> yield(name: "result")'''.replace(
+            ' ', '').replace('\n', '').replace('\t', ''))
+
+        query = self.client.get_query(begin=self.period_begin,
+                                      end=self.period_end,
+                                      custom_fields=custom_fields,
+                                      filters=filters,
+                                      groupby=groupby).replace(
+            ' ', '').replace('\n', '').replace('\t', '')
+
+        self.assertEqual(query, expected)

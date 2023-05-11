@@ -165,12 +165,20 @@ function configure_cloudkitty {
         iniset $CLOUDKITTY_CONF fetcher_keystone keystone_version 3
     fi
 
-    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "influxdb" ]; then
+    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "influxdb" ] && [ "$CLOUDKITTY_INFLUX_VERSION" == 1 ]; then
         iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} user ${CLOUDKITTY_INFLUXDB_USER}
         iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} password ${CLOUDKITTY_INFLUXDB_PASSWORD}
         iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} database ${CLOUDKITTY_INFLUXDB_DATABASE}
         iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} host ${CLOUDKITTY_INFLUXDB_HOST}
         iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} port ${CLOUDKITTY_INFLUXDB_PORT}
+    fi
+
+    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "influxdb" ] && [ "$CLOUDKITTY_INFLUX_VERSION" == 2 ]; then
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} host ${CLOUDKITTY_INFLUXDB_HOST}
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} port ${CLOUDKITTY_INFLUXDB_PORT}
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} url "http://${CLOUDKITTY_INFLUXDB_HOST}:${CLOUDKITTY_INFLUXDB_PORT}"
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} token ${CLOUDKITTY_INFLUXDB_PASSWORD}
+        iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} version 2
     fi
 
     if [ "$CLOUDKITTY_STORAGE_BACKEND" == "elasticsearch" ]; then
@@ -242,9 +250,13 @@ function create_cloudkitty_data_dir {
 }
 
 function create_influxdb_database {
-    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "influxdb" ]; then
+    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "influxdb" ] && [ "$CLOUDKITTY_INFLUX_VERSION" == 1 ]; then
         influx -execute "CREATE DATABASE ${CLOUDKITTY_INFLUXDB_DATABASE}"
     fi
+    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "influxdb" ] && [ "$CLOUDKITTY_INFLUX_VERSION" == 2 ]; then
+        influx setup --username ${CLOUDKITTY_INFLUXDB_USER} --password ${CLOUDKITTY_INFLUXDB_PASSWORD} --token ${CLOUDKITTY_INFLUXDB_PASSWORD} --org openstack --bucket cloudkitty --force
+    fi
+
 }
 
 function create_elasticsearch_index {
@@ -296,9 +308,25 @@ function install_influx_ubuntu {
     sudo dpkg -i --skip-same-version ${influxdb_file}
 }
 
+function install_influx_v2_ubuntu {
+    local influxdb_file=$(get_extra_file https://dl.influxdata.com/influxdb/releases/influxdb2_2.7.5-1_amd64.deb)
+    sudo dpkg -i --skip-same-version ${influxdb_file}
+    local influxcli_file=$(get_extra_file https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.7.3-linux-amd64.tar.gz)
+    tar xvzf ${influxcli_file}
+    sudo cp ./influx /usr/local/bin/
+}
+
 function install_influx_fedora {
     local influxdb_file=$(get_extra_file https://dl.influxdata.com/influxdb/releases/influxdb-1.6.3.x86_64.rpm)
     sudo yum localinstall -y ${influxdb_file}
+}
+
+function install_influx_v2_fedora {
+    local influxdb_file=$(get_extra_file https://dl.influxdata.com/influxdb/releases/influxdb2-2.7.5-1.x86_64.rpm)
+    sudo yum localinstall -y ${influxdb_file}
+    local influxcli_file=$(get_extra_file https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.7.3-linux-amd64.tar.gz)
+    tar xvzf ${influxcli_file}
+    sudo cp ./influx /usr/local/bin/
 }
 
 function install_influx {
@@ -306,6 +334,19 @@ function install_influx {
         install_influx_ubuntu
     elif is_fedora; then
         install_influx_fedora
+    else
+        die $LINENO "Distribution must be Debian or Fedora-based"
+    fi
+    sudo cp -f "${CLOUDKITTY_DIR}"/devstack/files/influxdb.conf /etc/influxdb/influxdb.conf
+    sudo systemctl start influxdb || sudo systemctl restart influxdb
+}
+
+
+function install_influx_v2 {
+    if is_ubuntu; then
+        install_influx_v2_ubuntu
+    elif is_fedora; then
+        install_influx_v2_fedora
     else
         die $LINENO "Distribution must be Debian or Fedora-based"
     fi
@@ -367,9 +408,10 @@ function install_opensearch {
 function install_cloudkitty {
     git_clone $CLOUDKITTY_REPO $CLOUDKITTY_DIR $CLOUDKITTY_BRANCH
     setup_develop $CLOUDKITTY_DIR
-
-    if [ $CLOUDKITTY_STORAGE_BACKEND == 'influxdb' ]; then
+    if [ $CLOUDKITTY_STORAGE_BACKEND == 'influxdb' ] && [ "$CLOUDKITTY_INFLUX_VERSION" == 1 ]; then
         install_influx
+    elif [ $CLOUDKITTY_STORAGE_BACKEND == 'influxdb' ] && [ "$CLOUDKITTY_INFLUX_VERSION" == 2 ]; then
+        install_influx_v2
     elif [ $CLOUDKITTY_STORAGE_BACKEND == 'elasticsearch' ]; then
         install_elasticsearch
     elif [ $CLOUDKITTY_STORAGE_BACKEND == 'opensearch' ]; then
