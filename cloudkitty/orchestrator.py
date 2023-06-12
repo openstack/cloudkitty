@@ -400,7 +400,7 @@ class Worker(BaseWorker):
         return True
 
     def do_execute_scope_processing(self, timestamp):
-        metrics = list(self._conf['metrics'].keys())
+        metrics = list(self._collector.conf.keys())
         # Collection
         metrics = sorted(metrics)
         usage_data = self._do_collection(metrics, timestamp)

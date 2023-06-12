@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import copy
 from datetime import timedelta
 import requests
 
@@ -24,6 +25,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from voluptuous import All
 from voluptuous import In
+from voluptuous import Invalid
 from voluptuous import Length
 from voluptuous import Range
 from voluptuous import Required
@@ -38,6 +40,24 @@ from cloudkitty.utils import tz as tzutils
 LOG = logging.getLogger(__name__)
 
 COLLECTOR_GNOCCHI_OPTS = 'collector_gnocchi'
+
+
+def GnocchiMetricDict(value):
+    if isinstance(value, dict) and len(value.keys()) > 0:
+        return value
+    if isinstance(value, list) and len(value) > 0:
+        for v in value:
+            if not (isinstance(v, dict) and len(v.keys()) > 0):
+                raise Invalid("Not a dict with at least one key or a "
+                              "list with at least one dict with at "
+                              "least one key. Provided value: %s" % value)
+        return value
+    raise Invalid("Not a dict with at least one key or a "
+                  "list with at least one dict with at "
+                  "least one key. Provided value: %s" % value)
+
+
+GNOCCHI_CONF_SCHEMA = {Required('metrics'): GnocchiMetricDict}
 
 collector_gnocchi_opts = [
     cfg.StrOpt(
@@ -183,16 +203,30 @@ class GnocchiCollector(collector.BaseCollector):
         """Check metrics configuration
 
         """
-        conf = collector.BaseCollector.check_configuration(conf)
+        conf = Schema(GNOCCHI_CONF_SCHEMA)(conf)
+        conf = copy.deepcopy(conf)
+        scope_key = CONF.collect.scope_key
         metric_schema = Schema(collector.METRIC_BASE_SCHEMA).extend(
             GNOCCHI_EXTRA_SCHEMA)
 
         output = {}
-        for metric_name, metric in conf.items():
-            met = output[metric_name] = metric_schema(metric)
+        for metric_name, metric in conf['metrics'].items():
+            if not isinstance(metric, list):
+                metric = [metric]
+            for m in metric:
+                met = metric_schema(m)
+                m.update(met)
+                if scope_key not in m['groupby']:
+                    m['groupby'].append(scope_key)
+                if met['extra_args']['resource_key'] not in m['groupby']:
+                    m['groupby'].append(met['extra_args']['resource_key'])
 
-            if met['extra_args']['resource_key'] not in met['groupby']:
-                met['groupby'].append(met['extra_args']['resource_key'])
+                names = [metric_name]
+                alt_name = met.get('alt_name')
+                if alt_name is not None:
+                    names.append(alt_name)
+                new_metric_name = "@#".join(names)
+                output[new_metric_name] = m
 
         return output
 
@@ -337,7 +371,7 @@ class GnocchiCollector(collector.BaseCollector):
                 if 'Metrics not found' not in e.message["cause"]:
                     raise
             LOG.warning('[{scope}] Skipping this metric for the '
-                        'current cycle.'.format(scope=project_id, err=e))
+                        'current cycle.'.format(scope=project_id))
             return []
 
     def get_aggregation_api_arguments(self, end, metric_name, project_id,
@@ -392,6 +426,7 @@ class GnocchiCollector(collector.BaseCollector):
 
     @staticmethod
     def generate_aggregation_operation(extra_args, metric_name):
+        metric_name = metric_name.split('@#')[0]
         aggregation_method = extra_args['aggregation_method']
         re_aggregation_method = aggregation_method
 

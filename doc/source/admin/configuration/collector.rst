@@ -288,6 +288,33 @@ specified. The extra args for each collector are detailed below.
 Gnocchi
 ~~~~~~~
 
+Besides the common configuration, the Gnocchi collector also accepts a list of
+rating types definitions for each metric. Using a list of rating types
+definitions allows operators to rate different aspects of the same resource
+type collected through the same metric in Gnocchi, otherwise operators would
+need to create multiple metrics in Gnocchi to create multiple rating types in
+CloudKitty.
+
+.. code-block:: yaml
+
+   metrics:
+     instance.metric:
+       - unit: instance
+         alt_name: flavor
+         mutate: NUMBOOL
+         groupby:
+           - id
+         metadata:
+           - flavor_id
+       - unit: instance
+         alt_name: operating_system_license
+         mutate: NUMBOOL
+         groupby:
+           - id
+         metadata:
+           - os_license
+
+
 .. note:: In order to retrieve metrics from Gnocchi, Cloudkitty uses the
           dynamic aggregates endpoint. It builds an operation of the following
           format: ``(aggregate RE_AGGREGATION_METHOD (metric METRIC_NAME

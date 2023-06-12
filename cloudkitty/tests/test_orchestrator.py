@@ -355,14 +355,19 @@ class WorkerTest(tests.TestCase):
             self, update_scope_processing_state_db_mock,
             persist_rating_data_mock, execute_measurements_rating_mock,
             do_collection_mock):
-        self.worker._conf = {"metrics": {"metric1": "s", "metric2": "d"}}
+        self.worker._collector = collector.gnocchi.GnocchiCollector(
+            period=3600,
+            conf=tests.samples.DEFAULT_METRICS_CONF,
+        )
         do_collection_mock.return_value = None
 
         timestamp_now = tzutils.localized_now()
         self.worker.do_execute_scope_processing(timestamp_now)
 
         do_collection_mock.assert_has_calls([
-            mock.call(["metric1", "metric2"], timestamp_now)
+            mock.call(['cpu@#instance', 'image.size', 'ip.floating',
+                       'network.incoming.bytes', 'network.outgoing.bytes',
+                       'radosgw.objects.size', 'volume.size'], timestamp_now)
         ])
 
         self.assertFalse(execute_measurements_rating_mock.called)
@@ -378,7 +383,10 @@ class WorkerTest(tests.TestCase):
             self, update_scope_processing_state_db_mock,
             persist_rating_data_mock, execute_measurements_rating_mock,
             do_collection_mock):
-        self.worker._conf = {"metrics": {"metric1": "s", "metric2": "d"}}
+        self.worker._collector = collector.gnocchi.GnocchiCollector(
+            period=3600,
+            conf=tests.samples.DEFAULT_METRICS_CONF,
+        )
 
         usage_data_mock = {"some_usage_data": 2}
         do_collection_mock.return_value = usage_data_mock
@@ -391,7 +399,9 @@ class WorkerTest(tests.TestCase):
         self.worker.do_execute_scope_processing(timestamp_now)
 
         do_collection_mock.assert_has_calls([
-            mock.call(["metric1", "metric2"], timestamp_now)
+            mock.call(['cpu@#instance', 'image.size', 'ip.floating',
+                       'network.incoming.bytes', 'network.outgoing.bytes',
+                       'radosgw.objects.size', 'volume.size'], timestamp_now)
         ])
 
         end_time = tzutils.add_delta(
