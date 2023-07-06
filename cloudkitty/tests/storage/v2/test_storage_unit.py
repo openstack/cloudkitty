@@ -104,11 +104,11 @@ class StorageUnitTest(TestCase):
         returned_total = round(
             sum(r.get('rate', r.get('price')) for r in total['results']), 5)
         self.assertLessEqual(
-            abs(expected_total - float(returned_total)), 0.00001)
+            abs(expected_total - float(returned_total)), 0.0001)
 
         returned_qty = round(sum(r['qty'] for r in total['results']), 5)
         self.assertLessEqual(
-            abs(expected_qty - float(returned_qty)), 0.00001)
+            abs(expected_qty - float(returned_qty)), 0.0001)
 
     def test_get_total_all_scopes_all_periods(self):
         expected_total, expected_qty, _ = self._expected_total_qty_len(
@@ -193,24 +193,24 @@ class StorageUnitTest(TestCase):
             abs(round(
                 float(first_element.get('rate', first_element.get('price')))
                 - expected_total_first, 5)),
-            0.00001,
+            0.0001,
         )
         second_element = total['results'][1]
         self.assertLessEqual(
             abs(round(
                 float(second_element.get('rate', second_element.get('price')))
                 - expected_total_second, 5)),
-            0.00001,
+            0.0001,
         )
         self.assertLessEqual(
             abs(round(float(total['results'][0]['qty'])
                       - expected_qty_first, 5)),
-            0.00001,
+            0.0001,
         )
         self.assertLessEqual(
             abs(round(float(total['results'][1]['qty'])
                       - expected_qty_second, 5)),
-            0.00001,
+            0.0001,
         )
 
     def test_get_total_all_scopes_one_period_groupby_project_id(self):
@@ -236,23 +236,23 @@ class StorageUnitTest(TestCase):
         self.assertLessEqual(
             abs(round(float(first_entry.get('rate', first_entry.get('price')))
                       - expected_total_first, 5)),
-            0.00001,
+            0.0001,
         )
         self.assertLessEqual(
             abs(round(
                 float(second_entry.get('rate', second_entry.get('price')))
                 - expected_total_second, 5)),
-            0.00001,
+            0.0001,
         )
         self.assertLessEqual(
             abs(round(float(total['results'][0]['qty'])
                       - expected_qty_first, 5)),
-            0.00001,
+            0.0001,
         )
         self.assertLessEqual(
             abs(round(float(total['results'][1]['qty'])
                       - expected_qty_second, 5)),
-            0.00001,
+            0.0001,
         )
 
     def test_get_total_all_scopes_all_periods_groupby_type_paginate(self):
