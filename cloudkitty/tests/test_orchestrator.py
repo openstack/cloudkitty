@@ -623,10 +623,9 @@ class CloudKittyReprocessorTest(tests.TestCase):
 
         expected_lock_name = "<class 'cloudkitty.orchestrator." \
                              "ReprocessingWorker'>-id=scope_identifier-" \
-                             "start=%s-end=%s-current=%s" % (
+                             "start=%s-end=%s" % (
                                  scope_mock.start_reprocess_time,
-                                 scope_mock.end_reprocess_time,
-                                 scope_mock.current_reprocess_time)
+                                 scope_mock.end_reprocess_time)
 
         self.assertEqual(expected_lock_name, return_generate_lock_name)
 
