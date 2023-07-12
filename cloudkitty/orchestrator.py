@@ -517,13 +517,27 @@ class ReprocessingWorker(Worker):
 
         end_of_this_processing = tzutils.local_to_utc(end_of_this_processing)
 
-        LOG.debug("Cleaning backend [%s] data for reprocessing scope [%s] "
-                  "for timeframe[start=%s, end=%s].",
-                  self._storage, self.scope, timestamp, end_of_this_processing)
-
-        self._storage.delete(
-            begin=timestamp, end=end_of_this_processing,
-            filters={self.scope_key: self._tenant_id})
+        # If the start_reprocess_time of the reprocessing task equals to
+        # the current reprocessing time, it means that we have just started
+        # executing it. Therefore, we can clean/erase the old data in the
+        # reprocessing task time frame.
+        if tzutils.local_to_utc(self.scope.start_reprocess_time) == timestamp:
+            LOG.info(
+                "Cleaning backend [%s] data for reprocessing scope [%s] for "
+                "timeframe[start=%s, end=%s].", self._storage, self.scope,
+                self.scope.start_reprocess_time, self.scope.end_reprocess_time)
+            self._storage.delete(
+                begin=self.scope.start_reprocess_time,
+                end=self.scope.end_reprocess_time,
+                filters={self.scope_key: self._tenant_id})
+        else:
+            LOG.debug("No need to clean backend [%s] data for reprocessing "
+                      "scope [%s] for timeframe[start=%s, end=%s]. We are "
+                      "past the very first timestamp; therefore, the cleaning "
+                      "for the reprocessing task period has already been "
+                      "executed.", self._storage, self.scope,
+                      self.scope.start_reprocess_time,
+                      self.scope.end_reprocess_time)
 
         LOG.debug("Executing the reprocessing of scope [%s] for "
                   "timeframe[start=%s, end=%s].", self.scope, timestamp,
