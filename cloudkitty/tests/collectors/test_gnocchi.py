@@ -211,7 +211,8 @@ class GnocchiCollectorAggregationOperationTest(tests.TestCase):
                     resource_type='resource_x',
                     search={'=': {'type': 'resource_x'}},
                     start=self.start, stop=self.end,
-                    granularity=3600
+                    granularity=3600,
+                    use_history=True
                 )
 
     def test_multiple_confs(self):
