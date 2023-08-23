@@ -116,7 +116,7 @@ function _cloudkitty_config_apache_wsgi {
         s|%APACHE_NAME%|$APACHE_NAME|g;
         s|%WSGIAPP%|$CLOUDKITTY_WSGI_DIR/app.wsgi|g;
         s|%USER%|$STACK_USER|g;
-        s|%VIRTUALENV%|$venv_path|g
+        s|%VIRTUALENV%|$DEVSTACK_VENV|g
     " -i $cloudkitty_apache_conf
 }
 

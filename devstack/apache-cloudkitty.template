@@ -1,7 +1,7 @@
 Listen %PORT%
 
 <VirtualHost *:%PORT%>
-    WSGIDaemonProcess cloudkitty-api processes=2 threads=10 user=%USER% display-name=%{GROUP} %VIRTUALENV%
+    WSGIDaemonProcess cloudkitty-api processes=2 threads=10 user=%USER% display-name=%{GROUP} python-home=%VIRTUALENV%
     WSGIProcessGroup cloudkitty-api
     WSGIScriptAlias / %WSGIAPP%
     WSGIApplicationGroup %{GLOBAL}
