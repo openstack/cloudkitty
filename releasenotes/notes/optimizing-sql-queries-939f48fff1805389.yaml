@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    Queries filtering on date fields are slow as they have to parse each row.
+    There are sometimes millions of rows to parse while only a few thousands
+    are necessary.
+    The following patch narrows data to process by filtering more on
+    frame_model.begin as a firtst step using a `BETWEEN` statement instead
+    of >=
+    The BETWEEN statement requires an indexes to be efficient which are
+    https://review.opendev.org/c/openstack/cloudkitty/+/865435/

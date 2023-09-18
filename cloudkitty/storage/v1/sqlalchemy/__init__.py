@@ -112,9 +112,10 @@ class SQLAlchemyStorage(storage.BaseStorage):
         if service:
             q = q.filter(
                 self.frame_model.res_type == service)
+        # begin and end filters are both needed, do not remove one of them.
         q = q.filter(
-            self.frame_model.begin >= begin,
-            self.frame_model.end <= end,
+            self.frame_model.begin.between(begin, end),
+            self.frame_model.end.between(begin, end),
             self.frame_model.res_type != '_NO_DATA_')
         if groupby:
             q = q.group_by(sqlalchemy.sql.text(groupby))
@@ -136,9 +137,10 @@ class SQLAlchemyStorage(storage.BaseStorage):
         q = utils.model_query(
             self.frame_model,
             session)
+        # begin and end filters are both needed, do not remove one of them.
         q = q.filter(
-            self.frame_model.begin >= begin,
-            self.frame_model.end <= end)
+            self.frame_model.begin.between(begin, end),
+            self.frame_model.end.between(begin, end))
         tenants = q.distinct().values(
             self.frame_model.tenant_id)
         return [tenant.tenant_id for tenant in tenants]
@@ -152,9 +154,10 @@ class SQLAlchemyStorage(storage.BaseStorage):
         q = utils.model_query(
             self.frame_model,
             session)
+        # begin and end filters are both needed, do not remove one of them.
         q = q.filter(
-            self.frame_model.begin >= begin,
-            self.frame_model.end <= end)
+            self.frame_model.begin.between(begin, end),
+            self.frame_model.end.between(begin, end))
         for filter_name, filter_value in filters.items():
             if filter_value:
                 q = q.filter(
