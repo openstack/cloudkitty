@@ -385,6 +385,7 @@ class GnocchiCollector(collector.BaseCollector):
             'resource_type': resource_type,
             'start': start,
             'stop': end,
+            'use_history': True,
             'groupby': self.conf[metric_name]['groupby'],
             'search': self.extend_filter(*query_parameters),
         }

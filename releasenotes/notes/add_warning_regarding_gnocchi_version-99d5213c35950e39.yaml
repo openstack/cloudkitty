@@ -1,0 +1,14 @@
+---
+fixes:
+  - |
+    CloudKitty will always use the correct metadata for the
+    processing and reprocessing jobs. This means, we always use
+    the metadata for the timestamp that we are collecting at
+    Gnocchi backend.This is achieved with the use of
+    ``use_history=true`` in Gnocchi, which was released under
+    `version 4.5.0 <https://github.com/gnocchixyz/gnocchi/releases/tag/4.5.0>`__.
+    Before that release, the ``aggregates`` API would only return
+    the latest metadata for the resource of the metric being handled.
+    Therefore, for CloudKitty processing and reprocessing, we would
+    always have the possibility of using the wrong attribute version
+    to rate the computing resources.
