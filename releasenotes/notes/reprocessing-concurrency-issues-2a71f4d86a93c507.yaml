@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fixed concurrency issues during reprocessing tasks.

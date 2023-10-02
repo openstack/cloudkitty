@@ -614,13 +614,17 @@ class CloudKittyProcessor(cotyledon.Service):
             lock_name, lock = get_lock(
                 self.coord, self.generate_lock_base_name(tenant_id))
 
-            LOG.debug('[Worker: {w}] Trying to acquire lock "{lock_name}".'
-                      .format(w=self._worker_id, lock_name=lock_name))
+            LOG.debug('[Worker: {w}] Trying to acquire lock "{lock_name}" for '
+                      'scope ID {scope_id}.'.format(w=self._worker_id,
+                                                    lock_name=lock_name,
+                                                    scope_id=tenant_id))
 
             lock_acquired = lock.acquire(blocking=False)
             if lock_acquired:
-                LOG.debug('[Worker: {w}] Acquired lock "{lock_name}".'.format(
-                    w=self._worker_id, lock_name=lock_name))
+                LOG.debug('[Worker: {w}] Acquired lock "{lock_name}" for '
+                          'scope ID {scope_id}.'.format(w=self._worker_id,
+                                                        lock_name=lock_name,
+                                                        scope_id=tenant_id))
 
                 try:
                     self.process_scope(tenant_id)
@@ -702,9 +706,10 @@ class CloudKittyReprocessor(CloudKittyProcessor):
                  self._worker_id, len(self.tenants))
 
     def generate_lock_base_name(self, scope):
-        return "%s-id=%s-start=%s-end=%s-current=%s" % (
-            self.worker_class, scope.identifier, scope.start_reprocess_time,
-            scope.end_reprocess_time, scope.current_reprocess_time)
+        return "%s-id=%s-start=%s-end=%s" % (self.worker_class,
+                                             scope.identifier,
+                                             scope.start_reprocess_time,
+                                             scope.end_reprocess_time)
 
 
 class CloudKittyServiceManager(cotyledon.ServiceManager):
