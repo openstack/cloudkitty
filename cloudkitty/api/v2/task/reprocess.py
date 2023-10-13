@@ -253,10 +253,14 @@ class ReprocessSchedulerGetApi(base.BaseResource):
         if not isinstance(scope_ids, list):
             scope_ids = [scope_ids]
 
+        # Some versions of python-cloudkittyclient can send the order in upper
+        # case, e.g. "DESC". Convert it to lower case for compatibility.
+        order = order.lower()
+
         if order not in ACCEPTED_GET_REPROCESSING_REQUEST_ORDERS:
             raise http_exceptions.BadRequest(
-                "The order [%s] is not valid. Accepted values are %s.",
-                order, ACCEPTED_GET_REPROCESSING_REQUEST_ORDERS)
+                "The order [%s] is not valid. Accepted values are %s." %
+                (order, ACCEPTED_GET_REPROCESSING_REQUEST_ORDERS))
 
         schedules = self.schedule_reprocessing_db.get_all(
             identifier=scope_ids, remove_finished=False,
