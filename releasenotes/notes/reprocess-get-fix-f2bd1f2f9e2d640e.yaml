@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fix retrieval of reprocessing tasks which was returning ``Internal Server
+    Error``.
