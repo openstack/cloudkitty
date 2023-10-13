@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fix patch scope API which was returning ``Internal Server Error``.

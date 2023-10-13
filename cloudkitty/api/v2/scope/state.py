@@ -225,7 +225,7 @@ class ScopeState(base.BaseResource):
             'scope_key': update_storage_scope.scope_key,
             'fetcher': update_storage_scope.fetcher,
             'collector': update_storage_scope.collector,
-            'state': update_storage_scope.state.isoformat(),
+            'state': update_storage_scope.last_processed_timestamp.isoformat(),
             'active': update_storage_scope.active,
             'scope_activation_toggle_date':
                 update_storage_scope.scope_activation_toggle_date.isoformat()
