@@ -1,6 +1,6 @@
 ---
 deprecations:
   - |
-    Support for using Monasca as a fetcher and collector is being deprecated
-    in the Antelope release. The complete removal is going to take place
-    in B release.
+    Support for using Monasca as a fetcher and collector is being deprecated in
+    the 2023.1 Antelope release. The complete removal is going to take place in
+    the 2024.1 Caracal release.
