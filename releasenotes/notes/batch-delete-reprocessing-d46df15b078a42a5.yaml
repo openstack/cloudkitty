@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Optimized the reprocessing workflow to execute batch cleaning
+    of data in the storage backend of CloudKitty.

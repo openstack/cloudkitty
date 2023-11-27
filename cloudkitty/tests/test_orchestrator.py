@@ -1034,15 +1034,16 @@ class ReprocessingWorkerTest(tests.TestCase):
             self, do_execute_scope_processing_mock_from_worker):
 
         now_timestamp = tzutils.localized_now()
+        self.reprocessing_worker.scope.start_reprocess_time = now_timestamp
         self.reprocessing_worker.do_execute_scope_processing(now_timestamp)
 
-        expected_end = tzutils.localized_now() + datetime.timedelta(
-            seconds=self.reprocessing_worker._period)
-
         self.storage_mock.delete.assert_has_calls([
-            mock.call(begin=now_timestamp, end=expected_end,
-                      filters={self.reprocessing_worker.scope_key:
-                               self.reprocessing_worker._tenant_id})])
+            mock.call(
+                begin=self.reprocessing_worker.scope.start_reprocess_time,
+                end=self.reprocessing_worker.scope.end_reprocess_time,
+                filters={
+                    self.reprocessing_worker.scope_key:
+                        self.reprocessing_worker._tenant_id})])
 
         do_execute_scope_processing_mock_from_worker.assert_has_calls([
             mock.call(now_timestamp)])
