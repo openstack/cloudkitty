@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixes accounting of quantity values when ``use_all_resource_revisions``
+    option is used in the Gnocchi collector.

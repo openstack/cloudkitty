@@ -541,25 +541,137 @@ class GnocchiCollector(collector.BaseCollector):
         Therefore, this option ('use_all_resource_revisions') allows operators
         to discard all datapoints returned from Gnocchi, but the last one in
         the granularity queried by CloudKitty. The default behavior is
-        maintained, which means, CloudKitty always use all of the data
-        points returned.
+        maintained, which means, CloudKitty always use all the data points
+        returned.
+
+        When the 'mutate' option is not used, we need to sum all the
+        quantities, and use this value with the latest version of the
+        attributes received. Otherwise, we will miss the complete accounting
+        for the time frame where the revision happened.
         """
 
-        use_all_resource_revisions = \
-            met['extra_args']['use_all_resource_revisions']
+        use_all_resource_revisions = met[
+            'extra_args']['use_all_resource_revisions']
+
         LOG.debug("Configuration use_all_resource_revisions set to [%s] for "
-                  "%s", use_all_resource_revisions, metric_name)
+                  "metric [%s]", use_all_resource_revisions, metric_name)
 
         if data and not use_all_resource_revisions:
-            data.sort(
-                key=lambda x: (x["group"]["id"], x["group"]["revision_start"]),
-                reverse=False)
+            if "id" not in data[0].get('group', {}).keys():
+                LOG.debug("There is no ID id in the groupby section and we "
+                          "are trying to use 'use_all_resource_revisions'. "
+                          "However, without an ID there is not much we can do "
+                          "to identify the revisions for a resource.")
+                return data
 
-            # We just care about the oldest entry per resource ID in the
-            # given time slice (configured granularity in Cloudkitty).
-            single_entries_per_id = {d["group"]["id"]: d for d in
-                                     data}.values()
+            original_data = copy.deepcopy(data)
+            # Here we order the data in a way to maintain the latest revision
+            # as the principal element to be used. We are assuming that there
+            # is a revision_start attribute, which denotes when the revision
+            # was created. If there is no revision start, we cannot do much.
+            data.sort(key=lambda x: (x["group"]["id"],
+                                     x["group"]["revision_start"]),
+                      reverse=False)
+
+            # We just care about the oldest entry per resource in the
+            # given time slice (configured granularity in Cloudkitty) regarding
+            # the attributes. For the quantity, we still want to use all the
+            # quantity elements summing up the value for all the revisions.
+            map_id_entry = {d["group"]['id']: d for d in data}
+            single_entries_per_id = list(map_id_entry.values())
+
+            GnocchiCollector.zero_quantity_values(single_entries_per_id)
+
+            for element in original_data:
+                LOG.debug("Processing entry [%s] for original data from "
+                          "Gnocchi to sum all of the revisions if needed for "
+                          "metric [%s].", element, metric_name)
+                group_entry = element.get('group')
+                if not group_entry:
+                    LOG.warning("No groupby section found for element [%s].",
+                                element)
+                    continue
+
+                entry_id = group_entry.get('id')
+                if not entry_id:
+                    LOG.warning("No ID attribute found for element [%s].",
+                                element)
+                    continue
+
+                first_measure = element.get('measures')
+                if first_measure:
+                    second_measure = first_measure.get('measures')
+                    if second_measure:
+                        aggregated_value = second_measure.get('aggregated', [])
+                        if len(aggregated_value) == 1:
+                            actual_aggregated_value = aggregated_value[0]
+
+                            if len(actual_aggregated_value) == 3:
+                                value_to_add = actual_aggregated_value[2]
+                                entry = map_id_entry[entry_id]
+                                old_value = list(
+                                    entry['measures']['measures'][
+                                        'aggregated'][0])
+
+                                new_value = copy.deepcopy(old_value)
+                                new_value[2] += value_to_add
+                                entry['measures']['measures'][
+                                    'aggregated'][0] = tuple(new_value)
+
+                                LOG.debug("Adding value [%s] to value [%s] "
+                                          "in entry [%s] for metric [%s].",
+                                          value_to_add, old_value, entry,
+                                          metric_name)
+
             LOG.debug("Replaced list of data points [%s] with [%s] for "
-                      "metric [%s]", data, single_entries_per_id, metric_name)
+                      "metric [%s]", original_data, single_entries_per_id,
+                      metric_name)
+
             data = single_entries_per_id
         return data
+
+    @staticmethod
+    def zero_quantity_values(single_entries_per_id):
+        """Cleans the quantity value of the entry for further processing."""
+        for single_entry in single_entries_per_id:
+            first_measure = single_entry.get('measures')
+            if first_measure:
+                second_measure = first_measure.get('measures')
+                if second_measure:
+                    aggregated_value = second_measure.get('aggregated', [])
+
+                    if len(aggregated_value) == 1:
+                        actual_aggregated_value = aggregated_value[0]
+
+                        # We need to convert the tuple to a list
+                        actual_aggregated_value = list(actual_aggregated_value)
+                        if len(actual_aggregated_value) == 3:
+                            LOG.debug("Zeroing aggregated value for single "
+                                      "entry [%s].", single_entry)
+                            # We are going to zero this elements, as we
+                            # will be summing all of them later.
+                            actual_aggregated_value[2] = 0
+
+                            # Convert back to tuple
+                            aggregated_value[0] = tuple(
+                                actual_aggregated_value)
+                        else:
+                            LOG.warning("We expect the actual aggregated "
+                                        "value to be a list of 3 elements."
+                                        " The first one is a timestamp, "
+                                        "the second the granularity, and "
+                                        "the last one the quantity "
+                                        "measured. But we got a different "
+                                        "structure: [%s]. for entry [%s].",
+                                        actual_aggregated_value,
+                                        single_entry)
+                    else:
+                        LOG.warning("Aggregated value return does not "
+                                    "have the expected size. Expected 1, "
+                                    "but got [%s].", len(aggregated_value))
+                else:
+                    LOG.debug('Second measure of the aggregates API for '
+                              'entry [%s] is empty.', single_entry)
+            else:
+                LOG.debug('First measure of the aggregates API for entry '
+                          '[%s] is empty.', single_entry)
