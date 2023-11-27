@@ -28,7 +28,6 @@ from cloudkitty import collector
 from cloudkitty.collector.exceptions import CollectError
 from cloudkitty.common.prometheus_client import PrometheusClient
 from cloudkitty.common.prometheus_client import PrometheusResponseError
-from cloudkitty import dataframe
 from cloudkitty import utils as ck_utils
 from cloudkitty.utils import tz as tzutils
 
@@ -243,12 +242,8 @@ class PrometheusCollector(collector.BaseCollector):
                 item,
             )
 
-            formatted_resources.append(dataframe.DataPoint(
-                self.conf[metric_name]['unit'],
-                qty,
-                0,
-                groupby,
-                metadata,
-            ))
+            point = self._create_data_point(self.conf[metric_name]['unit'],
+                                            qty, 0, groupby, metadata, start)
+            formatted_resources.append(point)
 
         return formatted_resources

@@ -16,9 +16,13 @@
 import abc
 import datetime
 
+from oslo_log import log as logging
+
 from oslo_config import cfg
 
 from cloudkitty import storage_state
+
+from werkzeug import exceptions as http_exceptions
 
 
 storage_opts = [
@@ -32,6 +36,8 @@ storage_opts = [
 
 CONF = cfg.CONF
 CONF.register_opts(storage_opts, 'storage')
+
+LOG = logging.getLogger(__name__)
 
 
 class BaseStorage(object, metaclass=abc.ABCMeta):
@@ -159,3 +165,35 @@ class BaseStorage(object, metaclass=abc.ABCMeta):
     # NOTE(lpeschke): This is only kept for v1 storage backward compatibility
     def get_tenants(self, begin=None, end=None):
         return storage_state.StateManager().get_tenants(begin, end)
+
+    TIME_COMMANDS_MAP = {"d": "day_of_the_year", "w": "week_of_the_year",
+                         "m": "month", "y": "year"}
+
+    def parse_groupby_syntax_to_groupby_elements(self, groupbys):
+        if not groupbys:
+            LOG.debug("No groupby to process syntax.")
+            return groupbys
+
+        groupbys_parsed = []
+        for elem in groupbys:
+            if 'time' in elem:
+                time_command = elem.split('-')
+                number_of_parts = len(time_command)
+                if number_of_parts == 2:
+                    g = self.TIME_COMMANDS_MAP.get(time_command[1])
+                    if not g:
+                        raise http_exceptions.BadRequest(
+                            "Invalid groupby time option. There is no "
+                            "groupby processing for [%s]." % elem)
+
+                    LOG.debug("Replacing API groupby time command [%s] with "
+                              "internal groupby command [%s].", elem, g)
+                    elem = g
+
+                elif number_of_parts > 2:
+                    LOG.warning("The groupby [%s] command is not expected for "
+                                "storage backend [%s]. Therefore, we leave it "
+                                "as is.", elem, self)
+
+            groupbys_parsed.append(elem)
+        return groupbys_parsed

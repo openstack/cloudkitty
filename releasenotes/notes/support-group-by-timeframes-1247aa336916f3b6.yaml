@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Introduce new default groupby options: (i) time: to group data hourly.
+    The actual group by process will depend on the ``period`` parameter. The
+    default value is ``3600``, which represents one hour; (ii) time-d: to
+    group data by day of the year; (iii) time-w: to group data by week of
+    the year; (iv) time-m: to group data by month; and, (v) time-y: to group
+    data by year. If you have old data in CloudKitty and you wish to use
+    these group by methods, you will need to reprocess the desired timeframe.

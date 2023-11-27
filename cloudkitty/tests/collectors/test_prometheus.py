@@ -256,14 +256,16 @@ class PrometheusCollectorTest(tests.TestCase):
 
     def test_format_retrieve(self):
         expected_name = 'http_requests_total'
+        group_by = {'bar': '', 'foo': '', 'project_id': '',
+                    'week_of_the_year': '00', 'day_of_the_year': '1',
+                    'month': '1', 'year': '2015'}
+
         expected_data = [
             dataframe.DataPoint(
-                'instance', '7', '0',
-                {'bar': '', 'foo': '', 'project_id': ''},
+                'instance', '7', '0', group_by,
                 {'code': '200', 'instance': 'localhost:9090'}),
             dataframe.DataPoint(
-                'instance', '42', '0',
-                {'bar': '', 'foo': '', 'project_id': ''},
+                'instance', '42', '0', group_by,
                 {'code': '200', 'instance': 'localhost:9090'}),
         ]
 

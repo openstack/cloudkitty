@@ -33,7 +33,6 @@ from voluptuous import Schema
 
 from cloudkitty import collector
 from cloudkitty.common import custom_session
-from cloudkitty import dataframe
 from cloudkitty import utils as ck_utils
 from cloudkitty.utils import tz as tzutils
 
@@ -518,13 +517,9 @@ class GnocchiCollector(collector.BaseCollector):
                             project_id, start, end, e),
                     )
                     continue
-                formated_resources.append(dataframe.DataPoint(
-                    met['unit'],
-                    qty,
-                    0,
-                    groupby,
-                    metadata,
-                ))
+                point = self._create_data_point(
+                    met['unit'], qty, 0, groupby, metadata, start)
+                formated_resources.append(point)
         return formated_resources
 
     @staticmethod

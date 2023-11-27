@@ -14,6 +14,7 @@
 #    under the License.
 #
 import abc
+import datetime
 import fractions
 
 from oslo_config import cfg
@@ -30,8 +31,8 @@ from voluptuous import Optional
 from voluptuous import Required
 from voluptuous import Schema
 
+from cloudkitty.dataframe import DataPoint
 from cloudkitty import utils as ck_utils
-
 
 LOG = logging.getLogger(__name__)
 
@@ -247,6 +248,30 @@ class BaseCollector(object, metaclass=abc.ABCMeta):
             raise NoDataCollected(self.collector_name, name)
 
         return name, data
+
+    def _create_data_point(self, unit, qty, price, groupby, metadata, start):
+        if not start:
+            start = datetime.datetime.now()
+            LOG.debug("Collector [%s]. No start datetime defined for "
+                      "datapoint[unit=%s, quantity=%s, price=%s, groupby=%s, "
+                      "metadata=%s]. Therefore, we use the current time as "
+                      "the start time for this datapoint.",
+                      self.collector_name, unit, qty, price, groupby, metadata)
+
+        week_of_the_year = start.strftime("%U")
+        day_of_the_year = start.strftime("%-j")
+        month_of_the_year = start.strftime("%-m")
+        year = start.strftime("%Y")
+
+        if groupby is None:
+            groupby = {}
+
+        groupby['week_of_the_year'] = week_of_the_year
+        groupby['day_of_the_year'] = day_of_the_year
+        groupby['month'] = month_of_the_year
+        groupby['year'] = year
+
+        return DataPoint(unit, qty, price, groupby, metadata)
 
 
 class InvalidConfiguration(Exception):

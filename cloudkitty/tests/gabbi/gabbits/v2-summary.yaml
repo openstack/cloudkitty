@@ -86,3 +86,32 @@ tests:
     response_json_paths:
       $.results.`len`: 2
       $.total: 2
+
+  - name: Get a summary grouped by time-w and project_id
+    url: /v2/summary
+    status: 200
+    query_parameters:
+      groupby: [time-w, project_id]
+    response_json_paths:
+      $.results.`len`: 4
+      $.total: 4
+
+  - name: Get a summary grouped by time-d
+    url: /v2/summary
+    status: 200
+    query_parameters:
+      groupby: [time-d]
+    response_json_paths:
+      $.results.`len`: 2
+      $.total: 2
+
+  - name: Get a summary grouped by time-y
+    url: /v2/summary
+    status: 200
+    query_parameters:
+      groupby: [time-y]
+    response_json_paths:
+      $.results.`len`: 3
+      $.total: 3
+
+

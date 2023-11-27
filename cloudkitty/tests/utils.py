@@ -39,9 +39,27 @@ def generate_v2_storage_data(min_length=10,
         for project_id in project_ids:
             data = [copy.deepcopy(sample)
                     for i in range(min_length + random.randint(1, 10))]
+
+            first_group = data[:round(len(data)/2)]
+            second_group = data[round(len(data)/2):]
+
+            for elem in first_group:
+                elem['groupby']['year'] = 2022
+                elem['groupby']['week_of_the_year'] = 1
+                elem['groupby']['day_of_the_year'] = 1
+                elem['groupby']['month'] = 10
+
+            for elem in second_group:
+                elem['groupby']['year'] = 2023
+                elem['groupby']['week_of_the_year'] = 2
+                elem['groupby']['day_of_the_year'] = 2
+                elem['groupby']['month'] = 12
+
+            data[0]['groupby']['year'] = 2021
             for elem in data:
                 elem['groupby']['id'] = uuidutils.generate_uuid()
                 elem['groupby']['project_id'] = project_id
+
             datapoints += [dataframe.DataPoint(
                 elem['vol']['unit'],
                 elem['vol']['qty'],

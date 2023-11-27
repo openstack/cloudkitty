@@ -16,8 +16,10 @@ import datetime
 from unittest import mock
 
 import testscenarios
+from werkzeug import exceptions as http_exceptions
 
 from cloudkitty import storage
+
 from cloudkitty.tests import samples
 from cloudkitty.tests.storage.v2 import es_utils
 from cloudkitty.tests.storage.v2 import influx_utils
@@ -339,6 +341,69 @@ class StorageUnitTest(TestCase):
                                for frame in frames['dataframes'])
 
         self.assertEqual(expected_length, retrieved_length)
+
+    def test_parse_groupby_syntax_to_groupby_elements_no_time_groupby(self):
+        groupby = ["something"]
+
+        out = self.storage.parse_groupby_syntax_to_groupby_elements(groupby)
+
+        self.assertEqual(groupby, out)
+
+    def test_parse_groupby_syntax_to_groupby_elements_time_groupby(self):
+        groupby = ["something", "time"]
+
+        out = self.storage.parse_groupby_syntax_to_groupby_elements(groupby)
+
+        self.assertEqual(groupby, out)
+
+    def test_parse_groupby_syntax_to_groupby_elements_odd_time(self):
+        groupby = ["something", "time-odd-time-element"]
+
+        with mock.patch.object(storage.v2.LOG, 'warning') as log_mock:
+            out = self.storage.parse_groupby_syntax_to_groupby_elements(
+                groupby)
+            log_mock.assert_has_calls([
+                mock.call("The groupby [%s] command is not expected for "
+                          "storage backend [%s]. Therefore, we leave it as "
+                          "is.", "time-odd-time-element", self.storage)])
+
+        self.assertEqual(groupby, out)
+
+    def test_parse_groupby_syntax_to_groupby_elements_wrong_time_frame(self):
+        groupby = ["something", "time-u"]
+
+        expected_message = r"400 Bad Request: Invalid groupby time option. " \
+                           r"There is no groupby processing for \[time-u\]."
+
+        self.assertRaisesRegex(
+            http_exceptions.BadRequest, expected_message,
+            self.storage.parse_groupby_syntax_to_groupby_elements,
+            groupby)
+
+    def test_parse_groupby_syntax_to_groupby_elements_all_time_options(self):
+        groupby = ["something", "time", "time-d", "time-w", "time-m", "time-y"]
+
+        expected_log_calls = []
+        for k, v in storage.v2.BaseStorage.TIME_COMMANDS_MAP.items():
+            expected_log_calls.append(
+                mock.call("Replacing API groupby time command [%s] with "
+                          "internal groupby command [%s].", "time-%s" % k, v))
+
+        with mock.patch.object(storage.v2.LOG, 'debug') as log_debug_mock:
+            out = self.storage.parse_groupby_syntax_to_groupby_elements(
+                groupby)
+            log_debug_mock.assert_has_calls(expected_log_calls)
+
+        self.assertEqual(["something", "time", "day_of_the_year",
+                          "week_of_the_year", "month", "year"], out)
+
+    def test_parse_groupby_syntax_to_groupby_elements_no_groupby(self):
+        with mock.patch.object(storage.v2.LOG, 'debug') as log_debug_mock:
+            out = self.storage.parse_groupby_syntax_to_groupby_elements(None)
+            log_debug_mock.assert_has_calls([
+                mock.call("No groupby to process syntax.")])
+
+            self.assertIsNone(out)
 
 
 StorageUnitTest.generate_scenarios()
