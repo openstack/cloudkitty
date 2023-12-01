@@ -95,6 +95,17 @@
         CLOUDKITTY_STORAGE_VERSION: 2
 
 - job:
+    name: cloudkitty-tempest-full-v2-storage-opensearch
+    parent: base-cloudkitty-v2-api-tempest-job
+    description: |
+      Job testing cloudkitty installation on devstack with python 3 and the
+      OpenSearch v2 storage driver and running tempest tests
+    vars:
+      devstack_localrc:
+        CLOUDKITTY_STORAGE_BACKEND: opensearch
+        CLOUDKITTY_STORAGE_VERSION: 2
+
+- job:
     name: cloudkitty-tox-bandit
     parent: openstack-tox
     timeout: 2400
@@ -129,6 +140,8 @@
       jobs:
         - cloudkitty-tempest-full-v2-storage-influxdb
         - cloudkitty-tempest-full-v2-storage-elasticsearch:
+            voting: false
+        - cloudkitty-tempest-full-v2-storage-opensearch:
             voting: false
         - cloudkitty-tempest-full-v1-storage-sqlalchemy
         - cloudkitty-tempest-full-ipv6-only
