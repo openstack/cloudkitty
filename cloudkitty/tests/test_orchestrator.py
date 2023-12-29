@@ -416,7 +416,8 @@ class WorkerTest(tests.TestCase):
         ])
         self.assertTrue(update_scope_processing_state_db_mock.called)
 
-    @mock.patch("cloudkitty.storage_state.StateManager.get_state")
+    @mock.patch("cloudkitty.storage_state.StateManager"
+                ".get_last_processed_timestamp")
     @mock.patch("cloudkitty.storage_state.StateManager"
                 ".is_storage_scope_active")
     @mock.patch("cloudkitty.orchestrator.Worker.do_execute_scope_processing")
@@ -438,7 +439,8 @@ class WorkerTest(tests.TestCase):
         self.assertFalse(do_execute_scope_processing_mock.called)
         self.assertTrue(next_timestamp_to_process_mock.called)
 
-    @mock.patch("cloudkitty.storage_state.StateManager.get_state")
+    @mock.patch("cloudkitty.storage_state.StateManager"
+                ".get_last_processed_timestamp")
     @mock.patch("cloudkitty.storage_state.StateManager"
                 ".is_storage_scope_active")
     @mock.patch("cloudkitty.orchestrator.Worker.do_execute_scope_processing")
@@ -468,7 +470,8 @@ class WorkerTest(tests.TestCase):
         self.assertFalse(state_manager_is_storage_scope_active_mock.called)
         self.assertTrue(next_timestamp_to_process_mock.called)
 
-    @mock.patch("cloudkitty.storage_state.StateManager.get_state")
+    @mock.patch("cloudkitty.storage_state.StateManager"
+                ".get_last_processed_timestamp")
     @mock.patch("cloudkitty.storage_state.StateManager"
                 ".is_storage_scope_active")
     @mock.patch("cloudkitty.orchestrator.Worker.do_execute_scope_processing")
@@ -503,7 +506,8 @@ class WorkerTest(tests.TestCase):
 
         self.assertTrue(next_timestamp_to_process_mock.called)
 
-    @mock.patch("cloudkitty.storage_state.StateManager.get_state")
+    @mock.patch("cloudkitty.storage_state.StateManager"
+                ".get_last_processed_timestamp")
     @mock.patch("cloudkitty.storage_state.StateManager"
                 ".is_storage_scope_active")
     @mock.patch("cloudkitty.orchestrator.Worker.do_execute_scope_processing")
@@ -588,7 +592,8 @@ class WorkerTest(tests.TestCase):
         state_mock = mock.Mock()
 
         timestamp_now = tzutils.localized_now()
-        state_mock._state.get_state.return_value = timestamp_now
+        state_mock._state.get_last_processed_timestamp.return_value = \
+            timestamp_now
 
         expected_time = timestamp_now + datetime.timedelta(hours=1)
         check_time_state_mock.return_value = \
@@ -599,7 +604,7 @@ class WorkerTest(tests.TestCase):
 
         self.assertEqual(expected_time, return_of_method)
 
-        state_mock._state.get_state.assert_has_calls([
+        state_mock._state.get_last_processed_timestamp.assert_has_calls([
             mock.call(self._tenant_id)])
         check_time_state_mock.assert_has_calls([
             mock.call(timestamp_now, 3600, 2)])

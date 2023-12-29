@@ -134,7 +134,7 @@ class WriteOrchestrator(object):
 
     def reset_state(self):
         self._load_state_manager_data()
-        self.usage_end = self._storage_state.get_state()
+        self.usage_end = self._storage_state.get_last_processed_timestamp()
         self._update_state_manager_data()
 
     def restart_month(self):
@@ -145,7 +145,8 @@ class WriteOrchestrator(object):
 
     def process(self):
         self._load_state_manager_data()
-        storage_state = self._storage_state.get_state(self._tenant_id)
+        storage_state = self._storage_state.get_last_processed_timestamp(
+            self._tenant_id)
         if not self.usage_start:
             self.usage_start = storage_state
             self.usage_end = self.usage_start + self._period
@@ -154,5 +155,6 @@ class WriteOrchestrator(object):
                 self._commit_data()
             self._update_state_manager_data()
             self._load_state_manager_data()
-            storage_state = self._storage_state.get_state(self._tenant_id)
+            storage_state = self._storage_state.get_last_processed_timestamp(
+                self._tenant_id)
         self.close()

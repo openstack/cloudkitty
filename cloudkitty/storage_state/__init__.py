@@ -228,14 +228,6 @@ class StateManager(object):
             session.add(state_object)
             session.commit()
 
-    def get_state(self, identifier,
-                  fetcher=None, collector=None, scope_key=None):
-        LOG.warning("The method 'get_state' is deprecated. "
-                    "Consider using the new method "
-                    "'get_last_processed_timestamp'.")
-        return self.get_last_processed_timestamp(
-            identifier, fetcher, collector, scope_key)
-
     def get_last_processed_timestamp(self, identifier, fetcher=None,
                                      collector=None, scope_key=None):
         """Get the last processed timestamp of a scope.
