@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The ``storage_state.get_state`` method has been removed in favor of the
+    ``storage_state.get_last_processed_timestamp`` method.
