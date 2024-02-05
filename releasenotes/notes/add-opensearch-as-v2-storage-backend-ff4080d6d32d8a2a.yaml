@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    OpenSearch has been added as an alternative v2 storage backend. It is a
+    duplicate of the ElasticSearch backend, with the naming changed where
+    appropriate. This change is in support of the deprecation of ElasticSearch
+    as a backend.

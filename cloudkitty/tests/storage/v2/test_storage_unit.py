@@ -21,6 +21,7 @@ from cloudkitty import storage
 from cloudkitty.tests import samples
 from cloudkitty.tests.storage.v2 import es_utils
 from cloudkitty.tests.storage.v2 import influx_utils
+from cloudkitty.tests.storage.v2 import opensearch_utils
 from cloudkitty.tests import TestCase
 from cloudkitty.tests import utils as test_utils
 from cloudkitty.utils import tz as tzutils
@@ -32,11 +33,16 @@ _ES_CLIENT_PATH = ('cloudkitty.storage.v2.elasticsearch'
 _INFLUX_CLIENT_PATH = 'cloudkitty.storage.v2.influx.InfluxClient'
 
 
+_OS_CLIENT_PATH = ('cloudkitty.storage.v2.opensearch'
+                   '.client.OpenSearchClient')
+
+
 class StorageUnitTest(TestCase):
 
     storage_scenarios = [
-        ('influx', dict(storage_backend='influxdb')),
-        ('elastic', dict(storage_backend='elasticsearch'))]
+        ('influxdb', dict(storage_backend='influxdb')),
+        ('elasticsearch', dict(storage_backend='elasticsearch')),
+        ('opensearch', dict(storage_backend='opensearch'))]
 
     @classmethod
     def generate_scenarios(cls):
@@ -48,6 +54,8 @@ class StorageUnitTest(TestCase):
                 new=es_utils.FakeElasticsearchClient)
     @mock.patch(_INFLUX_CLIENT_PATH,
                 new=influx_utils.FakeInfluxClient)
+    @mock.patch(_OS_CLIENT_PATH,
+                new=opensearch_utils.FakeOpenSearchClient)
     @mock.patch('cloudkitty.utils.load_conf', new=test_utils.load_conf)
     def setUp(self):
         super(StorageUnitTest, self).setUp()
