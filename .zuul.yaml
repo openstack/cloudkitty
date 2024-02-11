@@ -32,6 +32,38 @@
         TEMPEST_PLUGINS: /opt/stack/cloudkitty-tempest-plugin
 
 - job:
+    name: cloudkitty-grenade-job
+    parent: grenade
+    description: |
+      Grenade job to test release upgrades
+    required-projects:
+      - opendev.org/openstack/grenade
+      - opendev.org/openstack/cloudkitty
+      - opendev.org/openstack/cloudkitty-tempest-plugin
+      - opendev.org/openstack/python-cloudkittyclient
+    irrelevant-files: *base_irrelevant_files
+    vars:
+      devstack_plugins:
+        cloudkitty: https://opendev.org/openstack/cloudkitty.git
+        cloudkitty-tempest-plugin: https://opendev.org/openstack/cloudkitty-tempest-plugin.git
+      devstack_services:
+        ck-api: true
+        ck-proc: true
+      tempest_concurrency: 1
+      tempest_plugins:
+        - cloudkitty-tempest-plugin
+      tempest_test_regex: cloudkitty_tempest_plugin.*
+      tox_envlist: all
+      grenade_from_branch: master
+      grenade_devstack_localrc:
+        shared:
+          TARGET_BRANCH: master
+          BASE_DEVSTACK_BRANCH: master
+          CLOUDKITTY_USE_MOD_WSGI: false
+          CLOUDKITTY_FETCHER: keystone
+          USE_PYTHON3: True
+
+- job:
     name: base-cloudkitty-v1-api-tempest-job
     parent: base-cloudkitty-tempest-job
     description: |
@@ -161,9 +193,11 @@
         - cloudkitty-tempest-full-ipv6-only
         - cloudkitty-tox-bandit:
             voting: false
+        - cloudkitty-grenade-job
     gate:
       jobs:
         - cloudkitty-tempest-full-v2-storage-influxdb
         - cloudkitty-tempest-full-v2-storage-influxdb-v2
         - cloudkitty-tempest-full-v1-storage-sqlalchemy
         - cloudkitty-tempest-full-ipv6-only
+        - cloudkitty-grenade-job
