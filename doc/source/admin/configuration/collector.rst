@@ -10,7 +10,7 @@ Options common to all collectors are specified in the ``[collect]`` section of
 the configuration file. The following options are available:
 
 * ``collector``: Defaults to ``gnocchi``. The name of the collector to load.
-  Must be one of [``gnocchi``, ``monasca``, ``prometheus``].
+  Must be one of [``gnocchi``, ``prometheus``].
 
 * ``period``: Default to 3600. Duration (in seconds) of the collect period.
 
@@ -53,25 +53,6 @@ Section: ``collector_gnocchi``.
 * ``region_name``: Defaults to ``RegionOne``. For keystone authentication only.
   Region name.
 
-
-Monasca
--------
-
-Section: ``collector_monasca``.
-
-* ``interface``: Defaults to ``internal``. The interface to use for keystone
-  URL discovery.
-
-* ``monasca_service_name``: Defaults to ``monasca``. Name of the Monasca
-  service in Keystone.
-
-.. note:: By default, cloudkitty retrieves all metrics from Monasca in the
-          project it is identified in. However, some metrics may need to be
-          fetched from another tenant (for example if ceilometer is publishing
-          metrics to monasca in the ``service`` tenant but monasca-agent is
-          publishing metrics to the ``admin`` tenant). See the monasca-specific
-          section in "Metric collection" below for details on how to configure
-          this.
 
 Prometheus
 ----------
@@ -413,24 +394,6 @@ CloudKitty.
   RE_AGGREGATION_METHOD (metric METRIC_NAME AGGREGATION_METHOD)))) 2)``: this
   custom query would return ``0`` when the value of the series swap.
 
-Monasca
-~~~~~~~
-
-* ``resource_key``: Defaults to ``resource_id``. The attribute containing the
-  unique resource identifier. This is an advanced option, do not modify it
-  unless you know what you're doing.
-
-* ``aggregation_method``: Defaults to ``max``. The aggregation method to use
-  when retrieving measures from monasca. Must be one of ``min``, ``max``,
-  ``mean``.
-
-* ``forced_project_id``: Defaults to None. Force the given metric to be
-  fetched from a specific tenant instead of the one cloudkitty is identified
-  in. For example, if cloudkitty is identified in the ``service`` project, but
-  needs to fetch a metric from the ``admin`` project, its ID should be
-  specified through this option. If this option is set to ``SCOPE_ID``,
-  the metric will be fetched from the current project (this assumes that
-  scopes are configured to be projects/tenants).
 
 Prometheus
 ~~~~~~~~~~

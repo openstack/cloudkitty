@@ -30,7 +30,7 @@ What can be done with CloudKitty ? What can't ?
 
 **With Cloudkitty, it is possible to:**
 
-- Collect metrics from OpenStack (through Gnocchi and Monasca) or from
+- Collect metrics from OpenStack (through Gnocchi) or from
   somewhere else (through Gnocchi in standalone mode and Prometheus). Metric
   collection is **highly customizable**.
 
