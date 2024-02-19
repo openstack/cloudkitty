@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Add support to Influx v2 database as storage backend.

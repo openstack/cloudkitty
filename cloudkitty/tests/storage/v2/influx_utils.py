@@ -90,7 +90,7 @@ class FakeInfluxClient(InfluxClient):
         return target_serie
 
     def get_total(self, types, begin, end, custom_fields, groupby=None,
-                  filters=None):
+                  filters=None, limit=None):
         total = copy.deepcopy(self.total_sample)
         series = []
 

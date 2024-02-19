@@ -76,12 +76,25 @@
     name: cloudkitty-tempest-full-v2-storage-influxdb
     parent: base-cloudkitty-v2-api-tempest-job
     description: |
-      Job testing cloudkitty installation on devstack with python 3 and the
-      InfluxDB v2 storage driver and running tempest tests
+      Job testing cloudkitty installation on devstack with python 3, InfluxDB
+      v1 and the InfluxDB v2 storage driver and running tempest tests
     vars:
       devstack_localrc:
         CLOUDKITTY_STORAGE_BACKEND: influxdb
         CLOUDKITTY_STORAGE_VERSION: 2
+        CLOUDKITTY_INFLUX_VERSION: 1
+
+- job:
+    name: cloudkitty-tempest-full-v2-storage-influxdb-v2
+    parent: base-cloudkitty-v2-api-tempest-job
+    description: |
+      Job testing cloudkitty installation on devstack with python 3, InfluxDB
+      v2 and the InfluxDB v2 storage driver and running tempest tests
+    vars:
+      devstack_localrc:
+        CLOUDKITTY_STORAGE_BACKEND: influxdb
+        CLOUDKITTY_STORAGE_VERSION: 2
+        CLOUDKITTY_INFLUX_VERSION: 2
 
 - job:
     name: cloudkitty-tempest-full-v2-storage-elasticsearch
@@ -139,6 +152,7 @@
     check:
       jobs:
         - cloudkitty-tempest-full-v2-storage-influxdb
+        - cloudkitty-tempest-full-v2-storage-influxdb-v2
         - cloudkitty-tempest-full-v2-storage-elasticsearch:
             voting: false
         - cloudkitty-tempest-full-v2-storage-opensearch:
@@ -150,5 +164,6 @@
     gate:
       jobs:
         - cloudkitty-tempest-full-v2-storage-influxdb
+        - cloudkitty-tempest-full-v2-storage-influxdb-v2
         - cloudkitty-tempest-full-v1-storage-sqlalchemy
         - cloudkitty-tempest-full-ipv6-only
