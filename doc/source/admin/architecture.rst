@@ -73,9 +73,6 @@ Five fetchers are available in CloudKitty:
   discover new projects from Gnocchi when it is used with OpenStack. It can be
   used in an OpenStack context or with a standalone Gnocchi deployment.
 
-* The ``monasca`` fetcher retrieves from `Monasca`_ all values from a
-  configurable metric dimension (``project_id`` by default).
-
 * The ``prometheus`` fetcher works in a similar way to the Gnocchi fetcher,
   which allows to discover scopes from `Prometheus`_.
 
@@ -95,9 +92,6 @@ There are three collectors available in CloudKitty:
 * The ``gnocchi`` collector retrieves data from `Gnocchi`_. It can be used in
   an OpenStack context or with a standalone Gnocchi deployment.
 
-* The ``monasca`` collector retrieves data from `Monasca`_. Keystone
-  authentication is required for this collector.
-
 * The ``prometheus`` collector retrieves data from `Prometheus`_.
 
 Details about the configuration of each collector are available in the
@@ -109,7 +103,6 @@ the `developer documentation`_.
 .. _developer documentation: ../developer/collector.html
 .. _collector configuration guide: configuration/collector.html
 .. _Gnocchi: https://gnocchi.xyz/
-.. _Monasca: https://docs.openstack.org/monasca-api/latest/
 .. _Prometheus: https://prometheus.io/docs/introduction/overview/
 
 Rating

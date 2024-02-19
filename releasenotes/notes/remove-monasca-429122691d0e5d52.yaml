@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The Monasca collector and fetcher are removed due to the unmaintained
+    state of Monasca.
