@@ -279,7 +279,7 @@ function init_cloudkitty {
     create_opensearch_index
 
     # Migrate cloudkitty database
-    $CLOUDKITTY_BIN_DIR/cloudkitty-dbsync upgrade
+    upgrade_cloudkitty_database
 
     # Init the storage backend
     if [ $CLOUDKITTY_STORAGE_BACKEND == 'hybrid' ]; then
@@ -381,7 +381,7 @@ function install_cloudkitty {
 function start_cloudkitty {
     run_process ck-proc "$CLOUDKITTY_BIN_DIR/cloudkitty-processor --config-file=$CLOUDKITTY_CONF"
     if [[ "$CLOUDKITTY_USE_MOD_WSGI" == "False" ]]; then
-        run_process ck-api "$CLOUDKITTY_BIN_DIR/cloudkitty-api --config-file=$CLOUDKITTY_CONF"
+        run_process ck-api "$CLOUDKITTY_BIN_DIR/cloudkitty-api --host $CLOUDKITTY_SERVICE_HOST --port $CLOUDKITTY_SERVICE_PORT"
     elif is_service_enabled ck-api; then
         enable_apache_site cloudkitty
         echo_summary "Waiting 15s for cloudkitty-processor to authenticate against keystone before apache is restarted."
@@ -441,6 +441,11 @@ function update_horizon_static {
     DJANGO_SETTINGS_MODULE=openstack_dashboard.settings \
         $django_admin compress --force
     restart_apache_server
+}
+
+# Upgrade cloudkitty database
+function upgrade_cloudkitty_database {
+    $CLOUDKITTY_BIN_DIR/cloudkitty-dbsync upgrade
 }
 
 # configure_cloudkitty_dashboard() - Set config files, create data dirs, etc
