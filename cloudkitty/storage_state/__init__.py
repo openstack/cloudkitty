@@ -85,28 +85,26 @@ class StateManager(object):
         :param offset: optional to shift the projection
         :type offset: int
         """
-        session = db.get_session()
-        session.begin()
+        with db.session_for_read() as session:
 
-        q = utils.model_query(self.model, session)
-        if identifier:
-            q = q.filter(
-                self.model.identifier.in_(to_list_if_needed(identifier)))
-        if fetcher:
-            q = q.filter(
-                self.model.fetcher.in_(to_list_if_needed(fetcher)))
-        if collector:
-            q = q.filter(
-                self.model.collector.in_(to_list_if_needed(collector)))
-        if scope_key:
-            q = q.filter(
-                self.model.scope_key.in_(to_list_if_needed(scope_key)))
-        if active is not None and active != []:
-            q = q.filter(self.model.active.in_(to_list_if_needed(active)))
-        q = apply_offset_and_limit(limit, offset, q)
+            q = utils.model_query(self.model, session)
+            if identifier:
+                q = q.filter(
+                    self.model.identifier.in_(to_list_if_needed(identifier)))
+            if fetcher:
+                q = q.filter(
+                    self.model.fetcher.in_(to_list_if_needed(fetcher)))
+            if collector:
+                q = q.filter(
+                    self.model.collector.in_(to_list_if_needed(collector)))
+            if scope_key:
+                q = q.filter(
+                    self.model.scope_key.in_(to_list_if_needed(scope_key)))
+            if active is not None and active != []:
+                q = q.filter(self.model.active.in_(to_list_if_needed(active)))
+            q = apply_offset_and_limit(limit, offset, q)
 
-        r = q.all()
-        session.close()
+            r = q.all()
 
         for item in r:
             item.last_processed_timestamp = tzutils.utc_to_local(
@@ -183,20 +181,18 @@ class StateManager(object):
         """
         last_processed_timestamp = tzutils.local_to_utc(
             last_processed_timestamp, naive=True)
-        session = db.get_session()
-        session.begin()
-        r = self._get_db_item(
-            session, identifier, fetcher, collector, scope_key)
+        with db.session_for_write() as session:
+            r = self._get_db_item(
+                session, identifier, fetcher, collector, scope_key)
 
-        if r:
-            if r.last_processed_timestamp != last_processed_timestamp:
-                r.last_processed_timestamp = last_processed_timestamp
-                session.commit()
-        else:
-            self.create_scope(identifier, last_processed_timestamp,
-                              fetcher=fetcher, collector=collector,
-                              scope_key=scope_key)
-        session.close()
+            if r:
+                if r.last_processed_timestamp != last_processed_timestamp:
+                    r.last_processed_timestamp = last_processed_timestamp
+                    session.commit()
+            else:
+                self.create_scope(identifier, last_processed_timestamp,
+                                  fetcher=fetcher, collector=collector,
+                                  scope_key=scope_key)
 
     def create_scope(self, identifier, last_processed_timestamp, fetcher=None,
                      collector=None, scope_key=None, active=True,
@@ -219,25 +215,18 @@ class StateManager(object):
         :type session: object
         """
 
-        is_session_reused = True
-        if not session:
-            session = db.get_session()
-            session.begin()
-            is_session_reused = False
+        with db.session_for_write() as session:
 
-        state_object = self.model(
-            identifier=identifier,
-            last_processed_timestamp=last_processed_timestamp,
-            fetcher=fetcher,
-            collector=collector,
-            scope_key=scope_key,
-            active=active
-        )
-        session.add(state_object)
-        session.commit()
-
-        if not is_session_reused:
-            session.close()
+            state_object = self.model(
+                identifier=identifier,
+                last_processed_timestamp=last_processed_timestamp,
+                fetcher=fetcher,
+                collector=collector,
+                scope_key=scope_key,
+                active=active
+            )
+            session.add(state_object)
+            session.commit()
 
     def get_state(self, identifier,
                   fetcher=None, collector=None, scope_key=None):
@@ -261,11 +250,9 @@ class StateManager(object):
         :type scope_key: str
         :rtype: datetime.datetime
         """
-        session = db.get_session()
-        session.begin()
-        r = self._get_db_item(
-            session, identifier, fetcher, collector, scope_key)
-        session.close()
+        with db.session_for_read() as session:
+            r = self._get_db_item(
+                session, identifier, fetcher, collector, scope_key)
         return tzutils.utc_to_local(r.last_processed_timestamp) if r else None
 
     def init(self):
@@ -274,10 +261,8 @@ class StateManager(object):
     # This is made in order to stay compatible with legacy behavior but
     # shouldn't be used
     def get_tenants(self, begin=None, end=None):
-        session = db.get_session()
-        session.begin()
-        q = utils.model_query(self.model, session)
-        session.close()
+        with db.session_for_read() as session:
+            q = utils.model_query(self.model, session)
         return [tenant.identifier for tenant in q]
 
     def update_storage_scope(self, storage_scope_to_update, scope_key=None,
@@ -295,30 +280,28 @@ class StateManager(object):
         :param active: indicates if the storage scope is active for processing
         :type active: bool
         """
-        session = db.get_session()
-        session.begin()
+        with db.session_for_write() as session:
 
-        db_scope = self._get_db_item(session,
-                                     storage_scope_to_update.identifier,
-                                     storage_scope_to_update.fetcher,
-                                     storage_scope_to_update.collector,
-                                     storage_scope_to_update.scope_key)
+            db_scope = self._get_db_item(session,
+                                         storage_scope_to_update.identifier,
+                                         storage_scope_to_update.fetcher,
+                                         storage_scope_to_update.collector,
+                                         storage_scope_to_update.scope_key)
 
-        if scope_key:
-            db_scope.scope_key = scope_key
-        if fetcher:
-            db_scope.fetcher = fetcher
-        if collector:
-            db_scope.collector = collector
-        if active is not None and active != db_scope.active:
-            db_scope.active = active
+            if scope_key:
+                db_scope.scope_key = scope_key
+            if fetcher:
+                db_scope.fetcher = fetcher
+            if collector:
+                db_scope.collector = collector
+            if active is not None and active != db_scope.active:
+                db_scope.active = active
 
-            now = tzutils.localized_now()
-            db_scope.scope_activation_toggle_date = tzutils.local_to_utc(
-                now, naive=True)
+                now = tzutils.localized_now()
+                db_scope.scope_activation_toggle_date = tzutils.local_to_utc(
+                    now, naive=True)
 
-        session.commit()
-        session.close()
+            session.commit()
 
     def is_storage_scope_active(self, identifier, fetcher=None,
                                 collector=None, scope_key=None):
@@ -334,11 +317,9 @@ class StateManager(object):
         :type scope_key: str
         :rtype: datetime.datetime
         """
-        session = db.get_session()
-        session.begin()
-        r = self._get_db_item(
-            session, identifier, fetcher, collector, scope_key)
-        session.close()
+        with db.session_for_read() as session:
+            r = self._get_db_item(
+                session, identifier, fetcher, collector, scope_key)
 
         return r.active
 
@@ -365,23 +346,21 @@ class ReprocessingSchedulerDb(object):
                       projection. The ordering field will be the `id`.
         :type order: str
         """
-        session = db.get_session()
-        session.begin()
+        with db.session_for_read() as session:
 
-        query = utils.model_query(self.model, session)
+            query = utils.model_query(self.model, session)
 
-        if identifier:
-            query = query.filter(self.model.identifier.in_(identifier))
-        if remove_finished:
-            query = self.remove_finished_processing_schedules(query)
-        if order:
-            query = query.order_by(sql.text("id %s" % order))
+            if identifier:
+                query = query.filter(self.model.identifier.in_(identifier))
+            if remove_finished:
+                query = self.remove_finished_processing_schedules(query)
+            if order:
+                query = query.order_by(sql.text("id %s" % order))
 
-        query = apply_offset_and_limit(limit, offset, query)
+            query = apply_offset_and_limit(limit, offset, query)
 
-        result_set = query.all()
+            result_set = query.all()
 
-        session.close()
         return result_set
 
     def remove_finished_processing_schedules(self, query):
@@ -398,13 +377,10 @@ class ReprocessingSchedulerDb(object):
         :type reprocessing_scheduler: models.ReprocessingScheduler
         """
 
-        session = db.get_session()
-        session.begin()
+        with db.session_for_write() as session:
 
-        session.add(reprocessing_scheduler)
-        session.commit()
-
-        session.close()
+            session.add(reprocessing_scheduler)
+            session.commit()
 
     def get_from_db(self, identifier=None, start_reprocess_time=None,
                     end_reprocess_time=None):
@@ -419,12 +395,10 @@ class ReprocessingSchedulerDb(object):
                                      reprocessing schedule
         :type end_reprocess_time: datetime.datetime
         """
-        session = db.get_session()
-        session.begin()
+        with db.session_for_read() as session:
 
-        result_set = self._get_db_item(
-            end_reprocess_time, identifier, session, start_reprocess_time)
-        session.close()
+            result_set = self._get_db_item(
+                end_reprocess_time, identifier, session, start_reprocess_time)
 
         return result_set
 
@@ -459,22 +433,21 @@ class ReprocessingSchedulerDb(object):
         :type new_current_time_stamp: datetime.datetime
         """
 
-        session = db.get_session()
-        session.begin()
+        with db.session_for_write() as session:
 
-        result_set = self._get_db_item(
-            end_reprocess_time, identifier, session, start_reprocess_time)
+            result_set = self._get_db_item(
+                end_reprocess_time, identifier, session, start_reprocess_time)
 
-        if not result_set:
-            LOG.warning("Trying to update current time to [%s] for identifier "
-                        "[%s] and reprocessing range [start=%, end=%s], but "
-                        "we could not find a this task in the database.",
-                        new_current_time_stamp, identifier,
-                        start_reprocess_time, end_reprocess_time)
-            return
-        new_current_time_stamp = tzutils.local_to_utc(
-            new_current_time_stamp, naive=True)
+            if not result_set:
+                LOG.warning("Trying to update current time to [%s] for "
+                            "identifier [%s] and reprocessing range [start=%, "
+                            "end=%s], but we could not find a this task in the"
+                            " database.",
+                            new_current_time_stamp, identifier,
+                            start_reprocess_time, end_reprocess_time)
+                return
+            new_current_time_stamp = tzutils.local_to_utc(
+                new_current_time_stamp, naive=True)
 
-        result_set.current_reprocess_time = new_current_time_stamp
-        session.commit()
-        session.close()
+            result_set.current_reprocess_time = new_current_time_stamp
+            session.commit()

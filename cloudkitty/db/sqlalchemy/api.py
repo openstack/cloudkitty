@@ -30,16 +30,15 @@ def get_backend():
 class State(api.State):
 
     def get_state(self, name):
-        session = db.get_session()
-        q = utils.model_query(
-            models.StateInfo,
-            session)
-        q = q.filter(models.StateInfo.name == name)
-        return q.value(models.StateInfo.state)
+        with db.session_for_read() as session:
+            q = utils.model_query(
+                models.StateInfo,
+                session)
+            q = q.filter(models.StateInfo.name == name)
+            return q.value(models.StateInfo.state)
 
     def set_state(self, name, state):
-        session = db.get_session()
-        with session.begin():
+        with db.session_for_write() as session:
             try:
                 q = utils.model_query(
                     models.StateInfo,
@@ -55,16 +54,15 @@ class State(api.State):
         return db_state.state
 
     def get_metadata(self, name):
-        session = db.get_session()
-        q = utils.model_query(
-            models.StateInfo,
-            session)
-        q.filter(models.StateInfo.name == name)
-        return q.value(models.StateInfo.s_metadata)
+        with db.session_for_read() as session:
+            q = utils.model_query(
+                models.StateInfo,
+                session)
+            q.filter(models.StateInfo.name == name)
+            return q.value(models.StateInfo.s_metadata)
 
     def set_metadata(self, name, metadata):
-        session = db.get_session()
-        with session.begin():
+        with db.session_for_write() as session:
             try:
                 q = utils.model_query(
                     models.StateInfo,
@@ -83,20 +81,19 @@ class ModuleInfo(api.ModuleInfo):
     """Base class for module info management."""
 
     def get_priority(self, name):
-        session = db.get_session()
-        q = utils.model_query(
-            models.ModuleStateInfo,
-            session)
-        q = q.filter(models.ModuleStateInfo.name == name)
-        res = q.value(models.ModuleStateInfo.priority)
-        if res:
-            return int(res)
-        else:
-            return 1
+        with db.session_for_read() as session:
+            q = utils.model_query(
+                models.ModuleStateInfo,
+                session)
+            q = q.filter(models.ModuleStateInfo.name == name)
+            res = q.value(models.ModuleStateInfo.priority)
+            if res:
+                return int(res)
+            else:
+                return 1
 
     def set_priority(self, name, priority):
-        session = db.get_session()
-        with session.begin():
+        with db.session_for_write() as session:
             try:
                 q = utils.model_query(
                     models.ModuleStateInfo,
@@ -113,20 +110,19 @@ class ModuleInfo(api.ModuleInfo):
         return int(db_state.priority)
 
     def get_state(self, name):
-        session = db.get_session()
-        try:
-            q = utils.model_query(
-                models.ModuleStateInfo,
-                session)
-            q = q.filter(models.ModuleStateInfo.name == name)
-            res = q.value(models.ModuleStateInfo.state)
-            return bool(res)
-        except sqlalchemy.orm.exc.NoResultFound:
-            return None
+        with db.session_for_read() as session:
+            try:
+                q = utils.model_query(
+                    models.ModuleStateInfo,
+                    session)
+                q = q.filter(models.ModuleStateInfo.name == name)
+                res = q.value(models.ModuleStateInfo.state)
+                return bool(res)
+            except sqlalchemy.orm.exc.NoResultFound:
+                return None
 
     def set_state(self, name, state):
-        session = db.get_session()
-        with session.begin():
+        with db.session_for_write() as session:
             try:
                 q = utils.model_query(
                     models.ModuleStateInfo,
@@ -145,20 +141,19 @@ class ServiceToCollectorMapping(object):
     """Base class for service to collector mapping."""
 
     def get_mapping(self, service):
-        session = db.get_session()
-        try:
-            q = utils.model_query(
-                models.ServiceToCollectorMapping,
-                session)
-            q = q.filter(
-                models.ServiceToCollectorMapping.service == service)
-            return q.one()
-        except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchMapping(service)
+        with db.session_for_read() as session:
+            try:
+                q = utils.model_query(
+                    models.ServiceToCollectorMapping,
+                    session)
+                q = q.filter(
+                    models.ServiceToCollectorMapping.service == service)
+                return q.one()
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.NoSuchMapping(service)
 
     def set_mapping(self, service, collector):
-        session = db.get_session()
-        with session.begin():
+        with db.session_for_write() as session:
             try:
                 q = utils.model_query(
                     models.ServiceToCollectorMapping,
@@ -176,37 +171,37 @@ class ServiceToCollectorMapping(object):
         return db_mapping
 
     def list_services(self, collector=None):
-        session = db.get_session()
-        q = utils.model_query(
-            models.ServiceToCollectorMapping,
-            session)
-        if collector:
-            q = q.filter(
-                models.ServiceToCollectorMapping.collector == collector)
-        res = q.distinct().values(
-            models.ServiceToCollectorMapping.service)
-        return res
+        with db.session_for_read() as session:
+            q = utils.model_query(
+                models.ServiceToCollectorMapping,
+                session)
+            if collector:
+                q = q.filter(
+                    models.ServiceToCollectorMapping.collector == collector)
+            res = q.distinct().values(
+                models.ServiceToCollectorMapping.service)
+            return res
 
     def list_mappings(self, collector=None):
-        session = db.get_session()
-        q = utils.model_query(
-            models.ServiceToCollectorMapping,
-            session)
-        if collector:
-            q = q.filter(
-                models.ServiceToCollectorMapping.collector == collector)
-        res = q.all()
-        return res
+        with db.session_for_read() as session:
+            q = utils.model_query(
+                models.ServiceToCollectorMapping,
+                session)
+            if collector:
+                q = q.filter(
+                    models.ServiceToCollectorMapping.collector == collector)
+            res = q.all()
+            return res
 
     def delete_mapping(self, service):
-        session = db.get_session()
-        q = utils.model_query(
-            models.ServiceToCollectorMapping,
-            session)
-        q = q.filter(models.ServiceToCollectorMapping.service == service)
-        r = q.delete()
-        if not r:
-            raise api.NoSuchMapping(service)
+        with db.session_for_write() as session:
+            q = utils.model_query(
+                models.ServiceToCollectorMapping,
+                session)
+            q = q.filter(models.ServiceToCollectorMapping.service == service)
+            r = q.delete()
+            if not r:
+                raise api.NoSuchMapping(service)
 
 
 class DBAPIManager(object):

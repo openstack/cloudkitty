@@ -34,131 +34,131 @@ class HashMap(api.HashMap):
         return migration
 
     def get_service(self, name=None, uuid=None):
-        session = db.get_session()
-        try:
-            q = session.query(models.HashMapService)
-            if name:
-                q = q.filter(
-                    models.HashMapService.name == name)
-            elif uuid:
-                q = q.filter(
-                    models.HashMapService.service_id == uuid)
-            else:
-                raise api.ClientHashMapError(
-                    'You must specify either name or uuid.')
-            res = q.one()
-            return res
-        except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchService(name=name, uuid=uuid)
+        with db.session_for_read() as session:
+            try:
+                q = session.query(models.HashMapService)
+                if name:
+                    q = q.filter(
+                        models.HashMapService.name == name)
+                elif uuid:
+                    q = q.filter(
+                        models.HashMapService.service_id == uuid)
+                else:
+                    raise api.ClientHashMapError(
+                        'You must specify either name or uuid.')
+                res = q.one()
+                return res
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.NoSuchService(name=name, uuid=uuid)
 
     def get_field(self, uuid=None, service_uuid=None, name=None):
-        session = db.get_session()
-        try:
-            q = session.query(models.HashMapField)
-            if uuid:
-                q = q.filter(
-                    models.HashMapField.field_id == uuid)
-            elif service_uuid and name:
-                q = q.join(
-                    models.HashMapField.service)
-                q = q.filter(
-                    models.HashMapService.service_id == service_uuid,
-                    models.HashMapField.name == name)
-            else:
-                raise api.ClientHashMapError(
-                    'You must specify either a uuid'
-                    ' or a service_uuid and a name.')
-            res = q.one()
-            return res
-        except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchField(uuid)
+        with db.session_for_read() as session:
+            try:
+                q = session.query(models.HashMapField)
+                if uuid:
+                    q = q.filter(
+                        models.HashMapField.field_id == uuid)
+                elif service_uuid and name:
+                    q = q.join(
+                        models.HashMapField.service)
+                    q = q.filter(
+                        models.HashMapService.service_id == service_uuid,
+                        models.HashMapField.name == name)
+                else:
+                    raise api.ClientHashMapError(
+                        'You must specify either a uuid'
+                        ' or a service_uuid and a name.')
+                res = q.one()
+                return res
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.NoSuchField(uuid)
 
     def get_group(self, uuid=None, name=None):
-        session = db.get_session()
-        try:
-            q = session.query(models.HashMapGroup)
-            if uuid:
-                q = q.filter(
-                    models.HashMapGroup.group_id == uuid)
-            if name:
-                q = q.filter(
-                    models.HashMapGroup.name == name)
-            res = q.one()
-            return res
-        except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchGroup(name, uuid)
+        with db.session_for_read() as session:
+            try:
+                q = session.query(models.HashMapGroup)
+                if uuid:
+                    q = q.filter(
+                        models.HashMapGroup.group_id == uuid)
+                if name:
+                    q = q.filter(
+                        models.HashMapGroup.name == name)
+                res = q.one()
+                return res
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.NoSuchGroup(name, uuid)
 
     def get_mapping(self, uuid):
-        session = db.get_session()
-        try:
-            q = session.query(models.HashMapMapping)
-            q = q.filter(
-                models.HashMapMapping.mapping_id == uuid)
-            res = q.one()
-            return res
-        except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchMapping(uuid)
+        with db.session_for_read() as session:
+            try:
+                q = session.query(models.HashMapMapping)
+                q = q.filter(
+                    models.HashMapMapping.mapping_id == uuid)
+                res = q.one()
+                return res
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.NoSuchMapping(uuid)
 
     def get_threshold(self, uuid):
-        session = db.get_session()
-        try:
-            q = session.query(models.HashMapThreshold)
-            q = q.filter(
-                models.HashMapThreshold.threshold_id == uuid)
-            res = q.one()
-            return res
-        except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchThreshold(uuid)
+        with db.session_for_read() as session:
+            try:
+                q = session.query(models.HashMapThreshold)
+                q = q.filter(
+                    models.HashMapThreshold.threshold_id == uuid)
+                res = q.one()
+                return res
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.NoSuchThreshold(uuid)
 
     def get_group_from_mapping(self, uuid):
-        session = db.get_session()
-        try:
-            q = session.query(models.HashMapGroup)
-            q = q.join(
-                models.HashMapGroup.mappings)
-            q = q.filter(
-                models.HashMapMapping.mapping_id == uuid)
-            res = q.one()
-            return res
-        except sqlalchemy.orm.exc.NoResultFound:
-            raise api.MappingHasNoGroup(uuid=uuid)
+        with db.session_for_read() as session:
+            try:
+                q = session.query(models.HashMapGroup)
+                q = q.join(
+                    models.HashMapGroup.mappings)
+                q = q.filter(
+                    models.HashMapMapping.mapping_id == uuid)
+                res = q.one()
+                return res
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.MappingHasNoGroup(uuid=uuid)
 
     def get_group_from_threshold(self, uuid):
-        session = db.get_session()
-        try:
-            q = session.query(models.HashMapGroup)
-            q = q.join(
-                models.HashMapGroup.thresholds)
-            q = q.filter(
-                models.HashMapThreshold.threshold_id == uuid)
-            res = q.one()
-            return res
-        except sqlalchemy.orm.exc.NoResultFound:
-            raise api.ThresholdHasNoGroup(uuid=uuid)
+        with db.session_for_read() as session:
+            try:
+                q = session.query(models.HashMapGroup)
+                q = q.join(
+                    models.HashMapGroup.thresholds)
+                q = q.filter(
+                    models.HashMapThreshold.threshold_id == uuid)
+                res = q.one()
+                return res
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.ThresholdHasNoGroup(uuid=uuid)
 
     def list_services(self):
-        session = db.get_session()
-        q = session.query(models.HashMapService)
-        res = q.values(
-            models.HashMapService.service_id)
-        return [uuid[0] for uuid in res]
+        with db.session_for_read() as session:
+            q = session.query(models.HashMapService)
+            res = q.values(
+                models.HashMapService.service_id)
+            return [uuid[0] for uuid in res]
 
     def list_fields(self, service_uuid):
-        session = db.get_session()
-        q = session.query(models.HashMapField)
-        q = q.join(
-            models.HashMapField.service)
-        q = q.filter(
-            models.HashMapService.service_id == service_uuid)
-        res = q.values(models.HashMapField.field_id)
-        return [uuid[0] for uuid in res]
+        with db.session_for_read() as session:
+            q = session.query(models.HashMapField)
+            q = q.join(
+                models.HashMapField.service)
+            q = q.filter(
+                models.HashMapService.service_id == service_uuid)
+            res = q.values(models.HashMapField.field_id)
+            return [uuid[0] for uuid in res]
 
     def list_groups(self):
-        session = db.get_session()
-        q = session.query(models.HashMapGroup)
-        res = q.values(
-            models.HashMapGroup.group_id)
-        return [uuid[0] for uuid in res]
+        with db.session_for_read() as session:
+            q = session.query(models.HashMapGroup)
+            res = q.values(
+                models.HashMapGroup.group_id)
+            return [uuid[0] for uuid in res]
 
     def list_mappings(self,
                       service_uuid=None,
@@ -167,33 +167,34 @@ class HashMap(api.HashMap):
                       no_group=False,
                       **kwargs):
 
-        session = db.get_session()
-        q = session.query(models.HashMapMapping)
-        if service_uuid:
-            q = q.join(
-                models.HashMapMapping.service)
-            q = q.filter(
-                models.HashMapService.service_id == service_uuid)
-        elif field_uuid:
-            q = q.join(
-                models.HashMapMapping.field)
-            q = q.filter(models.HashMapField.field_id == field_uuid)
-        elif not service_uuid and not field_uuid and not group_uuid:
-            raise api.ClientHashMapError(
-                'You must specify either service_uuid,'
-                ' field_uuid or group_uuid.')
-        if 'tenant_uuid' in kwargs:
-            q = q.filter(
-                models.HashMapMapping.tenant_id == kwargs.get('tenant_uuid'))
-        if group_uuid:
-            q = q.join(
-                models.HashMapMapping.group)
-            q = q.filter(models.HashMapGroup.group_id == group_uuid)
-        elif no_group:
-            q = q.filter(models.HashMapMapping.group_id == None)  # noqa
-        res = q.values(
-            models.HashMapMapping.mapping_id)
-        return [uuid[0] for uuid in res]
+        with db.session_for_read() as session:
+            q = session.query(models.HashMapMapping)
+            if service_uuid:
+                q = q.join(
+                    models.HashMapMapping.service)
+                q = q.filter(
+                    models.HashMapService.service_id == service_uuid)
+            elif field_uuid:
+                q = q.join(
+                    models.HashMapMapping.field)
+                q = q.filter(models.HashMapField.field_id == field_uuid)
+            elif not service_uuid and not field_uuid and not group_uuid:
+                raise api.ClientHashMapError(
+                    'You must specify either service_uuid,'
+                    ' field_uuid or group_uuid.')
+            if 'tenant_uuid' in kwargs:
+                q = q.filter(
+                    models.HashMapMapping.tenant_id == kwargs.get(
+                        'tenant_uuid'))
+            if group_uuid:
+                q = q.join(
+                    models.HashMapMapping.group)
+                q = q.filter(models.HashMapGroup.group_id == group_uuid)
+            elif no_group:
+                q = q.filter(models.HashMapMapping.group_id == None)  # noqa
+            res = q.values(
+                models.HashMapMapping.mapping_id)
+            return [uuid[0] for uuid in res]
 
     def list_thresholds(self,
                         service_uuid=None,
@@ -202,38 +203,38 @@ class HashMap(api.HashMap):
                         no_group=False,
                         **kwargs):
 
-        session = db.get_session()
-        q = session.query(models.HashMapThreshold)
-        if service_uuid:
-            q = q.join(
-                models.HashMapThreshold.service)
-            q = q.filter(
-                models.HashMapService.service_id == service_uuid)
-        elif field_uuid:
-            q = q.join(
-                models.HashMapThreshold.field)
-            q = q.filter(models.HashMapField.field_id == field_uuid)
-        elif not service_uuid and not field_uuid and not group_uuid:
-            raise api.ClientHashMapError(
-                'You must specify either service_uuid,'
-                ' field_uuid or group_uuid.')
-        if 'tenant_uuid' in kwargs:
-            q = q.filter(
-                models.HashMapThreshold.tenant_id == kwargs.get('tenant_uuid'))
-        if group_uuid:
-            q = q.join(
-                models.HashMapThreshold.group)
-            q = q.filter(models.HashMapGroup.group_id == group_uuid)
-        elif no_group:
-            q = q.filter(models.HashMapThreshold.group_id == None)  # noqa
-        res = q.values(
-            models.HashMapThreshold.threshold_id)
-        return [uuid[0] for uuid in res]
+        with db.session_for_read() as session:
+            q = session.query(models.HashMapThreshold)
+            if service_uuid:
+                q = q.join(
+                    models.HashMapThreshold.service)
+                q = q.filter(
+                    models.HashMapService.service_id == service_uuid)
+            elif field_uuid:
+                q = q.join(
+                    models.HashMapThreshold.field)
+                q = q.filter(models.HashMapField.field_id == field_uuid)
+            elif not service_uuid and not field_uuid and not group_uuid:
+                raise api.ClientHashMapError(
+                    'You must specify either service_uuid,'
+                    ' field_uuid or group_uuid.')
+            if 'tenant_uuid' in kwargs:
+                q = q.filter(
+                    models.HashMapThreshold.tenant_id == kwargs.get(
+                        'tenant_uuid'))
+            if group_uuid:
+                q = q.join(
+                    models.HashMapThreshold.group)
+                q = q.filter(models.HashMapGroup.group_id == group_uuid)
+            elif no_group:
+                q = q.filter(models.HashMapThreshold.group_id == None)  # noqa
+            res = q.values(
+                models.HashMapThreshold.threshold_id)
+            return [uuid[0] for uuid in res]
 
     def create_service(self, name):
-        session = db.get_session()
         try:
-            with session.begin():
+            with db.session_for_write() as session:
                 service_db = models.HashMapService(name=name)
                 service_db.service_id = uuidutils.generate_uuid()
                 session.add(service_db)
@@ -246,9 +247,8 @@ class HashMap(api.HashMap):
 
     def create_field(self, service_uuid, name):
         service_db = self.get_service(uuid=service_uuid)
-        session = db.get_session()
         try:
-            with session.begin():
+            with db.session_for_write() as session:
                 field_db = models.HashMapField(
                     service_id=service_db.id,
                     name=name,
@@ -264,9 +264,8 @@ class HashMap(api.HashMap):
             return field_db
 
     def create_group(self, name):
-        session = db.get_session()
         try:
-            with session.begin():
+            with db.session_for_write() as session:
                 group_db = models.HashMapGroup(
                     name=name,
                     group_id=uuidutils.generate_uuid())
@@ -308,9 +307,8 @@ class HashMap(api.HashMap):
         if group_id:
             group_db = self.get_group(uuid=group_id)
             group_fk = group_db.id
-        session = db.get_session()
         try:
-            with session.begin():
+            with db.session_for_write() as session:
                 field_map = models.HashMapMapping(
                     mapping_id=uuidutils.generate_uuid(),
                     value=value,
@@ -365,9 +363,8 @@ class HashMap(api.HashMap):
         if group_id:
             group_db = self.get_group(uuid=group_id)
             group_fk = group_db.id
-        session = db.get_session()
         try:
-            with session.begin():
+            with db.session_for_write() as session:
                 threshold_db = models.HashMapThreshold(
                     threshold_id=uuidutils.generate_uuid(),
                     level=level,
@@ -395,9 +392,8 @@ class HashMap(api.HashMap):
         return threshold_db
 
     def update_mapping(self, uuid, **kwargs):
-        session = db.get_session()
         try:
-            with session.begin():
+            with db.session_for_write() as session:
                 q = session.query(models.HashMapMapping)
                 q = q.filter(
                     models.HashMapMapping.mapping_id == uuid)
@@ -442,9 +438,8 @@ class HashMap(api.HashMap):
             raise api.NoSuchMapping(uuid)
 
     def update_threshold(self, uuid, **kwargs):
-        session = db.get_session()
         try:
-            with session.begin():
+            with db.session_for_write() as session:
                 q = session.query(models.HashMapThreshold)
                 q = q.filter(
                     models.HashMapThreshold.threshold_id == uuid)
@@ -483,38 +478,37 @@ class HashMap(api.HashMap):
             raise api.NoSuchThreshold(uuid)
 
     def delete_service(self, name=None, uuid=None):
-        session = db.get_session()
-        q = utils.model_query(
-            models.HashMapService,
-            session)
-        if name:
-            q = q.filter(models.HashMapService.name == name)
-        elif uuid:
-            q = q.filter(models.HashMapService.service_id == uuid)
-        else:
-            raise api.ClientHashMapError(
-                'You must specify either name or uuid.')
-        r = q.delete()
-        if not r:
-            raise api.NoSuchService(name, uuid)
+        with db.session_for_write() as session:
+            q = utils.model_query(
+                models.HashMapService,
+                session)
+            if name:
+                q = q.filter(models.HashMapService.name == name)
+            elif uuid:
+                q = q.filter(models.HashMapService.service_id == uuid)
+            else:
+                raise api.ClientHashMapError(
+                    'You must specify either name or uuid.')
+            r = q.delete()
+            if not r:
+                raise api.NoSuchService(name, uuid)
 
     def delete_field(self, uuid):
-        session = db.get_session()
-        q = utils.model_query(
-            models.HashMapField,
-            session)
-        q = q.filter(models.HashMapField.field_id == uuid)
-        r = q.delete()
-        if not r:
-            raise api.NoSuchField(uuid)
+        with db.session_for_write() as session:
+            q = utils.model_query(
+                models.HashMapField,
+                session)
+            q = q.filter(models.HashMapField.field_id == uuid)
+            r = q.delete()
+            if not r:
+                raise api.NoSuchField(uuid)
 
     def delete_group(self, uuid, recurse=True):
-        session = db.get_session()
-        q = utils.model_query(
-            models.HashMapGroup,
-            session)
-        q = q.filter(models.HashMapGroup.group_id == uuid)
-        with session.begin():
+        with db.session_for_write() as session:
+            q = utils.model_query(
+                models.HashMapGroup,
+                session)
+            q = q.filter(models.HashMapGroup.group_id == uuid)
             try:
                 r = q.with_for_update().one()
             except sqlalchemy.orm.exc.NoResultFound:
@@ -527,21 +521,21 @@ class HashMap(api.HashMap):
             q.delete()
 
     def delete_mapping(self, uuid):
-        session = db.get_session()
-        q = utils.model_query(
-            models.HashMapMapping,
-            session)
-        q = q.filter(models.HashMapMapping.mapping_id == uuid)
-        r = q.delete()
-        if not r:
-            raise api.NoSuchMapping(uuid)
+        with db.session_for_write() as session:
+            q = utils.model_query(
+                models.HashMapMapping,
+                session)
+            q = q.filter(models.HashMapMapping.mapping_id == uuid)
+            r = q.delete()
+            if not r:
+                raise api.NoSuchMapping(uuid)
 
     def delete_threshold(self, uuid):
-        session = db.get_session()
-        q = utils.model_query(
-            models.HashMapThreshold,
-            session)
-        q = q.filter(models.HashMapThreshold.threshold_id == uuid)
-        r = q.delete()
-        if not r:
-            raise api.NoSuchThreshold(uuid)
+        with db.session_for_write() as session:
+            q = utils.model_query(
+                models.HashMapThreshold,
+                session)
+            q = q.filter(models.HashMapThreshold.threshold_id == uuid)
+            r = q.delete()
+            if not r:
+                raise api.NoSuchThreshold(uuid)

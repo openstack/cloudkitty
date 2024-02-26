@@ -217,7 +217,9 @@ class ConfigFixture(fixture.GabbiFixture):
     def stop_fixture(self):
         if self.conf:
             self.conf.reset()
-        db.get_engine().dispose()
+        with db.session_for_write() as session:
+            engine = session.get_bind()
+            engine.dispose()
 
 
 class ConfigFixtureStorageV2(ConfigFixture):
@@ -341,11 +343,11 @@ class BaseStorageDataFixture(fixture.GabbiFixture):
 
     def stop_fixture(self):
         model = models.RatedDataFrame
-        session = db.get_session()
-        q = utils.model_query(
-            model,
-            session)
-        q.delete()
+        with db.session_for_write() as session:
+            q = utils.model_query(
+                model,
+                session)
+            q.delete()
 
 
 class StorageDataFixture(BaseStorageDataFixture):
@@ -405,11 +407,11 @@ class ScopeStateFixture(fixture.GabbiFixture):
                 d[0], d[1], fetcher=d[2], collector=d[3], scope_key=d[4])
 
     def stop_fixture(self):
-        session = db.get_session()
-        q = utils.model_query(
-            self.sm.model,
-            session)
-        q.delete()
+        with db.session_for_write() as session:
+            q = utils.model_query(
+                self.sm.model,
+                session)
+            q.delete()
 
 
 class CORSConfigFixture(fixture.GabbiFixture):

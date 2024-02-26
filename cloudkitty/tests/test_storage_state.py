@@ -28,7 +28,8 @@ class StateManagerTest(tests.TestCase):
 
         ``filter()`` can be called any number of times, followed by first(),
         which will cycle over the ``output`` parameter passed to the
-        constructor. The ``first_called`` attributes
+        constructor. The ``first_called`` attribute tracks how many times
+        first() is called.
         """
         def __init__(self, output, *args, **kwargs):
             super(StateManagerTest.QueryMock, self).__init__(*args, **kwargs)
@@ -80,7 +81,7 @@ class StateManagerTest(tests.TestCase):
         self._test_x_state_does_update_columns(self._state.get_state)
 
     def test_set_state_does_update_columns(self):
-        with mock.patch('cloudkitty.db.get_session'):
+        with mock.patch('cloudkitty.db.session_for_write'):
             self._test_x_state_does_update_columns(
                 lambda x: self._state.set_state(x, datetime(2042, 1, 1)))
 
@@ -101,7 +102,7 @@ class StateManagerTest(tests.TestCase):
         self._test_x_state_no_column_update(self._state.get_state)
 
     def test_set_state_no_column_update(self):
-        with mock.patch('cloudkitty.db.get_session'):
+        with mock.patch('cloudkitty.db.session_for_write'):
             self._test_x_state_no_column_update(
                 lambda x: self._state.set_state(x, datetime(2042, 1, 1)))
 
@@ -111,8 +112,10 @@ class StateManagerTest(tests.TestCase):
             self._get_r_mock('a', 'b', 'c', state))
         with mock.patch(
                 'oslo_db.sqlalchemy.utils.model_query',
-                new=query_mock), mock.patch('cloudkitty.db.get_session') as sm:
-            sm.return_value = session_mock = mock.MagicMock()
+                new=query_mock), mock.patch(
+                    'cloudkitty.db.session_for_write') as sm:
+            sm.return_value.__enter__.return_value = session_mock = \
+                mock.MagicMock()
             self._state.set_state('fake_identifier', state)
             session_mock.commit.assert_not_called()
             session_mock.add.assert_not_called()
@@ -123,8 +126,10 @@ class StateManagerTest(tests.TestCase):
         new_state = datetime(2042, 1, 1)
         with mock.patch(
                 'oslo_db.sqlalchemy.utils.model_query',
-                new=query_mock), mock.patch('cloudkitty.db.get_session') as sm:
-            sm.return_value = session_mock = mock.MagicMock()
+                new=query_mock), mock.patch(
+                    'cloudkitty.db.session_for_write') as sm:
+            sm.return_value.__enter__.return_value = session_mock = \
+                mock.MagicMock()
             self.assertNotEqual(r_mock.state, new_state)
             self._state.set_state('fake_identifier', new_state)
             self.assertEqual(r_mock.last_processed_timestamp, new_state)

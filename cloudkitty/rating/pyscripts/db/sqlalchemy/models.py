@@ -29,13 +29,11 @@ class PyScriptsBase(models.ModelBase):
                       'mysql_engine': "InnoDB"}
     fk_to_resolve = {}
 
-    def save(self, session=None):
+    def save(self):
         from cloudkitty import db
 
-        if session is None:
-            session = db.get_session()
-
-        super(PyScriptsBase, self).save(session=session)
+        with db.session_for_write() as session:
+            super(PyScriptsBase, self).save(session=session)
 
     def as_dict(self):
         d = {}

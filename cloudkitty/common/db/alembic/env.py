@@ -32,10 +32,11 @@ def run_migrations_online(target_metadata, version_table):
     :param target_metadata: Model's metadata used for autogenerate support.
     :param version_table: Override the default version table for alembic.
     """
-    engine = db.get_engine()
-    with engine.connect() as connection:
-        context.configure(connection=connection,
-                          target_metadata=target_metadata,
-                          version_table=version_table)
-        with context.begin_transaction():
-            context.run_migrations()
+    with db.session_for_write() as session:
+        engine = session.get_bind()
+        with engine.connect() as connection:
+            context.configure(connection=connection,
+                              target_metadata=target_metadata,
+                              version_table=version_table)
+            with context.begin_transaction():
+                context.run_migrations()

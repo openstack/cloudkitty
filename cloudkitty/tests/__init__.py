@@ -90,8 +90,10 @@ class TestCase(testscenarios.TestWithScenarios, base.BaseTestCase):
         self.app_context.push()
 
     def tearDown(self):
-        db.get_engine().dispose()
-        self.auth.stop()
-        self.session.stop()
-        self.app_context.pop()
-        super(TestCase, self).tearDown()
+        with db.session_for_write() as session:
+            engine = session.get_bind()
+            engine.dispose()
+            self.auth.stop()
+            self.session.stop()
+            self.app_context.pop()
+            super(TestCase, self).tearDown()

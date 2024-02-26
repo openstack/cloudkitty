@@ -34,33 +34,32 @@ class PyScripts(api.PyScripts):
         return migration
 
     def get_script(self, name=None, uuid=None):
-        session = db.get_session()
-        try:
-            q = session.query(models.PyScriptsScript)
-            if name:
-                q = q.filter(
-                    models.PyScriptsScript.name == name)
-            elif uuid:
-                q = q.filter(
-                    models.PyScriptsScript.script_id == uuid)
-            else:
-                raise ValueError('You must specify either name or uuid.')
-            res = q.one()
-            return res
-        except sqlalchemy.orm.exc.NoResultFound:
-            raise api.NoSuchScript(name=name, uuid=uuid)
+        with db.session_for_read() as session:
+            try:
+                q = session.query(models.PyScriptsScript)
+                if name:
+                    q = q.filter(
+                        models.PyScriptsScript.name == name)
+                elif uuid:
+                    q = q.filter(
+                        models.PyScriptsScript.script_id == uuid)
+                else:
+                    raise ValueError('You must specify either name or uuid.')
+                res = q.one()
+                return res
+            except sqlalchemy.orm.exc.NoResultFound:
+                raise api.NoSuchScript(name=name, uuid=uuid)
 
     def list_scripts(self):
-        session = db.get_session()
-        q = session.query(models.PyScriptsScript)
-        res = q.values(
-            models.PyScriptsScript.script_id)
-        return [uuid[0] for uuid in res]
+        with db.session_for_read() as session:
+            q = session.query(models.PyScriptsScript)
+            res = q.values(
+                models.PyScriptsScript.script_id)
+            return [uuid[0] for uuid in res]
 
     def create_script(self, name, data):
-        session = db.get_session()
         try:
-            with session.begin():
+            with db.session_for_write() as session:
                 script_db = models.PyScriptsScript(name=name)
                 script_db.data = data
                 script_db.script_id = uuidutils.generate_uuid()
@@ -73,9 +72,8 @@ class PyScripts(api.PyScripts):
                 script_db.script_id)
 
     def update_script(self, uuid, **kwargs):
-        session = db.get_session()
         try:
-            with session.begin():
+            with db.session_for_write() as session:
                 q = session.query(models.PyScriptsScript)
                 q = q.filter(
                     models.PyScriptsScript.script_id == uuid
@@ -99,16 +97,16 @@ class PyScripts(api.PyScripts):
             raise api.NoSuchScript(uuid=uuid)
 
     def delete_script(self, name=None, uuid=None):
-        session = db.get_session()
-        q = utils.model_query(
-            models.PyScriptsScript,
-            session)
-        if name:
-            q = q.filter(models.PyScriptsScript.name == name)
-        elif uuid:
-            q = q.filter(models.PyScriptsScript.script_id == uuid)
-        else:
-            raise ValueError('You must specify either name or uuid.')
-        r = q.delete()
-        if not r:
-            raise api.NoSuchScript(uuid=uuid)
+        with db.session_for_write() as session:
+            q = utils.model_query(
+                models.PyScriptsScript,
+                session)
+            if name:
+                q = q.filter(models.PyScriptsScript.name == name)
+            elif uuid:
+                q = q.filter(models.PyScriptsScript.script_id == uuid)
+            else:
+                raise ValueError('You must specify either name or uuid.')
+            r = q.delete()
+            if not r:
+                raise api.NoSuchScript(uuid=uuid)

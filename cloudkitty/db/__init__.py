@@ -13,28 +13,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-from oslo_config import cfg
-from oslo_db.sqlalchemy import session
+import threading
 
+from oslo_db.sqlalchemy import enginefacade
+
+_CONTEXT = threading.local()
 _FACADE = None
 
 
 def _create_facade_lazily():
     global _FACADE
     if _FACADE is None:
-        # FIXME(priteau): Remove autocommit=True (and ideally use of
-        # LegacyEngineFacade) asap since it's not compatible with SQLAlchemy
-        # 2.0.
-        _FACADE = session.EngineFacade.from_config(cfg.CONF, sqlite_fk=True,
-                                                   autocommit=True)
+        ctx = enginefacade.transaction_context()
+        ctx.configure(sqlite_fk=True)
+        _FACADE = ctx
     return _FACADE
 
 
-def get_engine():
-    facade = _create_facade_lazily()
-    return facade.get_engine()
+def session_for_read():
+    return _create_facade_lazily().reader.using(_CONTEXT)
 
 
-def get_session(**kwargs):
-    facade = _create_facade_lazily()
-    return facade.get_session(**kwargs)
+def session_for_write():
+    return _create_facade_lazily().writer.using(_CONTEXT)
