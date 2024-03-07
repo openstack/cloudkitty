@@ -41,12 +41,12 @@ Price calculation functions
     # These functions return the price of a service usage on a collect period.
     # The price is always equivalent to the price per unit multiplied by
     # the quantity.
-    def get_compute_price(item):
-        if not item['desc']['flavor'] in flavors:
+    def get_instance_price(item):
+        if not item['metadata']['flavor_name'] in flavors:
             return 0
         else:
             return (decimal.Decimal(item['vol']['qty'])
-                   * flavors[item['desc']['flavor']])
+                   * flavors[item['metadata']['flavor_name']])
 
     def get_image_price(item):
         if not item['vol']['qty']:
@@ -63,7 +63,7 @@ Price calculation functions
 
     # Mapping each service to its price calculation function
     services = {
-        'compute': get_compute_price,
+        'instance': get_instance_price,
         'volume': get_volume_price,
         'image': get_image_price
     }
