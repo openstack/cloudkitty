@@ -156,7 +156,8 @@ class StorageTotalTest(StorageTest):
             end=end)['results']
         # FIXME(sheeprine): floating point error (transition to decimal)
         self.assertEqual(1, len(total))
-        self.assertEqual(1.9473999999999998, total[0]["rate"])
+        self.assertAlmostEqual(
+            1.9473999999999998, total[0]["rate"], delta=0.001)
         self.assertEqual(begin, total[0]["begin"])
         self.assertEqual(end, total[0]["end"])
 

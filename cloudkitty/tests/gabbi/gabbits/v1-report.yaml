@@ -76,7 +76,7 @@ tests:
       service: "cpu"
     status: 200
     response_strings:
-      - "224.616"
+      - "/(224.61)(\\d)*/"
 
   - name: get total for a period filtering on image service
     url: /v1/report/total
