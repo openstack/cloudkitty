@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Adds support to the OpenSearch and Elasticsearch v2 storage backends for
+    using datastreams, rather than indices. These are useful when a cluster
+    has multiple storage types, as data can be rotated from hot to cold storage
+    when not in active use. The option ``use_datastream`` can be set under
+    either ``[storage_elasticsearch]`` or ``[storage_opensearch]``.

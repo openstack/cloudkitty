@@ -52,6 +52,9 @@ opensearch_storage_opts = [
                "contexts should be kept alive.",
                advanced=True,
                default=30, min=0, max=300),
+    cfg.BoolOpt('use_datastream',
+                help='Use a datastream rather than an index.',
+                default=False),
 ]
 
 CONF.register_opts(opensearch_storage_opts, OPENSEARCH_STORAGE_GROUP)
