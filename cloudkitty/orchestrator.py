@@ -272,7 +272,7 @@ class APIWorker(BaseWorker):
 
 
 def _check_state(obj, period, tenant_id):
-    timestamp = obj._state.get_state(tenant_id)
+    timestamp = obj._state.get_last_processed_timestamp(tenant_id)
     return ck_utils.check_time_state(timestamp,
                                      period,
                                      CONF.collect.wait_periods)
@@ -387,7 +387,7 @@ class Worker(BaseWorker):
             LOG.debug("Worker [%s] finished processing storage scope [%s].",
                       self._worker_id, self._tenant_id)
             return False
-        if self._state.get_state(self._tenant_id):
+        if self._state.get_last_processed_timestamp(self._tenant_id):
             if not self._state.is_storage_scope_active(self._tenant_id):
                 LOG.debug("Skipping processing for storage scope [%s] "
                           "because it is marked as inactive.",

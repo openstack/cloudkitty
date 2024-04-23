@@ -77,8 +77,9 @@ class StateManagerTest(tests.TestCase):
         self.assertEqual(r_mock.scope_key, 'scope_key')
         self.assertEqual(r_mock.fetcher, 'fetcher1')
 
-    def test_get_state_does_update_columns(self):
-        self._test_x_state_does_update_columns(self._state.get_state)
+    def test_get_last_processed_timestamp_does_update_columns(self):
+        self._test_x_state_does_update_columns(
+            self._state.get_last_processed_timestamp)
 
     def test_set_state_does_update_columns(self):
         with mock.patch('cloudkitty.db.session_for_write'):
@@ -98,8 +99,9 @@ class StateManagerTest(tests.TestCase):
         self.assertEqual(r_mock.scope_key, 'scope_key')
         self.assertEqual(r_mock.fetcher, 'fetcher1')
 
-    def test_get_state_no_column_update(self):
-        self._test_x_state_no_column_update(self._state.get_state)
+    def test_get_last_processed_timestamp_no_column_update(self):
+        self._test_x_state_no_column_update(
+            self._state.get_last_processed_timestamp)
 
     def test_set_state_no_column_update(self):
         with mock.patch('cloudkitty.db.session_for_write'):
