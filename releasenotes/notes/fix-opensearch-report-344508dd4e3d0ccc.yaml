@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fix some API report requests that were returning HTTP 500 errors when using
+    the ``opensearch`` storage backend. This fixes failures to load the Horizon
+    ``Rating`` panel.
