@@ -54,14 +54,10 @@
         - cloudkitty-tempest-plugin
       tempest_test_regex: cloudkitty_tempest_plugin.*
       tox_envlist: all
-      grenade_from_branch: master
       grenade_devstack_localrc:
         shared:
-          TARGET_BRANCH: master
-          BASE_DEVSTACK_BRANCH: master
           CLOUDKITTY_USE_MOD_WSGI: false
           CLOUDKITTY_FETCHER: keystone
-          USE_PYTHON3: True
 
 - job:
     name: base-cloudkitty-v1-api-tempest-job
