@@ -82,6 +82,23 @@ class RatingModule(BaseRatingModule):
             'priority': infos['priority'],
         }
 
+    @api_utils.add_input_schema('body', {
+        voluptuous.Optional('enabled'): voluptuous.Boolean(),
+        voluptuous.Optional('priority'): voluptuous.All(int, min=1),
+    })
+    def put(self, module_id, enabled=None, priority=None):
+        policy.authorize(flask.request.context, 'v2_rating:update_module', {})
+        try:
+            module = self.rating_modules[module_id].obj
+        except KeyError:
+            raise http_exceptions.NotFound(
+                "Module '{}' not found".format(module_id))
+        if enabled is not None:
+            module.set_state(enabled)
+        if priority is not None:
+            module.set_priority(priority)
+        return "", 204
+
 
 class RatingModuleList(BaseRatingModule):
 

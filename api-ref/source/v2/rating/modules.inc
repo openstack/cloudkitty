@@ -74,3 +74,38 @@ Response Example
 
 .. literalinclude:: ./api_samples/rating/module_get.json
    :language: javascript
+
+Update one module
+=================
+
+.. rest_method::  PUT /v2/rating/modules/(module_id)
+
+.. rest_parameters:: rating/modules_parameters.yml
+
+   - enabled: enabled_opt
+   - priority: priority_opt
+
+Status codes
+------------
+
+.. rest_status_code:: success http_status.yml
+
+   - 204
+
+.. rest_status_code:: error http_status.yml
+
+   - 400
+   - 401
+   - 403
+   - 404
+
+Response
+--------
+
+.. rest_parameters:: rating/modules_parameters.yml
+
+   - module_id: module_id
+   - description: description
+   - enabled: enabled
+   - hot_config: hot_config
+   - priority: priority
