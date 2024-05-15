@@ -363,6 +363,8 @@ class OpenSearchClient(object):
         if not paginate:
             offset = 0
 
+        metric_types = [metric_types] if metric_types else None
+
         must = self._build_must(begin, end, metric_types, filters)
         should = self._build_should(filters)
         composite = self._build_composite(groupby) if groupby else None
