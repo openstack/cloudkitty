@@ -86,9 +86,9 @@ class TestOpenSearchClient(unittest.TestCase):
         self.assertEqual(
             self.client._build_composite(['one', 'type', 'two']),
             {'sources': [
-                {'one': {'terms': {'field': 'groupby.one'}}},
-                {'type': {'terms': {'field': 'type'}}},
-                {'two': {'terms': {'field': 'groupby.two'}}},
+                {'one': {'terms': {'field': 'groupby.one.keyword'}}},
+                {'type': {'terms': {'field': 'type.keyword'}}},
+                {'two': {'terms': {'field': 'groupby.two.keyword'}}},
             ]},
         )
 
