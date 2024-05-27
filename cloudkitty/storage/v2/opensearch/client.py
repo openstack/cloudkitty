@@ -98,14 +98,15 @@ class OpenSearchClient(object):
         sources = []
         for elem in groupby:
             if elem == 'type':
-                sources.append({'type': {'terms': {'field': 'type'}}})
+                sources.append({'type': {'terms': {'field': 'type.keyword'}}})
             elif elem == 'time':
                 # Not doing a date_histogram aggregation because we don't know
                 # the period
                 sources.append({'begin': {'terms': {'field': 'start'}}})
                 sources.append({'end': {'terms': {'field': 'end'}}})
             else:
-                sources.append({elem: {'terms': {'field': 'groupby.' + elem}}})
+                field = 'groupby.' + elem + '.keyword'
+                sources.append({elem: {'terms': {'field': field}}})
 
         return {"sources": sources}
 
