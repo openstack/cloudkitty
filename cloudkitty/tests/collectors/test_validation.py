@@ -19,6 +19,8 @@ from voluptuous import error as verror
 
 from cloudkitty import collector
 from cloudkitty import tests
+from datetime import datetime
+from datetime import timedelta
 
 
 class MetricConfigValidationTest(tests.TestCase):
@@ -42,6 +44,46 @@ class MetricConfigValidationTest(tests.TestCase):
             'offset': 0,
             'mutate': 'NONE',
         }
+    }
+
+    list_data = {
+        'metrics': {
+            'metric_one': [
+                {
+                    'groupby': ['one'],
+                    'metadata': ['two'],
+                    'alt_name': 'metric_u',
+                    'unit': 'u',
+                },
+                {
+                    'groupby': ['three'],
+                    'metadata': ['four'],
+                    'alt_name': 'metric_v',
+                    'unit': 'v',
+                }
+            ]
+        }
+    }
+
+    list_output = {
+        'metric_one@#metric_u': {
+            'groupby': ['one'],
+            'metadata': ['two'],
+            'unit': 'u',
+            'alt_name': 'metric_u',
+            'factor': 1,
+            'offset': 0,
+            'mutate': 'NONE',
+        },
+        'metric_one@#metric_v': {
+            'groupby': ['three'],
+            'metadata': ['four'],
+            'unit': 'v',
+            'alt_name': 'metric_v',
+            'factor': 1,
+            'offset': 0,
+            'mutate': 'NONE',
+        },
     }
 
     def test_base_minimal_config(self):
@@ -149,6 +191,48 @@ class MetricConfigValidationTest(tests.TestCase):
             expected_output,
         )
 
+    def test_prometheus_query_builder(self):
+        data = copy.deepcopy(self.base_data)
+        data['metrics']['metric_one']['extra_args'] = {
+            'aggregation_method': 'max',
+            'query_function': 'abs',
+            'query_prefix': 'custom_prefix',
+            'query_suffix': 'custom_suffix',
+            'range_function': 'delta',
+        }
+
+        prometheus = collector.prometheus.PrometheusCollector
+
+        conf = prometheus.check_configuration(data)
+        metric_name = list(conf.keys())[0]
+        start = datetime.now()
+        end = start + timedelta(seconds=60)
+        scope_key = "random_key"
+        scope_id = "random_value"
+        groupby = conf[metric_name].get('groupby', [])
+        metadata = conf[metric_name].get('metadata', [])
+
+        query = prometheus.build_query(
+            conf,
+            metric_name,
+            start,
+            end,
+            scope_key,
+            scope_id,
+            groupby,
+            metadata
+        )
+
+        expected_output = (
+            'custom_prefix max(abs(delta(metric_one{random_key="random_value"}'
+            '[60s]))) by (one, project_id, two) custom_suffix'
+        )
+
+        self.assertEqual(
+            query,
+            expected_output,
+        )
+
     def test_check_duplicates(self):
         data = copy.deepcopy(self.base_data)
         for metric_name, metric in data['metrics'].items():
@@ -179,3 +263,29 @@ class MetricConfigValidationTest(tests.TestCase):
             self.assertRaises(
                 collector.InvalidConfiguration,
                 collector.validate_map_mutator, metric_name, metric)
+
+    def test_base_minimal_config_list(self):
+        data = copy.deepcopy(self.list_data)
+        expected_output = copy.deepcopy(self.list_output)
+
+        for _, metric in expected_output.items():
+            metric['groupby'].append('project_id')
+
+        self.assertEqual(
+            collector.BaseCollector.check_configuration(data),
+            expected_output,
+        )
+
+    # submetric with same alt_name should fail
+    # Because they would overlap in the dict
+    def test_check_duplicates_list(self):
+        data = copy.deepcopy(self.list_data)
+        data['metrics']['metric_one'].append({
+            'groupby': ['five'],
+            'metadata': ['six'],
+            'alt_name': 'metric_v',
+            'unit': 'w',
+        })
+        self.assertRaises(
+            collector.InvalidConfiguration,
+            collector.BaseCollector.check_configuration, data)
