@@ -114,7 +114,7 @@ def no_translate_logs(logical_line, filename):
     C313
     """
     if translated_logs.match(logical_line):
-        yield(0, "C313 Don't translate logs")
+        yield (0, "C313 Don't translate logs")
 
 
 class CheckLoggingFormatArgs(BaseASTChecker):
@@ -204,7 +204,7 @@ def check_explicit_underscore_import(logical_line, filename):
           custom_underscore_check.match(logical_line)):
         UNDERSCORE_IMPORT_FILES.append(filename)
     elif string_translation.match(logical_line):
-        yield(0, "C321: Found use of _() without explicit import of _ !")
+        yield (0, "C321: Found use of _() without explicit import of _ !")
 
 
 class CheckForStrUnicodeExc(BaseASTChecker):
@@ -294,7 +294,7 @@ def check_oslo_namespace_imports(logical_line, noqa):
         msg = ("C317: '%s' must be used instead of '%s'.") % (
             logical_line.replace('oslo.', 'oslo_'),
             logical_line)
-        yield(0, msg)
+        yield (0, msg)
 
 
 @core.flake8ext
@@ -317,7 +317,7 @@ def no_xrange(logical_line):
     C319
     """
     if assert_no_xrange_re.match(logical_line):
-        yield(0, "C319: Do not use xrange().")
+        yield (0, "C319: Do not use xrange().")
 
 
 @core.flake8ext
@@ -329,7 +329,7 @@ def validate_assertTrue(logical_line):
     if re.match(assert_True, logical_line):
         msg = ("C312: Unit tests should use assertTrue(value) instead"
                " of using assertEqual(True, value).")
-        yield(0, msg)
+        yield (0, msg)
 
 
 @core.flake8ext
@@ -341,7 +341,7 @@ def validate_assertIsNone(logical_line):
     if re.match(assert_None, logical_line):
         msg = ("C311: Unit tests should use assertIsNone(value) instead"
                " of using assertEqual(None, value).")
-        yield(0, msg)
+        yield (0, msg)
 
 
 @core.flake8ext
@@ -352,7 +352,7 @@ def no_log_warn_check(logical_line):
     """
     msg = ("C320: LOG.warn is deprecated, please use LOG.warning!")
     if re.match(no_log_warn, logical_line):
-        yield(0, msg)
+        yield (0, msg)
 
 
 @core.flake8ext

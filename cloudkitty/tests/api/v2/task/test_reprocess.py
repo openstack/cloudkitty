@@ -404,16 +404,16 @@ class TestReprocessingSchedulerGetApi(tests.TestCase):
         request_mock.args.lists.return_value = []
         list_all_return = self.endpoint.get()
 
-        self.assertTrue("results" in list_all_return)
-        self.assertTrue("id" not in list_all_return['results'][0])
-        self.assertTrue("scope_id" in list_all_return['results'][0])
-        self.assertTrue("reason" in list_all_return['results'][0])
-        self.assertTrue(
-            "current_reprocess_time" in list_all_return['results'][0])
-        self.assertTrue(
-            "start_reprocess_time" in list_all_return['results'][0])
-        self.assertTrue(
-            "end_reprocess_time" in list_all_return['results'][0])
+        self.assertIn("results", list_all_return)
+        self.assertNotIn("id", list_all_return['results'][0])
+        self.assertIn("scope_id", list_all_return['results'][0])
+        self.assertIn("reason", list_all_return['results'][0])
+        self.assertIn(
+            "current_reprocess_time", list_all_return['results'][0])
+        self.assertIn(
+            "start_reprocess_time", list_all_return['results'][0])
+        self.assertIn(
+            "end_reprocess_time", list_all_return['results'][0])
 
         self.assertEqual("scope_identifier",
                          list_all_return['results'][0]['scope_id'])
