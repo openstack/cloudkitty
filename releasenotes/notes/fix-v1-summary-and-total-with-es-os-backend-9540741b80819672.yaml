@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed a bug where ``openstack rating summary get -s <service>`` and
+    ``openstack rating total get -s <service>`` would fail when using the
+    Elasticsearch or OpenSearch storage backends. See story 2011128
+    <https://storyboard.openstack.org/#!/story/2011128>`_ for more details.
