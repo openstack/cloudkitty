@@ -148,19 +148,6 @@ class StateManager(object):
                 session.commit()
         return r
 
-    def set_state(self, identifier, state,
-                  fetcher=None, collector=None, scope_key=None):
-        """Set the last processed timestamp of a scope.
-
-        This method is deprecated, consider using
-        "set_last_processed_timestamp".
-        """
-        LOG.warning("The method 'set_state' is deprecated. "
-                    "Consider using the new method "
-                    "'set_last_processed_timestamp'.")
-        self.set_last_processed_timestamp(
-            identifier, state, fetcher, collector, scope_key)
-
     def set_last_processed_timestamp(
             self, identifier, last_processed_timestamp, fetcher=None,
             collector=None, scope_key=None):

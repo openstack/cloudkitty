@@ -403,7 +403,7 @@ class ScopeStateFixture(fixture.GabbiFixture):
             ('hhhh', datetime.datetime(2019, 6, 6), 'fet2', 'col2', 'key2'),
         ]
         for d in data:
-            self.sm.set_state(
+            self.sm.set_last_processed_timestamp(
                 d[0], d[1], fetcher=d[2], collector=d[3], scope_key=d[4])
 
     def stop_fixture(self):

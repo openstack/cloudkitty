@@ -446,7 +446,7 @@ class Worker(BaseWorker):
         return frame
 
     def update_scope_processing_state_db(self, timestamp):
-        self._state.set_state(self._tenant_id, timestamp)
+        self._state.set_last_processed_timestamp(self._tenant_id, timestamp)
 
 
 class ReprocessingWorker(Worker):

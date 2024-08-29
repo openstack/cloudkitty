@@ -84,7 +84,10 @@ class StateManagerTest(tests.TestCase):
     def test_set_state_does_update_columns(self):
         with mock.patch('cloudkitty.db.session_for_write'):
             self._test_x_state_does_update_columns(
-                lambda x: self._state.set_state(x, datetime(2042, 1, 1)))
+                lambda x: self._state.set_last_processed_timestamp(
+                    x, datetime(2042, 1, 1)
+                )
+            )
 
     def _test_x_state_no_column_update(self, func):
         r_mock = self._get_r_mock(
@@ -106,7 +109,10 @@ class StateManagerTest(tests.TestCase):
     def test_set_state_no_column_update(self):
         with mock.patch('cloudkitty.db.session_for_write'):
             self._test_x_state_no_column_update(
-                lambda x: self._state.set_state(x, datetime(2042, 1, 1)))
+                lambda x: self._state.set_last_processed_timestamp(
+                    x, datetime(2042, 1, 1)
+                )
+            )
 
     def test_set_state_does_not_duplicate_entries(self):
         state = datetime(2042, 1, 1)
@@ -118,7 +124,7 @@ class StateManagerTest(tests.TestCase):
                     'cloudkitty.db.session_for_write') as sm:
             sm.return_value.__enter__.return_value = session_mock = \
                 mock.MagicMock()
-            self._state.set_state('fake_identifier', state)
+            self._state.set_last_processed_timestamp('fake_identifier', state)
             session_mock.commit.assert_not_called()
             session_mock.add.assert_not_called()
 
@@ -133,7 +139,9 @@ class StateManagerTest(tests.TestCase):
             sm.return_value.__enter__.return_value = session_mock = \
                 mock.MagicMock()
             self.assertNotEqual(r_mock.state, new_state)
-            self._state.set_state('fake_identifier', new_state)
+            self._state.set_last_processed_timestamp(
+                'fake_identifier', new_state
+            )
             self.assertEqual(r_mock.last_processed_timestamp, new_state)
             session_mock.commit.assert_called_once()
             session_mock.add.assert_not_called()

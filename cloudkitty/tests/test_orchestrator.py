@@ -237,7 +237,8 @@ class WorkerTest(tests.TestCase):
         super(WorkerTest, self).setUp()
 
         patcher_state_manager_set_state = mock.patch(
-            "cloudkitty.storage_state.StateManager.set_state")
+            "cloudkitty.storage_state."
+            "StateManager.set_last_processed_timestamp")
         self.addCleanup(patcher_state_manager_set_state.stop)
         self.state_manager_set_state_mock = \
             patcher_state_manager_set_state.start()
