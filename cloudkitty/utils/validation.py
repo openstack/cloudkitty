@@ -13,10 +13,7 @@
 #    under the License.
 #
 """Common utils for voluptuous schema validation"""
-try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections import Iterable
+from collections.abc import Iterable
 import functools
 import voluptuous
 
