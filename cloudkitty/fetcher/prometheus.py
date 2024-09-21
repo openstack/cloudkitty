@@ -42,13 +42,12 @@ fetcher_prometheus_opts = [
     ),
     cfg.StrOpt(
         'prometheus_user',
-        default='',
         help='Prometheus user (for basic auth only)',
     ),
     cfg.StrOpt(
         'prometheus_password',
-        default='',
-        help='Prometheus user (for basic auth only)',
+        secret=True,
+        help='Prometheus password (for basic auth only)',
     ),
     cfg.StrOpt(
         'cafile',
