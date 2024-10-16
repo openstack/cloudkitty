@@ -20,7 +20,6 @@ import functools
 import hashlib
 import multiprocessing
 import random
-import sys
 import time
 
 import cotyledon
@@ -331,7 +330,7 @@ class Worker(BaseWorker):
                 # collection will be retried during the next collect
                 # cycle. In the future, we should implement a retrying
                 # system in workers
-                sys.exit(1)
+                raise e
 
         return self._do_execute_collection(_get_result, metrics)
 
@@ -640,12 +639,19 @@ class CloudKittyProcessor(cotyledon.Service):
                                                         lock_name=lock_name,
                                                         scope_id=tenant_id))
 
+                _success = True
                 try:
                     self.process_scope(tenant_id)
+                except Exception as e:
+                    _success = False
+                    LOG.error('Error processing scope %s, we will try it again'
+                              ' later.', tenant_id)
+                    LOG.exception(e)
                 finally:
                     lock.release()
 
-                LOG.debug("Finished processing scope [%s].", tenant_id)
+                if _success:
+                    LOG.debug("Finished processing scope [%s].", tenant_id)
             else:
                 LOG.debug("Could not acquire lock [%s] for processing "
                           "scope [%s] with worker [%s].", lock_name,
