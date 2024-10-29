@@ -48,22 +48,3 @@ class PrometheusClient(object):
                 'Could not get a valid json response for '
                 '{} (response: {})'.format(res.url, res.text)
             )
-
-    def get_range(self, query, start, end, step, timeout=None):
-        res = self._get(
-            self.RANGE_QUERY_ENDPOINT,
-            params={
-                'query': query,
-                'start': start,
-                'end': end,
-                'step': step,
-                'timeout': timeout,
-            },
-        )
-        try:
-            return res.json()
-        except ValueError:
-            raise PrometheusResponseError(
-                'Could not get a valid json response for '
-                '{} (response: {})'.format(res.url, res.text)
-            )

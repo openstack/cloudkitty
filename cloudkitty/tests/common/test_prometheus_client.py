@@ -110,21 +110,6 @@ class PrometheusClientTest(tests.TestCase):
             )
             self.assertEqual(res, {'foo': 'bar'})
 
-    def test_get_range(self):
-        mock_get = mock.patch(
-            'requests.get',
-            side_effect=self._mock_requests_get('{"foo": "bar"}'),
-        )
-
-        with mock_get:
-            res = self.client.get_range(
-                'max(http_requests_total) by (project_id)',
-                samples.FIRST_PERIOD_BEGIN,
-                samples.FIRST_PERIOD_END,
-                10,
-            )
-            self.assertEqual(res, {'foo': 'bar'})
-
     def test_get_instant_raises_error_on_bad_json(self):
         # Simulating malformed JSON response from HTTP+PromQL instant request
         mock_get = mock.patch(
@@ -136,20 +121,4 @@ class PrometheusClientTest(tests.TestCase):
                 prometheus.PrometheusResponseError,
                 self.client.get_instant,
                 'max(http_requests_total) by (project_id)',
-            )
-
-    def test_get_range_raises_error_on_bad_json(self):
-        # Simulating malformed JSON response from HTTP+PromQL range request
-        mock_get = mock.patch(
-            'requests.get',
-            side_effect=self._mock_requests_get('{"foo": "bar"'),
-        )
-        with mock_get:
-            self.assertRaises(
-                prometheus.PrometheusResponseError,
-                self.client.get_range,
-                'max(http_requests_total) by (project_id)',
-                samples.FIRST_PERIOD_BEGIN,
-                samples.FIRST_PERIOD_END,
-                10,
             )
