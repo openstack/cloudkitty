@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Support for using Elasticsearch as a storage backend is not deprecated
+    anymore. The Elasticsearch storage backend was deprecated in the
+    Antelope release in favour of OpenSearch. The removal of the deprecation
+    is made following licensing changes and demand from CloudKitty users.
