@@ -20,7 +20,6 @@ import sys
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_policy import opts as policy_opts
 from oslo_policy import policy
 from oslo_utils import excutils
 
@@ -28,11 +27,6 @@ from cloudkitty.common import policies
 
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
-# TODO(gmann): Remove setting the default value of config policy_file
-# once oslo_policy change the default value to 'policy.yaml'.
-# https://github.com/openstack/oslo.policy/blob/a626ad12fe5a3abd49d70e3e5b95589d279ab578/oslo_policy/opts.py#L49
-DEFAULT_POLICY_FILE = 'policy.yaml'
-policy_opts.set_defaults(cfg.CONF, DEFAULT_POLICY_FILE)
 
 _ENFORCER = None
 # oslo_policy will read the policy configuration file again when the file
