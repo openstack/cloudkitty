@@ -56,7 +56,10 @@
       tox_envlist: all
       grenade_devstack_localrc:
         shared:
-          CLOUDKITTY_USE_MOD_WSGI: false
+          # for <2025.1
+          CLOUDKITTY_USE_MODE_WSGI: false
+          # for >=2025.1
+          CLOUDKITTY_USE_UWSGI: false
           CLOUDKITTY_FETCHER: keystone
 
 - job:
