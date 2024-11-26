@@ -37,6 +37,13 @@ if [[ -d $CLOUDKITTY_DIR/bin ]]; then
 else
     CLOUDKITTY_BIN_DIR=$(get_python_exec_prefix)
 fi
+CLOUDKITTY_UWSGI=$CLOUDKITTY_BIN_DIR/cloudkitty-api
+if [ ${CLOUDKITTY_USE_UWSGI,,} == 'true' ]; then
+    CLOUDKITTY_ENDPOINT=$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOST/rating
+else
+    CLOUDKITTY_ENDPOINT=$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT
+fi
+
 
 # Functions
 # ---------
@@ -51,10 +58,7 @@ function create_cloudkitty_accounts {
     local cloudkitty_service=$(get_or_create_service "cloudkitty" \
         "rating" "OpenStack Rating")
     get_or_create_endpoint $cloudkitty_service \
-        "$REGION_NAME" \
-        "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/" \
-        "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/" \
-        "$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOSTPORT/"
+        "$REGION_NAME" $CLOUDKITTY_ENDPOINT
 
     # Create the rating role
     get_or_create_role "rating"
@@ -73,52 +77,20 @@ function is_cloudkitty_enabled {
     return 1
 }
 
-# Remove WSGI files, disable and remove Apache vhost file
-function _cloudkitty_cleanup_apache_wsgi {
-    if is_service_enabled ck-api && [ "$CLOUDKITTY_USE_MOD_WSGI" == "True" ]; then
-        sudo rm -f "$CLOUDKITTY_WSGI_DIR"/*
-        sudo rm -rf  "$CLOUDKITTY_WSGI_DIR"
-        sudo rm -f $(apache_site_config_for cloudkitty)
-    fi
-}
-
 # cleanup_cloudkitty() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_cloudkitty {
-    _cloudkitty_cleanup_apache_wsgi
     # Clean up dirs
-    rm -rf $CLOUDKITTY_AUTH_CACHE_DIR/*
     rm -rf $CLOUDKITTY_CONF_DIR/*
     rm -rf $CLOUDKITTY_OUTPUT_BASEPATH/*
     for i in $(find $CLOUDKITTY_ENABLED_DIR -iname '_[0-9]*.py' -printf '%f\n'); do
         rm -f "${CLOUDKITTY_HORIZON_ENABLED_DIR}/$i"
     done
-}
-
-
-# Configure mod_wsgi
-function _cloudkitty_config_apache_wsgi {
-    sudo mkdir -m 755 -p $CLOUDKITTY_WSGI_DIR
-
-    local cloudkitty_apache_conf=$(apache_site_config_for cloudkitty)
-    local venv_path=""
-
-    # Copy proxy vhost and wsgi file
-    sudo cp $CLOUDKITTY_DIR/cloudkitty/api/app.wsgi $CLOUDKITTY_WSGI_DIR/app.wsgi
-
-    if [[ ${USE_VENV} = True ]]; then
-        venv_path="python-path=${PROJECT_VENV["cloudkitty"]}/lib/$(python_version)/site-packages"
+    if [ ${CLOUDKITTY_USE_UWSGI,,} == 'true' ]; then
+        remove_uwsgi_config "$CLOUDKITTY_UWSGI_CONF"
     fi
-
-    sudo cp $CLOUDKITTY_DIR/devstack/apache-cloudkitty.template $cloudkitty_apache_conf
-    sudo sed -e "
-        s|%PORT%|$CLOUDKITTY_SERVICE_PORT|g;
-        s|%APACHE_NAME%|$APACHE_NAME|g;
-        s|%WSGIAPP%|$CLOUDKITTY_WSGI_DIR/app.wsgi|g;
-        s|%USER%|$STACK_USER|g;
-        s|%VIRTUALENV%|$DEVSTACK_VENV|g
-    " -i $cloudkitty_apache_conf
 }
+
 
 # configure_cloudkitty() - Set config files, create data dirs, etc
 function configure_cloudkitty {
@@ -215,8 +187,8 @@ function configure_cloudkitty {
     # keystone middleware
     configure_keystone_authtoken_middleware $CLOUDKITTY_CONF cloudkitty
 
-    if is_service_enabled ck-api && [ "$CLOUDKITTY_USE_MOD_WSGI" == "True" ]; then
-        _cloudkitty_config_apache_wsgi
+    if [ ${CLOUDKITTY_USE_UWSGI,,} == 'true' ]; then
+        write_uwsgi_config "$CLOUDKITTY_UWSGI_CONF" "$CLOUDKITTY_UWSGI" "/rating" "" "cloudkitty"
     fi
 }
 
@@ -225,17 +197,6 @@ function wait_for_gnocchi() {
     if ! wait_for_service $SERVICE_TIMEOUT $gnocchi_url; then
        die $LINENO "Waited for gnocchi too long."
     fi
-}
-
-# create_cloudkitty_cache_dir() - Part of the init_cloudkitty() process
-function create_cloudkitty_cache_dir {
-    # Create cache dir
-    sudo mkdir -p $CLOUDKITTY_AUTH_CACHE_DIR/api
-    sudo chown $STACK_USER $CLOUDKITTY_AUTH_CACHE_DIR/api
-    rm -f $CLOUDKITTY_AUTH_CACHE_DIR/api/*
-    sudo mkdir -p $CLOUDKITTY_AUTH_CACHE_DIR/registry
-    sudo chown $STACK_USER $CLOUDKITTY_AUTH_CACHE_DIR/registry
-    rm -f $CLOUDKITTY_AUTH_CACHE_DIR/registry/*
 }
 
 # create_cloudkitty_data_dir() - Part of the init_cloudkitty() process
@@ -274,11 +235,6 @@ function create_opensearch_index {
 # init_cloudkitty() - Initialize CloudKitty database
 function init_cloudkitty {
     # Delete existing cache
-    sudo rm -rf $CLOUDKITTY_AUTH_CACHE_DIR
-    sudo mkdir -p $CLOUDKITTY_AUTH_CACHE_DIR
-    sudo chown $STACK_USER $CLOUDKITTY_AUTH_CACHE_DIR
-
-    # Delete existing cache
     sudo rm -rf $CLOUDKITTY_OUTPUT_BASEPATH
     sudo mkdir -p $CLOUDKITTY_OUTPUT_BASEPATH
     sudo chown $STACK_USER $CLOUDKITTY_OUTPUT_BASEPATH
@@ -299,7 +255,6 @@ function init_cloudkitty {
     fi
     $CLOUDKITTY_BIN_DIR/cloudkitty-storage-init
 
-    create_cloudkitty_cache_dir
     create_cloudkitty_data_dir
 }
 
@@ -417,21 +372,21 @@ function install_cloudkitty {
     elif [ $CLOUDKITTY_STORAGE_BACKEND == 'opensearch' ]; then
         install_opensearch
     fi
+    if [ ${CLOUDKITTY_USE_UWSGI,,} == 'true' ]; then
+        pip_install uwsgi
+    fi
 }
 
 # start_cloudkitty() - Start running processes, including screen
 function start_cloudkitty {
     run_process ck-proc "$CLOUDKITTY_BIN_DIR/cloudkitty-processor --config-file=$CLOUDKITTY_CONF"
-    if [[ "$CLOUDKITTY_USE_MOD_WSGI" == "False" ]]; then
+    if [ ${CLOUDKITTY_USE_UWSGI,,} == 'true' ]; then
+        run_process ck-api "$CLOUDKITTY_BIN_DIR/uwsgi --ini $CLOUDKITTY_UWSGI_CONF"
+    else
         run_process ck-api "$CLOUDKITTY_BIN_DIR/cloudkitty-api --host $CLOUDKITTY_SERVICE_HOST --port $CLOUDKITTY_SERVICE_PORT"
-    elif is_service_enabled ck-api; then
-        enable_apache_site cloudkitty
-        echo_summary "Waiting 15s for cloudkitty-processor to authenticate against keystone before apache is restarted."
-        sleep 15s
-        restart_apache_server
     fi
-    echo "Waiting for ck-api ($CLOUDKITTY_SERVICE_HOST:$CLOUDKITTY_SERVICE_PORT) to start..."
-    if ! wait_for_service $SERVICE_TIMEOUT $CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOST:$CLOUDKITTY_SERVICE_PORT; then
+    echo "Waiting for ck-api ($CLOUDKITTY_SERVICE_HOST) to start..."
+    if ! wait_for_service $SERVICE_TIMEOUT $CLOUDKITTY_ENDPOINT; then
         die $LINENO "ck-api did not start"
     fi
 }
@@ -444,13 +399,8 @@ function stop_cloudkitty {
     fi
 
     if is_service_enabled ck-api ; then
-        if [ "$CLOUDKITTY_USE_MOD_WSGI" == "True" ]; then
-            disable_apache_site cloudkitty
-            restart_apache_server
-        else
-            # Kill the cloudkitty screen windows
-            stop_process ck-api
-        fi
+        # Kill the cloudkitty screen windows
+        stop_process ck-api
     fi
 }
 
@@ -482,7 +432,6 @@ function update_horizon_static {
         $django_admin collectstatic --noinput
     DJANGO_SETTINGS_MODULE=openstack_dashboard.settings \
         $django_admin compress --force
-    restart_apache_server
 }
 
 # Upgrade cloudkitty database
@@ -505,7 +454,6 @@ if is_service_enabled ck-api; then
         if is_service_enabled horizon; then
             install_cloudkitty_dashboard
         fi
-        cleanup_cloudkitty
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring CloudKitty"
         configure_cloudkitty
@@ -528,6 +476,10 @@ if is_service_enabled ck-api; then
 
     if [[ "$1" == "unstack" ]]; then
         stop_cloudkitty
+    fi
+
+    if [[ "$1" == "clean" ]]; then
+        cleanup_cloudkitty
     fi
 fi
 

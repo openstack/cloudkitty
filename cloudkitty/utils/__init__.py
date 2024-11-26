@@ -182,16 +182,8 @@ def refresh_stevedore(namespace=None):
 
     Useful to have dynamic loading/unloading of stevedore modules.
     """
-    # NOTE(sheeprine): pkg_resources doesn't support reload on python3 due to
-    # defining basestring which is still there on reload hence executing
-    # python2 related code.
-    try:
-        del sys.modules['pkg_resources'].basestring
-    except AttributeError:
-        # python2, do nothing
-        pass
-    # Force working_set reload
-    importlib.reload(sys.modules['pkg_resources'])
+    if 'pkg_resources' in sys.modules:
+        importlib.reload(sys.modules['pkg_resources'])
     # Clear stevedore cache
     cache = extension.ExtensionManager.ENTRY_POINT_CACHE
     if namespace:
