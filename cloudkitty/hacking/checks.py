@@ -321,30 +321,6 @@ def no_xrange(logical_line):
 
 
 @core.flake8ext
-def validate_assertTrue(logical_line):
-    """Use assertTrue instead of assertEqual
-
-    C312
-    """
-    if re.match(assert_True, logical_line):
-        msg = ("C312: Unit tests should use assertTrue(value) instead"
-               " of using assertEqual(True, value).")
-        yield (0, msg)
-
-
-@core.flake8ext
-def validate_assertIsNone(logical_line):
-    """Use assertIsNone instead of assertEqual
-
-    C311
-    """
-    if re.match(assert_None, logical_line):
-        msg = ("C311: Unit tests should use assertIsNone(value) instead"
-               " of using assertEqual(None, value).")
-        yield (0, msg)
-
-
-@core.flake8ext
 def no_log_warn_check(logical_line):
     """Disallow 'LOG.warn'
 
@@ -353,15 +329,3 @@ def no_log_warn_check(logical_line):
     msg = ("C320: LOG.warn is deprecated, please use LOG.warning!")
     if re.match(no_log_warn, logical_line):
         yield (0, msg)
-
-
-@core.flake8ext
-def assert_raises_regexp(logical_line):
-    """Check for usage of deprecated assertRaisesRegexp
-
-    C322
-    """
-    res = asse_raises_regexp.search(logical_line)
-    if res:
-        yield (0, "C322: assertRaisesRegex must be used instead "
-                  "of assertRaisesRegexp")

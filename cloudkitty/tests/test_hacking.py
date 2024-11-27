@@ -285,33 +285,9 @@ class HackingTestCase(tests.TestCase):
 
         self.assertEqual(0, len(list(checks.no_xrange("range(45)"))))
 
-    def test_validate_assertTrue(self):
-        test_value = True
-        self.assertEqual(0, len(list(checks.validate_assertTrue(
-            "assertTrue(True)"))))
-        self.assertEqual(1, len(list(checks.validate_assertTrue(
-            "assertEqual(True, %s)" % test_value))))
-
-    def test_validate_assertIsNone(self):
-        test_value = None
-        self.assertEqual(0, len(list(checks.validate_assertIsNone(
-            "assertIsNone(None)"))))
-        self.assertEqual(1, len(list(checks.validate_assertIsNone(
-            "assertEqual(None, %s)" % test_value))))
-
     def test_no_log_warn_check(self):
         self.assertEqual(0, len(list(checks.no_log_warn_check(
             "LOG.warning('This should not trigger LOG.warn"
             "hacking check.')"))))
         self.assertEqual(1, len(list(checks.no_log_warn_check(
             "LOG.warn('We should not use LOG.wan')"))))
-
-    def test_oslo_assert_raises_regexp(self):
-        code = """
-               self.assertRaisesRegexp(ValueError,
-                                       "invalid literal for.*XYZ'$",
-                                       int,
-                                       'XYZ')
-               """
-        self._assert_has_errors(code, checks.assert_raises_regexp,
-                                expected_errors=[(1, 0, "C322")])
