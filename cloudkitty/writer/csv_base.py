@@ -231,7 +231,7 @@ class BaseCSVBackend(writer.BaseReportWriter):
             self._init_headers()
 
         formated_data = []
-        for base, mapped in self._field_map.iteritems():
+        for base, mapped in self._field_map.items():
             final_data = ''
             if isinstance(mapped, str):
                 mapped_section, mapped_field = mapped.rsplit(':', 1)
