@@ -10,8 +10,6 @@ Cloudkitty Specific Commandments
 --------------------------------
 
 - [C310] Check for improper use of logging format arguments.
-- [C311] Use assertIsNone(...) instead of assertEqual(None, ...).
-- [C312] Use assertTrue(...) rather than assertEqual(True, ...).
 - [C313] Validate that logs are not translated.
 - [C314] str() and unicode() cannot be used on an exception.
 - [C315] Translated messages cannot be concatenated.  String should be
@@ -23,7 +21,6 @@ Cloudkitty Specific Commandments
 - [C320] Do not use LOG.warn as it's deprecated.
 - [C321] Ensure that the _() function is explicitly imported to ensure
   proper translations.
-- [C322] Check for usage of deprecated assertRaisesRegexp
 
 LOG Translations
 ----------------
