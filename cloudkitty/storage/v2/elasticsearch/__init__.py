@@ -52,6 +52,10 @@ elasticsearch_storage_opts = [
                     "should be kept alive.",
                advanced=True,
                default=30, min=0, max=300),
+    cfg.BoolOpt('use_datastream',
+                help='Use a datastream rather than an index. This is useful '
+                     'starting with Elasticsearch 7.17.',
+                default=False),
 ]
 
 CONF.register_opts(elasticsearch_storage_opts, ELASTICSEARCH_STORAGE_GROUP)

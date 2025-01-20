@@ -12,11 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+from datetime import datetime
 import itertools
 
 from oslo_log import log
 import requests
 
+from cloudkitty.storage.v2 import elasticsearch
 from cloudkitty.storage.v2.elasticsearch import exceptions
 from cloudkitty.utils import json
 
@@ -248,8 +250,12 @@ class ElasticsearchClient(object):
         data = '\n'.join(itertools.chain(
             *[(instruction, json.dumps(term)) for term in terms]
         )) + '\n'
-        url = '/'.join(
-            (self._url, self._index_name, self._mapping_name, '_bulk'))
+        if elasticsearch.CONF.storage_elasticsearch.use_datastream:
+            url = '/'.join(
+                (self._url, self._index_name, '_bulk'))
+        else:
+            url = '/'.join(
+                (self._url, self._index_name, self._mapping_name, '_bulk'))
         return self._req(self._sess.post, url, data, None, deserialize=False)
 
     def bulk_index(self, terms):
@@ -259,7 +265,10 @@ class ElasticsearchClient(object):
         :type terms: collections.abc.Iterable
         """
         LOG.debug("Indexing {} documents".format(len(terms)))
-        return self.bulk_with_instruction({"index": {}}, terms)
+        if elasticsearch.CONF.storage_elasticsearch.use_datastream:
+            return self.bulk_with_instruction({"create": {}}, terms)
+        else:
+            return self.bulk_with_instruction({"index": {}}, terms)
 
     def commit(self):
         """Index all documents"""
@@ -275,17 +284,31 @@ class ElasticsearchClient(object):
         :param type_: type of the DataPoint
         :type type_: str
         """
-        self._docs.append({
-            'start': start,
-            'end': end,
-            'type': type_,
-            'unit': point.unit,
-            'description': point.description,
-            'qty': point.qty,
-            'price': point.price,
-            'groupby': point.groupby,
-            'metadata': point.metadata,
-        })
+        if elasticsearch.CONF.storage_elasticsearch.use_datastream:
+            self._docs.append({
+                '@timestamp': datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                'start': start,
+                'end': end,
+                'type': type_,
+                'unit': point.unit,
+                'description': point.description,
+                'qty': point.qty,
+                'price': point.price,
+                'groupby': point.groupby,
+                'metadata': point.metadata,
+            })
+        else:
+            self._docs.append({
+                'start': start,
+                'end': end,
+                'type': type_,
+                'unit': point.unit,
+                'description': point.description,
+                'qty': point.qty,
+                'price': point.price,
+                'groupby': point.groupby,
+                'metadata': point.metadata,
+            })
         if self._autocommit and len(self._docs) >= self._chunk_size:
             self.commit()
 
