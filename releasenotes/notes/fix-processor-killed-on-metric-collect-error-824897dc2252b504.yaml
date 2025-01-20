@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Changes the metric collector exception handling to raise an exception
+    instead of killing the processor when an error happens in the metric
+    collect, so the problematic scope will be skipped till next
+    collection and the other scopes will be processed normally.
