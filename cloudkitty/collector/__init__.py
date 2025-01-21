@@ -64,7 +64,16 @@ COLLECTORS_NAMESPACE = 'cloudkitty.collector.backends'
 def MetricDict(value):
     if isinstance(value, dict) and len(value.keys()) > 0:
         return value
-    raise Invalid("Not a dict with at least one key")
+    if isinstance(value, list) and len(value) > 0:
+        for v in value:
+            if not (isinstance(v, dict) and len(v.keys()) > 0):
+                raise Invalid("Not a dict with at least one key or a "
+                              "list with at least one dict with at "
+                              "least one key. Provided value: %s" % value)
+        return value
+    raise Invalid("Not a dict with at least one key or a "
+                  "list with at least one dict with at "
+                  "least one key. Provided value: %s" % value)
 
 
 CONF_BASE_SCHEMA = {Required('metrics'): MetricDict}
@@ -189,9 +198,26 @@ class BaseCollector(object, metaclass=abc.ABCMeta):
 
         output = {}
         for metric_name, metric in conf['metrics'].items():
-            output[metric_name] = metric_schema(metric)
-            if scope_key not in output[metric_name]['groupby']:
-                output[metric_name]['groupby'].append(scope_key)
+            if not isinstance(metric, list):
+                metric = [metric]
+            for m in metric:
+                met = metric_schema(m)
+                names = [metric_name]
+                alt_name = met.get('alt_name')
+                if alt_name is not None:
+                    names.append(alt_name)
+
+                new_metric_name = "@#".join(names)
+                if output.get(new_metric_name) is not None:
+                    raise InvalidConfiguration(
+                        "Metric {} already exists, you should change the"
+                        "alt_name for metric: {}"
+                        .format(new_metric_name, metric))
+
+                output[new_metric_name] = met
+
+                if scope_key not in output[new_metric_name]['groupby']:
+                    output[new_metric_name]['groupby'].append(scope_key)
 
         return output
 

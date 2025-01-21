@@ -153,24 +153,24 @@ class PrometheusCollector(collector.BaseCollector):
 
         return metadata, groupby, qty
 
-    def fetch_all(self, metric_name, start, end, scope_id, q_filter=None):
-        """Returns metrics to be valorized."""
-        scope_key = CONF.collect.scope_key
-        method = self.conf[metric_name]['extra_args']['aggregation_method']
-        query_function = self.conf[metric_name]['extra_args'].get(
+    @staticmethod
+    def build_query(conf, metric_name, start, end, scope_key, scope_id,
+                    groupby, metadata):
+        """Builds the query for the metrics to be valorized."""
+
+        method = conf[metric_name]['extra_args']['aggregation_method']
+        query_function = conf[metric_name]['extra_args'].get(
             'query_function')
-        range_function = self.conf[metric_name]['extra_args'].get(
+        range_function = conf[metric_name]['extra_args'].get(
             'range_function')
-        groupby = self.conf[metric_name].get('groupby', [])
-        metadata = self.conf[metric_name].get('metadata', [])
-        query_prefix = self.conf[metric_name]['extra_args']['query_prefix']
-        query_suffix = self.conf[metric_name]['extra_args']['query_suffix']
+        query_prefix = conf[metric_name]['extra_args']['query_prefix']
+        query_suffix = conf[metric_name]['extra_args']['query_suffix']
+        query_metric = metric_name.split('@#')[0]
         period = tzutils.diff_seconds(end, start)
-        time = end
 
         # The metric with the period
         query = '{0}{{{1}="{2}"}}[{3}s]'.format(
-            metric_name,
+            query_metric,
             scope_key,
             scope_id,
             period
@@ -211,6 +211,26 @@ class PrometheusCollector(collector.BaseCollector):
         # Add custom query suffix
         if query_suffix:
             query = "{0} {1}".format(query, query_suffix)
+
+        return query
+
+    def fetch_all(self, metric_name, start, end, scope_id, q_filter=None):
+        """Returns metrics to be valorized."""
+        time = end
+        metadata = self.conf[metric_name].get('metadata', [])
+        groupby = self.conf[metric_name].get('groupby', [])
+        scope_key = CONF.collect.scope_key
+
+        query = self.build_query(
+            self.conf,
+            metric_name,
+            start,
+            end,
+            scope_key,
+            scope_id,
+            groupby,
+            metadata
+        )
 
         try:
             res = self._conn.get_instant(

@@ -293,21 +293,14 @@ summary GET API.
          - ram
        metadata: []
 
-Collector-specific configuration
---------------------------------
+Multiple ratings in one metric
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Some collectors require extra options. These must be specified through the
-``extra_args`` option. Some options have defaults, other must be systematically
-specified. The extra args for each collector are detailed below.
-
-Gnocchi
-~~~~~~~
-
-Besides the common configuration, the Gnocchi collector also accepts a list of
+Besides the common configuration, the collectors also accept a list of
 rating types definitions for each metric. Using a list of rating types
 definitions allows operators to rate different aspects of the same resource
-type collected through the same metric in Gnocchi, otherwise operators would
-need to create multiple metrics in Gnocchi to create multiple rating types in
+type collected through the same metric, otherwise operators would need to
+create multiple metrics in the collector to create multiple rating types in
 CloudKitty.
 
 .. code-block:: yaml
@@ -329,6 +322,15 @@ CloudKitty.
          metadata:
            - os_license
 
+Collector-specific configuration
+--------------------------------
+
+Some collectors require extra options. These must be specified through the
+``extra_args`` option. Some options have defaults, other must be systematically
+specified. The extra args for each collector are detailed below.
+
+Gnocchi
+~~~~~~~
 
 .. note:: In order to retrieve metrics from Gnocchi, Cloudkitty uses the
           dynamic aggregates endpoint. It builds an operation of the following
@@ -419,4 +421,40 @@ Prometheus
   ``delta``, ``deriv``, ``idelta``, ``irange``, ``irate``, ``rate``. For more
   information on these functions, you can check `this page`_
 
+Here is one example of a rating with PromQL `vector matching`_:
+
+.. code-block:: yaml
+
+  metrics:
+    libvirt_domain_openstack_info:
+    - alt_name: cpu
+      unit: vCPU
+      groupby:
+      - project_id
+      metadata:
+      - instance_name
+      - domain
+      extra_args:
+        query_suffix: "* on (domain) group_left() libvirt_domain_vcpu_maximum"
+
+
+And the resulting PromQL:
+
+.. code-block:: promql
+
+  max(
+     max_over_time(
+        libvirt_domain_openstack_info{project_id="<PROJECT_ID>"}
+        [1h]
+     )
+  ) by (
+     project_id,
+     instance_name,
+     domain
+  ) * on (domain)
+  group_left()
+  libvirt_domain_vcpu_maximum
+
+
 .. _this page: https://prometheus.io/docs/prometheus/latest/querying/basics/
+.. _vector matching: https://prometheus.io/docs/prometheus/latest/querying/operators/#vector-matching
