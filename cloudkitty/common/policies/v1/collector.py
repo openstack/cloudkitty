@@ -23,13 +23,15 @@ collector_policies = [
         check_str=base.ROLE_ADMIN,
         description='Return the list of every services mapped to a collector.',
         operations=[{'path': '/v1/collector/mappings',
-                     'method': 'LIST'}]),
+                     'method': 'LIST'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='collector:get_mapping',
         check_str=base.ROLE_ADMIN,
         description='Return a service to collector mapping.',
         operations=[{'path': '/v1/collector/mappings/{service_id}',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='collector:manage_mapping',
         check_str=base.ROLE_ADMIN,
@@ -37,19 +39,22 @@ collector_policies = [
         operations=[{'path': '/v1/collector/mappings',
                      'method': 'POST'},
                     {'path': '/v1/collector/mappings/{service_id}',
-                     'method': 'DELETE'}]),
+                     'method': 'DELETE'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='collector:get_state',
         check_str=base.ROLE_ADMIN,
         description='Query the enable state of a collector.',
         operations=[{'path': '/v1/collector/states/{collector_id}',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='collector:update_state',
         check_str=base.ROLE_ADMIN,
         description='Set the enable state of a collector.',
         operations=[{'path': '/v1/collector/states/{collector_id}',
-                     'method': 'PUT'}])
+                     'method': 'PUT'}],
+        scope_types=['project'])
 ]
 
 

@@ -23,19 +23,22 @@ rating_policies = [
         check_str=base.ROLE_ADMIN,
         description='Returns the list of loaded modules in Cloudkitty.',
         operations=[{'path': '/v2/rating/modules',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='v2_rating:get_module',
         check_str=base.ROLE_ADMIN,
         description='Get specified module.',
         operations=[{'path': '/v2/rating/modules/{module_id}',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='v2_rating:update_module',
         check_str=base.ROLE_ADMIN,
         description='Change the state and priority of a module.',
         operations=[{'path': '/v2/rating/modules/{module_id}',
-                     'method': 'PUT'}])
+                     'method': 'PUT'}],
+        scope_types=['project'])
 ]
 
 

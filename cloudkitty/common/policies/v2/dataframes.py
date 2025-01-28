@@ -23,13 +23,15 @@ dataframes_policies = [
         check_str=base.ROLE_ADMIN,
         description='Add one or several DataFrames',
         operations=[{'path': '/v2/dataframes',
-                     'method': 'POST'}]),
+                     'method': 'POST'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='dataframes:get',
-        check_str=base.RULE_ADMIN_OR_OWNER,
+        check_str=base.PROJECT_READER_OR_ADMIN,
         description='Get DataFrames',
         operations=[{'path': '/v2/dataframes',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
 ]
 
 

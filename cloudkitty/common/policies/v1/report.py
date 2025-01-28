@@ -23,19 +23,22 @@ report_policies = [
         check_str=base.ROLE_ADMIN,
         description='Return the list of rated tenants.',
         operations=[{'path': '/v1/report/tenants',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='report:get_summary',
-        check_str=base.RULE_ADMIN_OR_OWNER,
+        check_str=base.PROJECT_READER_OR_ADMIN,
         description='Return the summary to pay for a given period.',
         operations=[{'path': '/v1/report/summary',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='report:get_total',
-        check_str=base.RULE_ADMIN_OR_OWNER,
+        check_str=base.PROJECT_READER_OR_ADMIN,
         description='Return the amount to pay for a given period.',
         operations=[{'path': '/v1/report/total',
-                     'method': 'GET'}])
+                     'method': 'GET'}],
+        scope_types=['project'])
 ]
 
 

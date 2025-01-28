@@ -22,13 +22,15 @@ schedule_policies = [
         check_str=base.ROLE_ADMIN,
         description='Schedule a scope for reprocessing',
         operations=[{'path': '/v2/task/reprocesses',
-                     'method': 'POST'}]),
+                     'method': 'POST'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='schedule:get_task_reprocesses',
         check_str=base.ROLE_ADMIN,
         description='Get reprocessing schedule tasks for scopes.',
         operations=[{'path': '/v2/task/reprocesses',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
 ]
 
 

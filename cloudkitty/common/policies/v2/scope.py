@@ -23,25 +23,29 @@ scope_policies = [
         check_str=base.ROLE_ADMIN,
         description='Get the state of one or several scopes',
         operations=[{'path': '/v2/scope',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='scope:reset_state',
         check_str=base.ROLE_ADMIN,
         description='Reset the state of one or several scopes',
         operations=[{'path': '/v2/scope',
-                     'method': 'PUT'}]),
+                     'method': 'PUT'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='scope:patch_state',
         check_str=base.ROLE_ADMIN,
         description='Enables operators to patch a storage scope',
         operations=[{'path': '/v2/scope',
-                     'method': 'PATCH'}]),
+                     'method': 'PATCH'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='scope:post_state',
         check_str=base.ROLE_ADMIN,
         description='Enables operators to create a storage scope',
         operations=[{'path': '/v2/scope',
-                     'method': 'POST'}]),
+                     'method': 'POST'}],
+        scope_types=['project']),
 ]
 
 

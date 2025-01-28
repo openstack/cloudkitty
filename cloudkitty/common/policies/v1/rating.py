@@ -23,32 +23,37 @@ rating_policies = [
         check_str=base.ROLE_ADMIN,
         description='Return the list of loaded modules in Cloudkitty.',
         operations=[{'path': '/v1/rating/modules',
-                     'method': 'LIST'}]),
+                     'method': 'LIST'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='rating:get_module',
         check_str=base.ROLE_ADMIN,
         description='Get specified module.',
         operations=[{'path': '/v1/rating/modules/{module_id}',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='rating:update_module',
         check_str=base.ROLE_ADMIN,
         description='Change the state and priority of a module.',
         operations=[{'path': '/v1/rating/modules/{module_id}',
-                     'method': 'PUT'}]),
+                     'method': 'PUT'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='rating:quote',
         check_str=base.UNPROTECTED,
         description='Get an instant quote based on multiple resource '
                     'descriptions.',
         operations=[{'path': '/v1/rating/quote',
-                     'method': 'POST'}]),
+                     'method': 'POST'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='rating:module_config',
         check_str=base.ROLE_ADMIN,
         description='Trigger a rating module list reload.',
         operations=[{'path': '/v1/rating/reload_modules',
-                     'method': 'GET'}])
+                     'method': 'GET'}],
+        scope_types=['project'])
 ]
 
 

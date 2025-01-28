@@ -19,6 +19,24 @@ RULE_ADMIN_OR_OWNER = 'rule:admin_or_owner'
 ROLE_ADMIN = 'role:admin'
 UNPROTECTED = ''
 
+DEPRECATED_REASON = """
+CloudKitty API policies are introducing new default roles with scope_type
+capabilities. Old policies are deprecated and silently going to be ignored
+in future release.
+"""
+
+DEPRECATED_ADMIN_OR_OWNER_POLICY = policy.DeprecatedRule(
+    name=RULE_ADMIN_OR_OWNER,
+    check_str='is_admin:True or '
+              '(role:admin and is_admin_project:True) or '
+              'project_id:%(project_id)s',
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since='22.0.0'
+)
+
+PROJECT_MEMBER_OR_ADMIN = 'rule:project_member_or_admin'
+PROJECT_READER_OR_ADMIN = 'rule:project_reader_or_admin'
+
 rules = [
     policy.RuleDefault(
         name='context_is_admin',
@@ -27,10 +45,33 @@ rules = [
         name='admin_or_owner',
         check_str='is_admin:True or '
                   '(role:admin and is_admin_project:True) or '
-                  'project_id:%(project_id)s'),
+                  'project_id:%(project_id)s',
+        deprecated_for_removal=True,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since='22.0.0'),
     policy.RuleDefault(
         name='default',
-        check_str=UNPROTECTED)
+        check_str=UNPROTECTED),
+    policy.RuleDefault(
+        "project_member_api",
+        "role:member and project_id:%(project_id)s",
+        "Default rule for Project level non admin APIs.",
+        deprecated_rule=DEPRECATED_ADMIN_OR_OWNER_POLICY),
+    policy.RuleDefault(
+        "project_reader_api",
+        "role:reader and project_id:%(project_id)s",
+        "Default rule for Project level read only APIs.",
+        deprecated_rule=DEPRECATED_ADMIN_OR_OWNER_POLICY),
+    policy.RuleDefault(
+        "project_member_or_admin",
+        "rule:project_member_api or rule:context_is_admin",
+        "Default rule for Project Member or admin APIs.",
+        deprecated_rule=DEPRECATED_ADMIN_OR_OWNER_POLICY),
+    policy.RuleDefault(
+        "project_reader_or_admin",
+        "rule:project_reader_api or rule:context_is_admin",
+        "Default rule for Project reader or admin APIs.",
+        deprecated_rule=DEPRECATED_ADMIN_OR_OWNER_POLICY)
 ]
 
 

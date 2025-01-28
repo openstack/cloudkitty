@@ -23,31 +23,36 @@ info_policies = [
         check_str=base.UNPROTECTED,
         description='List available services information in Cloudkitty.',
         operations=[{'path': '/v1/info/services',
-                     'method': 'LIST'}]),
+                     'method': 'LIST'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='info:get_service_info',
         check_str=base.UNPROTECTED,
         description='Get specified service information.',
         operations=[{'path': '/v1/info/services/{metric_id}',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='info:list_metrics_info',
         check_str=base.UNPROTECTED,
         description='List available metrics information in Cloudkitty.',
         operations=[{'path': '/v1/info/metrics',
-                     'method': 'LIST'}]),
+                     'method': 'LIST'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='info:get_metric_info',
         check_str=base.UNPROTECTED,
         description='Get specified metric information.',
         operations=[{'path': '/v1/info/metrics/{metric_id}',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
     policy.DocumentedRuleDefault(
         name='info:get_config',
         check_str=base.UNPROTECTED,
         description='Get current configuration in Cloudkitty.',
         operations=[{'path': '/v1/info/config',
-                     'method': 'GET'}])
+                     'method': 'GET'}],
+        scope_types=['project'])
 ]
 
 

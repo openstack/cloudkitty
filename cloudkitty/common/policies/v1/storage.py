@@ -20,11 +20,12 @@ from cloudkitty.common.policies import base
 storage_policies = [
     policy.DocumentedRuleDefault(
         name='storage:list_data_frames',
-        check_str=base.RULE_ADMIN_OR_OWNER,
+        check_str=base.PROJECT_READER_OR_ADMIN,
         description='Return a list of rated resources for a time period '
                     'and a tenant.',
         operations=[{'path': '/v1/storage/dataframes',
-                     'method': 'GET'}])
+                     'method': 'GET'}],
+        scope_types=['project'])
 ]
 
 

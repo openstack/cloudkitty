@@ -19,10 +19,11 @@ from cloudkitty.common.policies import base
 example_policies = [
     policy.DocumentedRuleDefault(
         name='summary:get_summary',
-        check_str=base.RULE_ADMIN_OR_OWNER,
+        check_str=base.PROJECT_READER_OR_ADMIN,
         description='Get a rating summary',
         operations=[{'path': '/v2/summary',
-                     'method': 'GET'}]),
+                     'method': 'GET'}],
+        scope_types=['project']),
 ]
 
 

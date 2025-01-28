@@ -1,0 +1,17 @@
+---
+features:
+  - |
+    The CloudKitty policies implemented the scope concept and new default roles
+    (``admin``, ``member``, and ``reader``) provided by keystone.
+upgrade:
+  - |
+    All the policies implement the ``scope_type`` and new defaults.
+
+    * **Scope**
+
+      Each policy is protected with ``project`` ``scope_type``.
+
+    * **New Defaults (Admin, Member and Reader)**
+
+      Policies are default to Admin, Member and Reader roles. Old roles are
+      also supported. There is no change in the legacy admin access.
