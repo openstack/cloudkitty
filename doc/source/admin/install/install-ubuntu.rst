@@ -1,13 +1,9 @@
-Install from packages for Ubuntu (16.04)
-========================================
+Install from packages for Ubuntu
+================================
 
-Packages for Ubuntu 16.04 are available starting from the Newton release.
-
-#. Enable the OpenStack repository for the Newton or Ocata release::
-
-    apt install software-properties-common
-    add-apt-repository ppa:objectif-libre/cloudkitty # Newton
-    add-apt-repository ppa:objectif-libre/cloudkitty-ocata # Ocata
+Note that Canonical doesn't maintain CloudKitty packages. These are only
+maintained in Debian, and then imported from Debian Unstable to the
+Ubuntu Universe repository.
 
 #. Upgrade the packages on your host::
 
