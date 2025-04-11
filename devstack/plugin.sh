@@ -110,7 +110,7 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF oslo_policy policy_file 'policy.yaml'
 
     cp $CLOUDKITTY_DIR$CLOUDKITTY_CONF_DIR/api_paste.ini $CLOUDKITTY_CONF_DIR
-    cp $CLOUDKITTY_DIR$CLOUDKITTY_CONF_DIR/metrics.yml $CLOUDKITTY_CONF_DIR
+    cp $CLOUDKITTY_METRICS_CONF $CLOUDKITTY_CONF_DIR
     iniset_rpc_backend cloudkitty $CLOUDKITTY_CONF DEFAULT
 
     iniset $CLOUDKITTY_CONF DEFAULT notification_topics 'notifications'
@@ -135,6 +135,10 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF "fetcher_$CLOUDKITTY_FETCHER" auth_section authinfos
     if [[ "$CLOUDKITTY_FETCHER" == "keystone" ]]; then
         iniset $CLOUDKITTY_CONF fetcher_keystone keystone_version 3
+    elif [ $CLOUDKITTY_FETCHER == 'prometheus' ]; then
+        iniset $CLOUDKITTY_CONF "fetcher_prometheus" prometheus_url $CLOUDKITTY_PROMETHEUS_URL
+        iniset $CLOUDKITTY_CONF "fetcher_prometheus" metric $CLOUDKITTY_FETCHER_METRIC
+        iniset $CLOUDKITTY_CONF "fetcher_prometheus" scope_attribute $CLOUDKITTY_FETCHER_SCOPE_ATTRIBUTE
     fi
 
     if [ "$CLOUDKITTY_STORAGE_BACKEND" == "influxdb" ] && [ "$CLOUDKITTY_INFLUX_VERSION" == 1 ]; then
@@ -166,7 +170,10 @@ function configure_cloudkitty {
     # collect
     iniset $CLOUDKITTY_CONF collect collector $CLOUDKITTY_COLLECTOR
     iniset $CLOUDKITTY_CONF "collector_${CLOUDKITTY_COLLECTOR}" auth_section authinfos
-    iniset $CLOUDKITTY_CONF collect metrics_conf $CLOUDKITTY_CONF_DIR/$CLOUDKITTY_METRICS_CONF
+    if [ $CLOUDKITTY_COLLECTOR == 'prometheus' ]; then
+        iniset $CLOUDKITTY_CONF collector_prometheus prometheus_url $CLOUDKITTY_PROMETHEUS_URL
+    fi
+    iniset $CLOUDKITTY_CONF collect metrics_conf $CLOUDKITTY_CONF_DIR/$(basename $CLOUDKITTY_METRICS_CONF)
     # DO NOT DO THIS IN PRODUCTION! This is done in order to get data quicker
     # when starting a devstack installation, but is NOT a recommended setting
     iniset $CLOUDKITTY_CONF collect wait_periods 0
