@@ -28,6 +28,7 @@ the configuration file. The following options are available:
   - ``influxdb``
   - ``elasticsearch``
   - ``opensearch``
+  - ``loki``
 
 Driver-specific options
 =======================
@@ -111,3 +112,28 @@ Section ``storage_opensearch``:
 
 * ``scroll_duration``: Defaults to 30. Duration (in seconds) for which the
   OpenSearch scroll contexts should be kept alive.
+
+Loki (v2)
+-------------------
+
+Section ``storage_loki``:
+
+* ``url``: Defaults to ``http://localhost:3100/loki/api/v1``. Loki host, along
+  with port and protocol.
+
+* ``tenant``: Defaults to tenant1. Loki tenant.
+
+* ``stream``: Defaults to ``{"service": "cloudkitty"}``. The labels that are
+  going to be used to define the Loki stream as Python dict.
+
+* ``buffer_size``: Defaults to ``1``. The number of messages that will be
+  grouped together before launching a Loki HTTP POST request.
+
+* ``content_type``: Defaults to ``application/json``. The http Content-Type
+  that will be used to send info to Loki. It can also be
+  ``application/x-protobuf`` (not supported yet).
+
+* ``insecure``: Defaults to ``false``. Set to true to allow insecure HTTPS
+  connections to Loki.
+
+* ``cafile``: Path of the CA certificate to trust for HTTPS connections.

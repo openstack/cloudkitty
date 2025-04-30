@@ -23,6 +23,7 @@ from cloudkitty import storage
 from cloudkitty.tests import samples
 from cloudkitty.tests.storage.v2 import es_utils
 from cloudkitty.tests.storage.v2 import influx_utils
+from cloudkitty.tests.storage.v2 import loki_utils
 from cloudkitty.tests.storage.v2 import opensearch_utils
 from cloudkitty.tests import TestCase
 from cloudkitty.tests import utils as test_utils
@@ -38,13 +39,18 @@ _INFLUX_CLIENT_PATH = 'cloudkitty.storage.v2.influx.InfluxClient'
 _OS_CLIENT_PATH = ('cloudkitty.storage.v2.opensearch'
                    '.client.OpenSearchClient')
 
+_LOKI_CLIENT_PATH = ('cloudkitty.storage.v2.loki'
+                     '.client.LokiClient')
+
 
 class StorageUnitTest(TestCase):
 
     storage_scenarios = [
         ('influxdb', dict(storage_backend='influxdb')),
         ('elasticsearch', dict(storage_backend='elasticsearch')),
-        ('opensearch', dict(storage_backend='opensearch'))]
+        ('opensearch', dict(storage_backend='opensearch')),
+        ('loki', dict(storage_backend='loki'))
+    ]
 
     @classmethod
     def generate_scenarios(cls):
@@ -58,6 +64,8 @@ class StorageUnitTest(TestCase):
                 new=influx_utils.FakeInfluxClient)
     @mock.patch(_OS_CLIENT_PATH,
                 new=opensearch_utils.FakeOpenSearchClient)
+    @mock.patch(_LOKI_CLIENT_PATH,
+                new=loki_utils.FakeLokiClient)
     @mock.patch('cloudkitty.utils.load_conf', new=test_utils.load_conf)
     def setUp(self):
         super(StorageUnitTest, self).setUp()
@@ -312,7 +320,6 @@ class StorageUnitTest(TestCase):
 
         retrieved_length = sum(len(list(frame.iterpoints()))
                                for frame in frames['dataframes'])
-
         self.assertEqual(expected_length, retrieved_length)
 
     def test_retrieve_all_scopes_one_type(self):
