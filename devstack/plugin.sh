@@ -37,7 +37,7 @@ if [[ -d $CLOUDKITTY_DIR/bin ]]; then
 else
     CLOUDKITTY_BIN_DIR=$(get_python_exec_prefix)
 fi
-CLOUDKITTY_UWSGI=$CLOUDKITTY_BIN_DIR/cloudkitty-api
+CLOUDKITTY_UWSGI=cloudkitty.wsgi.api:application
 if [ ${CLOUDKITTY_USE_UWSGI,,} == 'true' ]; then
     CLOUDKITTY_ENDPOINT=$CLOUDKITTY_SERVICE_PROTOCOL://$CLOUDKITTY_SERVICE_HOST/rating
 else

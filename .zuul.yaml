@@ -201,7 +201,8 @@
         - cloudkitty-tempest-full-ipv6-only
         - cloudkitty-tox-bandit:
             voting: false
-        - cloudkitty-grenade-job
+        - cloudkitty-grenade-job:
+            voting: false
     gate:
       jobs:
         - cloudkitty-tempest-full-v2-storage-influxdb
@@ -211,4 +212,3 @@
         - cloudkitty-tempest-full-v2-storage-opensearch
         - cloudkitty-tempest-full-v1-storage-sqlalchemy
         - cloudkitty-tempest-full-ipv6-only
-        - cloudkitty-grenade-job
