@@ -56,10 +56,6 @@
       tox_envlist: all
       grenade_devstack_localrc:
         shared:
-          # for <2025.1
-          CLOUDKITTY_USE_MODE_WSGI: false
-          # for >=2025.1
-          CLOUDKITTY_USE_UWSGI: false
           CLOUDKITTY_FETCHER: keystone
 
 - job:
@@ -201,8 +197,7 @@
         - cloudkitty-tempest-full-ipv6-only
         - cloudkitty-tox-bandit:
             voting: false
-        - cloudkitty-grenade-job:
-            voting: false
+        - cloudkitty-grenade-job
     gate:
       jobs:
         - cloudkitty-tempest-full-v2-storage-influxdb
@@ -212,3 +207,4 @@
         - cloudkitty-tempest-full-v2-storage-opensearch
         - cloudkitty-tempest-full-v1-storage-sqlalchemy
         - cloudkitty-tempest-full-ipv6-only
+        - cloudkitty-grenade-job
