@@ -45,7 +45,7 @@ influx_storage_opts = [
     cfg.StrOpt('retention_policy', default='autogen',
                help='Retention policy to use'),
     cfg.StrOpt('host', help='InfluxDB host', default='localhost'),
-    cfg.IntOpt('port', help='InfluxDB port', default=8086),
+    cfg.PortOpt('port', help='InfluxDB port', default=8086),
     cfg.BoolOpt(
         'use_ssl',
         help='Set to true to use ssl for influxDB connection. '
