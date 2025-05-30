@@ -22,6 +22,8 @@ import random
 import sys
 import uuid
 
+from oslo_utils import timeutils
+
 from cloudkitty import json_utils as json
 
 
@@ -588,7 +590,7 @@ def main():
     generators = [compute, image, volume, net_bw, floating]
 
     # Date
-    now = datetime.datetime.utcnow()
+    now = timeutils.utcnow()
     hour_delta = datetime.timedelta(hours=1)
     cur_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     cur_month = cur_date.month
