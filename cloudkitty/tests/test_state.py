@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-import datetime
+from oslo_utils import timeutils
 
 from cloudkitty import state
 from cloudkitty import tests
@@ -29,14 +29,14 @@ class DBStateManagerTest(tests.TestCase):
         self.assertEqual(name, 'testuser_osrtf')
 
     def test_state_access(self):
-        now = datetime.datetime.utcnow()
+        now = timeutils.utcnow()
         self.sm.set_state(now)
         result = self.sm.get_state()
         self.assertEqual(result, str(now))
 
     def test_metadata_access(self):
         metadata = {'foo': 'bar'}
-        now = datetime.datetime.utcnow()
+        now = timeutils.utcnow()
         self.sm.set_state(now)
         self.sm.set_metadata(metadata)
         result = self.sm.get_metadata()
