@@ -232,6 +232,8 @@ class PrometheusCollector(collector.BaseCollector):
             metadata
         )
 
+        LOG.debug("Executing Prometheus query [%s]", query)
+
         try:
             res = self._conn.get_instant(
                 query,
