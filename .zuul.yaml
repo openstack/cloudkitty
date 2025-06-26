@@ -28,7 +28,6 @@
       tox_envlist: all
       devstack_localrc:
         CLOUDKITTY_FETCHER: keystone
-        USE_PYTHON3: True
         TEMPEST_PLUGINS: /opt/stack/cloudkitty-tempest-plugin
 
 - job:
