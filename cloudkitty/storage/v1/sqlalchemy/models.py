@@ -15,12 +15,12 @@
 #
 from oslo_db.sqlalchemy import models
 import sqlalchemy
-from sqlalchemy.ext import declarative
+from sqlalchemy.orm import declarative_base
 
 from cloudkitty.utils import json
 
 
-Base = declarative.declarative_base()
+Base = declarative_base()
 
 
 class RatedDataFrame(Base, models.ModelBase):

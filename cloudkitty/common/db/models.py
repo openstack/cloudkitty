@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-from sqlalchemy.ext import declarative
+from sqlalchemy.orm import declarative_base
 
 NAMING_CONVENTION = {
     "ix": 'ix_%(column_0_label)s',
@@ -24,6 +24,6 @@ NAMING_CONVENTION = {
 
 
 def get_base():
-    base = declarative.declarative_base()
+    base = declarative_base()
     base.metadata.naming_convention = NAMING_CONVENTION
     return base

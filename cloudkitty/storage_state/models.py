@@ -15,9 +15,9 @@
 #
 from oslo_db.sqlalchemy import models
 import sqlalchemy
-from sqlalchemy.ext import declarative
+from sqlalchemy import orm
 
-Base = declarative.declarative_base()
+Base = orm.declarative_base()
 
 
 def to_string_selected_fields(object_to_print, fields=[]):
@@ -31,7 +31,7 @@ def to_string_selected_fields(object_to_print, fields=[]):
 class IdentifierState(Base, models.ModelBase):
     """Represents the state of a given identifier."""
 
-    @declarative.declared_attr
+    @orm.declared_attr
     def __table_args__(cls):
         return (
             sqlalchemy.schema.UniqueConstraint(
@@ -74,7 +74,7 @@ class IdentifierState(Base, models.ModelBase):
 class ReprocessingScheduler(Base, models.ModelBase):
     """Represents the reprocessing scheduler table."""
 
-    @declarative.declared_attr
+    @orm.declared_attr
     def __table_args__(cls):
         return (
             sqlalchemy.schema.PrimaryKeyConstraint('id'),

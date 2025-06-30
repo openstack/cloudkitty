@@ -15,7 +15,6 @@
 #
 from oslo_db.sqlalchemy import models
 import sqlalchemy
-from sqlalchemy.ext import declarative
 from sqlalchemy import orm
 from sqlalchemy import schema
 
@@ -110,7 +109,7 @@ class HashMapField(Base, HashMapBase):
     fk_to_resolve = {
         'service_id': 'service.service_id'}
 
-    @declarative.declared_attr
+    @orm.declared_attr
     def __table_args__(cls):
         args = (
             schema.UniqueConstraint(
@@ -205,7 +204,7 @@ class HashMapMapping(Base, HashMapBase):
         'field_id': 'field.field_id',
         'group_id': 'group.group_id'}
 
-    @declarative.declared_attr
+    @orm.declared_attr
     def __table_args__(cls):
         args = (
             schema.UniqueConstraint(
@@ -277,7 +276,7 @@ class HashMapThreshold(Base, HashMapBase):
         'field_id': 'field.field_id',
         'group_id': 'group.group_id'}
 
-    @declarative.declared_attr
+    @orm.declared_attr
     def __table_args__(cls):
         args = (
             schema.UniqueConstraint(

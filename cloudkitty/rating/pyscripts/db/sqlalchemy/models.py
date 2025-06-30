@@ -18,12 +18,12 @@ import zlib
 
 from oslo_db.sqlalchemy import models
 import sqlalchemy
-from sqlalchemy.ext import declarative
 from sqlalchemy.ext import hybrid
+from sqlalchemy.orm import declarative_base
 
 from cloudkitty.rating.common.db.models import VolatileAuditableModel
 
-Base = declarative.declarative_base()
+Base = declarative_base()
 
 
 class PyScriptsBase(models.ModelBase):
