@@ -60,6 +60,9 @@ upgrade_project cloudkitty $RUN_DIR $BASE_DEVSTACK_BRANCH $TARGET_DEVSTACK_BRANC
 # Migrate the database
 upgrade_cloudkitty_database || die $LINO "ERROR in database migration"
 
+# Update api_paste.ini for healthcheck middleware as app
+cp $CLOUDKITTY_DIR$CLOUDKITTY_CONF_DIR/api_paste.ini $CLOUDKITTY_CONF_DIR
+
 start_cloudkitty
 
 # Don't succeed unless the services come up
