@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The ``[state]`` configuration group has been removed, because all options
+    in this group have been unused.
