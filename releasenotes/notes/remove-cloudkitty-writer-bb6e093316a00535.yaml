@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    The ``cloudkitty-writer`` CLI has been removed. The CLI has been
+    unmaintained for a long time and has not been functional for multiple
+    releases. Use the report API instead. Also, the ``[output]`` configuration
+    section has been removed.
