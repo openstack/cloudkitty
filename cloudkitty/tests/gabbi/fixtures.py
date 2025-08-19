@@ -54,18 +54,26 @@ from cloudkitty.utils import tz as tzutils
 
 
 INITIAL_DT = datetime.datetime(2015, 1, 1, tzinfo=tz.tzutc())
+CURRENT = 0
 
 
 class UUIDFixture(fixture.GabbiFixture):
+
+    def incremental_uuid(self):
+        global CURRENT
+        CURRENT = CURRENT + 1
+        return f'6c1b8a30-797f-4b7e-ad66-{str(CURRENT).zfill(12)}'
+
     def start_fixture(self):
-        FAKE_UUID = '6c1b8a30-797f-4b7e-ad66-9879b79059fb'
         patcher = mock.patch(
             'oslo_utils.uuidutils.generate_uuid',
-            return_value=FAKE_UUID)
+            side_effect=self.incremental_uuid)
         patcher.start()
         self.patcher = patcher
 
     def stop_fixture(self):
+        global CURRENT
+        CURRENT = 0
         self.patcher.stop()
 
 

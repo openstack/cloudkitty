@@ -292,8 +292,20 @@ class Worker(BaseWorker):
         self._state = state.StateManager()
         self.next_timestamp_to_process = functools.partial(
             _check_state, self, self._period, self._tenant_id)
-
+        self.refresh_rating_rules()
         super(Worker, self).__init__(self._tenant_id)
+
+    def refresh_rating_rules(self):
+        for processor in self._processors:
+            processing_date = self.next_timestamp_to_process()
+            processor.obj.reload_config(processing_date)
+            data = getattr(processor.obj, '_entries',
+                           getattr(processor.obj, '_script',
+                                   None))
+            LOG.debug("Reloading rating rules for processor [%s]"
+                      " and scope [%s] at [%s] using rules [%s]",
+                      processor.obj.module_name,
+                      self._tenant_id, processing_date, data)
 
     def _collect(self, metric, start_timestamp):
         next_timestamp = tzutils.add_delta(
@@ -376,6 +388,7 @@ class Worker(BaseWorker):
     def run(self):
         should_continue_processing = self.execute_worker_processing()
         while should_continue_processing:
+            self.refresh_rating_rules()
             should_continue_processing = self.execute_worker_processing()
 
     def execute_worker_processing(self):

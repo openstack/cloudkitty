@@ -18,11 +18,12 @@ import decimal
 from wsme import types as wtypes
 
 from cloudkitty.api.v1 import types as ck_types
+from cloudkitty.rating.common.datamodels.models import VolatileAuditableModel
 
 MAP_TYPE = wtypes.Enum(wtypes.text, 'flat', 'rate')
 
 
-class Mapping(wtypes.Base):
+class Mapping(VolatileAuditableModel):
     """Type describing a Mapping.
 
     A mapping is used to apply rating rules based on a value, if the parent is
@@ -59,12 +60,14 @@ class Mapping(wtypes.Base):
 
     @classmethod
     def sample(cls):
+        sample = super().sample()
         sample = cls(mapping_id='39dbd39d-f663-4444-a795-fb19d81af136',
                      field_id='ac55b000-a05b-4832-b2ff-265a034886ab',
                      value='m1.micro',
                      map_type='flat',
                      cost=decimal.Decimal('4.2'),
-                     tenant_id='7977999e-2e25-11e6-a8b2-df30b233ffcb')
+                     tenant_id='7977999e-2e25-11e6-a8b2-df30b233ffcb',
+                     **sample.__dict__)
         return sample
 
 

@@ -236,10 +236,17 @@ class WorkerTest(tests.TestCase):
     def setUp(self):
         super(WorkerTest, self).setUp()
 
+        patcher_state_manager_get_state = mock.patch(
+            "cloudkitty.storage_state.StateManager"
+            ".get_last_processed_timestamp")
         patcher_state_manager_set_state = mock.patch(
             "cloudkitty.storage_state."
             "StateManager.set_last_processed_timestamp")
         self.addCleanup(patcher_state_manager_set_state.stop)
+        self.state_manager_get_state_mock = \
+            patcher_state_manager_get_state.start()
+        self.state_manager_get_state_mock.return_value = datetime.datetime(
+            2019, 7, 16, 8, 55, 1)
         self.state_manager_set_state_mock = \
             patcher_state_manager_set_state.start()
 
@@ -882,6 +889,13 @@ class ReprocessingWorkerTest(tests.TestCase):
     def setUp(self):
         super(ReprocessingWorkerTest, self).setUp()
 
+        patcher_state_manager_get_state = mock.patch(
+            "cloudkitty.storage_state.StateManager"
+            ".get_last_processed_timestamp")
+        self.state_manager_get_state_mock = \
+            patcher_state_manager_get_state.start()
+        self.state_manager_get_state_mock.return_value = datetime.datetime(
+            2019, 7, 16, 8, 55, 1)
         patcher_reprocessing_scheduler_db_get_from_db = mock.patch(
             "cloudkitty.storage_state.ReprocessingSchedulerDb.get_from_db")
         self.addCleanup(patcher_reprocessing_scheduler_db_get_from_db.stop)

@@ -21,6 +21,8 @@ import sqlalchemy
 from sqlalchemy.ext import declarative
 from sqlalchemy.ext import hybrid
 
+from cloudkitty.rating.common.db.models import VolatileAuditableModel
+
 Base = declarative.declarative_base()
 
 
@@ -59,7 +61,7 @@ class PyScriptsBase(models.ModelBase):
         return res
 
 
-class PyScriptsScript(Base, PyScriptsBase):
+class PyScriptsScript(Base, PyScriptsBase, VolatileAuditableModel):
     """A PyScripts entry.
 
     """

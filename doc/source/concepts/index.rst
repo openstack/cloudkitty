@@ -69,7 +69,17 @@ Rating rules
 Rating rules are the expressions used to create a charge (assign a value to
 a computing resource consumption). Rating rules can be created with
 PyScripts or with the use of fields, services and groups with hashmap
-rating rules.
+rating rules. You can define a ``start`` and ``end`` dates to the rating rules
+(PyScripts and hashmap mappings), which define the period they will be valid
+and applied in the rating process. If neither ``start`` or ``end`` dates are
+defined, they will be set as the rule's creation date and ``None``
+respectively. A ``None`` ``end`` date means the rating rule will last
+indefinitely. The ``start`` date cannot be set as a past date, if you really
+need to do it, you can force it using a ``force`` flag when creating the rule.
+Once the rule starts running (rule's ``start`` > current date), you will not be
+able to update the rule anymore, in this case, if you need to change the
+rule's value, you will need to delete it and create it again with the new
+value.
 
 If we have a hashmap mapping configuration for a service and another
 hashmap map configuration for a field that belongs to the same service,

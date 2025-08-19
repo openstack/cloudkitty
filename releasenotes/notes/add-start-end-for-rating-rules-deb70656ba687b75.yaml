@@ -1,0 +1,21 @@
+---
+features:
+  - |
+    Add new fields to specify the validity period of rating rules for modules
+    ``hashmap`` and ``pyscripts``. These new fields also improve the audit
+    mechanism for rating rules changes and deletion, allowing users to know
+    when the rules were changed or removed (marked as deleted) and by whom.
+
+upgrade:
+  - |
+    New rules for both ``hashmap`` and ``pyscript`` modules will no longer be
+    reprocessed for past periods, by default they are valid from the moment
+    they were created on. To allow new rules to be valid for past periods,
+    operators will need to specify a ``start_date`` in the past and pass the
+    query parameter ``force=true`` when creating the rating rule, then the
+    rule will be valid and used since the defined start date. Update rating
+    rules for both ``hashmap`` and ``pyscript`` modules will no longer be
+    allowed for rules where the ``start_date`` is in the past, to do so, you
+    will need to delete and create a new rating rule with the desired values,
+    the unique value you can update for rules that already started, is the
+    ``end_date``.

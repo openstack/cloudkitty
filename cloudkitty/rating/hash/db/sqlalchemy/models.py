@@ -20,6 +20,7 @@ from sqlalchemy import orm
 from sqlalchemy import schema
 
 from cloudkitty.common.db import models as ck_models
+from cloudkitty.rating.common.db.models import VolatileAuditableModel
 
 Base = ck_models.get_base()
 
@@ -190,7 +191,7 @@ class HashMapGroup(Base, HashMapBase):
                     name=self.name)
 
 
-class HashMapMapping(Base, HashMapBase):
+class HashMapMapping(Base, HashMapBase, VolatileAuditableModel):
     """A mapping between a field or service, a value and a type.
 
     Used to model final equation.

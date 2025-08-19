@@ -114,21 +114,25 @@ To use your script for rating, you will need to enable the pyscripts module
 Adding the script to CloudKitty
 -------------------------------
 
-Create the script and specify its name.
+Create the script and specify its name, description, start and end dates.
+If the ``start`` and ``end`` are not given, the ``start`` will be set as the
+creation date and the ``end`` as ``None``. The script is valid from the
+``start`` time until the ``end`` time, if the ``end`` time is ``None``, the
+script is endless.
 
 .. code-block:: console
 
     $ cloudkitty pyscript create my_awesome_script script.py
-    +-------------------+--------------------------------------+------------------------------------------+---------------------------------------+
-    | Name              | Script ID                            | Checksum                                 | Data                                  |
-    +-------------------+--------------------------------------+------------------------------------------+---------------------------------------+
-    | my_awesome_script | 78e1955a-4e7e-47e3-843c-524d8e6ad4c4 | 49e889018eb86b2035437ebb69093c0b6379f18c | from __future__ import print_function |
-    |                   |                                      |                                          | from cloudkitty import rating         |
-    |                   |                                      |                                          |                                       |
-    |                   |                                      |                                          | import decimal                        |
-    |                   |                                      |                                          |                                       |
-    |                   |                                      |                                          |         {...}                         |
-    |                   |                                      |                                          |                                       |
-    |                   |                                      |                                          | data = process(data)                  |
-    |                   |                                      |                                          |                                       |
-    +-------------------+--------------------------------------+------------------------------------------+---------------------------------------+
+    +-------------------+--------------------------------------+---------------------+---------------------+------+-------------+---------+----------------------------------+------------+------------+------------------------------------------+---------------------------------------+
+    | Name              | Script ID                            | Created At          | Start               | End  | Description | Deleted | Created By                       | Updated By | Deleted By | Checksum                                 | Data                                  |
+    +-------------------+--------------------------------------+---------------------+---------------------+------+-------------+---------+----------------------------------+------------+------------+------------------------------------------+---------------------------------------+
+    | my_awesome_script | 78e1955a-4e7e-47e3-843c-524d8e6ad4c4 | 2023-01-01T10:00:00 | 2023-01-01T10:00:00 | None | None        | None    | 7977999e2e2511e6a8b2df30b233ffcb | None       | None       | 49e889018eb86b2035437ebb69093c0b6379f18c | from __future__ import print_function |
+    |                   |                                      |                     |                     |      |             |         |                                  |            |            |                                          | from cloudkitty import rating         |
+    |                   |                                      |                     |                     |      |             |         |                                  |            |            |                                          |                                       |
+    |                   |                                      |                     |                     |      |             |         |                                  |            |            |                                          | import decimal                        |
+    |                   |                                      |                     |                     |      |             |         |                                  |            |            |                                          |                                       |
+    |                   |                                      |                     |                     |      |             |         |                                  |            |            |                                          |         {...}                         |
+    |                   |                                      |                     |                     |      |             |         |                                  |            |            |                                          |                                       |
+    |                   |                                      |                     |                     |      |             |         |                                  |            |            |                                          | data = process(data)                  |
+    |                   |                                      |                     |                     |      |             |         |                                  |            |            |                                          |                                       |
+    +-------------------+--------------------------------------+---------------------+---------------------+------+-------------+---------+----------------------------------+------------+------------+------------------------------------------+---------------------------------------+

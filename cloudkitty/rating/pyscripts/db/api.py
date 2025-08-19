@@ -64,25 +64,34 @@ class PyScripts(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_script(self, name=None, uuid=None):
+    def get_script(self, name=None, uuid=None, deleted=None):
         """Return a script object.
 
         :param name: Filter on a script name.
         :param uuid: The uuid of the script to get.
+        :param deleted: Show deleted script.
         """
 
     @abc.abstractmethod
-    def list_scripts(self):
+    def list_scripts(self, **kwargs):
         """Return a UUID list of every scripts available.
 
         """
 
     @abc.abstractmethod
-    def create_script(self, name, data):
+    def create_script(self, name, data,
+                      start=None,
+                      end=None,
+                      description=None,
+                      created_by=None):
         """Create a new script.
 
         :param name: Name of the script to create.
         :param data: Content of the python script.
+        :param start: The date the script will start to be valid.
+        :param end: The date the script will stop to be valid.
+        :param description: The script description
+        :param created_by: The user who created the script.
         """
 
     @abc.abstractmethod

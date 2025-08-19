@@ -41,11 +41,11 @@ class HashMap(rating.RatingProcessorBase):
         self._res = {}
         self._load_rates()
 
-    def reload_config(self):
+    def reload_config(self, start=None):
         """Reload the module's configuration.
 
         """
-        self._load_rates()
+        self._load_rates(start)
 
     def _load_mappings(self, mappings_uuid_list):
         hashmap = hash_db_api.get_instance()
@@ -93,13 +93,15 @@ class HashMap(rating.RatingProcessorBase):
                         root,
                         service_uuid=None,
                         field_uuid=None,
-                        tenant_uuid=None):
+                        tenant_uuid=None,
+                        start=None):
         hashmap = hash_db_api.get_instance()
         list_func = getattr(hashmap, 'list_{}'.format(entry_type))
         entries_uuid_list = list_func(
             service_uuid=service_uuid,
             field_uuid=field_uuid,
-            tenant_uuid=tenant_uuid)
+            tenant_uuid=tenant_uuid,
+            is_active=start or True)
         load_func = getattr(self, '_load_{}'.format(entry_type))
         entries = load_func(entries_uuid_list)
         if entry_type in root:
@@ -112,7 +114,7 @@ class HashMap(rating.RatingProcessorBase):
         else:
             root[entry_type] = entries
 
-    def _load_service_entries(self, service_name, service_uuid):
+    def _load_service_entries(self, service_name, service_uuid, start=None):
         self._entries[service_name] = dict()
         for entry_type in ('mappings', 'thresholds'):
             for tenant in (None, self._tenant_id):
@@ -120,9 +122,11 @@ class HashMap(rating.RatingProcessorBase):
                     entry_type,
                     self._entries[service_name],
                     service_uuid=service_uuid,
-                    tenant_uuid=tenant)
+                    tenant_uuid=tenant,
+                    start=start)
 
-    def _load_field_entries(self, service_name, field_name, field_uuid):
+    def _load_field_entries(self, service_name, field_name, field_uuid,
+                            start=None):
         if service_name not in self._entries:
             self._entries[service_name] = {}
         if 'fields' not in self._entries[service_name]:
@@ -134,21 +138,23 @@ class HashMap(rating.RatingProcessorBase):
                     entry_type,
                     scope,
                     field_uuid=field_uuid,
-                    tenant_uuid=tenant)
+                    tenant_uuid=tenant,
+                    start=start)
 
-    def _load_rates(self):
+    def _load_rates(self, start=None):
         self._entries = {}
         hashmap = hash_db_api.get_instance()
         services_uuid_list = hashmap.list_services()
         for service_uuid in services_uuid_list:
             service_db = hashmap.get_service(uuid=service_uuid)
             service_name = service_db.name
-            self._load_service_entries(service_name, service_uuid)
+            self._load_service_entries(service_name, service_uuid, start)
             fields_uuid_list = hashmap.list_fields(service_uuid)
             for field_uuid in fields_uuid_list:
                 field_db = hashmap.get_field(uuid=field_uuid)
                 field_name = field_db.name
-                self._load_field_entries(service_name, field_name, field_uuid)
+                self._load_field_entries(service_name, field_name, field_uuid,
+                                         start)
 
     def add_rating_informations(self, point):
         for entry in self._res.values():

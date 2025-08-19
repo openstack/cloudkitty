@@ -214,48 +214,56 @@ class PyScriptsRatingTest(tests.TestCase):
     @mock.patch.object(uuidutils, 'generate_uuid',
                        return_value=FAKE_UUID)
     def test_create_script(self, patch_generate_uuid):
-        self._db_api.create_script('policy1', TEST_CODE1)
+        self._db_api.create_script('policy1', TEST_CODE1,
+                                   created_by='')
         scripts = self._db_api.list_scripts()
         self.assertEqual([FAKE_UUID], scripts)
         patch_generate_uuid.assert_called_once_with()
 
     def test_create_duplicate_script(self):
-        self._db_api.create_script('policy1', TEST_CODE1)
+        self._db_api.create_script('policy1', TEST_CODE1,
+                                   created_by='')
         self.assertRaises(api.ScriptAlreadyExists,
                           self._db_api.create_script,
                           'policy1',
-                          TEST_CODE1)
+                          TEST_CODE1, created_by='')
 
     def test_get_script_by_uuid(self):
-        expected = self._db_api.create_script('policy1', TEST_CODE1)
+        expected = self._db_api.create_script('policy1', TEST_CODE1,
+                                              created_by='')
         actual = self._db_api.get_script(uuid=expected.script_id)
         self.assertEqual(expected.data, actual.data)
 
     def test_get_script_by_name(self):
-        expected = self._db_api.create_script('policy1', TEST_CODE1)
+        expected = self._db_api.create_script('policy1', TEST_CODE1,
+                                              created_by='')
         actual = self._db_api.get_script(expected.name)
         self.assertEqual(expected.data, actual.data)
 
     def test_get_script_without_parameters(self):
-        self._db_api.create_script('policy1', TEST_CODE1)
+        self._db_api.create_script('policy1', TEST_CODE1,
+                                   created_by='')
         self.assertRaises(
             ValueError,
             self._db_api.get_script)
 
     def test_delete_script_by_name(self):
-        self._db_api.create_script('policy1', TEST_CODE1)
+        self._db_api.create_script('policy1', TEST_CODE1,
+                                   created_by='')
         self._db_api.delete_script('policy1')
         scripts = self._db_api.list_scripts()
         self.assertEqual([], scripts)
 
     def test_delete_script_by_uuid(self):
-        script_db = self._db_api.create_script('policy1', TEST_CODE1)
+        script_db = self._db_api.create_script('policy1', TEST_CODE1,
+                                               created_by='')
         self._db_api.delete_script(uuid=script_db.script_id)
         scripts = self._db_api.list_scripts()
         self.assertEqual([], scripts)
 
     def test_delete_script_without_parameters(self):
-        self._db_api.create_script('policy1', TEST_CODE1)
+        self._db_api.create_script('policy1', TEST_CODE1,
+                                   created_by='')
         self.assertRaises(
             ValueError,
             self._db_api.delete_script)
@@ -272,13 +280,15 @@ class PyScriptsRatingTest(tests.TestCase):
             uuid='6e8de9fc-ee17-4b60-b81a-c9320e994e76')
 
     def test_update_script(self):
-        script_db = self._db_api.create_script('policy1', TEST_CODE1)
+        script_db = self._db_api.create_script('policy1', TEST_CODE1,
+                                               created_by='')
         self._db_api.update_script(script_db.script_id, data=TEST_CODE2)
         actual = self._db_api.get_script(uuid=script_db.script_id)
         self.assertEqual(TEST_CODE2, actual.data)
 
     def test_update_script_uuid_disabled(self):
-        expected = self._db_api.create_script('policy1', TEST_CODE1)
+        expected = self._db_api.create_script('policy1', TEST_CODE1,
+                                              created_by='')
         self._db_api.update_script(expected.script_id,
                                    data=TEST_CODE2,
                                    script_id='42')
@@ -286,7 +296,8 @@ class PyScriptsRatingTest(tests.TestCase):
         self.assertEqual(expected.script_id, actual.script_id)
 
     def test_update_script_unknown_attribute(self):
-        expected = self._db_api.create_script('policy1', TEST_CODE1)
+        expected = self._db_api.create_script('policy1', TEST_CODE1,
+                                              created_by='')
         self.assertRaises(
             ValueError,
             self._db_api.update_script,
@@ -294,7 +305,8 @@ class PyScriptsRatingTest(tests.TestCase):
             nonexistent=1)
 
     def test_empty_script_update(self):
-        expected = self._db_api.create_script('policy1', TEST_CODE1)
+        expected = self._db_api.create_script('policy1', TEST_CODE1,
+                                              created_by='')
         self.assertRaises(
             ValueError,
             self._db_api.update_script,
@@ -303,19 +315,22 @@ class PyScriptsRatingTest(tests.TestCase):
     # Storage tests
     def test_compressed_data(self):
         data = TEST_CODE1
-        self._db_api.create_script('policy1', data)
+        self._db_api.create_script('policy1', data,
+                                   created_by='')
         script = self._db_api.get_script('policy1')
         expected = zlib.compress(data)
         self.assertEqual(expected, script._data)
 
     def test_on_the_fly_decompression(self):
         data = TEST_CODE1
-        self._db_api.create_script('policy1', data)
+        self._db_api.create_script('policy1', data,
+                                   created_by='')
         script = self._db_api.get_script('policy1')
         self.assertEqual(data, script.data)
 
     def test_script_repr(self):
-        script_db = self._db_api.create_script('policy1', TEST_CODE1)
+        script_db = self._db_api.create_script('policy1', TEST_CODE1,
+                                               created_by='')
         self.assertEqual(
             '<PyScripts Script[{uuid}]: name={name}>'.format(
                 uuid=script_db.script_id,
@@ -324,12 +339,14 @@ class PyScriptsRatingTest(tests.TestCase):
 
     # Checksum tests
     def test_validate_checksum(self):
-        self._db_api.create_script('policy1', TEST_CODE1)
+        self._db_api.create_script('policy1', TEST_CODE1,
+                                   created_by='')
         script = self._db_api.get_script('policy1')
         self.assertEqual(TEST_CODE1_CHECKSUM, script.checksum)
 
     def test_read_only_checksum(self):
-        self._db_api.create_script('policy1', TEST_CODE1)
+        self._db_api.create_script('policy1', TEST_CODE1,
+                                   created_by='')
         script = self._db_api.get_script('policy1')
         self.assertRaises(
             AttributeError,
@@ -340,22 +357,27 @@ class PyScriptsRatingTest(tests.TestCase):
             '7d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e')
 
     def test_update_checksum(self):
-        self._db_api.create_script('policy1', TEST_CODE1)
+        self._db_api.create_script('policy1', TEST_CODE1,
+                                   created_by='')
         script = self._db_api.get_script('policy1')
         script = self._db_api.update_script(script.script_id, data=TEST_CODE2)
         self.assertEqual(TEST_CODE2_CHECKSUM, script.checksum)
 
     # Code exec tests
     def test_load_scripts(self):
-        policy1_db = self._db_api.create_script('policy1', TEST_CODE1)
-        policy2_db = self._db_api.create_script('policy2', TEST_CODE2)
+        policy1_db = self._db_api.create_script('policy1', TEST_CODE1,
+                                                created_by='')
+        policy2_db = self._db_api.create_script('policy2', TEST_CODE2,
+                                                created_by='')
         self._pyscripts.load_scripts_in_memory()
         self.assertIn(policy1_db.script_id, self._pyscripts._scripts)
         self.assertIn(policy2_db.script_id, self._pyscripts._scripts)
 
     def test_purge_old_scripts(self):
-        policy1_db = self._db_api.create_script('policy1', TEST_CODE1)
-        policy2_db = self._db_api.create_script('policy2', TEST_CODE2)
+        policy1_db = self._db_api.create_script('policy1', TEST_CODE1,
+                                                created_by='')
+        policy2_db = self._db_api.create_script('policy2', TEST_CODE2,
+                                                created_by='')
         self._pyscripts.reload_config()
         self.assertIn(policy1_db.script_id, self._pyscripts._scripts)
         self.assertIn(policy2_db.script_id, self._pyscripts._scripts)
@@ -367,7 +389,8 @@ class PyScriptsRatingTest(tests.TestCase):
     @mock.patch.object(uuidutils, 'generate_uuid',
                        return_value=FAKE_UUID)
     def test_valid_script_data_loaded(self, patch_generate_uuid):
-        self._db_api.create_script('policy1', TEST_CODE1)
+        self._db_api.create_script('policy1', TEST_CODE1,
+                                   created_by='')
         self._pyscripts.load_scripts_in_memory()
         expected = {
             FAKE_UUID: {
@@ -384,7 +407,8 @@ class PyScriptsRatingTest(tests.TestCase):
         self.assertEqual(1, context['a'])
 
     def test_update_script_on_checksum_change(self):
-        policy_db = self._db_api.create_script('policy1', TEST_CODE1)
+        policy_db = self._db_api.create_script('policy1', TEST_CODE1,
+                                               created_by='')
         self._pyscripts.reload_config()
         self._db_api.update_script(policy_db.script_id, data=TEST_CODE2)
         self._pyscripts.reload_config()
@@ -393,8 +417,10 @@ class PyScriptsRatingTest(tests.TestCase):
             self._pyscripts._scripts[policy_db.script_id]['checksum'])
 
     def test_exec_code_isolation(self):
-        self._db_api.create_script('policy1', TEST_CODE1)
-        self._db_api.create_script('policy2', TEST_CODE3)
+        self._db_api.create_script('policy1', TEST_CODE1,
+                                   created_by='')
+        self._db_api.create_script('policy2', TEST_CODE3,
+                                   created_by='')
         self._pyscripts.reload_config()
 
         self.assertEqual(2, len(self._pyscripts._scripts))
@@ -403,7 +429,8 @@ class PyScriptsRatingTest(tests.TestCase):
 
     # Processing
     def test_process_rating(self):
-        self._db_api.create_script('policy1', COMPLEX_POLICY1)
+        self._db_api.create_script('policy1', COMPLEX_POLICY1,
+                                   created_by='')
         self._pyscripts.reload_config()
 
         data_output = self._pyscripts.process(self.dataframe_for_tests)
@@ -413,21 +440,22 @@ class PyScriptsRatingTest(tests.TestCase):
         for point in dict_output['usage']['compute']:
             if point['groupby'].get('flavor') == 'm1.nano':
                 self.assertEqual(
-                    decimal.Decimal('2'),  point['rating']['price'])
+                    decimal.Decimal('2'), point['rating']['price'])
             else:
                 self.assertEqual(
                     decimal.Decimal('0'), point['rating']['price'])
         for point in dict_output['usage']['instance_status']:
             if point['groupby'].get('flavor') == 'm1.ultra':
                 self.assertEqual(
-                    decimal.Decimal('96'),  point['rating']['price'])
+                    decimal.Decimal('96'), point['rating']['price'])
             else:
                 self.assertEqual(
                     decimal.Decimal('0'), point['rating']['price'])
 
     # Processing
     def test_process_rating_with_documentation_rules(self):
-        self._db_api.create_script('policy1', DOCUMENTATION_RATING_POLICY)
+        self._db_api.create_script('policy1', DOCUMENTATION_RATING_POLICY,
+                                   created_by='')
         self._pyscripts.reload_config()
 
         dataframe_for_tests = copy.deepcopy(self.dataframe_for_tests)
@@ -456,7 +484,7 @@ class PyScriptsRatingTest(tests.TestCase):
         for point in dict_output['usage']['instance_status']:
             if point['groupby'].get('flavor') == 'm1.ultra':
                 self.assertEqual(
-                    decimal.Decimal('0'),  point['rating']['price'])
+                    decimal.Decimal('0'), point['rating']['price'])
             else:
                 self.assertEqual(
                     decimal.Decimal('0'), point['rating']['price'])

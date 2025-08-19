@@ -236,6 +236,13 @@ class HashMap(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
+    def get_mapping_by_name(self, name):
+        """Return a mapping object.
+
+        :param name: name of the mapping to get.
+        """
+
+    @abc.abstractmethod
     def get_threshold(self, uuid):
         """Return a threshold object.
 
@@ -327,7 +334,12 @@ class HashMap(object, metaclass=abc.ABCMeta):
                        service_id=None,
                        field_id=None,
                        group_id=None,
-                       tenant_id=None):
+                       tenant_id=None,
+                       start=None,
+                       end=None,
+                       name=None,
+                       description=None,
+                       created_by=None):
         """Create a new service/field mapping.
 
         :param cost: Rating value to apply to this mapping.
@@ -337,6 +349,11 @@ class HashMap(object, metaclass=abc.ABCMeta):
         :param field_id: Field the mapping is applying to.
         :param group_id: The group of calculations to apply.
         :param tenant_id: The tenant to apply calculations to.
+        :param start: The date the rule will start to be valid.
+        :param end: The date the rule will stop to be valid.
+        :param name: The rule name.
+        :param description: The rule description
+        :param created_by: The user who created the rule.
         """
 
     @abc.abstractmethod
@@ -404,10 +421,11 @@ class HashMap(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def delete_mapping(self, uuid):
+    def delete_mapping(self, uuid, deleted_by=None):
         """Delete a mapping
 
         :param uuid: UUID of the mapping to delete.
+        :param deleted_by: UUID of the user who deleted the mapping.
         """
     @abc.abstractmethod
     def delete_threshold(self, uuid):
