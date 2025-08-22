@@ -93,6 +93,7 @@ def load_app():
 
 def build_wsgi_app(argv=None):
     service.prepare_service()
+    CONF.log_opt_values(LOG, log.DEBUG)
     return load_app()
 
 
