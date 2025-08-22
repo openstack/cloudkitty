@@ -110,15 +110,6 @@
         CLOUDKITTY_STORAGE_VERSION: 2
         CLOUDKITTY_INFLUX_VERSION: 1
 
-# TODO(gmann): As per the 2025.1 testing runtime, we need to run at least
-# one job on jammy. This job can be removed as per the future testing
-# runtime (whenever we start testing Ubuntu 26.04 as default version).
-- job:
-    name: cloudkitty-tempest-full-v2-storage-influxdb-jammy
-    parent: base-cloudkitty-v2-api-tempest-job
-    nodeset: openstack-single-node-jammy
-    description: This is integrated job testing on Ubuntu jammy(22.04)
-
 - job:
     name: cloudkitty-tempest-full-v2-storage-influxdb-v2
     parent: base-cloudkitty-v2-api-tempest-job
@@ -188,7 +179,6 @@
     check:
       jobs:
         - cloudkitty-tempest-full-v2-storage-influxdb
-        - cloudkitty-tempest-full-v2-storage-influxdb-jammy
         - cloudkitty-tempest-full-v2-storage-influxdb-v2
         - cloudkitty-tempest-full-v2-storage-elasticsearch
         - cloudkitty-tempest-full-v2-storage-opensearch
@@ -200,7 +190,6 @@
     gate:
       jobs:
         - cloudkitty-tempest-full-v2-storage-influxdb
-        - cloudkitty-tempest-full-v2-storage-influxdb-jammy
         - cloudkitty-tempest-full-v2-storage-influxdb-v2
         - cloudkitty-tempest-full-v2-storage-elasticsearch
         - cloudkitty-tempest-full-v2-storage-opensearch
