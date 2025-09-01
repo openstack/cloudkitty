@@ -73,7 +73,22 @@ orchestrator_opts = [
                min=1,
                deprecated_name='max_greenthreads',
                advanced=True,
-               help='Maximal number of threads to use per worker.')
+               help='Maximal number of threads to use per worker.'),
+    cfg.StrOpt("skip_datapoints_expression",
+               default="False",
+               advanced=True,
+               help='Python expression that can be used to skip/ignore the '
+                    'processed datapoint from being persisted in the storage '
+                    'backend. This is useful to avoid persisting entries in '
+                    'the storage backend when the QTY is zero, for instance. '
+                    'The datapoint being persisted will be available for the '
+                    'expression in a variable called "datapoint". The '
+                    'expression MUST return a True or False value. For '
+                    'instance, if one wants to skip persisting processed '
+                    'datapoints that have QTY as zero, the following '
+                    'expression can be used: '
+                    '"datapoint.get(\"vol\", {}).get(\"qty\", 0) == 0".'
+               )
 ]
 
 CONF.register_opts(orchestrator_opts, group='orchestrator')
@@ -291,7 +306,27 @@ class Worker(BaseWorker):
         self.next_timestamp_to_process = functools.partial(
             _check_state, self, self._period, self._tenant_id)
         self.refresh_rating_rules()
+
+        self.map_metric_definition_by_alt_name = self.create_alt_name_map()
+
         super(Worker, self).__init__(self._tenant_id)
+
+    def create_alt_name_map(self):
+        map_metrics_by_alt_name = {}
+        all_metrics = self._conf['metrics']
+        all_metrics_keys = list(all_metrics.keys())
+        for metric_key in all_metrics_keys:
+            alt_metric = all_metrics[metric_key]
+            LOG.debug("Processing metric definition for alt name map [%s] for "
+                      "metric key [%s].", alt_metric, metric_key)
+            if isinstance(alt_metric, list):
+                for item in alt_metric:
+                    map_metrics_by_alt_name[
+                        item.get('alt_name', metric_key)] = item
+            else:
+                map_metrics_by_alt_name[
+                    alt_metric.get('alt_name', metric_key)] = alt_metric
+        return map_metrics_by_alt_name
 
     def refresh_rating_rules(self):
         for processor in self._processors:
@@ -435,11 +470,68 @@ class Worker(BaseWorker):
         self.update_scope_processing_state_db(timestamp)
 
     def persist_rating_data(self, end_time, frame, start_time):
+        frame_dict = frame.as_dict(mutable=True)
+        LOG.debug("Preparing to persist processed frames [%s] for scope [%s] "
+                  "and time [start=%s,end=%s]", frame_dict, self._tenant_id,
+                  start_time, end_time)
+        usage_data_from_frame = frame_dict['usage']
+        for usage_data_metric_name in list(usage_data_from_frame.keys()):
+            self.execute_datapoints_filtering_for_metric(
+                usage_data_from_frame, usage_data_metric_name)
+        frame = dataframe.DataFrame.from_dict(frame_dict)
+
         LOG.debug("Persisting processed frames [%s] for scope [%s] and time "
-                  "[start=%s,end=%s]", frame, self._tenant_id, start_time,
-                  end_time)
+                  "[start=%s,end=%s].", frame.as_dict(), self._tenant_id,
+                  start_time, end_time)
 
         self._storage.push([frame], self._tenant_id)
+
+    def execute_datapoints_filtering_for_metric(self, usage_data_from_frame,
+                                                usage_data_metric_name):
+        all_datapoints = usage_data_from_frame[usage_data_metric_name]
+        filtered_datapoints = []
+        excluded_datapoints = []
+        skip_datapoint_expression = self.map_metric_definition_by_alt_name[
+            usage_data_metric_name].get(
+            "skip_datapoints_expression",
+            CONF.orchestrator.skip_datapoints_expression)
+
+        LOG.debug("Retrieved skip_datapoint_expression [%s] for metric [%s] "
+                  "from map of definitions [%s].", skip_datapoint_expression,
+                  usage_data_metric_name,
+                  self.map_metric_definition_by_alt_name)
+        for datapoint in all_datapoints:
+            self.execute_datapoints_filtering(
+                datapoint, excluded_datapoints, filtered_datapoints,
+                skip_datapoint_expression, usage_data_metric_name)
+        if not filtered_datapoints:
+            LOG.debug("No filtered datapoints for metric [%s] will be "
+                      "persisted. Excluded datapoints [%s].",
+                      usage_data_metric_name, excluded_datapoints)
+            del usage_data_from_frame[usage_data_metric_name]
+        else:
+            LOG.debug("Datapoints for metric [%s] updated to [%s].",
+                      usage_data_metric_name, filtered_datapoints)
+            usage_data_from_frame[
+                usage_data_metric_name] = filtered_datapoints
+            if excluded_datapoints:
+                LOG.debug("Excluded datapoints [%s] for metric [%s]. ",
+                          excluded_datapoints, usage_data_metric_name)
+
+    def execute_datapoints_filtering(
+            self, datapoint, excluded_datapoints, filtered_datapoints,
+            skip_datapoint_expression, usage_data_metric_name):
+        LOG.debug("Evaluating skip_datapoint_expression[%s] for datapoint "
+                  "[%s] under metric [%s].", skip_datapoint_expression,
+                  datapoint, usage_data_metric_name)
+
+        if not eval(skip_datapoint_expression):
+            filtered_datapoints.append(datapoint)
+        else:
+            LOG.debug("Datapoint [%s] will be skipped because of "
+                      "skip_datapoint_expression [%s].", datapoint,
+                      skip_datapoint_expression)
+            excluded_datapoints.append(datapoint)
 
     def execute_measurements_rating(self, end_time, start_time, usage_data):
         frame = dataframe.DataFrame(

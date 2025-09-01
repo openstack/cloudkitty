@@ -197,3 +197,43 @@ collect, and how they should be collected. Have a look at the
 `collector configuration guide`_ for this:
 
 .. _collector configuration guide: ./collector.html
+
+
+Orchestrator
+------------
+
+The orchestrator section enables CloudKitty operators to configure general
+settings such as `coordination_url`, `max_workers`, `max_workers_reprocessing`,
+`max_threads`, and `skip_datapoints_expression`.
+
+skip_datapoints_expression
+++++++++++++++++++++++++++
+
+This option allows operators to write Python expression that can be used to
+skip/ignore the processed datapoint from being persisted in the storage
+backend. This is useful to avoid persisting entries in the storage backend when
+the QTY is zero, for instance. The datapoint being persisted will be available
+for the expression in a variable called "datapoint". The expression MUST return
+a True or False value. For instance, if one wants to skip persisting processed
+datapoints that have `qty` as zero, the following expression can be used:
+
+.. code-block:: python
+
+    "datapoint.get(\"vol\", {}).get(\"qty\", 0) == 0"
+
+The available objects to be used in the expressions are the following:
+
+ * `datapoint`: it represents the datapoint used in the rating process. The
+   datapoint has fields such as `qty` and `price` that can be used. The `price`
+   fields is located under `rating` attribute (it is a dictionary), and the
+   `qty` field is located under `vol` attribute (it is a dictionary). The
+   `groupby` attribute represents all of the group-by attributes (it is a
+   dictionary) and their respective values. The `metadata` attribute represents
+   all of the metadata attributes (it is a dictionary) and their respective
+   values.
+ * `excluded_datapoints`:  it is a list with all of the datapoints already
+   filtered out.
+ * `filtered_datapoints`: a list with the datapoints that will be persisted.
+ * `skip_datapoint_expression`: the expression used to decided if we need or
+   not to exclude the datapoint.
+ * `usage_data_metric_name`: the metric name being processed.
