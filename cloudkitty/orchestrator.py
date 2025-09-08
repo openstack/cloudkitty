@@ -64,18 +64,16 @@ orchestrator_opts = [
     cfg.IntOpt(
         'max_workers_reprocessing',
         default=multiprocessing.cpu_count(),
+        sample_default=4,
         min=0,
         help='Max number of workers to execute the reprocessing. Defaults to '
              'the number of available CPU cores.'),
     cfg.IntOpt('max_threads',
-               # NOTE(peschk_l): This is the futurist default
-               default=multiprocessing.cpu_count() * 5,
-               sample_default=20,
+               default=16,
                min=1,
                deprecated_name='max_greenthreads',
                advanced=True,
-               help='Maximal number of threads to use per worker. Defaults to '
-               '5 times the number of available CPUs'),
+               help='Maximal number of threads to use per worker.')
 ]
 
 CONF.register_opts(orchestrator_opts, group='orchestrator')
