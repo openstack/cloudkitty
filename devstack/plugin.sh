@@ -172,6 +172,8 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF "collector_${CLOUDKITTY_COLLECTOR}" auth_section authinfos
     if [ $CLOUDKITTY_COLLECTOR == 'prometheus' ]; then
         iniset $CLOUDKITTY_CONF collector_prometheus prometheus_url $CLOUDKITTY_PROMETHEUS_URL
+        # Assumes openstack-exporter is being deployed
+        iniset $CLOUDKITTY_CONF collect scope_key tenant_id
     fi
     iniset $CLOUDKITTY_CONF collect metrics_conf $CLOUDKITTY_CONF_DIR/$(basename $CLOUDKITTY_METRICS_CONF)
     # DO NOT DO THIS IN PRODUCTION! This is done in order to get data quicker

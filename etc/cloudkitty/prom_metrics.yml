@@ -1,0 +1,30 @@
+metrics:
+
+  openstack_nova_server_status:
+    alt_name: instance
+    groupby:
+      - uuid
+      - user_id
+      - tenant_id
+    metadata:
+      - flavor_id
+      - name
+    mutate: MAP
+    mutate_map:
+      0.0: 1.0  # ACTIVE
+      11.0: 1.0 # SHUTOFF
+      12.0: 1.0 # SUSPENDED
+      16.0: 1.0 # PAUSED
+    unit: instance
+
+  openstack_cinder_limits_volume_used_gb:
+    alt_name: storage
+    unit: GiB
+    groupby:
+      - tenant_id
+
+  openstack_glance_image_bytes:
+    alt_name: image.size
+    unit: B
+    groupby:
+      - tenant_id

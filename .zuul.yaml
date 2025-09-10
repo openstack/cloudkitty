@@ -167,6 +167,32 @@
       - ^cloudkitty/tests/scenario/.*$
       - ^cloudkitty/tests/unittests/.*$
 
+
+- job:
+    name: cloudkitty-tempest-full-v2-fetcher-collector-prometheus
+    parent: base-cloudkitty-v2-api-tempest-job
+    description: |
+      Job testing cloudkitty installation with prometheus as the collector/fetcher
+    required-projects:
+    - opendev.org/openstack/devstack-plugin-prometheus
+    - opendev.org/openstack/cloudkitty
+    - opendev.org/openstack/cloudkitty-tempest-plugin
+    - opendev.org/openstack/python-cloudkittyclient
+    irrelevant-files: *base_irrelevant_files
+    vars:
+      devstack_plugins:
+        cloudkitty: https://opendev.org/openstack/cloudkitty.git
+        cloudkitty-tempest-plugin: https://opendev.org/openstack/cloudkitty-tempest-plugin.git
+        devstack-plugin-prometheus: https://opendev.org/openstack/devstack-plugin-prometheus
+      devstack_services:
+        ck-api: true
+        ck-proc: true
+      devstack_localrc:
+        CLOUDKITTY_FETCHER: prometheus
+        CLOUDKITTY_COLLECTOR: prometheus
+        CLOUDKITTY_METRICS_CONF: /opt/stack/cloudkitty/etc/cloudkitty/prom_metrics.yml
+
+
 - project:
     queue: cloudkitty
     templates:
@@ -184,6 +210,7 @@
         - cloudkitty-tempest-full-v2-storage-opensearch
         - cloudkitty-tempest-full-v1-storage-sqlalchemy
         - cloudkitty-tempest-full-ipv6-only
+        - cloudkitty-tempest-full-v2-fetcher-collector-prometheus
         - cloudkitty-tox-bandit:
             voting: false
         - cloudkitty-grenade-job
@@ -196,3 +223,4 @@
         - cloudkitty-tempest-full-v1-storage-sqlalchemy
         - cloudkitty-tempest-full-ipv6-only
         - cloudkitty-grenade-job
+        - cloudkitty-tempest-full-v2-fetcher-collector-prometheus
