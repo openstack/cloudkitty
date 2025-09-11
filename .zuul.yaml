@@ -145,6 +145,17 @@
         CLOUDKITTY_STORAGE_VERSION: 2
 
 - job:
+    name: cloudkitty-tempest-full-v2-storage-loki
+    parent: base-cloudkitty-v2-api-tempest-job
+    description: |
+      Job testing cloudkitty installation on devstack with python 3 and the
+      Loki v2 storage driver and running tempest tests
+    vars:
+      devstack_localrc:
+        CLOUDKITTY_STORAGE_BACKEND: loki
+        CLOUDKITTY_LOKI_URL: http://127.0.0.1:3100
+
+- job:
     name: cloudkitty-tox-bandit
     parent: openstack-tox
     timeout: 2400
@@ -183,6 +194,7 @@
         - cloudkitty-tempest-full-v2-storage-elasticsearch
         - cloudkitty-tempest-full-v2-storage-opensearch
         - cloudkitty-tempest-full-v1-storage-sqlalchemy
+        - cloudkitty-tempest-full-v2-storage-loki
         - cloudkitty-tempest-full-ipv6-only
         - cloudkitty-tox-bandit:
             voting: false
@@ -194,5 +206,6 @@
         - cloudkitty-tempest-full-v2-storage-elasticsearch
         - cloudkitty-tempest-full-v2-storage-opensearch
         - cloudkitty-tempest-full-v1-storage-sqlalchemy
+        - cloudkitty-tempest-full-v2-storage-loki
         - cloudkitty-tempest-full-ipv6-only
         - cloudkitty-grenade-job

@@ -1,0 +1,29 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+
+common:
+  instance_addr: 0.0.0.0
+  path_prefix: /opt/stack/data/loki
+  storage:
+    filesystem:
+      chunks_directory: /opt/stack/data/loki/chunks
+      rules_directory: /opt/stack/data/loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  max_query_length: 745h
