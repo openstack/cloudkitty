@@ -23,6 +23,7 @@ from oslo_log import log as logging
 from oslo_policy import opts as policy_opts
 from oslo_policy import policy
 from oslo_utils import excutils
+from oslo_utils import strutils
 
 from cloudkitty.common import policies
 
@@ -108,8 +109,9 @@ def authorize(context, action, target):
     init()
 
     try:
-        LOG.debug('Authenticating user with credentials %(credentials)s',
-                  {'credentials': context.to_dict()})
+        LOG.debug(
+            'Authenticating user with credentials %(credentials)s',
+            {'credentials': strutils.mask_dict_password(context.to_dict())})
         return _ENFORCER.authorize(action, target, context,
                                    do_raise=True,
                                    exc=PolicyNotAuthorized,
@@ -120,9 +122,12 @@ def authorize(context, action, target):
             LOG.exception('Policy not registered')
     except Exception:
         with excutils.save_and_reraise_exception():
-            LOG.error('Policy check for %(action)s failed with credentials '
-                      '%(credentials)s',
-                      {'action': action, 'credentials': context.to_dict()})
+            LOG.error(
+                'Policy check for %(action)s failed with credentials '
+                '%(credentials)s', {
+                    'action': action,
+                    'credentials': strutils.mask_dict_password(
+                        context.to_dict())})
 
 
 def check_is_admin(context):
