@@ -24,7 +24,8 @@ LOG = log.getLogger(__name__)
 class LokiClient(object):
     """Class used to ease interaction with Loki."""
 
-    def __init__(self, url, tenant, stream_labels, content_type, buffer_size):
+    def __init__(self, url, tenant, stream_labels, content_type, buffer_size,
+                 cert, verify):
         if content_type != "application/json":
             raise exceptions.UnsupportedContentType(content_type)
 
@@ -36,6 +37,9 @@ class LokiClient(object):
         }
         self._buffer_size = buffer_size
         self._points = []
+
+        self._cert = cert
+        self._verify = verify
 
     def _build_payload_json(self, batch):
         payload = {
@@ -86,7 +90,8 @@ class LokiClient(object):
             "limit": limit
         }
 
-        response = requests.get(url, params=params, headers=self._headers)
+        response = requests.get(url, params=params, headers=self._headers,
+                                cert=self._cert, verify=self._verify)
 
         if response.status_code == 200:
             data = response.json()['data']
@@ -103,7 +108,8 @@ class LokiClient(object):
 
         while self._points:
             payload = self._build_payload_json(self._points)
-            response = requests.post(url, json=payload, headers=self._headers)
+            response = requests.post(url, json=payload, headers=self._headers,
+                                     cert=self._cert, verify=self._verify)
 
             if response.status_code == 204:
                 LOG.debug(
@@ -130,8 +136,8 @@ class LokiClient(object):
             "end": int(end.timestamp()),
         }
 
-        LOG.debug(f"Request Params: {params}")
-        response = requests.post(url, params=params, headers=self._headers)
+        response = requests.post(url, params=params, headers=self._headers,
+                                 cert=self._cert, verify=self._verify)
 
         if response.status_code == 204:
             LOG.debug(
