@@ -18,14 +18,6 @@ from oslo_db import options as db_options  # noqa
 from oslo_messaging import opts  # noqa
 
 
-state_opts = [
-    cfg.StrOpt('backend',
-               default='cloudkitty.backend.file.FileBackend',
-               help='Backend for the state manager.'),
-    cfg.StrOpt('basepath',
-               default='/var/lib/cloudkitty/states/',
-               help='Storage directory for the file state backend.'), ]
-
 output_opts = [
     cfg.StrOpt('backend',
                default='cloudkitty.backend.file.FileBackend',
@@ -38,7 +30,6 @@ output_opts = [
                 help='Output pipeline'), ]
 
 
-cfg.CONF.register_opts(state_opts, 'state')
 cfg.CONF.register_opts(output_opts, 'output')
 
 # oslo.db defaults

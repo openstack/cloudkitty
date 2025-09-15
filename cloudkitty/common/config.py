@@ -60,8 +60,6 @@ _opts = [
         cloudkitty.orchestrator.orchestrator_opts))),
     ('output', list(itertools.chain(
         cloudkitty.config.output_opts))),
-    ('state', list(itertools.chain(
-        cloudkitty.config.state_opts))),
     ('storage', list(itertools.chain(
         cloudkitty.storage.storage_opts))),
     ('storage_influxdb', list(itertools.chain(
