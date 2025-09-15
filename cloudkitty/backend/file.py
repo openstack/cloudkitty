@@ -13,12 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import io
 
 
-class FileBackend(file):  # noqa
-    def __init__(self, path, mode='ab+'):
-        try:
-            super(FileBackend, self).__init__(path, mode)
-        except IOError:
-            # File not found
-            super(FileBackend, self).__init__(path, 'wb+')
+class FileBackend(io.FileIO):
+    def __init__(self, path, mode='a+'):
+        super(FileBackend, self).__init__(path, mode)
