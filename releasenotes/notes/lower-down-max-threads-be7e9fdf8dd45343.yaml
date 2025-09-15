@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The ``[orchestrator] max_threads`` parameter now defaults to 16, to avoid
+    too many threads in total in node with many CPU cores.
