@@ -619,11 +619,12 @@ class InfluxClientV2(InfluxClient):
     def get_custom_fields_query(self, custom_fields, query, field_filters,
                                 group_filters, limit=None, groupby=None):
         if not groupby:
-            groupby = []
+            columns_to_keep = '"_field", "_value", "_start", "_stop"'
+        else:
+            columns_to_keep = ', '.join(map(lambda g: f'"{g}"', groupby))
+            columns_to_keep += ', "_field", "_value", "_start", "_stop"'
         if not custom_fields:
             custom_fields = 'sum(price) AS price,sum(qty) AS qty'
-        columns_to_keep = ', '.join(map(lambda g: f'"{g}"', groupby))
-        columns_to_keep += ', "_field", "_value", "_start", "_stop"'
         new_query = ''
         LOG.debug("Custom fields: %s", custom_fields)
         LOG.debug("Custom fields processed: %s",

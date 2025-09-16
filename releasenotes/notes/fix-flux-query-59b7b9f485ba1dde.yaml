@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fix the Flux query syntax error when no groupby is used. See `story 2011528
+    <https://storyboard.openstack.org/#!/story/2011528>`_ for more details.

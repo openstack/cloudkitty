@@ -439,3 +439,49 @@ class TestInfluxClientV2(unittest.TestCase):
             ' ', '').replace('\n', '').replace('\t', '')
 
         self.assertEqual(query, expected)
+
+    def test_query_build_no_groupby(self):
+        """Test query building when groupby is empty."""
+        custom_fields = 'sum(price) AS price,sum(qty) AS qty'
+        groupby = []  # Empty groupby
+        filters = {
+            'filter1': '10',
+            'filter2': 'filter2_filter'
+        }
+        beg = self.period_begin.isoformat()
+        end = self.period_end.isoformat()
+        self.maxDiff = None
+        expected = ('\n'
+                    '        from(bucket:"cloudkitty")\n'
+                    f'            |> range(start: {beg}, stop: {end})\n'
+                    '            |> filter(fn: (r) => r["_measurement"] == '
+                    '"dataframes")\n'
+                    '            |> filter(fn: (r) => r["_field"] == "price"'
+                    '  and r.filter1==10 and r.filter2=="filter2_filter" )\n'
+                    '            |> group()\n'
+                    '            |> sum()\n'
+                    '            |> keep(columns: ["_field", "_value", '
+                    '"_start", "_stop"])\n'
+                    '            |> set(key: "_field", value: "price")\n'
+                    '            |> yield(name: "price")\n'
+                    '        \n'
+                    '        from(bucket:"cloudkitty")\n'
+                    f'            |> range(start: {beg}, stop: {end})\n'
+                    '            |> filter(fn: (r) => r["_measurement"] == '
+                    '"dataframes")\n'
+                    '            |> filter(fn: (r) => r["_field"] == "qty"'
+                    '  and r.filter1==10 and r.filter2=="filter2_filter" )\n'
+                    '            |> group()\n'
+                    '            |> sum()\n'
+                    '            |> keep(columns: ["_field", "_value", '
+                    '"_start", "_stop"])\n'
+                    '            |> set(key: "_field", value: "qty")\n'
+                    '            |> yield(name: "qty")\n'
+                    '        ')
+
+        query = self.client.get_query(begin=self.period_begin,
+                                      end=self.period_end,
+                                      custom_fields=custom_fields,
+                                      filters=filters,
+                                      groupby=groupby)
+        self.assertEqual(query, expected)
