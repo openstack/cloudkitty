@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import datetime
+
 from oslo_log import log
 import requests
 
@@ -25,7 +27,7 @@ class LokiClient(object):
     """Class used to ease interaction with Loki."""
 
     def __init__(self, url, tenant, stream_labels, content_type, buffer_size,
-                 cert, verify):
+                 shard_days, cert, verify):
         if content_type != "application/json":
             raise exceptions.UnsupportedContentType(content_type)
 
@@ -37,6 +39,7 @@ class LokiClient(object):
         }
         self._buffer_size = buffer_size
         self._points = []
+        self._shard_days = shard_days
 
         self._cert = cert
         self._verify = verify
@@ -164,7 +167,7 @@ class LokiClient(object):
 
         self.delete_by_query(query, begin, end)
 
-    def retrieve(self, begin, end, filters, metric_types, limit):
+    def _retrieve(self, begin, end, filters, metric_types, limit):
         """Retrieves dataframes stored in Loki."""
         query = self._base_query()
         loki_query_parts = []
@@ -186,6 +189,11 @@ class LokiClient(object):
         if loki_query_parts:
             query += ' | ' + ', '.join(loki_query_parts)
 
+        LOG.debug(
+            f"Loki query: '{query}', begin: '{begin}', end: '{end}', "
+            f"limit: '{limit}'"
+        )
+
         data_response = self.search(query, begin, end, limit)
 
         if not isinstance(data_response, dict) or \
@@ -204,6 +212,26 @@ class LokiClient(object):
         output = data_response.get('result', [])
 
         return total, output
+
+    def retrieve(self, begin, end, filters, metric_types, limit):
+        total = 0
+        data = []
+        if end - begin > datetime.timedelta(days=self._shard_days):
+            step = datetime.timedelta(days=self._shard_days)
+            current_begin = begin
+
+            while current_begin < end:
+                current_end = min(current_begin + step, end)
+                t, d = self._retrieve(
+                    current_begin, current_end, filters, metric_types, limit)
+                total += t
+                data += d
+                current_begin = current_end
+        else:
+            total, data = self._retrieve(
+                begin, end, filters, metric_types, limit)
+
+        return total, data
 
     def add_point(self, point, type, start, end):
         """Append a point to the client."""
@@ -246,8 +274,7 @@ class LokiClient(object):
             LOG.warning("offset is not supported by Loki.")
 
         total_count, data = self.retrieve(
-            begin, end, filters, metric_types, limit
-        )
+                begin, end, filters, metric_types, limit)
 
         if not groupby:
             total_qty = 0.0
@@ -297,4 +324,5 @@ class LokiClient(object):
                 'sum_qty': {'value': values['sum_qty']},
                 'sum_price': {'value': values['sum_price']}
             })
+
         return len(result), result

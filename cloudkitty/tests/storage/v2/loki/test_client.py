@@ -14,6 +14,7 @@
 #
 
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 import json
 import unittest
@@ -48,6 +49,7 @@ class TestLokiClient(unittest.TestCase):
         self.stream_labels = {"app": "cloudkitty", "source": "test"}
         self.content_type = "application/json"
         self.buffer_size = 2
+        self.shard_days = 7
         self.cert = ('/path/to/cert', '/path/to/key')
         self.verify = '/path/to/cafile'
         self.client = client.LokiClient(
@@ -56,6 +58,7 @@ class TestLokiClient(unittest.TestCase):
             self.stream_labels,
             self.content_type,
             self.buffer_size,
+            self.shard_days,
             cert=self.cert,
             verify=self.verify
         )
@@ -76,7 +79,8 @@ class TestLokiClient(unittest.TestCase):
     def test_init_unsupported_content_type(self, mock_log, mock_requests):
         with self.assertRaises(exceptions.UnsupportedContentType):
             client.LokiClient(self.base_url, self.tenant, self.stream_labels,
-                              "text/plain", self.buffer_size, None, True)
+                              "text/plain", self.buffer_size, self.shard_days,
+                              None, True)
 
     def test_build_payload_json(self, mock_log, mock_requests):
         batch = [["1609459200000000000", "log line 1"],
@@ -550,3 +554,34 @@ class TestLokiClient(unittest.TestCase):
             mock_base_query.return_value, self.begin_dt, self.end_dt
         )
         mock_base_query.assert_called_once()
+
+    @patch.object(client.LokiClient, '_retrieve')
+    def test_retrieve_shards_with_long_time_range(
+            self, mock_retrieve, mock_log, mock_requests_arg):
+        begin_dt = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        end_dt = datetime(2024, 1, 15, tzinfo=timezone.utc)
+        mock_retrieve.return_value = (1, ["dummy_data"])
+
+        self.client.retrieve(begin_dt, end_dt, None, None, 100)
+
+        calls = [
+            call(begin_dt, begin_dt + timedelta(days=self.shard_days),
+                 None, None, 100),
+            call(begin_dt + timedelta(days=self.shard_days), end_dt,
+                 None, None, 100)
+        ]
+        mock_retrieve.assert_has_calls(calls)
+        self.assertEqual(mock_retrieve.call_count, 2)
+
+    @patch.object(client.LokiClient, '_retrieve')
+    def test_retrieve_no_sharding_with_short_time_range(
+            self, mock_retrieve, mock_log, mock_requests_arg):
+        begin_dt = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        end_dt = datetime(2024, 1, 5, tzinfo=timezone.utc)
+        mock_retrieve.return_value = (1, ["dummy_data"])
+
+        self.client.retrieve(begin_dt, end_dt, None, None, 100)
+
+        mock_retrieve.assert_called_once_with(
+            begin_dt, end_dt, None, None, 100
+        )
