@@ -31,6 +31,7 @@ import cloudkitty.storage
 import cloudkitty.storage.v1.hybrid.backends.gnocchi
 import cloudkitty.storage.v2.elasticsearch
 import cloudkitty.storage.v2.influx
+import cloudkitty.storage.v2.loki
 import cloudkitty.storage.v2.opensearch
 import cloudkitty.utils
 
@@ -70,6 +71,8 @@ _opts = [
         cloudkitty.storage.v2.opensearch.opensearch_storage_opts))),
     ('storage_gnocchi', list(itertools.chain(
         cloudkitty.storage.v1.hybrid.backends.gnocchi.gnocchi_storage_opts))),
+    ('storage_loki', list(itertools.chain(
+        cloudkitty.storage.v2.loki.loki_storage_opts))),
     (None, list(itertools.chain(
         cloudkitty.api.app.auth_opts,
         cloudkitty.service.service_opts))),
