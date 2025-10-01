@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fix request to Elasticsearch/OpenSearch that has potentially not the 
+    correct type.
