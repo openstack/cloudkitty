@@ -167,6 +167,10 @@ function configure_cloudkitty {
         iniset $CLOUDKITTY_CONF storage_${CLOUDKITTY_STORAGE_BACKEND} index_name ${CLOUDKITTY_OPENSEARCH_INDEX}
     fi
 
+    if [ "$CLOUDKITTY_STORAGE_BACKEND" == "loki" ]; then
+        iniset $CLOUDKITTY_CONF storage_loki url ${CLOUDKITTY_LOKI_URL}
+    fi
+
     # collect
     iniset $CLOUDKITTY_CONF collect collector $CLOUDKITTY_COLLECTOR
     iniset $CLOUDKITTY_CONF "collector_${CLOUDKITTY_COLLECTOR}" auth_section authinfos
@@ -366,6 +370,53 @@ function install_opensearch {
     sudo systemctl start opensearch || sudo systemctl restart opensearch
 }
 
+function start_loki {
+    LOKI_SYSTEMD_SERVICE="devstack@loki.service"
+    loki_command="$CLOUDKITTY_BIN_DIR/loki"
+    loki_command+=" --config.file=${CLOUDKITTY_DIR}/devstack/files/loki-config.yaml"
+
+    write_user_unit_file $LOKI_SYSTEMD_SERVICE "$loki_command" "" "$STACK_USER"
+
+    enable_service $LOKI_SYSTEMD_SERVICE
+    start_service $LOKI_SYSTEMD_SERVICE
+}
+
+function install_loki_ubuntu {
+    local loki_url="https://github.com/grafana/loki/releases/download/v3.5.4/loki-linux-amd64.zip"
+    local loki_tmp="/tmp/loki-linux-amd64.zip"
+
+    sudo apt-get install -y unzip wget
+
+    wget -O ${loki_tmp} ${loki_url}
+    unzip -o ${loki_tmp} -d /tmp
+    sudo mv /tmp/loki-linux-amd64 $CLOUDKITTY_BIN_DIR/loki
+    sudo chmod +x $CLOUDKITTY_BIN_DIR/loki
+}
+
+function install_loki_fedora {
+    local loki_url="https://github.com/grafana/loki/releases/download/v3.5.4/loki-linux-amd64.zip"
+    local loki_tmp="/tmp/loki-linux-amd64.zip"
+
+    sudo dnf install -y unzip wget
+
+    wget -O ${loki_tmp} ${loki_url}
+    unzip -o ${loki_tmp} -d /tmp
+    sudo mv /tmp/loki-linux-amd64 $CLOUDKITTY_BIN_DIR/loki
+    sudo chmod +x $CLOUDKITTY_BIN_DIR/loki
+}
+
+function install_loki {
+    if is_ubuntu; then
+        install_loki_ubuntu
+    elif is_fedora; then
+        install_loki_fedora
+    else
+        die $LINENO "Distribution must be Debian or Fedora-based"
+    fi
+    # Start Loki service
+    start_loki
+}
+
 # install_cloudkitty() - Collect source and prepare
 function install_cloudkitty {
     git_clone $CLOUDKITTY_REPO $CLOUDKITTY_DIR $CLOUDKITTY_BRANCH
@@ -378,6 +429,8 @@ function install_cloudkitty {
         install_elasticsearch
     elif [ $CLOUDKITTY_STORAGE_BACKEND == 'opensearch' ]; then
         install_opensearch
+    elif [ $CLOUDKITTY_STORAGE_BACKEND == "loki" ]; then
+        install_loki
     fi
     if [ ${CLOUDKITTY_USE_UWSGI,,} == 'true' ]; then
         pip_install uwsgi
