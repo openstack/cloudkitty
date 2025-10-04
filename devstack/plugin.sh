@@ -379,16 +379,13 @@ function install_cloudkitty {
     elif [ $CLOUDKITTY_STORAGE_BACKEND == 'opensearch' ]; then
         install_opensearch
     fi
-    if [ ${CLOUDKITTY_USE_UWSGI,,} == 'true' ]; then
-        pip_install uwsgi
-    fi
 }
 
 # start_cloudkitty() - Start running processes, including screen
 function start_cloudkitty {
     run_process ck-proc "$CLOUDKITTY_BIN_DIR/cloudkitty-processor --config-file=$CLOUDKITTY_CONF"
     if [ ${CLOUDKITTY_USE_UWSGI,,} == 'true' ]; then
-        run_process ck-api "$CLOUDKITTY_BIN_DIR/uwsgi --ini $CLOUDKITTY_UWSGI_CONF"
+        run_process ck-api "$(which uwsgi) --ini $CLOUDKITTY_UWSGI_CONF"
     else
         run_process ck-api "$CLOUDKITTY_BIN_DIR/cloudkitty-api --host $CLOUDKITTY_SERVICE_HOST --port $CLOUDKITTY_SERVICE_PORT"
     fi
