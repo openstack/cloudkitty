@@ -121,7 +121,7 @@ Section ``storage_loki``:
 * ``url``: Defaults to ``http://localhost:3100/loki/api/v1``. Loki host, along
   with port and protocol.
 
-* ``tenant``: Defaults to tenant1. Loki tenant.
+* ``tenant``: Defaults to cloudkitty. Loki tenant.
 
 * ``stream``: Defaults to ``{"service": "cloudkitty"}``. The labels that are
   going to be used to define the Loki stream as Python dict.
@@ -136,4 +136,10 @@ Section ``storage_loki``:
 * ``insecure``: Defaults to ``false``. Set to true to allow insecure HTTPS
   connections to Loki.
 
-* ``cafile``: Path of the CA certificate to trust for HTTPS connections.
+* ``ca_file``: Path of the CA certificate to trust for HTTPS connections.
+
+* ``cert_file``: Path to a client cert for establishing mTLS connections to
+  Loki.
+
+* ``key_file``: Path to a client key for establishing mTLS connections to
+  Loki.

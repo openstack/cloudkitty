@@ -37,8 +37,8 @@ loki_storage_opts = [
         default='http://localhost:3100/loki/api/v1'),
     cfg.StrOpt(
         'tenant',
-        help='The loki tenant to be used. Defaults to tenant1.',
-        default='tenant1'),
+        help='The loki tenant to be used. Defaults to cloudkitty.',
+        default='cloudkitty'),
     cfg.DictOpt(
         'stream',
         help='The labels that are going to be used to define the Loki stream '
@@ -60,8 +60,18 @@ loki_storage_opts = [
         help='Set to true to allow insecure HTTPS connections to Loki',
         default=False),
     cfg.StrOpt(
-        'cafile',
+        'ca_file',
         help='Path of the CA certificate to trust for HTTPS connections.',
+        default=None),
+    cfg.StrOpt(
+        'cert_file',
+        help="Path to a client cert for establishing mTLS connections to "
+             "Loki.",
+        default=None),
+    cfg.StrOpt(
+        'key_file',
+        help="Path to a client key for establishing mTLS connections to "
+             "Loki.",
         default=None)
 ]
 
@@ -74,15 +84,22 @@ class LokiStorage(v2_storage.BaseStorage):
         super(LokiStorage, self).__init__(*args, **kwargs)
 
         verify = not CONF.storage_loki.insecure
-        if verify and CONF.storage_loki.cafile:
-            verify = CONF.storage_loki.cafile
+        if verify and CONF.storage_loki.ca_file:
+            verify = CONF.storage_loki.ca_file
+
+        if CONF.storage_loki.cert_file and CONF.storage_loki.key_file:
+            cert = (CONF.storage_loki.cert_file, CONF.storage_loki.key_file)
+        else:
+            cert = None
 
         self._conn = os_client.LokiClient(
             CONF.storage_loki.url,
             CONF.storage_loki.tenant,
             CONF.storage_loki.stream,
             CONF.storage_loki.content_type,
-            CONF.storage_loki.buffer_size)
+            CONF.storage_loki.buffer_size,
+            cert,
+            verify)
 
     def init(self):
         LOG.debug('LokiStorage Init.')
