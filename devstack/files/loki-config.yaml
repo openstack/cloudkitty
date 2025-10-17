@@ -27,3 +27,4 @@ schema_config:
 
 limits_config:
   max_query_length: 745h
+  reject_old_samples_max_age: 745h
