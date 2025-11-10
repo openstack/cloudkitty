@@ -22,7 +22,7 @@ Create Date: 2021-02-08 17:00:00.000
 from alembic import op
 
 import sqlalchemy
-from sqlalchemy.ext import declarative
+from sqlalchemy import orm
 
 from oslo_db.sqlalchemy import models
 
@@ -35,7 +35,7 @@ down_revision = 'c50ed2c19204'
 branch_labels = None
 depends_on = None
 
-Base = declarative.declarative_base()
+Base = orm.declarative_base()
 
 
 def upgrade():
@@ -53,7 +53,7 @@ def upgrade():
 class IdentifierTableForThisDataBaseModelChangeSet(Base, models.ModelBase):
     """Represents the state of a given identifier."""
 
-    @declarative.declared_attr
+    @orm.declared_attr
     def __table_args__(cls):
         return (
             sqlalchemy.schema.UniqueConstraint(

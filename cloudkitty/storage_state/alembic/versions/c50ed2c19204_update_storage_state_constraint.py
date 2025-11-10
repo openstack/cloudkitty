@@ -24,7 +24,7 @@ from alembic import op
 from oslo_db.sqlalchemy import models
 
 import sqlalchemy
-from sqlalchemy.ext import declarative
+from sqlalchemy import orm
 
 # revision identifiers, used by Alembic.
 revision = 'c50ed2c19204'
@@ -32,7 +32,7 @@ down_revision = 'd9d103dd4dcf'
 branch_labels = None
 depends_on = None
 
-Base = declarative.declarative_base()
+Base = orm.declarative_base()
 
 
 def upgrade():
@@ -53,7 +53,7 @@ def upgrade():
 class IdentifierTableForThisDataBaseModelChangeSet(Base, models.ModelBase):
     """Represents the state of a given identifier."""
 
-    @declarative.declared_attr
+    @orm.declared_attr
     def __table_args__(cls):
         return (
             sqlalchemy.schema.UniqueConstraint(

@@ -15,9 +15,9 @@
 #
 from oslo_db.sqlalchemy import models
 import sqlalchemy
-from sqlalchemy.ext import declarative
+from sqlalchemy.orm import declarative_base
 
-Base = declarative.declarative_base()
+Base = declarative_base()
 
 
 class TenantState(Base, models.ModelBase):
