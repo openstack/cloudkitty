@@ -52,9 +52,19 @@ loki_storage_opts = [
     cfg.StrOpt(
         'content_type',
         help='The http Content-Type that will be used to send info to Loki. '
-             'Defaults to application/json. It can also be '
-             'application/x-protobuf',
+             'Currently only application/json is supported.',
         default='application/json'),
+    cfg.IntOpt(
+        'shard_days',
+        help='Controls how data retrieval requests are split across time. '
+             'When fetching data from Loki over a long period, the time '
+             'range is divided into smaller intervals of N days, and '
+             'separate requests are made for each interval. This prevents '
+             'timeouts and improves performance. Defaults to 7 days. '
+             'Maximum is 30 days.',
+        default=7,
+        min=1,
+        max=30),
     cfg.BoolOpt(
         'insecure',
         help='Set to true to allow insecure HTTPS connections to Loki',
@@ -98,6 +108,7 @@ class LokiStorage(v2_storage.BaseStorage):
             CONF.storage_loki.stream,
             CONF.storage_loki.content_type,
             CONF.storage_loki.buffer_size,
+            CONF.storage_loki.shard_days,
             cert,
             verify)
 
@@ -127,7 +138,13 @@ class LokiStorage(v2_storage.BaseStorage):
     def _build_dataframes(self, logs):
         dataframes = {}
         for log in logs:
-            labels = json.loads(log['values'][0][1])
+            try:
+                labels = json.loads(log['values'][0][1])
+            except json.JSONDecodeError:
+                # In case that we have non-json compliant log lines in Loki
+                LOG.error(f"Failed to decode log line: {log['values'][0][1]}, "
+                          f"ignoring.")
+                continue
             start = tzutils.dt_from_iso(labels['start'])
             end = tzutils.dt_from_iso(labels['end'])
             key = (start, end)

@@ -23,7 +23,7 @@ from cloudkitty.utils import json
 class FakeLokiClient(loki_client_module.LokiClient):
 
     def __init__(self, url, tenant, stream_labels, content_type,
-                 buffer_size, cert, verify, **kwargs):
+                 buffer_size, shard_days, cert, verify, **kwargs):
         if content_type != "application/json":
             raise loki_exceptions.UnsupportedContentType(content_type)
 
@@ -35,6 +35,7 @@ class FakeLokiClient(loki_client_module.LokiClient):
             'Content-Type': content_type
         }
         self._buffer_size = buffer_size
+        self._shard_days = shard_days
 
         self._cert = cert
         self._verify = verify
