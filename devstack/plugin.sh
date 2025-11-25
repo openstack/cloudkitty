@@ -82,7 +82,6 @@ function is_cloudkitty_enabled {
 function cleanup_cloudkitty {
     # Clean up dirs
     rm -rf $CLOUDKITTY_CONF_DIR/*
-    rm -rf $CLOUDKITTY_OUTPUT_BASEPATH/*
     for i in $(find $CLOUDKITTY_ENABLED_DIR -iname '_[0-9]*.py' -printf '%f\n'); do
         rm -f "${CLOUDKITTY_HORIZON_ENABLED_DIR}/$i"
     done
@@ -184,11 +183,6 @@ function configure_cloudkitty {
     # when starting a devstack installation, but is NOT a recommended setting
     iniset $CLOUDKITTY_CONF collect wait_periods 0
 
-    # output
-    iniset $CLOUDKITTY_CONF output backend $CLOUDKITTY_OUTPUT_BACKEND
-    iniset $CLOUDKITTY_CONF output basepath $CLOUDKITTY_OUTPUT_BASEPATH
-    iniset $CLOUDKITTY_CONF output pipeline $CLOUDKITTY_OUTPUT_PIPELINE
-
     # storage
     iniset $CLOUDKITTY_CONF storage backend $CLOUDKITTY_STORAGE_BACKEND
     iniset $CLOUDKITTY_CONF storage version $CLOUDKITTY_STORAGE_VERSION
@@ -247,11 +241,6 @@ function create_opensearch_index {
 
 # init_cloudkitty() - Initialize CloudKitty database
 function init_cloudkitty {
-    # Delete existing cache
-    sudo rm -rf $CLOUDKITTY_OUTPUT_BASEPATH
-    sudo mkdir -p $CLOUDKITTY_OUTPUT_BASEPATH
-    sudo chown $STACK_USER $CLOUDKITTY_OUTPUT_BASEPATH
-
     # (Re)create cloudkitty database
     recreate_database cloudkitty utf8
 

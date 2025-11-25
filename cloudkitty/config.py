@@ -14,23 +14,8 @@
 #    under the License.
 #
 from oslo_config import cfg
-from oslo_db import options as db_options  # noqa
-from oslo_messaging import opts  # noqa
+from oslo_db import options as db_options
 
-
-output_opts = [
-    cfg.StrOpt('backend',
-               default='cloudkitty.backend.file.FileBackend',
-               help='Backend for the output manager.'),
-    cfg.StrOpt('basepath',
-               default='/var/lib/cloudkitty/states/',
-               help='Storage directory for the file output backend.'),
-    cfg.ListOpt('pipeline',
-                default=['osrf'],
-                help='Output pipeline'), ]
-
-
-cfg.CONF.register_opts(output_opts, 'output')
 
 # oslo.db defaults
 db_options.set_defaults(

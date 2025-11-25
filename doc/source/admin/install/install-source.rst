@@ -17,7 +17,6 @@ following executables:
 * ``cloudkitty-processor``: Processing service (collecting and rating)
 * ``cloudkitty-dbsync``: Tool to create and upgrade the database schema
 * ``cloudkitty-storage-init``: Tool to initiate the storage backend
-* ``cloudkitty-writer``: Reporting tool
 
 Install sample configuration files::
 
