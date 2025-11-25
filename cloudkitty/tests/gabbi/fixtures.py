@@ -433,7 +433,7 @@ class CORSConfigFixture(fixture.GabbiFixture):
         def _mock_getattr(instance, key):
             if key != 'allowed_origin':
                 return self._original_call_method(instance, key)
-            return "http://valid.example.com"
+            return ["http://valid.example.com"]
 
         self._original_call_method = cfg.ConfigOpts.GroupAttr.__getattr__
         cfg.ConfigOpts.GroupAttr.__getattr__ = _mock_getattr
