@@ -38,21 +38,27 @@ class LokiClient(object):
             'Content-Type': content_type
         }
         self._buffer_size = buffer_size
-        self._points = []
+        self._points = {}
         self._shard_days = shard_days
 
         self._cert = cert
         self._verify = verify
 
     def _build_payload_json(self, batch):
-        payload = {
-            "streams": [
-                {
-                    "stream": self._stream_labels,
-                    "values": batch
-                }
-            ]
-        }
+        """Build payload with separate streams per project_id."""
+        streams = []
+        for project_id, values in batch.items():
+            # Combine base stream labels with project_id
+            stream_labels = self._stream_labels.copy()
+            # Only add project_id label if it's not None
+            if project_id is not None:
+                stream_labels['project_id'] = project_id
+            streams.append({
+                "stream": stream_labels,
+                "values": values
+            })
+
+        payload = {"streams": streams}
         return payload
 
     def _dict_to_loki_query(self, tags_dict, groupby=False, brackets=True):
@@ -76,9 +82,12 @@ class LokiClient(object):
         else:
             return ', '.join(pairs)
 
-    def _base_query(self):
+    def _base_query(self, project_id=None):
         """Makes sure that we always get json results."""
-        return self._dict_to_loki_query(self._stream_labels) + ' | json'
+        stream_labels = self._stream_labels.copy()
+        if project_id is not None:
+            stream_labels['project_id'] = project_id
+        return self._dict_to_loki_query(stream_labels) + ' | json'
 
     def search(self, query, begin, end, limit):
         url = f"{self._base_url}/query_range"
@@ -93,6 +102,7 @@ class LokiClient(object):
             "limit": limit
         }
 
+        LOG.debug(f"Executing Loki query: {params}")
         response = requests.get(url, params=params, headers=self._headers,
                                 cert=self._cert, verify=self._verify)
 
@@ -109,23 +119,27 @@ class LokiClient(object):
         """Send messages to Loki in batches."""
         url = f"{self._base_url}/push"
 
-        while self._points:
-            payload = self._build_payload_json(self._points)
-            response = requests.post(url, json=payload, headers=self._headers,
-                                     cert=self._cert, verify=self._verify)
+        if not self._points:
+            return
 
-            if response.status_code == 204:
-                LOG.debug(
-                    f"Batch of {len(self._points)} messages pushed "
-                    f"successfully."
-                )
-                self._points = []
-            else:
-                LOG.error(
-                    f"Failed to push logs: {response.status_code} - "
-                    f"{response.text}"
-                )
-                break
+        # Count total points across all project_ids
+        total_points = sum(len(points) for points in self._points.values())
+
+        payload = self._build_payload_json(self._points)
+        response = requests.post(url, json=payload, headers=self._headers,
+                                 cert=self._cert, verify=self._verify)
+
+        if response.status_code == 204:
+            LOG.debug(
+                f"Batch of {total_points} messages across "
+                f"{len(self._points)} project(s) pushed successfully."
+            )
+            self._points = {}
+        else:
+            LOG.error(
+                f"Failed to push logs: {response.status_code} - "
+                f"{response.text}"
+            )
 
     def delete_by_query(self, query, begin, end):
         url = f"{self._base_url}/delete"
@@ -153,12 +167,20 @@ class LokiClient(object):
             )
 
     def delete(self, begin, end, filters):
-        query = self._base_query()
+        # Extract project_id from filters to use in stream selector
+        project_id = None
+        remaining_filters = filters
+        if filters and 'project_id' in filters:
+            project_id = filters['project_id']
+            remaining_filters = {k: v for k, v in filters.items()
+                                 if k != 'project_id'}
+
+        query = self._base_query(project_id=project_id)
         loki_query_parts = []
-        if filters:
+        if remaining_filters:
             loki_query_parts.append(
                 self._dict_to_loki_query(
-                    filters, groupby=True, brackets=False
+                    remaining_filters, groupby=True, brackets=False
                 )
             )
 
@@ -169,13 +191,20 @@ class LokiClient(object):
 
     def _retrieve(self, begin, end, filters, metric_types, limit):
         """Retrieves dataframes stored in Loki."""
-        query = self._base_query()
+        project_id = None
+        remaining_filters = filters
+        if filters and 'project_id' in filters:
+            project_id = filters['project_id']
+            remaining_filters = {k: v for k, v in filters.items()
+                                 if k != 'project_id'}
+
+        query = self._base_query(project_id=project_id)
         loki_query_parts = []
 
-        if filters:
+        if remaining_filters:
             loki_query_parts.append(
                 self._dict_to_loki_query(
-                    filters, groupby=True, brackets=False
+                    remaining_filters, groupby=True, brackets=False
                 )
             )
 
@@ -234,9 +263,12 @@ class LokiClient(object):
         return total, data
 
     def add_point(self, point, type, start, end):
-        """Append a point to the client."""
+        """Append a point to the client, grouped by project_id."""
         timestamp_ns = int(end.timestamp() * 1_000_000_000)
         timestamp = str(timestamp_ns)
+
+        # Extract project_id from point.groupby (use None if not present)
+        project_id = point.groupby.get('project_id', None)
 
         data = {
             'start': start,
@@ -251,9 +283,16 @@ class LokiClient(object):
         }
 
         log_line = json.dumps(data)
-        self._points.append([timestamp, log_line])
 
-        if len(self._points) >= self._buffer_size:
+        # Group points by project_id
+        if project_id not in self._points:
+            self._points[project_id] = []
+
+        self._points[project_id].append([timestamp, log_line])
+
+        # Check if any project has reached buffer size
+        if any(len(points) >= self._buffer_size for points
+               in self._points.values()):
             self.push()
 
     def total(self, begin, end, metric_types, filters, groupby,
