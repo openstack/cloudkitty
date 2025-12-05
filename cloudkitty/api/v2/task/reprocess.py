@@ -212,7 +212,7 @@ class ReprocessSchedulerPostApi(base.BaseResource):
                 LOG.debug(
                     "No need to validate possible collision of reprocessing "
                     "for scope [%s] because it does not have active "
-                    "reprocessing schedules." % scope_to_reprocess)
+                    "reprocessing schedules.", scope_to_reprocess)
                 continue
 
             for schedule in all_reprocessing_schedules:

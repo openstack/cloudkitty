@@ -219,13 +219,13 @@ class ElasticsearchClient(object):
         resp = self._req(
             self._sess.delete, url, json.dumps(body), None, deserialize=False)
         body = resp.json()
-        LOG.debug('Freed {} scrolls contexts'.format(body['num_freed']))
+        LOG.debug('Freed {} scrolls contexts', body['num_freed'])
         return body
 
     def close_scrolls(self):
         """Closes all scroll contexts opened by this client."""
         ids = list(self._scroll_ids)
-        LOG.debug('Closing {} scroll contexts: {}'.format(len(ids), ids))
+        LOG.debug('Closing {} scroll contexts: {}', len(ids), ids)
         self.close_scroll({'scroll_id': ids})
         self._scroll_ids = set()
 
@@ -267,7 +267,7 @@ class ElasticsearchClient(object):
         :param terms: list of documents to index
         :type terms: collections.abc.Iterable
         """
-        LOG.debug("Indexing {} documents".format(len(terms)))
+        LOG.debug("Indexing {} documents", len(terms))
         if elasticsearch.CONF.storage_elasticsearch.use_datastream:
             return self.bulk_with_instruction({"create": {}}, terms)
         else:
