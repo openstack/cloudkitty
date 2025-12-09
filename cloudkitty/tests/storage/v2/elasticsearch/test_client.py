@@ -53,6 +53,13 @@ class TestElasticsearchClient(unittest.TestCase):
             [{'term': {'type': 'awesome'}}],
         )
 
+    def test_build_must_with_metric_type(self):
+        types = 'awesome'
+        self.assertEqual(
+            self.client._build_must(None, None, types, None),
+            [{'terms': {'type': ['awesome']}}],
+        )
+
     def test_build_must_with_metric_types(self):
         types = ['awesome', 'amazing']
         self.assertEqual(

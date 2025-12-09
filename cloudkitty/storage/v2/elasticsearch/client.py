@@ -78,6 +78,9 @@ class ElasticsearchClient(object):
             must.append({'term': {'type': filters['type']}})
 
         if metric_types:
+            if type(metric_types) is not list:
+                metric_types = [metric_types]
+
             must.append({"terms": {"type": metric_types}})
 
         return must
