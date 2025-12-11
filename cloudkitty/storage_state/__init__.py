@@ -201,6 +201,8 @@ class StateManager(object):
         :param session: the current database session to be reused
         :type session: object
         """
+        if active is None:
+            active = True
 
         with db.session_for_write() as session:
 
