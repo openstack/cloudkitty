@@ -133,6 +133,9 @@ class LokiClient(object):
         if query is None:
             query = self._base_query()
 
+        if end is None:
+            end = datetime.datetime.now(datetime.timezone.utc)
+
         params = {
             "query": query,
             "start": int(begin.timestamp()),
