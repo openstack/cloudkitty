@@ -13,6 +13,7 @@
 #    under the License.
 #
 import flask
+from oslo_config import cfg
 import voluptuous
 
 from cloudkitty.api.v2 import base
@@ -24,6 +25,10 @@ TABLE_RESPONSE_FORMAT = "table"
 OBJECT_RESPONSE_FORMAT = "object"
 
 ALL_RESPONSE_FORMATS = [TABLE_RESPONSE_FORMAT, OBJECT_RESPONSE_FORMAT]
+
+CONF = cfg.CONF
+
+CONF.import_opt('scope_key', 'cloudkitty.collector', 'collect')
 
 
 class Summary(base.BaseResource):
@@ -66,7 +71,11 @@ class Summary(base.BaseResource):
                     'columns': [],
                     'results': [],
                 }
-            filters['project_id'] = flask.request.context.project_id
+            scope_key = CONF.collect.scope_key
+            if filters:
+                filters[scope_key] = flask.request.context.project_id
+            else:
+                filters = {scope_key: flask.request.context.project_id}
 
         metric_types = filters.pop('type', [])
         if not isinstance(metric_types, list):
