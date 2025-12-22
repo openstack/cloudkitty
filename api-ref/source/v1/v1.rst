@@ -14,13 +14,13 @@ Collector
 .. rest-controller:: cloudkitty.api.v1.controllers.collector:CollectorStateController
    :webprefix: /v1/collector/states
 
-.. autotype:: cloudkitty.api.v1.datamodels.collector.CollectorInfos
+.. autoclass:: cloudkitty.api.v1.datamodels.collector.CollectorInfos
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.collector.ServiceToCollectorMapping
+.. autoclass:: cloudkitty.api.v1.datamodels.collector.ServiceToCollectorMapping
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.collector.ServiceToCollectorMappingCollection
+.. autoclass:: cloudkitty.api.v1.datamodels.collector.ServiceToCollectorMappingCollection
    :members:
 
 
@@ -33,10 +33,10 @@ Info
 .. rest-controller:: cloudkitty.api.v1.controllers.info:MetricInfoController
    :webprefix: /v1/info/metric
 
-.. autotype:: cloudkitty.api.v1.datamodels.info.CloudkittyMetricInfo
+.. autoclass:: cloudkitty.api.v1.datamodels.info.CloudkittyMetricInfo
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.info.CloudkittyMetricInfoCollection
+.. autoclass:: cloudkitty.api.v1.datamodels.info.CloudkittyMetricInfoCollection
    :members:
 
 .. rest-controller:: cloudkitty.api.v1.controllers.info:ServiceInfoController
@@ -55,16 +55,16 @@ Rating
 .. rest-controller:: cloudkitty.api.v1.controllers.rating:RatingController
    :webprefix: /v1/rating
 
-.. autotype:: cloudkitty.api.v1.datamodels.rating.CloudkittyModule
+.. autoclass:: cloudkitty.api.v1.datamodels.rating.CloudkittyModule
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.rating.CloudkittyModuleCollection
+.. autoclass:: cloudkitty.api.v1.datamodels.rating.CloudkittyModuleCollection
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.rating.CloudkittyResource
+.. autoclass:: cloudkitty.api.v1.datamodels.rating.CloudkittyResource
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.rating.CloudkittyResourceCollection
+.. autoclass:: cloudkitty.api.v1.datamodels.rating.CloudkittyResourceCollection
    :members:
 
 
@@ -84,11 +84,11 @@ Storage
 .. rest-controller:: cloudkitty.api.v1.controllers.storage:DataFramesController
    :webprefix: /v1/storage/dataframes
 
-.. autotype:: cloudkitty.api.v1.datamodels.storage.RatedResource
+.. autoclass:: cloudkitty.api.v1.datamodels.storage.RatedResource
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.storage.DataFrame
+.. autoclass:: cloudkitty.api.v1.datamodels.storage.DataFrame
    :members:
 
-.. autotype:: cloudkitty.api.v1.datamodels.storage.DataFrameCollection
+.. autoclass:: cloudkitty.api.v1.datamodels.storage.DataFrameCollection
    :members:

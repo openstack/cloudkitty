@@ -8,8 +8,8 @@ PyScripts Module REST API
 .. rest-controller:: cloudkitty.rating.pyscripts.controllers.script:PyScriptsScriptsController
    :webprefix: /v1/rating/module_config/pyscripts/scripts
 
-.. autotype:: cloudkitty.rating.pyscripts.datamodels.script.Script
+.. autoclass:: cloudkitty.rating.pyscripts.datamodels.script.Script
    :members:
 
-.. autotype:: cloudkitty.rating.pyscripts.datamodels.script.ScriptCollection
+.. autoclass:: cloudkitty.rating.pyscripts.datamodels.script.ScriptCollection
    :members:
