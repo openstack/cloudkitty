@@ -25,6 +25,7 @@ cloudkitty.egg-info
 .python-version
 
 # Configuration file
+doc/source/_static/cloudkitty.conf.sample
 etc/cloudkitty/cloudkitty.conf.sample
 etc/cloudkitty/policy.yaml.sample
 
