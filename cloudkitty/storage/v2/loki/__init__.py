@@ -17,6 +17,7 @@ import json
 
 from oslo_config import cfg
 from oslo_log import log as oslo_logging
+from werkzeug import exceptions as http_exceptions
 
 from cloudkitty import dataframe
 from cloudkitty.storage import v2 as v2_storage
@@ -161,6 +162,10 @@ class LokiStorage(v2_storage.BaseStorage):
                  filters=None,
                  metric_types=None,
                  offset=0, limit=1000, paginate=True):
+        if limit > 5000:
+            raise http_exceptions.BadRequest(
+                f"Limit {limit} exceeds maximum allowed limit of 5000 for "
+                f"Loki storage. Please reduce the limit parameter.")
         begin, end = self._local_to_utc(begin or tzutils.get_month_start(),
                                         end or tzutils.get_next_month())
         total, logs = self._conn.retrieve(
@@ -195,6 +200,10 @@ class LokiStorage(v2_storage.BaseStorage):
     def total(self, groupby=None, begin=None, end=None, metric_types=None,
               filters=None, custom_fields=None, offset=0, limit=1000,
               paginate=False):
+        if limit > 5000:
+            raise http_exceptions.BadRequest(
+                f"Limit {limit} exceeds maximum allowed limit of 5000 for "
+                f"Loki storage. Please reduce the limit parameter.")
         begin, end = self._local_to_utc(begin or tzutils.get_month_start(),
                                         end or tzutils.get_next_month())
 

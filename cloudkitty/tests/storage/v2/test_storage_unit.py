@@ -422,3 +422,44 @@ class StorageUnitTest(TestCase):
 
 
 StorageUnitTest.generate_scenarios()
+
+
+class LokiStorageLimitTest(TestCase):
+    """Test Loki-specific limit validation"""
+
+    @mock.patch(_LOKI_CLIENT_PATH, new=loki_utils.FakeLokiClient)
+    @mock.patch('cloudkitty.utils.load_conf', new=test_utils.load_conf)
+    def setUp(self):
+        super(LokiStorageLimitTest, self).setUp()
+        self.conf.set_override('backend', 'loki', 'storage')
+        self.conf.set_override('version', '2', 'storage')
+        self.storage = storage.get_storage(conf=test_utils.load_conf())
+        self.storage.init()
+
+    def test_retrieve_with_limit_over_5000_raises_exception(self):
+        from werkzeug import exceptions as http_exceptions
+        self.assertRaisesRegex(
+            http_exceptions.BadRequest,
+            r'Limit 5001 exceeds maximum allowed limit of 5000',
+            self.storage.retrieve,
+            limit=5001
+        )
+
+    def test_retrieve_with_limit_5000_succeeds(self):
+        # This should not raise an exception
+        result = self.storage.retrieve(limit=5000)
+        self.assertIsNotNone(result)
+
+    def test_total_with_limit_over_5000_raises_exception(self):
+        from werkzeug import exceptions as http_exceptions
+        self.assertRaisesRegex(
+            http_exceptions.BadRequest,
+            r'Limit 5001 exceeds maximum allowed limit of 5000',
+            self.storage.total,
+            limit=5001
+        )
+
+    def test_total_with_limit_5000_succeeds(self):
+        # This should not raise an exception
+        result = self.storage.total(limit=5000)
+        self.assertIsNotNone(result)
