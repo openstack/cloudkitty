@@ -741,21 +741,3 @@ class CloudKittyReprocessor(CloudKittyProcessor):
                                              scope.identifier,
                                              scope.start_reprocess_time,
                                              scope.end_reprocess_time)
-
-
-class CloudKittyServiceManager(cotyledon.ServiceManager):
-
-    def __init__(self):
-        super(CloudKittyServiceManager, self).__init__()
-        if CONF.orchestrator.max_workers:
-            self.cloudkitty_processor_service_id = self.add(
-                CloudKittyProcessor, workers=CONF.orchestrator.max_workers)
-        else:
-            LOG.info("No worker configured for CloudKitty processing.")
-
-        if CONF.orchestrator.max_workers_reprocessing:
-            self.cloudkitty_reprocessor_service_id = self.add(
-                CloudKittyReprocessor,
-                workers=CONF.orchestrator.max_workers_reprocessing)
-        else:
-            LOG.info("No worker configured for CloudKitty reprocessing.")

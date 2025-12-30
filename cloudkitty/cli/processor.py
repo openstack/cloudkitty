@@ -13,11 +13,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import cotyledon
+from cotyledon import oslo_config_glue
+from oslo_config import cfg
+from oslo_log import log
+
 from cloudkitty import service
 
 
+CONF = cfg.CONF
+LOG = log.getLogger(__name__)
+
+
 def main():
+    sm = cotyledon.ServiceManager()
     service.prepare_service()
+    oslo_config_glue.setup(sm, CONF)
 
     # NOTE(mc): This import is done here to ensure that the prepare_service()
     # function is called before any cfg option. By importing the orchestrator
@@ -25,7 +36,22 @@ def main():
     # before the prepare_service(), making cfg.CONF returning default values
     # systematically.
     from cloudkitty import orchestrator
-    orchestrator.CloudKittyServiceManager().run()
+
+    if CONF.orchestrator.max_workers:
+        sm.add(
+            orchestrator.CloudKittyProcessor,
+            workers=CONF.orchestrator.max_workers)
+    else:
+        LOG.info("No worker configured for CloudKitty processing.")
+
+    if CONF.orchestrator.max_workers_reprocessing:
+        sm.add(
+            orchestrator.CloudKittyReprocessor,
+            workers=CONF.orchestrator.max_workers_reprocessing)
+    else:
+        LOG.info("No worker configured for CloudKitty reprocessing.")
+
+    sm.run()
 
 
 if __name__ == '__main__':

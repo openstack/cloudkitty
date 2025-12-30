@@ -170,66 +170,6 @@ class OrchestratorTest(tests.TestCase):
             self.assertEqual('fake2', worker._processors[2].name)
             self.assertEqual(1, worker._processors[2].obj.priority)
 
-    @mock.patch("cotyledon.ServiceManager.add")
-    @mock.patch("cotyledon._service_manager.ServiceManager.__init__")
-    def test_cloudkitty_service_manager_only_processing(
-            self, service_manager_init_mock, cotyledon_add_mock):
-
-        OrchestratorTest.execute_cloudkitty_service_manager_test(
-            cotyledon_add_mock=cotyledon_add_mock, max_workers_reprocessing=0,
-            max_workers=1)
-
-        self.assertTrue(service_manager_init_mock.called)
-
-    @mock.patch("cotyledon.ServiceManager.add")
-    @mock.patch("cotyledon._service_manager.ServiceManager.__init__")
-    def test_cloudkitty_service_manager_only_reprocessing(
-            self, service_manager_init_mock, cotyledon_add_mock):
-        OrchestratorTest.execute_cloudkitty_service_manager_test(
-            cotyledon_add_mock=cotyledon_add_mock, max_workers_reprocessing=1,
-            max_workers=0)
-
-        self.assertTrue(service_manager_init_mock.called)
-
-    @mock.patch("cotyledon.ServiceManager.add")
-    @mock.patch("cotyledon._service_manager.ServiceManager.__init__")
-    def test_cloudkitty_service_manager_both_processings(
-            self, service_manager_init_mock, cotyledon_add_mock):
-        OrchestratorTest.execute_cloudkitty_service_manager_test(
-            cotyledon_add_mock=cotyledon_add_mock)
-
-        self.assertTrue(service_manager_init_mock.called)
-
-    @staticmethod
-    def execute_cloudkitty_service_manager_test(cotyledon_add_mock=None,
-                                                max_workers=1,
-                                                max_workers_reprocessing=1):
-
-        original_conf = orchestrator.CONF
-        try:
-            orchestrator.CONF = mock.Mock()
-            orchestrator.CONF.orchestrator = mock.Mock()
-            orchestrator.CONF.orchestrator.max_workers = max_workers
-            orchestrator.CONF.orchestrator.max_workers_reprocessing = \
-                max_workers_reprocessing
-
-            orchestrator.CloudKittyServiceManager()
-
-            expected_calls = []
-            if max_workers:
-                expected_calls.append(
-                    mock.call(orchestrator.CloudKittyProcessor,
-                              workers=max_workers))
-
-            if max_workers_reprocessing:
-                expected_calls.append(
-                    mock.call(orchestrator.CloudKittyReprocessor,
-                              workers=max_workers_reprocessing))
-
-            cotyledon_add_mock.assert_has_calls(expected_calls)
-        finally:
-            orchestrator.CONF = original_conf
-
 
 class WorkerTest(tests.TestCase):
 
