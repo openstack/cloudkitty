@@ -72,7 +72,7 @@ class TestLokiClient(unittest.TestCase):
         self.assertEqual(self.client._headers['Content-Type'],
                          self.content_type)
         self.assertEqual(self.client._buffer_size, self.buffer_size)
-        self.assertEqual(self.client._points, [])
+        self.assertEqual(self.client._points, {})
         self.assertEqual(self.client._cert, self.cert)
         self.assertEqual(self.client._verify, self.verify)
 
@@ -83,18 +83,44 @@ class TestLokiClient(unittest.TestCase):
                               None, True)
 
     def test_build_payload_json(self, mock_log, mock_requests):
-        batch = [["1609459200000000000", "log line 1"],
-                 ["1609459200000000001", "log line 2"]]
+        batch = {
+            "proj1": [["1609459200000000000", "log line 1"],
+                      ["1609459200000000001", "log line 2"]],
+            "proj2": [["1609459200000000002", "log line 3"]]
+        }
+        payload = self.client._build_payload_json(batch)
+        expected_payload = {
+            "streams": [
+                {
+                    "stream": {**self.stream_labels, "project_id": "proj1"},
+                    "values": batch["proj1"]
+                },
+                {
+                    "stream": {**self.stream_labels, "project_id": "proj2"},
+                    "values": batch["proj2"]
+                }
+            ]
+        }
+        self.assertEqual(payload, expected_payload)
+
+    def test_build_payload_json_with_none_project_id(
+            self, mock_log, mock_requests):
+        batch = {
+            None: [["1609459200000000000", "log line 1"],
+                   ["1609459200000000001", "log line 2"]]
+        }
         payload = self.client._build_payload_json(batch)
         expected_payload = {
             "streams": [
                 {
                     "stream": self.stream_labels,
-                    "values": batch
+                    "values": batch[None]
                 }
             ]
         }
         self.assertEqual(payload, expected_payload)
+        # Verify that project_id is NOT in the stream labels
+        self.assertNotIn('project_id', payload['streams'][0]['stream'])
 
     def test_dict_to_loki_query(self, mock_log, mock_requests):
         self.assertEqual(self.client._dict_to_loki_query({}), '{}')
@@ -200,18 +226,21 @@ class TestLokiClient(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 204
         mock_requests.post.return_value = mock_response
-        self.client._points = [["ts1", "log1"], ["ts2", "log2"]]
+        self.client._points = {
+            "proj1": [["ts1", "log1"], ["ts2", "log2"]]
+        }
         self.client.push()
         expected_url = f"{self.base_url}/push"
         expected_payload = self.client._build_payload_json(
-            [["ts1", "log1"], ["ts2", "log2"]]
+            {"proj1": [["ts1", "log1"], ["ts2", "log2"]]}
         )
         mock_requests.post.assert_called_once_with(
             expected_url, json=expected_payload, headers=self.client._headers,
             cert=self.client._cert, verify=self.client._verify
         )
-        self.assertEqual(self.client._points, [])
-        log_msg = "Batch of 2 messages pushed successfully."
+        self.assertEqual(self.client._points, {})
+        log_msg = ("Batch of 2 messages across 1 project(s) "
+                   "pushed successfully.")
         mock_log.debug.assert_called_once_with(log_msg)
 
     def test_push_failure(self, mock_log, mock_requests):
@@ -219,8 +248,8 @@ class TestLokiClient(unittest.TestCase):
         mock_response.status_code = 400
         mock_response.text = "Bad Request"
         mock_requests.post.return_value = mock_response
-        initial_points = [["ts1", "log1"], ["ts2", "log2"]]
-        self.client._points = list(initial_points)
+        initial_points = {"proj1": [["ts1", "log1"], ["ts2", "log2"]]}
+        self.client._points = dict(initial_points)
         self.client.push()
         self.assertEqual(self.client._points, initial_points)
         expected_msg = "Failed to push logs: 400 - Bad Request"
@@ -234,7 +263,7 @@ class TestLokiClient(unittest.TestCase):
         )
 
     def test_push_no_points(self, mock_log, mock_requests):
-        self.client._points = []
+        self.client._points = {}
         self.client.push()
         mock_requests.post.assert_not_called()
 
@@ -267,9 +296,11 @@ class TestLokiClient(unittest.TestCase):
         metric_types = "cpu_util"
         total, output = self.client.retrieve(self.begin_dt, self.end_dt,
                                              filters, metric_types, 50)
-        base_query = self.client._base_query()
+        # project_id is now part of the stream selector, not groupby filter
+        base_query = self.client._base_query(project_id="proj1")
+        # Only remaining filters (region) go in groupby
         filter_query_part = self.client._dict_to_loki_query(
-            filters, groupby=True, brackets=False
+            {"region": "reg1"}, groupby=True, brackets=False
         )
         metric_query_part = f'type = "{metric_types}"'
         expected_full_query = (
@@ -337,8 +368,11 @@ class TestLokiClient(unittest.TestCase):
         self.client._buffer_size = 3
         point = MockDataPoint(qty=1, price=10)
         self.client.add_point(point, "test_type", self.begin_dt, self.end_dt)
+        # _points is now a dict with project_id as key
         self.assertEqual(len(self.client._points), 1)
-        added_point_data = json.loads(self.client._points[0][1])
+        self.assertIn('proj1', self.client._points)
+        self.assertEqual(len(self.client._points['proj1']), 1)
+        added_point_data = json.loads(self.client._points['proj1'][0][1])
         self.assertEqual(added_point_data['type'], "test_type")
         self.assertEqual(added_point_data['qty'], 1)
         self.assertEqual(added_point_data['price'], 10)
@@ -354,7 +388,10 @@ class TestLokiClient(unittest.TestCase):
         self.client._buffer_size = 1
         point = MockDataPoint()
         self.client.add_point(point, "test_type", self.begin_dt, self.end_dt)
+        # _points is now a dict with project_id as key
         self.assertEqual(len(self.client._points), 1)
+        self.assertIn('proj1', self.client._points)
+        self.assertEqual(len(self.client._points['proj1']), 1)
         mock_push.assert_called_once()
 
     @patch.object(client.LokiClient, 'retrieve')
@@ -531,17 +568,19 @@ class TestLokiClient(unittest.TestCase):
     @patch.object(client.LokiClient, '_base_query')
     def test_delete_with_filters(self, mock_base_query, mock_delete_by_query,
                                  mock_log, mock_requests_arg):
-        mock_base_query.return_value = '{app="cloudkitty", source="test"} ' \
-                                       '| json'
+        mock_base_query.return_value = (
+            '{app="cloudkitty", source="test", project_id="proj1"} | json'
+        )
         filters = {"project_id": "proj1", "resource_type": "instance"}
         self.client.delete(self.begin_dt, self.end_dt, filters)
-        exp_query_filters = 'groupby_project_id="proj1", ' \
-                            'groupby_resource_type="instance"'
+        # project_id is now in stream selector via _base_query
+        # only resource_type goes in groupby filters
+        exp_query_filters = 'groupby_resource_type="instance"'
         exp_query = f'{mock_base_query.return_value} | {exp_query_filters}'
         mock_delete_by_query.assert_called_once_with(
             exp_query, self.begin_dt, self.end_dt
         )
-        mock_base_query.assert_called_once()
+        mock_base_query.assert_called_once_with(project_id="proj1")
 
     @patch.object(client.LokiClient, 'delete_by_query')
     @patch.object(client.LokiClient, '_base_query')
@@ -553,7 +592,7 @@ class TestLokiClient(unittest.TestCase):
         mock_delete_by_query.assert_called_once_with(
             mock_base_query.return_value, self.begin_dt, self.end_dt
         )
-        mock_base_query.assert_called_once()
+        mock_base_query.assert_called_once_with(project_id=None)
 
     @patch.object(client.LokiClient, '_retrieve')
     def test_retrieve_shards_with_long_time_range(
