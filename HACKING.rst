@@ -14,7 +14,6 @@ Cloudkitty Specific Commandments
 - [C314] str() and unicode() cannot be used on an exception.
 - [C315] Translated messages cannot be concatenated.  String should be
   included in translated message.
-- [C317] `oslo_` should be used instead of `oslo.`
 - [C318] Must use a dict comprehension instead of a dict constructor
   with a sequence of key-value pairs.
 - [C319] Ensure to not use xrange().
