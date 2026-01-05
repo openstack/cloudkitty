@@ -16,7 +16,6 @@ Cloudkitty Specific Commandments
   included in translated message.
 - [C318] Must use a dict comprehension instead of a dict constructor
   with a sequence of key-value pairs.
-- [C319] Ensure to not use xrange().
 - [C320] Do not use LOG.warn as it's deprecated.
 - [C321] Ensure that the _() function is explicitly imported to ensure
   proper translations.
