@@ -85,8 +85,3 @@ class IterableValuesDict(DictTypeValidator):
         except (TypeError, ValueError) as e:
             raise voluptuous.Invalid(
                 "{} can't be converted to a dict: {}".format(item, e))
-
-
-def get_string_type():
-    """Returns ``basestring`` in python2 and ``str`` in python3."""
-    return str

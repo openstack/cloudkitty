@@ -31,10 +31,6 @@ class SingleQueryParam(object):
     verifies its type and returns it directly, instead of returning a list
     containing a single element.
 
-    Note that this validator uses ``voluptuous.Coerce`` internally and thus
-    should not be used together with
-    ``cloudkitty.utils.validation.get_string_type`` in python2.
-
     :param param_type: Type of the query parameter
     """
     def __init__(self, param_type):
@@ -55,10 +51,6 @@ class MultiQueryParam(object):
     This validator splits comma-separated query parameter into lists,
     verifies their type and returns it directly, instead of returning a list
     containing a single element.
-
-    Note that this validator uses ``voluptuous.Coerce`` internally and thus
-    should not be used together with
-    ``cloudkitty.utils.validation.get_string_type`` in python2.
 
     :param param_type: Type of the query parameter
     """
@@ -225,7 +217,7 @@ def paginated(func):
                voluptuous.Required(
                    'message',
                    default='This is an example endpoint',
-               ): validation_utils.get_string_type(),
+               ): str,
            })
            def get(self, offset=0, limit=100):
                # [...]
@@ -249,7 +241,7 @@ def add_output_schema(schema):
                voluptuous.Required(
                    'message',
                    default='This is an example endpoint',
-               ): validation_utils.get_string_type(),
+               ): str,
            })
            def get(self):
                return {}

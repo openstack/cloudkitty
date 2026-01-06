@@ -22,7 +22,6 @@ from cloudkitty.common import policy
 from cloudkitty import messaging
 from cloudkitty import storage_state
 from cloudkitty.utils import tz as tzutils
-from cloudkitty.utils import validation as vutils
 
 from oslo_log import log
 
@@ -51,15 +50,13 @@ class ScopeState(base.BaseResource):
             api_utils.MultiQueryParam(int),
     })
     @api_utils.add_output_schema({'results': [{
-        voluptuous.Required('scope_id'): vutils.get_string_type(),
-        voluptuous.Required('scope_key'): vutils.get_string_type(),
-        voluptuous.Required('fetcher'): vutils.get_string_type(),
-        voluptuous.Required('collector'): vutils.get_string_type(),
-        voluptuous.Optional(
-            'last_processed_timestamp'): vutils.get_string_type(),
+        voluptuous.Required('scope_id'): str,
+        voluptuous.Required('scope_key'): str,
+        voluptuous.Required('fetcher'): str,
+        voluptuous.Required('collector'): str,
+        voluptuous.Optional('last_processed_timestamp'): str,
         voluptuous.Required('active'): bool,
-        voluptuous.Optional('scope_activation_toggle_date'):
-            vutils.get_string_type(),
+        voluptuous.Optional('scope_activation_toggle_date'): str,
     }]})
     def get(self, offset=0, limit=100, scope_id=None, scope_key=None,
             fetcher=None, collector=None, active=None):
@@ -165,15 +162,14 @@ class ScopeState(base.BaseResource):
             api_utils.SingleQueryParam(bool),
     })
     @api_utils.add_output_schema({
-        voluptuous.Required('scope_id'): vutils.get_string_type(),
-        voluptuous.Required('scope_key'): vutils.get_string_type(),
-        voluptuous.Required('fetcher'): vutils.get_string_type(),
-        voluptuous.Required('collector'): vutils.get_string_type(),
+        voluptuous.Required('scope_id'): str,
+        voluptuous.Required('scope_key'): str,
+        voluptuous.Required('fetcher'): str,
+        voluptuous.Required('collector'): str,
         voluptuous.Optional('last_processed_timestamp'):
             voluptuous.Coerce(tzutils.dt_from_iso),
         voluptuous.Required('active'): bool,
-        voluptuous.Required('scope_activation_toggle_date'):
-            vutils.get_string_type()
+        voluptuous.Required('scope_activation_toggle_date'): str,
     })
     def patch(self, scope_id, scope_key=None, fetcher=None,
               collector=None, active=None):
@@ -234,15 +230,13 @@ class ScopeState(base.BaseResource):
             voluptuous.Coerce(tzutils.dt_from_iso),
     })
     @api_utils.add_output_schema({
-        voluptuous.Required('scope_id'): vutils.get_string_type(),
-        voluptuous.Required('scope_key'): vutils.get_string_type(),
-        voluptuous.Required('fetcher'): vutils.get_string_type(),
-        voluptuous.Required('collector'): vutils.get_string_type(),
-        voluptuous.Required('last_processed_timestamp'):
-            vutils.get_string_type(),
+        voluptuous.Required('scope_id'): str,
+        voluptuous.Required('scope_key'): str,
+        voluptuous.Required('fetcher'): str,
+        voluptuous.Required('collector'): str,
+        voluptuous.Required('last_processed_timestamp'): str,
         voluptuous.Required('active'): bool,
-        voluptuous.Required('scope_activation_toggle_date'):
-            vutils.get_string_type()
+        voluptuous.Required('scope_activation_toggle_date'): str,
     })
     def post(self, scope_id, scope_key=None, fetcher=None, collector=None,
              active=None, last_processed_timestamp=None):
