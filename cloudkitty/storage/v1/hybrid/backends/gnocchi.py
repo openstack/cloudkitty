@@ -20,6 +20,7 @@ from gnocchiclient import client as gclient
 from gnocchiclient import exceptions as gexceptions
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
+from oslo_config import types
 from oslo_log import log as logging
 from oslo_utils import uuidutils
 
@@ -35,6 +36,39 @@ CONF = cfg.CONF
 
 CONF.import_opt('period', 'cloudkitty.collector', 'collect')
 
+
+class ArchivePolicy(types.ConfigType):
+    def __init__(self, type_name='archive policy'):
+        super().__init__(type_name=type_name)
+
+    def __call__(self, value):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except json.JsonDecodeError as e:
+                raise ValueError("Invalid json string: %s", e)
+
+        if not isinstance(value, list):
+            raise ValueError("Value should be a list of dicts")
+
+        for policy in value:
+            if not isinstance(policy, dict):
+                raise ValueError("Value should be a list of dicts")
+            if set(policy.keys()) != {'granularity', 'timespan'}:
+                raise ValueError("Each item should contain only granularity "
+                                 "and timespan.")
+        return value
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__)
+
+    def _formatter(self, value):
+        return json.dumps(value)
+
+
 GNOCCHI_STORAGE_OPTS = 'storage_gnocchi'
 gnocchi_storage_opts = [
     cfg.StrOpt('interface',
@@ -44,13 +78,16 @@ gnocchi_storage_opts = [
                default='rating',
                help='Gnocchi storage archive policy name.'),
     # The archive policy definition MUST include the collect period granularity
-    cfg.StrOpt('archive_policy_definition',
-               default='[{"granularity": '
-                       + str(CONF.collect.period) +
-                       ', "timespan": "90 days"}, '
-                       '{"granularity": 86400, "timespan": "360 days"}, '
-                       '{"granularity": 2592000, "timespan": "1800 days"}]',
-               help='Gnocchi storage archive policy definition.'), ]
+    cfg.Opt(
+        'archive_policy_definition',
+        type=ArchivePolicy(),
+        default=[
+            {"granularity": CONF.collect.period, "timespan": "90 days"},
+            {"granularity": 86400, "timespan": "360 days"},
+            {"granularity": 2592000, "timespan": "1800 days"}
+        ],
+        help='Gnocchi storage archive policy definition.'),
+    ]
 CONF.register_opts(gnocchi_storage_opts, GNOCCHI_STORAGE_OPTS)
 
 ks_loading.register_session_conf_options(
@@ -223,7 +260,7 @@ class GnocchiStorage(BaseHybridBackend):
                              'interface': CONF.storage_gnocchi.interface})
         self._archive_policy_name = (
             CONF.storage_gnocchi.archive_policy_name)
-        self._archive_policy_definition = json.loads(
+        self._archive_policy_definition = (
             CONF.storage_gnocchi.archive_policy_definition)
         self._period = kwargs.get('period') or CONF.collect.period
         self._measurements = dict()
