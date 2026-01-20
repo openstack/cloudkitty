@@ -140,11 +140,11 @@ class StateManager(object):
                 r.collector = collector
                 r.fetcher = fetcher
                 LOG.info('Updating identifier "{i}" with scope_key "{sk}", '
-                         'collector "{c}" and fetcher "{f}"'.format(
-                             i=identifier,
-                             sk=scope_key,
-                             c=collector,
-                             f=fetcher))
+                         'collector "{c}" and fetcher "{f}"',
+                         i=identifier,
+                         sk=scope_key,
+                         c=collector,
+                         f=fetcher)
                 session.commit()
         return r
 

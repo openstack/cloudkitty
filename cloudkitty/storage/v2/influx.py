@@ -143,7 +143,7 @@ class InfluxClient(object):
         total_points = len(self._points)
         if len(self._points) < 1:
             return
-        LOG.debug('Pushing {} points to InfluxDB'.format(total_points))
+        LOG.debug('Pushing {} points to InfluxDB', total_points)
         self._conn.write_points(self._points,
                                 retention_policy=self._retention_policy)
         self._points = []
@@ -555,7 +555,7 @@ class InfluxClientV2(InfluxClient):
         total_points = len(self._points)
         if len(self._points) < 1:
             return
-        LOG.debug('Pushing {} points to InfluxDB'.format(total_points))
+        LOG.debug('Pushing {} points to InfluxDB', total_points)
         self.write_points(self._points,
                           retention_policy=self._retention_policy)
         self._points = []
@@ -755,10 +755,8 @@ class InfluxStorage(v2_storage.BaseStorage):
         policy = CONF.storage_influxdb.retention_policy
         database = CONF.storage_influxdb.database
         if not self._conn.retention_policy_exists(database, policy):
-            LOG.error(
-                'Archive policy "{}" does not exist in database "{}"'.format(
-                    policy, database)
-            )
+            LOG.error('Archive policy "{}" does not exist in database "{}"',
+                      policy, database)
 
     def push(self, dataframes, scope_id=None):
 
