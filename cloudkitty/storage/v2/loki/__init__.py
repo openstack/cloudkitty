@@ -89,6 +89,14 @@ loki_storage_opts = [
         default=60,
         min=0,
         help='Timeout value for http requests'),
+    cfg.BoolOpt(
+        'use_structured_metadata',
+        help='Use Loki structured metadata for query filtering. Enable this '
+             'after all data without structured metadata has expired (based '
+             'on your retention policy). Requires Loki 3.0+. When disabled, '
+             'queries use JSON parsing which works with both old and new '
+             'data.',
+        default=False)
 ]
 
 CONF.register_opts(loki_storage_opts, LOKI_STORAGE_GROUP)
@@ -118,7 +126,7 @@ class LokiStorage(v2_storage.BaseStorage):
             cert,
             verify,
             CONF.storage_loki.timeout,
-        )
+            CONF.storage_loki.use_structured_metadata)
 
     def init(self):
         LOG.debug('LokiStorage Init.')

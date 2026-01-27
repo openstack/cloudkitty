@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Adds support for Loki structured metadata (Loki 3.0+) to the Loki v2
+    storage backend for improved query performance. Structured metadata is
+    now always stored with log entries for commonly queried fields (type,
+    user, unit, flavor_name). The option ``use_structured_metadata`` can be
+    set under ``[storage_loki]`` to enable queries to filter on indexed
+    metadata instead of JSON parsing. This option defaults to ``false`` for
+    backward compatibility. To migrate, deploy the new code, wait for the
+    data retention period so old data expires, then set
+    ``use_structured_metadata=true``.

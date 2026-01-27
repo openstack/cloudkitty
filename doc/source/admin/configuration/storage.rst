@@ -143,3 +143,18 @@ Section ``storage_loki``:
 
 * ``key_file``: Path to a client key for establishing mTLS connections to
   Loki.
+
+* ``use_structured_metadata``: Defaults to ``false``. When enabled, queries
+  use Loki structured metadata for filtering instead of JSON parsing. This
+  provides significant query performance improvements but requires all stored
+  data to have structured metadata. Enable this option after your data
+  retention period has passed following the upgrade to a version that stores
+  structured metadata. Requires Loki 3.0+.
+
+.. note::
+
+   CloudKitty automatically stores structured metadata with each log entry
+   for the following fields: ``type``, ``user``, ``unit``, and ``flavor_name``.
+   This is done regardless of the ``use_structured_metadata`` setting.
+   The setting only controls whether queries leverage this metadata for
+   faster filtering.
