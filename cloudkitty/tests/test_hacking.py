@@ -280,11 +280,6 @@ class HackingTestCase(tests.TestCase):
         self.assertEqual(0, len(list(checks.dict_constructor_with_list_copy(
             "      self._render_dict(xml, data_el, data.__dict__)"))))
 
-    def test_no_xrange(self):
-        self.assertEqual(1, len(list(checks.no_xrange("xrange(45)"))))
-
-        self.assertEqual(0, len(list(checks.no_xrange("range(45)"))))
-
     def test_no_log_warn_check(self):
         self.assertEqual(0, len(list(checks.no_log_warn_check(
             "LOG.warning('This should not trigger LOG.warn"

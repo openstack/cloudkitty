@@ -47,11 +47,7 @@ underscore_import_check_multi = re.compile(r"(.)*import (.)*_, (.)*")
 # We need this for cases where they have created their own _ function.
 custom_underscore_check = re.compile(r"(.)*_\s*=\s*(.)*")
 dict_constructor_with_list_copy_re = re.compile(r".*\bdict\((\[)?(\(|\[)")
-assert_no_xrange_re = re.compile(r"\s*xrange\s*\(")
-assert_True = re.compile(r".*assertEqual\(True, .*\)")
-assert_None = re.compile(r".*assertEqual\(None, .*\)")
 no_log_warn = re.compile(r".*LOG.warn\(.*\)")
-asse_raises_regexp = re.compile(r"assertRaisesRegexp\(")
 
 
 class BaseASTChecker(ast.NodeVisitor):
@@ -292,16 +288,6 @@ def dict_constructor_with_list_copy(logical_line):
            )
     if dict_constructor_with_list_copy_re.match(logical_line):
         yield (0, msg)
-
-
-@core.flake8ext
-def no_xrange(logical_line):
-    """Ensure to not use xrange()
-
-    C319
-    """
-    if assert_no_xrange_re.match(logical_line):
-        yield (0, "C319: Do not use xrange().")
 
 
 @core.flake8ext
