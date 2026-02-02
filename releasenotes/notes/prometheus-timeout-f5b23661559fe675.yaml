@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Introduced timeout for HTTP requests sent to Prometheus. Timeout thresholds
+    are 60 seconds by default and can be customized by the following options.
+
+    - ``[collector_prometheus] timeout``
+    - ``[fetcher_prometheus] timeout``

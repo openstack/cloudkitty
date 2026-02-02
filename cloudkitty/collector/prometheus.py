@@ -59,6 +59,12 @@ collector_prometheus_opts = [
         default=False,
         help='Explicitly trust untrusted HTTPS responses',
     ),
+    cfg.FloatOpt(
+        'timeout',
+        default=60,
+        min=0,
+        help='Timeout value for http requests',
+    ),
 ]
 cfg.CONF.register_opts(collector_prometheus_opts, PROMETHEUS_COLLECTOR_OPTS)
 
@@ -110,6 +116,7 @@ class PrometheusCollector(collector.BaseCollector):
             url,
             auth=(user, password) if user and password else None,
             verify=verify,
+            timeout=CONF.collector_prometheus.timeout
         )
 
     @staticmethod
