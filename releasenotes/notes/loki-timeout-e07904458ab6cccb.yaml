@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Introduced timeout for HTTP requests sent to Loki. Timeout threshold is
+    60 seconds by default and can be customized by
+    the ``[storage_loki] timeout`` option.

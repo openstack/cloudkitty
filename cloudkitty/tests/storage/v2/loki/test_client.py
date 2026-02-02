@@ -52,6 +52,7 @@ class TestLokiClient(unittest.TestCase):
         self.shard_days = 7
         self.cert = ('/path/to/cert', '/path/to/key')
         self.verify = '/path/to/cafile'
+        self.timeout = 60
         self.client = client.LokiClient(
             self.base_url,
             self.tenant,
@@ -60,7 +61,8 @@ class TestLokiClient(unittest.TestCase):
             self.buffer_size,
             self.shard_days,
             cert=self.cert,
-            verify=self.verify
+            verify=self.verify,
+            timeout=self.timeout,
         )
         self.begin_dt = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
         self.end_dt = datetime(2024, 1, 1, 1, 0, 0, tzinfo=timezone.utc)
@@ -80,7 +82,7 @@ class TestLokiClient(unittest.TestCase):
         with self.assertRaises(exceptions.UnsupportedContentType):
             client.LokiClient(self.base_url, self.tenant, self.stream_labels,
                               "text/plain", self.buffer_size, self.shard_days,
-                              None, True)
+                              None, True, 60.0)
 
     def test_build_payload_json(self, mock_log, mock_requests):
         batch = {
@@ -190,7 +192,8 @@ class TestLokiClient(unittest.TestCase):
             params=expected_params,
             headers=self.client._headers,
             cert=self.client._cert,
-            verify=self.client._verify
+            verify=self.client._verify,
+            timeout=self.client.timeout,
         )
         self.assertEqual(
             data,
@@ -236,7 +239,8 @@ class TestLokiClient(unittest.TestCase):
         )
         mock_requests.post.assert_called_once_with(
             expected_url, json=expected_payload, headers=self.client._headers,
-            cert=self.client._cert, verify=self.client._verify
+            cert=self.client._cert, verify=self.client._verify,
+            timeout=self.client.timeout
         )
         self.assertEqual(self.client._points, {})
         log_msg = ("Batch of 2 messages across 1 project(s) "
@@ -259,7 +263,8 @@ class TestLokiClient(unittest.TestCase):
             json=self.client._build_payload_json(initial_points),
             headers=self.client._headers,
             cert=self.client._cert,
-            verify=self.client._verify
+            verify=self.client._verify,
+            timeout=self.client.timeout
         )
 
     def test_push_no_points(self, mock_log, mock_requests):
@@ -529,7 +534,8 @@ class TestLokiClient(unittest.TestCase):
             },
             headers=self.client._headers,
             cert=self.client._cert,
-            verify=self.client._verify
+            verify=self.client._verify,
+            timeout=self.client.timeout
         )
         ml.debug.assert_has_calls([
             call("Dataframes deleted successfully.")
@@ -557,7 +563,8 @@ class TestLokiClient(unittest.TestCase):
             params=expected_params,
             headers=self.client._headers,
             cert=self.client._cert,
-            verify=self.client._verify
+            verify=self.client._verify,
+            timeout=self.client.timeout
         )
         expected_error_msg = ("Failed to delete dataframes: "
                               "500 - Internal Server Error")
