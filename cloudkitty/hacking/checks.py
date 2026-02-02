@@ -46,7 +46,6 @@ underscore_import_check = re.compile(r"(.)*import _$")
 underscore_import_check_multi = re.compile(r"(.)*import (.)*_, (.)*")
 # We need this for cases where they have created their own _ function.
 custom_underscore_check = re.compile(r"(.)*_\s*=\s*(.)*")
-oslo_namespace_imports = re.compile(r"from[\s]*oslo[.](.*)")
 dict_constructor_with_list_copy_re = re.compile(r".*\bdict\((\[)?(\(|\[)")
 assert_no_xrange_re = re.compile(r"\s*xrange\s*\(")
 assert_True = re.compile(r".*assertEqual\(True, .*\)")
@@ -280,21 +279,6 @@ class CheckForTransAdd(BaseASTChecker):
             elif self._check_call_names(node.right, self.TRANS_FUNC):
                 self.add_error(node.right)
         super(CheckForTransAdd, self).generic_visit(node)
-
-
-@core.flake8ext
-def check_oslo_namespace_imports(logical_line, noqa):
-    """'oslo_' should be used instead of 'oslo.'
-
-    C317
-    """
-    if noqa:
-        return
-    if re.match(oslo_namespace_imports, logical_line):
-        msg = ("C317: '%s' must be used instead of '%s'.") % (
-            logical_line.replace('oslo.', 'oslo_'),
-            logical_line)
-        yield (0, msg)
 
 
 @core.flake8ext
