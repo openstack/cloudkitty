@@ -82,8 +82,8 @@ cfg.CONF.register_opts(collector_gnocchi_opts, COLLECTOR_GNOCCHI_OPTS)
 CONF = cfg.CONF
 
 # According to 'gnocchi/rest/aggregates/operations.py#AGG_MAP' and
-# 'gnocchi/rest/aggregates/operations.py#AGG_MAP' the following are the basic
-# aggregation methods that one can use when configuring an aggregation
+# 'gnocchi/archive_policy.py#VALID_AGGREGATION_METHODS' the following are the
+# basic aggregation methods that one can use when configuring an aggregation
 # method in the archive policy in Gnocchi or using the aggregation API.
 BASIC_AGGREGATION_METHODS = set(('mean', 'sum', 'last', 'max', 'min', 'std',
                                  'median', 'first', 'count'))
