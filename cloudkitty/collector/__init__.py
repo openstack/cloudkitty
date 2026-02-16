@@ -111,6 +111,11 @@ METRIC_BASE_SCHEMA = {
     # Collector-specific args. Should be overriden by schema provided for
     # the given collector
     Optional('extra_args'): dict,
+
+    # Expression used to define if we should or not skip the processed
+    # datapoint from being persisted in the storage backend. This is useful
+    # to exclude persisting data in the backend for entries with QTY==0.
+    Optional('skip_datapoints_expression'): All(str, Length(min=1)),
 }
 
 

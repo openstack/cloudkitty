@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Enable ignoring processed datapoints in the storage backend.

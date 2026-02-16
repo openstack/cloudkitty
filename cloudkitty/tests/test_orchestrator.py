@@ -15,6 +15,7 @@
 #
 import datetime
 import re
+from typing import Callable
 
 from unittest import mock
 
@@ -24,6 +25,7 @@ from tooz import coordination
 from tooz.drivers import file
 
 from cloudkitty import collector
+from cloudkitty import dataframe
 from cloudkitty import orchestrator
 from cloudkitty.storage.v2 import influx
 from cloudkitty import storage_state
@@ -283,16 +285,398 @@ class WorkerTest(tests.TestCase):
             mock.call(start=start_time, end=end_time, usage={})
         ])
 
-    def test_persist_rating_data(self):
+    @mock.patch('cloudkitty.dataframe.DataFrame.from_dict')
+    def test_persist_rating_data(self, dataframe_from_dict_mock):
         start_time = tzutils.localized_now()
         end_time = start_time + datetime.timedelta(hours=1)
 
-        frame = {"id": "sd"}
-        self.worker.persist_rating_data(end_time, frame, start_time)
+        frame = mock.Mock()
+        frame.start = start_time
+        frame.end = end_time
+
+        dataframe_from_dict_mock.return_value = frame
+
+        metric_name = 'metric-one'
+        frame.as_dict.return_value = {
+            'usage': {metric_name: [{
+                "vol": {
+                    "unit": "GiB",
+                    "qty": 1.2,
+                },
+                "rating": {
+                    "price": 0.04,
+                },
+                "groupby": {
+                    "group_one": "one",
+                    "group_two": "two",
+                },
+                "metadata": {
+                    "attr_one": "one",
+                    "attr_two": "two",
+                },
+            }]}}
+
+        self.worker.map_metric_definition_by_alt_name[metric_name] = {}
+
+        with mock.patch.object(
+                self.worker, 'execute_datapoints_filtering_for_metric',
+                wraps=self.get_filtering_method_for_spy()) as wrapped_object1:
+            with mock.patch.object(self.worker,
+                                   'execute_datapoints_filtering',
+                                   wraps=self.get_actual_filtering_for_spy()
+                                   ) as wrapped_object2:
+                self.worker.persist_rating_data(end_time, frame, start_time)
+
+                self.assertEqual(wrapped_object1.call_count, 1)
+                self.assertEqual(wrapped_object2.call_count, 1)
 
         self.storage_mock.push.assert_has_calls([
             mock.call([frame], self.worker._tenant_id)
         ])
+
+    def get_actual_filtering_for_spy(self) -> Callable[..., None]:
+        return self.worker.execute_datapoints_filtering
+
+    def get_filtering_method_for_spy(self) -> Callable[..., None]:
+        return self.worker.execute_datapoints_filtering_for_metric
+
+    def test_persist_rating_data_filter_qty_zero(self):
+        metric_name = 'metric-one'
+        start_time = tzutils.localized_now()
+        end_time = start_time + datetime.timedelta(hours=1)
+
+        frame = dataframe.DataFrame.from_dict(
+            {'period': {
+                'begin': start_time, 'end': end_time},
+                'usage': {metric_name: [{
+                    "vol": {
+                        "unit": "GiB",
+                        "qty": 0,
+                    },
+                    "rating": {
+                        "price": 0.00,
+                    },
+                    "groupby": {
+                        "group_one": "one",
+                        "group_two": "two",
+                    },
+                    "metadata": {
+                        "attr_one": "one",
+                        "attr_two": "two",
+                    },
+                }]}})
+
+        expected_frame = dataframe.DataFrame.from_dict(
+            {
+                'period': {'begin': start_time, 'end': end_time},
+                'usage': {}
+            })
+
+        self.worker.map_metric_definition_by_alt_name[
+            metric_name] = {
+            "skip_datapoints_expression":
+                'datapoint.get("vol", {}).get("qty", 0) == 0'}
+
+        with mock.patch.object(self.worker,
+                               'execute_datapoints_filtering_for_metric',
+                               wraps=self.get_filtering_method_for_spy()
+                               ) as wrapped_object1:
+            with mock.patch.object(self.worker,
+                                   'execute_datapoints_filtering',
+                                   wraps=self.get_actual_filtering_for_spy()
+                                   ) as wrapped_object2:
+                with mock.patch.object(
+                        orchestrator.LOG, 'debug') as log_debug_mock:
+                    self.worker.persist_rating_data(
+                        end_time, frame, start_time)
+
+                    self.assertEqual(wrapped_object1.call_count, 1)
+                    self.assertEqual(wrapped_object2.call_count, 1)
+                    log_debug_mock.assert_has_calls(
+                        [mock.call(
+                            "Persisting processed frames [%s] for scope [%s] "
+                            "and time [start=%s,end=%s].",
+                            expected_frame.as_dict(), self.worker._tenant_id,
+                            start_time, end_time)])
+
+                    self.assertEqual(1, self.storage_mock.push.call_count)
+
+                    self.assertEqual(
+                        expected_frame.as_dict(),
+                        self.storage_mock.push.call_args_list[
+                            0][0][0][0].as_dict())
+
+    def test_persist_rating_data_filter_metadata_element(self):
+        start_time = tzutils.localized_now()
+        end_time = start_time + datetime.timedelta(hours=1)
+
+        frame = dataframe.DataFrame.from_dict(
+            {'period': {
+                'begin': start_time, 'end': end_time},
+                'usage': {
+                    'metric-one':
+                        [{
+                            "vol": {
+                                "unit": "GiB",
+                                "qty": 0,
+                            },
+                            "rating": {
+                                "price": 0.00,
+                            },
+                            "groupby": {
+                                "group_one": "one",
+                                "group_two": "two",
+                            },
+                            "metadata": {
+                                "attr_one": "one",
+                                "attr_two": "two",
+                            },
+                        }],
+                    'metric-two': [{
+                        "vol": {
+                            "unit": "GiB",
+                            "qty": 34,
+                        },
+                        "rating": {
+                            "price": 330.00,
+                        },
+                        "groupby": {
+                            "group_one": "xxx",
+                        },
+                        "metadata": {
+                            "attr_one": "some_value",
+                        },
+                    }]}})
+
+        expected_frame = dataframe.DataFrame.from_dict(
+            {'period': {'begin': start_time, 'end': end_time},
+             'usage': {'metric-one': [{
+                 "vol": {
+                     "unit": "GiB",
+                     "qty": 0,
+                 },
+                 "rating": {
+                     "price": 0.00,
+                 },
+                 "groupby": {
+                     "group_one": "one",
+                     "group_two": "two",
+                 },
+                 "metadata": {
+                     "attr_one": "one",
+                     "attr_two": "two",
+                 },
+             }]}})
+
+        self.worker.map_metric_definition_by_alt_name['metric-one'] = {}
+        self.worker.map_metric_definition_by_alt_name['metric-two'] = {
+            "skip_datapoints_expression":
+                'datapoint.get("metadata", {}).get('
+                '"attr_one") == "some_value"'}
+
+        with mock.patch.object(
+                self.worker, 'execute_datapoints_filtering_for_metric',
+                wraps=self.get_filtering_method_for_spy()) as wrapped_object1:
+            with mock.patch.object(
+                    self.worker, 'execute_datapoints_filtering',
+                    wraps=self.get_actual_filtering_for_spy()
+            ) as wrapped_object2:
+                with mock.patch.object(
+                        orchestrator.LOG, 'debug') as log_debug_mock:
+                    self.worker.persist_rating_data(
+                        end_time, frame, start_time)
+
+                    self.assertEqual(wrapped_object1.call_count, 2)
+                    self.assertEqual(wrapped_object2.call_count, 2)
+                    log_debug_mock.assert_has_calls(
+                        [mock.call(
+                            "Persisting processed frames [%s] for scope [%s] "
+                            "and time [start=%s,end=%s].",
+                            expected_frame.as_dict(), self.worker._tenant_id,
+                            start_time, end_time)])
+
+                    self.assertEqual(1, self.storage_mock.push.call_count)
+
+                    self.assertEqual(
+                        expected_frame.as_dict(),
+                        self.storage_mock.push.call_args_list[0][
+                            0][0][0].as_dict())
+
+    def test_persist_rating_data_filter_skip_all_default(self):
+        start_time = tzutils.localized_now()
+        end_time = start_time + datetime.timedelta(hours=1)
+
+        frame = dataframe.DataFrame.from_dict({
+            'period': {'begin': start_time, 'end': end_time},
+            'usage': {
+                'metric-one':
+                    [{
+                        "vol": {
+                            "unit": "GiB",
+                            "qty": 0,
+                        },
+                        "rating": {
+                            "price": 0.00,
+                        },
+                        "groupby": {
+                            "group_one": "one",
+                            "group_two": "two",
+                        },
+                        "metadata": {
+                            "attr_one": "one",
+                            "attr_two": "two",
+                        },
+                    }],
+                'metric-two': [{
+                    "vol": {
+                        "unit": "GiB",
+                        "qty": 34,
+                    },
+                    "rating": {
+                        "price": 330.00,
+                    },
+                    "groupby": {
+                        "group_one": "xxx",
+                    },
+                    "metadata": {
+                        "attr_one": "some_value",
+                    },
+                }]}})
+
+        expected_frame = dataframe.DataFrame.from_dict({
+            'period': {'begin': start_time, 'end': end_time},
+            'usage': {}})
+
+        orchestrator.CONF.orchestrator.skip_datapoints_expression = "True"
+
+        self.worker.map_metric_definition_by_alt_name['metric-one'] = {}
+        self.worker.map_metric_definition_by_alt_name['metric-two'] = {}
+
+        with mock.patch.object(
+                self.worker, 'execute_datapoints_filtering_for_metric',
+                wraps=self.get_filtering_method_for_spy()
+        ) as wrapped_object1:
+            with mock.patch.object(
+                    self.worker, 'execute_datapoints_filtering',
+                    wraps=self.get_actual_filtering_for_spy()
+            ) as wrapped_object2:
+                with mock.patch.object(
+                        orchestrator.LOG, 'debug') as log_debug_mock:
+                    self.worker.persist_rating_data(
+                        end_time, frame, start_time)
+
+                    self.assertEqual(wrapped_object1.call_count, 2)
+                    self.assertEqual(wrapped_object2.call_count, 2)
+                    log_debug_mock.assert_has_calls([
+                        mock.call(
+                            "Persisting processed frames [%s] for scope [%s] "
+                            "and time [start=%s,end=%s].",
+                            expected_frame.as_dict(), self.worker._tenant_id,
+                            start_time, end_time)])
+
+                    self.assertEqual(1, self.storage_mock.push.call_count)
+
+                    self.assertEqual(
+                        expected_frame.as_dict(),
+                        self.storage_mock.push.call_args_list[0][
+                            0][0][0].as_dict())
+
+    def test_persist_rating_data_default_skip_all_override_not_skip(self):
+        start_time = tzutils.localized_now()
+        end_time = start_time + datetime.timedelta(hours=1)
+
+        frame = dataframe.DataFrame.from_dict({
+            'period': {'begin': start_time, 'end': end_time},
+            'usage': {
+                'metric-one':
+                    [{
+                        "vol": {
+                            "unit": "GiB",
+                            "qty": 0,
+                        },
+                        "rating": {
+                            "price": 0.00,
+                        },
+                        "groupby": {
+                            "group_one": "one",
+                            "group_two": "two",
+                        },
+                        "metadata": {
+                            "attr_one": "one",
+                            "attr_two": "two",
+                        },
+                    }],
+                'metric-two': [{
+                    "vol": {
+                        "unit": "GiB",
+                        "qty": 34,
+                    },
+                    "rating": {
+                        "price": 330.00,
+                    },
+                    "groupby": {
+                        "group_one": "xxx",
+                    },
+                    "metadata": {
+                        "attr_one": "some_value",
+                    },
+                }]}})
+
+        expected_frame = dataframe.DataFrame.from_dict({
+            'period': {'begin': start_time, 'end': end_time},
+            'usage': {
+                'metric-one':
+                    [{
+                        "vol": {
+                            "unit": "GiB",
+                            "qty": 0,
+                        },
+                        "rating": {
+                            "price": 0.00,
+                        },
+                        "groupby": {
+                            "group_one": "one",
+                            "group_two": "two",
+                        },
+                        "metadata": {
+                            "attr_one": "one",
+                            "attr_two": "two",
+                        },
+                    }]}})
+
+        orchestrator.CONF.orchestrator.skip_datapoints_expression = "True"
+
+        self.worker.map_metric_definition_by_alt_name[
+            'metric-one'] = {"skip_datapoints_expression": "False"}
+        self.worker.map_metric_definition_by_alt_name['metric-two'] = {}
+
+        with mock.patch.object(
+                self.worker, 'execute_datapoints_filtering_for_metric',
+                wraps=self.get_filtering_method_for_spy()) as wrapped_object1:
+            with mock.patch.object(
+                    self.worker, 'execute_datapoints_filtering',
+                    wraps=self.get_actual_filtering_for_spy()
+            ) as wrapped_object2:
+                with mock.patch.object(
+                        orchestrator.LOG, 'debug') as log_debug_mock:
+                    self.worker.persist_rating_data(
+                        end_time, frame, start_time)
+
+                    self.assertEqual(wrapped_object1.call_count, 2)
+                    self.assertEqual(wrapped_object2.call_count, 2)
+                    log_debug_mock.assert_has_calls([
+                        mock.call(
+                            "Persisting processed frames [%s] for scope [%s] "
+                            "and time [start=%s,end=%s].",
+                            expected_frame.as_dict(), self.worker._tenant_id,
+                            start_time, end_time)])
+
+                    self.assertEqual(1, self.storage_mock.push.call_count)
+
+                    self.assertEqual(
+                        expected_frame.as_dict(),
+                        self.storage_mock.push.call_args_list[0][
+                            0][0][0].as_dict())
 
     @mock.patch("cloudkitty.orchestrator.Worker._do_collection")
     @mock.patch("cloudkitty.orchestrator.Worker.execute_measurements_rating")
