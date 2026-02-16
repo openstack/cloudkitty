@@ -230,20 +230,22 @@ class ScopeState(base.BaseResource):
             api_utils.SingleQueryParam(str),
         voluptuous.Optional('active'):
             api_utils.SingleQueryParam(bool),
+        voluptuous.Required('last_processed_timestamp'):
+            voluptuous.Coerce(tzutils.dt_from_iso),
     })
     @api_utils.add_output_schema({
         voluptuous.Required('scope_id'): vutils.get_string_type(),
         voluptuous.Required('scope_key'): vutils.get_string_type(),
         voluptuous.Required('fetcher'): vutils.get_string_type(),
         voluptuous.Required('collector'): vutils.get_string_type(),
-        voluptuous.Optional('last_processed_timestamp'):
-            voluptuous.Coerce(tzutils.dt_from_iso),
+        voluptuous.Required('last_processed_timestamp'):
+            vutils.get_string_type(),
         voluptuous.Required('active'): bool,
         voluptuous.Required('scope_activation_toggle_date'):
             vutils.get_string_type()
     })
     def post(self, scope_id, scope_key=None, fetcher=None, collector=None,
-             active=None):
+             active=None, last_processed_timestamp=None):
 
         policy.authorize(
             flask.request.context,
@@ -260,28 +262,28 @@ class ScopeState(base.BaseResource):
                                            % scope_id)
 
         LOG.debug("Creating storage scope with data: [scope_id=%s, "
-                  "scope_key=%s, fetcher=%s, collector=%s, active=%s].",
-                  scope_id, scope_key, fetcher, collector, active)
+                  "scope_key=%s, fetcher=%s, collector=%s, active=%s, "
+                  "last_processed_timestamp=%s].",
+                  scope_id, scope_key, fetcher, collector, active,
+                  last_processed_timestamp)
 
-        self._storage_state.create_scope(scope_id, None, fetcher=fetcher,
-                                         collector=collector,
+        last_processed_timestamp = tzutils.local_to_utc(
+            last_processed_timestamp, naive=True)
+        self._storage_state.create_scope(scope_id, last_processed_timestamp,
+                                         fetcher=fetcher, collector=collector,
                                          scope_key=scope_key, active=active)
 
         storage_scopes = self._storage_state.get_all(
             identifier=scope_id)
-
         update_storage_scope = storage_scopes[0]
-        last_processed_timestamp = None
-        if update_storage_scope.last_processed_timestamp:
-            last_processed_timestamp =\
-                update_storage_scope.last_processed_timestamp.isoformat()
 
         return {
             'scope_id': update_storage_scope.identifier,
             'scope_key': update_storage_scope.scope_key,
             'fetcher': update_storage_scope.fetcher,
             'collector': update_storage_scope.collector,
-            'last_processed_timestamp': last_processed_timestamp,
+            'last_processed_timestamp':
+                update_storage_scope.last_processed_timestamp.isoformat(),
             'active': update_storage_scope.active,
             'scope_activation_toggle_date':
                 update_storage_scope.scope_activation_toggle_date.isoformat()

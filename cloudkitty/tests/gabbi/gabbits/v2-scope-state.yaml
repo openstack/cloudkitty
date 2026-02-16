@@ -171,3 +171,32 @@ tests:
     data:
       last_processed_timestamp: 20190716T085501Z
       scope_id: foobar
+
+  - name: Create scope with last_processed_timestamp
+    url: /v2/scope
+    method: POST
+    status: 200
+    request_headers:
+      content-type: application/json
+    data:
+      scope_id: new_scope
+      scope_key: test_key
+      fetcher: test_fetcher
+      collector: test_collector
+      last_processed_timestamp: 20190716T085501Z
+    response_json_paths:
+      $.scope_id: new_scope
+      $.scope_key: test_key
+      $.fetcher: test_fetcher
+      $.collector: test_collector
+      $.active: true
+      $.last_processed_timestamp: /2019-07-16T/
+
+  - name: Create scope without last_processed_timestamp fails
+    url: /v2/scope
+    method: POST
+    status: 400
+    request_headers:
+      content-type: application/json
+    data:
+      scope_id: another_scope
