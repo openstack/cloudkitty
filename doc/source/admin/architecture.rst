@@ -94,6 +94,9 @@ There are three collectors available in CloudKitty:
 
 * The ``prometheus`` collector retrieves data from `Prometheus`_.
 
+* The ``aetos`` collector retrieves data from `Prometheus`_ through the
+  `Aetos`_ reverse-proxy with Keystone authentication.
+
 Details about the configuration of each collector are available in the
 `collector configuration guide`_.
 
@@ -104,6 +107,7 @@ the `developer documentation`_.
 .. _collector configuration guide: configuration/collector.html
 .. _Gnocchi: https://gnocchi.xyz/
 .. _Prometheus: https://prometheus.io/docs/introduction/overview/
+.. _Aetos: https://opendev.org/openstack/aetos
 
 Rating
 ======

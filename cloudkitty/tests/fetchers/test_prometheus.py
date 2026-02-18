@@ -17,7 +17,7 @@
 from unittest import mock
 
 from cloudkitty.common.prometheus_client import PrometheusClient
-from cloudkitty.common.prometheus_client import PrometheusResponseError
+from cloudkitty.common.prometheus_client_base import PrometheusResponseError
 from cloudkitty.fetcher import prometheus
 from cloudkitty import tests
 

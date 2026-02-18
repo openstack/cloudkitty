@@ -10,7 +10,7 @@ Options common to all collectors are specified in the ``[collect]`` section of
 the configuration file. The following options are available:
 
 * ``collector``: Defaults to ``gnocchi``. The name of the collector to load.
-  Must be one of [``gnocchi``, ``prometheus``].
+  Must be one of [``gnocchi``, ``prometheus``, ``aetos``].
 
 * ``period``: Default to 3600. Duration (in seconds) of the collect period.
 
@@ -68,6 +68,22 @@ Section ``collector_prometheus``.
 * ``cafile``: Option to allow custom certificate authority file.
 
 * ``insecure``: Option to explicitly allow untrusted HTTPS connections.
+
+
+Aetos
+-----
+
+Section ``collector_aetos``.
+
+The Aetos collector retrieves data from Prometheus through the Aetos
+reverse-proxy, which adds Keystone authentication. It uses the same query
+logic as the Prometheus collector.
+
+* ``interface``: Defaults to ``public``. Type of endpoint to use in
+  keystoneclient. Valid values: ``internal``, ``public``, ``admin``.
+
+* ``region_name``: Defaults to ``None``. Region in Identity service catalog to
+  use for communication with the OpenStack service.
 
 
 Metric collection
@@ -397,8 +413,8 @@ Gnocchi
   custom query would return ``0`` when the value of the series swap.
 
 
-Prometheus
-~~~~~~~~~~
+Prometheus and Aetos
+~~~~~~~~~~~~~~~~~~~~
 
 * ``aggregation_method``: Defaults to ``max``. The aggregation method to use
   when retrieving measures from prometheus. Must be one of ``avg``, ``min``,

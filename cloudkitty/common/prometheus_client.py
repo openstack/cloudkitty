@@ -14,15 +14,10 @@
 #
 import requests
 
-
-class PrometheusResponseError(Exception):
-    pass
+from cloudkitty.common import prometheus_client_base
 
 
-class PrometheusClient(object):
-    INSTANT_QUERY_ENDPOINT = 'query'
-    RANGE_QUERY_ENDPOINT = 'query_range'
-
+class PrometheusClient(prometheus_client_base.PrometheusClientBase):
     def __init__(self, url, auth=None, verify=True, timeout=60):
         self.url = url
         self.auth = auth
@@ -46,7 +41,7 @@ class PrometheusClient(object):
         try:
             return res.json()
         except ValueError:
-            raise PrometheusResponseError(
+            raise prometheus_client_base.PrometheusResponseError(
                 'Could not get a valid json response for '
                 '{} (response: {})'.format(res.url, res.text)
             )

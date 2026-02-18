@@ -16,7 +16,10 @@
 import copy
 import itertools
 
+from keystoneauth1 import loading as ks_loading
+
 import cloudkitty.api.app
+import cloudkitty.collector.aetos
 import cloudkitty.collector.gnocchi
 import cloudkitty.collector.prometheus
 import cloudkitty.config
@@ -42,6 +45,10 @@ _opts = [
         cloudkitty.api.app.api_opts,))),
     ('collect', list(itertools.chain(
         cloudkitty.collector.collect_opts))),
+    ('collector_aetos', list(itertools.chain(
+        cloudkitty.collector.aetos.collector_aetos_opts,
+        ks_loading.get_session_conf_options(),
+        ks_loading.get_auth_common_conf_options()))),
     ('collector_gnocchi', list(itertools.chain(
         cloudkitty.collector.gnocchi.collector_gnocchi_opts))),
     ('collector_prometheus', list(itertools.chain(

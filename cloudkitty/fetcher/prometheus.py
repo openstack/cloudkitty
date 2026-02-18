@@ -16,7 +16,7 @@
 from oslo_config import cfg
 
 from cloudkitty.common.prometheus_client import PrometheusClient
-from cloudkitty.common.prometheus_client import PrometheusResponseError
+from cloudkitty.common.prometheus_client_base import PrometheusResponseError
 from cloudkitty import fetcher
 
 

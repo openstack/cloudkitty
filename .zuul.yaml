@@ -204,6 +204,33 @@
         CLOUDKITTY_METRICS_CONF: /opt/stack/cloudkitty/etc/cloudkitty/prom_metrics.yml
 
 
+- job:
+    name: cloudkitty-tempest-full-v2-collector-aetos
+    parent: base-cloudkitty-v2-api-tempest-job
+    description: |
+      Job testing cloudkitty installation with aetos as the collector
+    required-projects:
+    - opendev.org/openstack/devstack-plugin-prometheus
+    - opendev.org/openstack/cloudkitty
+    - opendev.org/openstack/cloudkitty-tempest-plugin
+    - opendev.org/openstack/python-cloudkittyclient
+    - opendev.org/openstack/python-observabilityclient
+    - opendev.org/openstack/aetos
+    irrelevant-files: *base_irrelevant_files
+    vars:
+      devstack_plugins:
+        cloudkitty: https://opendev.org/openstack/cloudkitty.git
+        cloudkitty-tempest-plugin: https://opendev.org/openstack/cloudkitty-tempest-plugin.git
+        devstack-plugin-prometheus: https://opendev.org/openstack/devstack-plugin-prometheus
+        aetos: https://opendev.org/openstack/aetos.git
+      devstack_services:
+        ck-api: true
+        ck-proc: true
+      devstack_localrc:
+        CLOUDKITTY_COLLECTOR: aetos
+        CLOUDKITTY_METRICS_CONF: /opt/stack/cloudkitty/etc/cloudkitty/prom_metrics.yml
+
+
 - project:
     queue: cloudkitty
     templates:
@@ -223,6 +250,7 @@
         - cloudkitty-tempest-full-v2-storage-loki
         - cloudkitty-tempest-full-ipv6-only
         - cloudkitty-tempest-full-v2-fetcher-collector-prometheus
+        - cloudkitty-tempest-full-v2-collector-aetos
         - cloudkitty-tox-bandit:
             voting: false
         - cloudkitty-grenade-job
@@ -237,3 +265,4 @@
         - cloudkitty-tempest-full-ipv6-only
         - cloudkitty-grenade-job
         - cloudkitty-tempest-full-v2-fetcher-collector-prometheus
+        - cloudkitty-tempest-full-v2-collector-aetos
