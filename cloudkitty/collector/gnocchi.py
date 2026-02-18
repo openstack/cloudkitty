@@ -338,8 +338,8 @@ class GnocchiCollector(collector.BaseCollector):
             if isinstance(e, gexceptions.BadRequest):
                 if 'Metrics not found' not in e.message["cause"]:
                     raise
-            LOG.warning('[{scope}] Skipping this metric for the '
-                        'current cycle.', scope=project_id)
+            LOG.warning('[%s] Skipping this metric for the '
+                        'current cycle.', project_id)
             return []
 
     def get_aggregation_api_arguments(self, end, metric_name, project_id,
@@ -481,8 +481,8 @@ class GnocchiCollector(collector.BaseCollector):
                         met, d, resources_info)
                 except AssociatedResourceNotFound as e:
                     LOG.warning(
-                        '[{}] An error occured during data collection '
-                        'between {} and {}: {}',
+                        '[%s] An error occured during data collection '
+                        'between %s and %s: %s',
                         project_id, start, end, e
                     )
                     continue
