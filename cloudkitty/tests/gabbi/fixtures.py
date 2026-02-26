@@ -516,6 +516,23 @@ class UTCFixture(fixture.GabbiFixture):
         self._tzmock.stop()
 
 
+# NOTE(stephenfin): Since gabbi 4.x, the intercept function (setup_app) is
+# called during test construction, before fixtures are started, so CONF is None
+# at that point. This lazy wrapper defers actual app creation until the first
+# request, by which time the fixtures will have been started and CONF will be
+# set.
+class LazyWSGIApp:
+    """A lazy WSGI app wrapper that defers app creation until first request."""
+
+    def __init__(self):
+        self._app = None
+
+    def __call__(self, environ, start_response):
+        if self._app is None:
+            self._app = app.load_app()
+        return self._app(environ, start_response)
+
+
 def setup_app():
     messaging.setup()
     # FIXME(sheeprine): Extension fixtures are interacting with transformers
@@ -524,4 +541,4 @@ def setup_app():
         'cloudkitty.collector.get_collector',
         return_value=None)
     with no_collector:
-        return app.load_app()
+        return LazyWSGIApp()
