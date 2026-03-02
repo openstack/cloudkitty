@@ -105,7 +105,7 @@ class ElasticsearchStorage(v2_storage.BaseStorage):
         if r.status_code != 200:
             raise exceptions.IndexDoesNotExist(
                 CONF.storage_elasticsearch.index_name)
-        LOG.info('Creating mapping "_doc" on index {}...',
+        LOG.info('Creating mapping "_doc" on index %s...',
                  CONF.storage_elasticsearch.index_name)
         self._conn.put_mapping(CLOUDKITTY_INDEX_MAPPING)
         LOG.info('Mapping created.')

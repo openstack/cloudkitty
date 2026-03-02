@@ -212,14 +212,14 @@ class ScopeEndpoint(object):
         self._coord.start(start_heart=True)
 
     def reset_state(self, ctxt, res_data):
-        LOG.info('Received state reset command. {}', res_data)
+        LOG.info('Received state reset command. %s', res_data)
         random.shuffle(res_data['scopes'])
         for scope in res_data['scopes']:
             lock_name, lock = get_lock(self._coord, scope['scope_id'])
-            LOG.debug('[ScopeEndpoint] Trying to acquire lock "{}" ...',
+            LOG.debug('[ScopeEndpoint] Trying to acquire lock "%s" ...',
                       lock_name)
             if lock.acquire(blocking=True):
-                LOG.debug('[ScopeEndpoint] Acquired lock "{}".', lock_name)
+                LOG.debug('[ScopeEndpoint] Acquired lock "%s".', lock_name)
                 last_processed_timestamp = tzutils.dt_from_iso(
                     res_data['last_processed_timestamp'])
                 try:
@@ -235,7 +235,7 @@ class ScopeEndpoint(object):
                     )
                 finally:
                     lock.release()
-                    LOG.debug('[ScopeEndpoint] Released lock "{}" .',
+                    LOG.debug('[ScopeEndpoint] Released lock "%s" .',
                               lock_name)
 
 
@@ -351,15 +351,14 @@ class Worker(BaseWorker):
             try:
                 return self._collect(metric, timestamp)
             except collector.NoDataCollected:
-                LOG.info('{prefix}No data collected '
-                         'for metric {metric} at timestamp {ts}',
-                         prefix=self._log_prefix, metric=metric, ts=timestamp)
+                LOG.info('%sNo data collected '
+                         'for metric %s at timestamp %s',
+                         self._log_prefix, metric, timestamp)
                 return metric, None
             except Exception as e:
-                LOG.exception('{prefix}Error while collecting metric {metric} '
-                              'at timestamp {ts}: {e}. Exiting.',
-                              prefix=self._log_prefix, metric=metric,
-                              ts=timestamp, e=e)
+                LOG.exception('%sError while collecting metric %s '
+                              'at timestamp %s: %s. Exiting.',
+                              self._log_prefix, metric, timestamp, e)
                 # FIXME(peschk_l): here we just exit, and the
                 # collection will be retried during the next collect
                 # cycle. In the future, we should implement a retrying
@@ -389,13 +388,13 @@ class Worker(BaseWorker):
                 futs = [tpool.submit(_get_result, metric)
                         for metric in metrics]
 
-                LOG.debug('{}Collecting [{}] metrics.',
+                LOG.debug('%sCollecting [%s] metrics.',
                           self._log_prefix, metrics)
 
                 results = [r.result() for r in waiters.wait_for_all(futs).done]
 
                 LOG.debug(
-                    "{}Collecting {} metrics took {}s total, with {}s average",
+                    "%sCollecting %s metrics took %ss total, with %ss average",
                     self._log_prefix,
                     tpool.statistics.executed,
                     tpool.statistics.runtime,
@@ -704,14 +703,14 @@ class CloudKittyProcessor(cotyledon.Service):
         pass
 
     def run(self):
-        LOG.debug('Started worker {}.', self._worker_id)
+        LOG.debug('Started worker %s.', self._worker_id)
         while True:
             self.internal_run()
 
     def terminate(self):
-        LOG.debug('Terminating worker {}.', self._worker_id)
+        LOG.debug('Terminating worker %s.', self._worker_id)
         self.coord.stop()
-        LOG.debug('Terminated worker {}.', self._worker_id)
+        LOG.debug('Terminated worker %s.', self._worker_id)
 
     def internal_run(self):
         self.load_scopes_to_process()
@@ -719,17 +718,15 @@ class CloudKittyProcessor(cotyledon.Service):
             lock_name, lock = get_lock(
                 self.coord, self.generate_lock_base_name(tenant_id))
 
-            LOG.debug('[Worker: {w}] Trying to acquire lock "{lock_name}" for '
-                      'scope ID {scope_id}.',
-                      w=self._worker_id, lock_name=lock_name,
-                      scope_id=tenant_id)
+            LOG.debug('[Worker: %s] Trying to acquire lock "%s" for '
+                      'scope ID %s.',
+                      self._worker_id, lock_name, tenant_id)
 
             lock_acquired = lock.acquire(blocking=False)
             if lock_acquired:
-                LOG.debug('[Worker: {w}] Acquired lock "{lock_name}" for '
-                          'scope ID {scope_id}.',
-                          w=self._worker_id, lock_name=lock_name,
-                          scope_id=tenant_id)
+                LOG.debug('[Worker: %s] Acquired lock "%s" for '
+                          'scope ID %s.',
+                          self._worker_id, lock_name, tenant_id)
 
                 _success = True
                 try:
@@ -779,8 +776,8 @@ class CloudKittyProcessor(cotyledon.Service):
         self.tenants = self.fetcher.get_tenants()
         random.shuffle(self.tenants)
 
-        LOG.info('[Worker: {w}] Tenants loaded for fetcher {f}',
-                 w=self._worker_id, f=self.fetcher.name)
+        LOG.info('[Worker: %s] Tenants loaded for fetcher %s',
+                 self._worker_id, self.fetcher.name)
 
 
 class CloudKittyReprocessor(CloudKittyProcessor):

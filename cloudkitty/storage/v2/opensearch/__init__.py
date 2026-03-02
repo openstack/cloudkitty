@@ -104,7 +104,7 @@ class OpenSearchStorage(v2_storage.BaseStorage):
         if r.status_code != 200:
             raise exceptions.IndexDoesNotExist(
                 CONF.storage_opensearch.index_name)
-        LOG.info('Creating mapping "_doc" on index {}...',
+        LOG.info('Creating mapping "_doc" on index %s...',
                  CONF.storage_opensearch.index_name)
         self._conn.post_mapping(CLOUDKITTY_INDEX_MAPPING)
         LOG.info('Mapping created.')
