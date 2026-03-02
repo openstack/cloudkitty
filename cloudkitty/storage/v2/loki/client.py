@@ -102,16 +102,17 @@ class LokiClient(object):
             "limit": limit
         }
 
-        LOG.debug(f"Executing Loki query: {params}")
+        LOG.debug("Executing Loki query: %s", params)
         response = requests.get(url, params=params, headers=self._headers,
                                 cert=self._cert, verify=self._verify)
 
         if response.status_code == 200:
             data = response.json()['data']
         else:
-            msg = (f"Failed to query logs or empty result: "
-                   f"{response.status_code} - {response.text}")
-            LOG.error(msg)
+            LOG.error(
+                "Failed to query logs or empty result: %d - %s",
+                response.status_code, response.text
+            )
             data = []
         return data
 
@@ -131,14 +132,15 @@ class LokiClient(object):
 
         if response.status_code == 204:
             LOG.debug(
-                f"Batch of {total_points} messages across "
-                f"{len(self._points)} project(s) pushed successfully."
+                "Batch of %d messages across %d project(s) "
+                "pushed successfully.",
+                total_points, len(self._points),
             )
             self._points = {}
         else:
             LOG.error(
-                f"Failed to push logs: {response.status_code} - "
-                f"{response.text}"
+                "Failed to push logs: %d - %s",
+                response.status_code, response.text
             )
 
     def delete_by_query(self, query, begin, end):
@@ -165,8 +167,8 @@ class LokiClient(object):
             )
         else:
             LOG.error(
-                f"Failed to delete dataframes: {response.status_code} - "
-                f"{response.text}"
+                "Failed to delete dataframes: %d - %s",
+                response.status_code, response.text
             )
 
     def delete(self, begin, end, filters):
@@ -222,8 +224,8 @@ class LokiClient(object):
             query += ' | ' + ', '.join(loki_query_parts)
 
         LOG.debug(
-            f"Loki query: '{query}', begin: '{begin}', end: '{end}', "
-            f"limit: '{limit}'"
+            "Loki query: '%s', begin: '%s', end: '%s', limit: '%s'",
+            query, begin, end, limit
         )
 
         data_response = self.search(query, begin, end, limit)
@@ -232,9 +234,10 @@ class LokiClient(object):
            'stats' not in data_response or \
            'result' not in data_response:
             LOG.warning(
-                f"Data from Loki search is not in the expected dictionary "
-                f"format or is missing keys. Query: '{query}'. Response "
-                f"received: {data_response}"
+                "Data from Loki search is not in the expected dictionary "
+                "format or is missing keys. Query: '%s'. Response "
+                "received: %s",
+                query, data_response
             )
             return 0, []
 

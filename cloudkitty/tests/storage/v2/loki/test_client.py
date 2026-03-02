@@ -220,7 +220,10 @@ class TestLokiClient(unittest.TestCase):
         self.assertEqual(data, [])
         expected_msg = ("Failed to query logs or empty result: 500 - "
                         "Internal Server Error")
-        mock_log.error.assert_called_once_with(expected_msg)
+        mock_log.error.assert_called_once()
+        self.assertEqual(expected_msg,
+                         mock_log.error.call_args[0][0] %
+                         mock_log.error.call_args[0][1:])
 
     def test_push_success_batch(self, mock_log, mock_requests):
         mock_response = MagicMock()
@@ -239,9 +242,12 @@ class TestLokiClient(unittest.TestCase):
             cert=self.client._cert, verify=self.client._verify
         )
         self.assertEqual(self.client._points, {})
-        log_msg = ("Batch of 2 messages across 1 project(s) "
-                   "pushed successfully.")
-        mock_log.debug.assert_called_once_with(log_msg)
+        expected_msg = ("Batch of 2 messages across 1 project(s) "
+                        "pushed successfully.")
+        mock_log.debug.assert_called_once()
+        self.assertEqual(expected_msg,
+                         mock_log.debug.call_args[0][0] %
+                         mock_log.debug.call_args[0][1:])
 
     def test_push_failure(self, mock_log, mock_requests):
         mock_response = MagicMock()
@@ -253,7 +259,10 @@ class TestLokiClient(unittest.TestCase):
         self.client.push()
         self.assertEqual(self.client._points, initial_points)
         expected_msg = "Failed to push logs: 400 - Bad Request"
-        mock_log.error.assert_called_once_with(expected_msg)
+        mock_log.error.assert_called_once()
+        self.assertEqual(expected_msg,
+                         mock_log.error.call_args[0][0] %
+                         mock_log.error.call_args[0][1:])
         mock_requests.post.assert_called_once_with(
             f"{self.base_url}/push",
             json=self.client._build_payload_json(initial_points),
@@ -343,9 +352,10 @@ class TestLokiClient(unittest.TestCase):
             f"or is missing keys. Query: '{expected_query_for_log}'. "
             f"Response received: {mock_search.return_value}"
         )
-        mock_loki_client_log.warning.assert_called_with(
-            expected_log_message_case1
-        )
+        mock_loki_client_log.warning.assert_called_once()
+        self.assertEqual(expected_log_message_case1,
+                         mock_loki_client_log.warning.call_args[0][0] %
+                         mock_loki_client_log.warning.call_args[0][1:])
         mock_search.reset_mock()
         mock_loki_client_log.reset_mock()
         mock_search.return_value = {"nodata": True}
@@ -358,9 +368,10 @@ class TestLokiClient(unittest.TestCase):
             f"or is missing keys. Query: '{expected_query_for_log}'. "
             f"Response received: {mock_search.return_value}"
         )
-        mock_loki_client_log.warning.assert_called_with(
-            expected_log_message_case2
-        )
+        mock_loki_client_log.warning.assert_called_once()
+        self.assertEqual(expected_log_message_case2,
+                         mock_loki_client_log.warning.call_args[0][0] %
+                         mock_loki_client_log.warning.call_args[0][1:])
 
     @patch.object(client.LokiClient, 'push')
     def test_add_point_no_push(self, mock_push, mock_log,
@@ -561,7 +572,10 @@ class TestLokiClient(unittest.TestCase):
         )
         expected_error_msg = ("Failed to delete dataframes: "
                               "500 - Internal Server Error")
-        mock_log.error.assert_called_once_with(expected_error_msg)
+        mock_log.error.assert_called_once()
+        self.assertEqual(expected_error_msg,
+                         mock_log.error.call_args[0][0] %
+                         mock_log.error.call_args[0][1:])
         mock_base_query.assert_not_called()
 
     @patch.object(client.LokiClient, 'delete_by_query')
