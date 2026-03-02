@@ -30,7 +30,7 @@ from cloudkitty.utils import validation as vutils
 # Decimal(str(0.121)) == Decimal('0.121')
 DATAPOINT_SCHEMA = voluptuous.Schema({
     voluptuous.Required('vol'): {
-        voluptuous.Required('unit'): vutils.get_string_type(),
+        voluptuous.Required('unit'): str,
         voluptuous.Required('qty'): voluptuous.Coerce(str),
     },
     voluptuous.Required('rating', default={}): {

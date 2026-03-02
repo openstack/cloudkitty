@@ -90,14 +90,11 @@ Let's update our ``get`` method in order to use this decorator:
            voluptuous.Required(
                'message',
                default='This is an example endpoint',
-           ): validation_utils.get_string_type(),
+           ): str,
        })
        def get(self):
            return {}
 
-
-.. note:: In this snippet, ``get_string_type`` returns ``basestring`` in
-          python2 and ``str`` in python3.
 
 .. code-block:: console
 
@@ -118,7 +115,7 @@ exceptions for HTTP return codes.
 .. code-block:: python
 
    @api_utils.add_input_schema('body', {
-       voluptuous.Required('fruit'): validation_utils.get_string_type(),
+       voluptuous.Required('fruit'): str,
    })
    def post(self, fruit=None):
        policy.authorize(flask.request.context, 'example:submit_fruit', {})
@@ -160,10 +157,6 @@ parameter is provided only once, and returns it.
 
 .. autoclass:: cloudkitty.api.v2.utils.SingleQueryParam
    :noindex:
-
-.. warning:: ``SingleQueryParam`` uses ``voluptuous.Coerce`` internally for
-             type checking. Thus, ``validation_utils.get_string_type`` cannot
-             be used as ``basestring`` can't be instantiated.
 
 
 Authorising methods

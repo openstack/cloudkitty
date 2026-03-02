@@ -23,7 +23,6 @@ from cloudkitty.api.v2 import base
 from cloudkitty.api.v2 import utils as api_utils
 from cloudkitty.common import policy
 from cloudkitty import utils as ck_utils
-from cloudkitty.utils import validation as vutils
 
 
 PROCESSORS_NAMESPACE = 'cloudkitty.rating.processors'
@@ -32,11 +31,11 @@ MODULE_SCHEMA = {
     voluptuous.Required(
         'description',
         default=None,
-    ): vutils.get_string_type(),
+    ): str,
     voluptuous.Required(
         'module_id',
         default=None,
-    ): vutils.get_string_type(),
+    ): str,
     voluptuous.Required(
         'enabled',
         default=None,

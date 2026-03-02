@@ -24,7 +24,6 @@ from cloudkitty.common import policy
 from cloudkitty import storage_state
 from cloudkitty.storage_state.models import ReprocessingScheduler
 from cloudkitty.utils import tz as tzutils
-from cloudkitty.utils import validation as validation_utils
 from oslo_config import cfg
 
 
@@ -257,14 +256,11 @@ class ReprocessSchedulerGetApi(base.BaseResource):
             api_utils.SingleQueryParam(str)
     })
     @api_utils.add_output_schema({'results': [{
-        voluptuous.Required('reason'): validation_utils.get_string_type(),
-        voluptuous.Required('scope_id'): validation_utils.get_string_type(),
-        voluptuous.Required('start_reprocess_time'):
-            validation_utils.get_string_type(),
-        voluptuous.Required('end_reprocess_time'):
-            validation_utils.get_string_type(),
-        voluptuous.Required('current_reprocess_time'):
-            validation_utils.get_string_type(),
+        voluptuous.Required('reason'): str,
+        voluptuous.Required('scope_id'): str,
+        voluptuous.Required('start_reprocess_time'): str,
+        voluptuous.Required('end_reprocess_time'): str,
+        voluptuous.Required('current_reprocess_time'): str,
     }]})
     def get(self, scope_ids=[], path_scope_id=None, offset=0, limit=100,
             order="desc"):
