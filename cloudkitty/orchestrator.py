@@ -14,7 +14,9 @@
 #
 import copy
 
+from concurrent import futures
 from datetime import timedelta
+
 import decimal
 import functools
 import hashlib
@@ -23,8 +25,6 @@ import random
 import time
 
 import cotyledon
-import futurist
-from futurist import waiters
 from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -42,7 +42,6 @@ from cloudkitty import storage
 from cloudkitty import storage_state as state
 from cloudkitty import utils as ck_utils
 from cloudkitty.utils import tz as tzutils
-
 
 LOG = logging.getLogger(__name__)
 
@@ -88,7 +87,15 @@ orchestrator_opts = [
                     'datapoints that have QTY as zero, the following '
                     'expression can be used: '
                     '"datapoint.get(\"vol\", {}).get(\"qty\", 0) == 0".'
-               )
+               ),
+    cfg.IntOpt('collector_request_timeout',
+               default=300,
+               min=30,
+               advanced=True,
+               help='Timeout for the orchestrator to wait for a response'
+                    'from the collector driver. This timeout is for the '
+                    'threadpool that is going go process the collection '
+                    'code.'),
 ]
 
 CONF.register_opts(orchestrator_opts, group='orchestrator')
@@ -296,10 +303,11 @@ class Worker(BaseWorker):
         self.next_timestamp_to_process = functools.partial(
             _check_state, self, self._period, self._tenant_id)
         self.refresh_rating_rules()
-
         self.map_metric_definition_by_alt_name = self.create_alt_name_map()
 
-        super(Worker, self).__init__(self._tenant_id)
+        self.thread_executor = futures.ThreadPoolExecutor(
+            thread_name_prefix=self._log_prefix,
+            max_workers=CONF.orchestrator.max_threads)
 
     def create_alt_name_map(self):
         map_metrics_by_alt_name = {}
@@ -370,39 +378,15 @@ class Worker(BaseWorker):
     def _do_execute_collection(self, _get_result, metrics):
         """Execute the metric measurement collection
 
-        When executing this method a ZeroDivisionError might be raised.
-        This happens when no executions have happened in the
-        `futurist.ThreadPoolExecutor`; then, when calling the
-        `average_runtime`, the exception is thrown. In such a case, there is
-         no need for further actions, and we can ignore the error.
-
         :param _get_result: the method to execute and get the metrics
         :param metrics: the list of metrics to be collected
         :return: the metrics measurements
         """
-        results = []
-        try:
-            with futurist.ThreadPoolExecutor(
-                    max_workers=CONF.orchestrator.max_threads) as tpool:
 
-                futs = [tpool.submit(_get_result, metric)
-                        for metric in metrics]
-
-                LOG.debug('%sCollecting [%s] metrics.',
-                          self._log_prefix, metrics)
-
-                results = [r.result() for r in waiters.wait_for_all(futs).done]
-
-                LOG.debug(
-                    "%sCollecting %s metrics took %ss total, with %ss average",
-                    self._log_prefix,
-                    tpool.statistics.executed,
-                    tpool.statistics.runtime,
-                    tpool.statistics.average_runtime)
-
-        except ZeroDivisionError as zeroDivisionError:
-            LOG.debug("Ignoring ZeroDivisionError for metrics [%s]: [%s].",
-                      metrics, zeroDivisionError)
+        execution_outputs = self.thread_executor.map(
+            _get_result, metrics,
+            timeout=CONF.orchestrator.collector_request_timeout)
+        results = list(execution_outputs)
 
         return dict(filter(lambda x: x[1] is not None, results))
 
@@ -776,8 +760,8 @@ class CloudKittyProcessor(cotyledon.Service):
         self.tenants = self.fetcher.get_tenants()
         random.shuffle(self.tenants)
 
-        LOG.info('[Worker: %s] Tenants loaded for fetcher %s',
-                 self._worker_id, self.fetcher.name)
+        LOG.info('[Worker: {w}] scopes [{s}] loaded for fetcher {f}',
+                 w=self._worker_id, s=len(self.tenants), f=self.fetcher.name)
 
 
 class CloudKittyReprocessor(CloudKittyProcessor):
