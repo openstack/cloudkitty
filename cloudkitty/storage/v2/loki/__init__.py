@@ -83,7 +83,12 @@ loki_storage_opts = [
         'key_file',
         help="Path to a client key for establishing mTLS connections to "
              "Loki.",
-        default=None)
+        default=None),
+    cfg.FloatOpt(
+        'timeout',
+        default=60,
+        min=0,
+        help='Timeout value for http requests'),
 ]
 
 CONF.register_opts(loki_storage_opts, LOKI_STORAGE_GROUP)
@@ -111,7 +116,9 @@ class LokiStorage(v2_storage.BaseStorage):
             CONF.storage_loki.buffer_size,
             CONF.storage_loki.shard_days,
             cert,
-            verify)
+            verify,
+            CONF.storage_loki.timeout,
+        )
 
     def init(self):
         LOG.debug('LokiStorage Init.')

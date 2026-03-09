@@ -27,7 +27,7 @@ class LokiClient(object):
     """Class used to ease interaction with Loki."""
 
     def __init__(self, url, tenant, stream_labels, content_type, buffer_size,
-                 shard_days, cert, verify):
+                 shard_days, cert, verify, timeout):
         if content_type != "application/json":
             raise exceptions.UnsupportedContentType(content_type)
 
@@ -43,6 +43,8 @@ class LokiClient(object):
 
         self._cert = cert
         self._verify = verify
+
+        self.timeout = timeout
 
     def _build_payload_json(self, batch):
         """Build payload with separate streams per project_id."""
@@ -104,7 +106,8 @@ class LokiClient(object):
 
         LOG.debug("Executing Loki query: %s", params)
         response = requests.get(url, params=params, headers=self._headers,
-                                cert=self._cert, verify=self._verify)
+                                cert=self._cert, verify=self._verify,
+                                timeout=self.timeout)
 
         if response.status_code == 200:
             data = response.json()['data']
@@ -128,7 +131,8 @@ class LokiClient(object):
 
         payload = self._build_payload_json(self._points)
         response = requests.post(url, json=payload, headers=self._headers,
-                                 cert=self._cert, verify=self._verify)
+                                 cert=self._cert, verify=self._verify,
+                                 timeout=self.timeout)
 
         if response.status_code == 204:
             LOG.debug(
@@ -159,7 +163,8 @@ class LokiClient(object):
         }
 
         response = requests.post(url, params=params, headers=self._headers,
-                                 cert=self._cert, verify=self._verify)
+                                 cert=self._cert, verify=self._verify,
+                                 timeout=self.timeout)
 
         if response.status_code == 204:
             LOG.debug(
