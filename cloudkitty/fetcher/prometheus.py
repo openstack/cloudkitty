@@ -58,6 +58,12 @@ fetcher_prometheus_opts = [
         default=False,
         help='Explicitly trust untrusted HTTPS responses',
     ),
+    cfg.FloatOpt(
+        'timeout',
+        default=60,
+        min=0,
+        help='Timeout value for http requests',
+    ),
     cfg.DictOpt(
         'filters',
         default=dict(),
@@ -92,6 +98,7 @@ class PrometheusFetcher(fetcher.BaseFetcher):
             url,
             auth=(user, password) if user and password else None,
             verify=verify,
+            timeout=CONF.fetcher_prometheus.timeout
         )
 
     def get_tenants(self):

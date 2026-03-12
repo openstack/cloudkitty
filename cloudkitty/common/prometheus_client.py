@@ -23,10 +23,11 @@ class PrometheusClient(object):
     INSTANT_QUERY_ENDPOINT = 'query'
     RANGE_QUERY_ENDPOINT = 'query_range'
 
-    def __init__(self, url, auth=None, verify=True):
+    def __init__(self, url, auth=None, verify=True, timeout=60):
         self.url = url
         self.auth = auth
         self.verify = verify
+        self.timeout = timeout
 
     def _get(self, endpoint, params):
         return requests.get(
@@ -34,6 +35,7 @@ class PrometheusClient(object):
             params=params,
             auth=self.auth,
             verify=self.verify,
+            timeout=self.timeout,
         )
 
     def get_instant(self, query, time=None, timeout=None):
