@@ -120,15 +120,12 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF authinfos auth_type v3password
     iniset $CLOUDKITTY_CONF authinfos auth_protocol http
     iniset $CLOUDKITTY_CONF authinfos auth_url "$KEYSTONE_SERVICE_URI/v3"
-    iniset $CLOUDKITTY_CONF authinfos identity_uri "$KEYSTONE_SERVICE_URI/v3"
     iniset $CLOUDKITTY_CONF authinfos username cloudkitty
     iniset $CLOUDKITTY_CONF authinfos password $SERVICE_PASSWORD
-    iniset $CLOUDKITTY_CONF authinfos project_name $SERVICE_TENANT_NAME
-    iniset $CLOUDKITTY_CONF authinfos tenant_name $SERVICE_TENANT_NAME
+    iniset $CLOUDKITTY_CONF authinfos project_name $SERVICE_PROJECT_NAME
     iniset $CLOUDKITTY_CONF authinfos region_name $REGION_NAME
-    iniset $CLOUDKITTY_CONF authinfos user_domain_name default
-    iniset $CLOUDKITTY_CONF authinfos project_domain_name default
-    iniset $CLOUDKITTY_CONF authinfos debug "$ENABLE_DEBUG_LOG_LEVEL"
+    iniset $CLOUDKITTY_CONF authinfos user_domain_name $SERVICE_DOMAIN_NAME
+    iniset $CLOUDKITTY_CONF authinfos project_domain_name $SERVICE_DOMAIN_NAME
 
     iniset $CLOUDKITTY_CONF fetcher backend $CLOUDKITTY_FETCHER
     iniset $CLOUDKITTY_CONF "fetcher_$CLOUDKITTY_FETCHER" auth_section authinfos
