@@ -117,15 +117,7 @@ function configure_cloudkitty {
     iniset $CLOUDKITTY_CONF DEFAULT auth_strategy $CLOUDKITTY_AUTH_STRATEGY
 
     # auth
-    iniset $CLOUDKITTY_CONF authinfos auth_type v3password
-    iniset $CLOUDKITTY_CONF authinfos auth_protocol http
-    iniset $CLOUDKITTY_CONF authinfos auth_url "$KEYSTONE_SERVICE_URI/v3"
-    iniset $CLOUDKITTY_CONF authinfos username cloudkitty
-    iniset $CLOUDKITTY_CONF authinfos password $SERVICE_PASSWORD
-    iniset $CLOUDKITTY_CONF authinfos project_name $SERVICE_PROJECT_NAME
-    iniset $CLOUDKITTY_CONF authinfos region_name $REGION_NAME
-    iniset $CLOUDKITTY_CONF authinfos user_domain_name $SERVICE_DOMAIN_NAME
-    iniset $CLOUDKITTY_CONF authinfos project_domain_name $SERVICE_DOMAIN_NAME
+    configure_keystoneauth $CLOUDKITTY_CONF cloudkitty authinfos
 
     iniset $CLOUDKITTY_CONF fetcher backend $CLOUDKITTY_FETCHER
     iniset $CLOUDKITTY_CONF "fetcher_$CLOUDKITTY_FETCHER" auth_section authinfos
