@@ -302,7 +302,7 @@ class Worker(BaseWorker):
         self._state = state.StateManager()
         self.next_timestamp_to_process = functools.partial(
             _check_state, self, self._period, self._tenant_id)
-        self.refresh_rating_rules()
+
         self.map_metric_definition_by_alt_name = self.create_alt_name_map()
 
         self.thread_executor = futures.ThreadPoolExecutor(
@@ -393,7 +393,6 @@ class Worker(BaseWorker):
     def run(self):
         should_continue_processing = self.execute_worker_processing()
         while should_continue_processing:
-            self.refresh_rating_rules()
             should_continue_processing = self.execute_worker_processing()
 
     def execute_worker_processing(self):
@@ -417,6 +416,8 @@ class Worker(BaseWorker):
         return True
 
     def do_execute_scope_processing(self, timestamp):
+        self.refresh_rating_rules()
+
         metrics = list(self._collector.conf.keys())
         # Collection
         metrics = sorted(metrics)
