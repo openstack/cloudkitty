@@ -85,7 +85,12 @@ influx_storage_opts = [
         'url',
         help='InfluxDB 2 URL',
         default=None
-    )
+    ),
+    cfg.FloatOpt(
+        'timeout',
+        default=60,
+        min=0,
+        help='Timeout value for http requests'),
 ]
 
 CONF.register_opts(influx_storage_opts, INFLUX_STORAGE_GROUP)
@@ -708,8 +713,8 @@ class InfluxClientV2(InfluxClient):
             headers={
                 'Content-type': 'application/json',
                 'Authorization': f'Token {CONF.storage_influxdb.token}'},
-            data=json.dumps({
-                'query': query}))
+            data=json.dumps({'query': query}),
+            timeout=CONF.storage_influxdb.timeout)
         response_text = response.text
         LOG.debug("Raw Response: [%s].", response_text)
         handled_response = []

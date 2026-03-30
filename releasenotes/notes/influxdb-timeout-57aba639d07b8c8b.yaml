@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Introduced timeout for HTTP requests sent to InfluxDB. Timeout threshold is
+    60 seconds by default and can be customized by
+    the ``[storage_influxdb] timeout`` option.
+
