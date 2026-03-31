@@ -16,6 +16,8 @@
 import copy
 import itertools
 
+from keystoneauth1 import loading as ks_loading
+
 import cloudkitty.api.app
 import cloudkitty.collector.gnocchi
 import cloudkitty.collector.prometheus
@@ -43,16 +45,22 @@ _opts = [
     ('collect', list(itertools.chain(
         cloudkitty.collector.collect_opts))),
     ('collector_gnocchi', list(itertools.chain(
-        cloudkitty.collector.gnocchi.collector_gnocchi_opts))),
+        cloudkitty.collector.gnocchi.collector_gnocchi_opts,
+        ks_loading.get_session_conf_options(),
+        ks_loading.get_auth_common_conf_options()))),
     ('collector_prometheus', list(itertools.chain(
         cloudkitty.collector.prometheus.collector_prometheus_opts))),
     ('fetcher', list(itertools.chain(
         cloudkitty.fetcher.fetcher_opts))),
     ('fetcher_gnocchi', list(itertools.chain(
         cloudkitty.fetcher.gnocchi.gfetcher_opts,
-        cloudkitty.fetcher.gnocchi.fetcher_gnocchi_opts))),
+        cloudkitty.fetcher.gnocchi.fetcher_gnocchi_opts,
+        ks_loading.get_session_conf_options(),
+        ks_loading.get_auth_common_conf_options()))),
     ('fetcher_keystone', list(itertools.chain(
-        cloudkitty.fetcher.keystone.fetcher_keystone_opts))),
+        cloudkitty.fetcher.keystone.fetcher_keystone_opts,
+        ks_loading.get_session_conf_options(),
+        ks_loading.get_auth_common_conf_options()))),
     ('fetcher_prometheus', list(itertools.chain(
         cloudkitty.fetcher.prometheus.fetcher_prometheus_opts))),
     ('fetcher_source', list(itertools.chain(
@@ -68,7 +76,9 @@ _opts = [
     ('storage_opensearch', list(itertools.chain(
         cloudkitty.storage.v2.opensearch.opensearch_storage_opts))),
     ('storage_gnocchi', list(itertools.chain(
-        cloudkitty.storage.v1.hybrid.backends.gnocchi.gnocchi_storage_opts))),
+        cloudkitty.storage.v1.hybrid.backends.gnocchi.gnocchi_storage_opts,
+        ks_loading.get_session_conf_options(),
+        ks_loading.get_auth_common_conf_options()))),
     ('storage_loki', list(itertools.chain(
         cloudkitty.storage.v2.loki.loki_storage_opts))),
     (None, list(itertools.chain(
