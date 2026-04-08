@@ -16,6 +16,7 @@ import os.path
 
 from oslo_config import cfg
 from oslo_config import fixture as config_fixture
+from oslo_policy import opts as oslo_policy_opts
 from oslo_policy import policy as oslo_policy
 
 from cloudkitty.common import context
@@ -31,6 +32,7 @@ class PolicyFileTestCase(tests.TestCase):
 
     def setUp(self):
         super(PolicyFileTestCase, self).setUp()
+        oslo_policy_opts.set_defaults(CONF)
         self.fixture = self.useFixture(config_fixture.Config(CONF))
         self.context = context.RequestContext(
             user_id='fake',
