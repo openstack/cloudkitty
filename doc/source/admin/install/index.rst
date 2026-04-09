@@ -9,4 +9,3 @@ Installation Guide
    install-debian
    install-ubuntu
    install-rdo
-   mod_wsgi
