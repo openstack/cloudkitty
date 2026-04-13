@@ -19,7 +19,7 @@ from unittest import mock
 from cloudkitty import collector
 from cloudkitty.collector import exceptions
 from cloudkitty.collector import prometheus
-from cloudkitty.common.prometheus_client import PrometheusResponseError
+from cloudkitty.common.prometheus_client_base import PrometheusResponseError
 from cloudkitty import dataframe
 from cloudkitty import tests
 from cloudkitty.tests import samples
@@ -136,7 +136,7 @@ class PrometheusCollectorTest(tests.TestCase):
         )
 
         with mock.patch.object(
-            prometheus.PrometheusClient, 'get_instant',
+            prometheus.prometheus_client.PrometheusClient, 'get_instant',
         ) as mock_get:
             self.collector_mandatory.fetch_all(
                 'http_requests_total',
@@ -157,7 +157,7 @@ class PrometheusCollectorTest(tests.TestCase):
         )
 
         with mock.patch.object(
-            prometheus.PrometheusClient, 'get_instant',
+            prometheus.prometheus_client.PrometheusClient, 'get_instant',
         ) as mock_get:
             self.collector_without_range_function.fetch_all(
                 'http_requests_total',
@@ -178,7 +178,7 @@ class PrometheusCollectorTest(tests.TestCase):
         )
 
         with mock.patch.object(
-            prometheus.PrometheusClient, 'get_instant',
+            prometheus.prometheus_client.PrometheusClient, 'get_instant',
         ) as mock_get:
             self.collector_without_query_function.fetch_all(
                 'http_requests_total',
@@ -199,7 +199,7 @@ class PrometheusCollectorTest(tests.TestCase):
         )
 
         with mock.patch.object(
-            prometheus.PrometheusClient, 'get_instant',
+            prometheus.prometheus_client.PrometheusClient, 'get_instant',
         ) as mock_get:
             self.collector_all.fetch_all(
                 'http_requests_total',

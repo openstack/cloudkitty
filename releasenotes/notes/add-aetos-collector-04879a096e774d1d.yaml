@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    A collector for Aetos has been added, allowing CloudKitty to retrieve
+    metrics from Prometheus with Keystone authentication.
