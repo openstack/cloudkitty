@@ -362,7 +362,7 @@ function start_loki {
 }
 
 function install_loki_ubuntu {
-    local loki_url="https://github.com/grafana/loki/releases/download/v3.5.4/loki-linux-amd64.zip"
+    local loki_url="https://github.com/grafana/loki/releases/download/v3.7.1/loki-linux-amd64.zip"
     local loki_tmp="/tmp/loki-linux-amd64.zip"
 
     sudo apt-get install -y unzip wget
@@ -374,7 +374,7 @@ function install_loki_ubuntu {
 }
 
 function install_loki_fedora {
-    local loki_url="https://github.com/grafana/loki/releases/download/v3.5.4/loki-linux-amd64.zip"
+    local loki_url="https://github.com/grafana/loki/releases/download/v3.7.1/loki-linux-amd64.zip"
     local loki_tmp="/tmp/loki-linux-amd64.zip"
 
     sudo dnf install -y unzip wget
