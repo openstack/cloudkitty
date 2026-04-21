@@ -26,8 +26,12 @@ LOG = log.getLogger(__name__)
 class LokiClient(object):
     """Class used to ease interaction with Loki."""
 
+    # Fields stored as structured metadata for indexed querying (Loki 3.0+)
+    INDEXED_FIELDS = {'type', 'user', 'unit', 'flavor_name'}
+
     def __init__(self, url, tenant, stream_labels, content_type, buffer_size,
-                 shard_days, cert, verify, timeout):
+                 shard_days, cert, verify, timeout,
+                 use_structured_metadata=False):
         if content_type != "application/json":
             raise exceptions.UnsupportedContentType(content_type)
 
@@ -43,6 +47,7 @@ class LokiClient(object):
 
         self._cert = cert
         self._verify = verify
+        self._use_structured_metadata = use_structured_metadata
 
         self.timeout = timeout
 
@@ -85,11 +90,96 @@ class LokiClient(object):
             return ', '.join(pairs)
 
     def _base_query(self, project_id=None):
-        """Makes sure that we always get json results."""
+        """Build base query for Loki.
+
+        When use_structured_metadata is disabled, appends '| json' to parse
+        log lines. When enabled, callers handle adding '| json' as needed.
+        """
         stream_labels = self._stream_labels.copy()
         if project_id is not None:
             stream_labels['project_id'] = project_id
-        return self._dict_to_loki_query(stream_labels) + ' | json'
+        query = self._dict_to_loki_query(stream_labels)
+
+        if not self._use_structured_metadata:
+            query += ' | json'
+
+        return query
+
+    def _build_query(self, filters, metric_types=None):
+        """Build a Loki query from filters and optional metric_types.
+
+        Handles extracting project_id from filters, and when structured
+        metadata is enabled, splits filters into indexed (metadata) and
+        non-indexed (json-parsed) categories for optimal query performance.
+
+        Returns the assembled Loki query string.
+        """
+        project_id = None
+        remaining_filters = filters
+        if filters and 'project_id' in filters:
+            project_id = filters['project_id']
+            remaining_filters = {k: v for k, v in filters.items()
+                                 if k != 'project_id'}
+
+        if self._use_structured_metadata:
+            query = self._base_query(project_id=project_id)
+            metadata_filters = []
+            json_filters = []
+
+            # Handle metric_types filter (type is indexed)
+            if metric_types:
+                if isinstance(metric_types, list):
+                    current_metric_type = metric_types[0]
+                else:
+                    current_metric_type = metric_types
+                metadata_filters.append(f'type="{current_metric_type}"')
+
+            # Split remaining filters into indexed and non-indexed
+            if remaining_filters:
+                for key, value in remaining_filters.items():
+                    if isinstance(value, list):
+                        value = value[0]
+                    if isinstance(value, str):
+                        value = value.replace('"', '\\"')
+                    if key in self.INDEXED_FIELDS:
+                        metadata_filters.append(f'{key}="{value}"')
+                    else:
+                        json_filters.append(f'groupby_{key}="{value}"')
+
+            # Add metadata filters first (before | json)
+            for mf in metadata_filters:
+                query += ' | ' + mf
+
+            # Add | json and non-indexed filters if needed
+            if json_filters:
+                query += ' | json'
+                for jf in json_filters:
+                    query += ' | ' + jf
+            else:
+                # Need | json so total() can access qty/price from stream
+                query += ' | json'
+        else:
+            query = self._base_query(project_id=project_id)
+            loki_query_parts = []
+
+            if remaining_filters:
+                loki_query_parts.append(
+                    self._dict_to_loki_query(
+                        remaining_filters, groupby=True, brackets=False
+                    )
+                )
+
+            if metric_types:
+                if isinstance(metric_types, list):
+                    current_metric_type = metric_types[0]
+                else:
+                    current_metric_type = metric_types
+                loki_query_parts.append(f'type = "{current_metric_type}"')
+
+            if loki_query_parts:
+                query += ' | ' + ', '.join(loki_query_parts)
+
+        return query
 
     def search(self, query, begin, end, limit):
         url = f"{self._base_url}/query_range"
@@ -177,56 +267,12 @@ class LokiClient(object):
             )
 
     def delete(self, begin, end, filters):
-        # Extract project_id from filters to use in stream selector
-        project_id = None
-        remaining_filters = filters
-        if filters and 'project_id' in filters:
-            project_id = filters['project_id']
-            remaining_filters = {k: v for k, v in filters.items()
-                                 if k != 'project_id'}
-
-        query = self._base_query(project_id=project_id)
-        loki_query_parts = []
-        if remaining_filters:
-            loki_query_parts.append(
-                self._dict_to_loki_query(
-                    remaining_filters, groupby=True, brackets=False
-                )
-            )
-
-        if loki_query_parts:
-            query += ' | ' + ', '.join(loki_query_parts)
-
+        query = self._build_query(filters)
         self.delete_by_query(query, begin, end)
 
     def _retrieve(self, begin, end, filters, metric_types, limit):
         """Retrieves dataframes stored in Loki."""
-        project_id = None
-        remaining_filters = filters
-        if filters and 'project_id' in filters:
-            project_id = filters['project_id']
-            remaining_filters = {k: v for k, v in filters.items()
-                                 if k != 'project_id'}
-
-        query = self._base_query(project_id=project_id)
-        loki_query_parts = []
-
-        if remaining_filters:
-            loki_query_parts.append(
-                self._dict_to_loki_query(
-                    remaining_filters, groupby=True, brackets=False
-                )
-            )
-
-        if metric_types:
-            if isinstance(metric_types, list):
-                current_metric_type = metric_types[0]
-            else:
-                current_metric_type = metric_types
-            loki_query_parts.append(f'type = "{current_metric_type}"')
-
-        if loki_query_parts:
-            query += ' | ' + ', '.join(loki_query_parts)
+        query = self._build_query(filters, metric_types=metric_types)
 
         LOG.debug(
             "Loki query: '%s', begin: '%s', end: '%s', limit: '%s'",
@@ -295,11 +341,26 @@ class LokiClient(object):
 
         log_line = json.dumps(data)
 
+        # Build structured metadata from INDEXED_FIELDS for indexed querying
+        field_sources = {
+            'type': type,
+            'unit': point.unit,
+        }
+        structured_metadata = {}
+        for field in self.INDEXED_FIELDS:
+            if field in field_sources:
+                value = field_sources[field]
+            else:
+                value = point.groupby.get(field, '')
+            if value:
+                structured_metadata[field] = str(value)
+
         # Group points by project_id
         if project_id not in self._points:
             self._points[project_id] = []
 
-        self._points[project_id].append([timestamp, log_line])
+        self._points[project_id].append(
+            [timestamp, log_line, structured_metadata])
 
         # Check if any project has reached buffer size
         if any(len(points) >= self._buffer_size for points
@@ -350,9 +411,15 @@ class LokiClient(object):
 
             key_parts = {}
             for field in groupby:
-                if field == 'type':
+                if self._use_structured_metadata \
+                        and field in self.INDEXED_FIELDS:
+                    # Indexed fields are available directly in stream
+                    key_parts[field] = stream.get(field, '')
+                elif field == 'type':
+                    # type is always available directly (legacy behavior)
                     key_parts[field] = stream.get(field, '')
                 else:
+                    # Non-indexed fields have groupby_ prefix from JSON parsing
                     key_parts[field] = stream.get('groupby_' + field)
 
             key = tuple((k, v) for k, v in sorted(key_parts.items()))

@@ -645,3 +645,140 @@ class TestLokiClient(unittest.TestCase):
         mock_retrieve.assert_called_once_with(
             begin_dt, end_dt, None, None, 100
         )
+
+    # --- Structured Metadata Tests ---
+
+    @patch.object(client.LokiClient, 'push')
+    def test_add_point_includes_structured_metadata(
+            self, mock_push, mock_log, mock_requests_arg):
+        """Verify structured metadata is added as third element in values."""
+        self.client._buffer_size = 10
+        point = MockDataPoint(
+            unit="instance",
+            qty=1,
+            price=10,
+            groupby={
+                'project_id': 'proj1',
+                'user': 'user123',
+                'flavor_name': 'm1.small'
+            }
+        )
+        self.client.add_point(point, "instance", self.begin_dt, self.end_dt)
+
+        # Check the point was added with 3 elements
+        added_entry = self.client._points['proj1'][0]
+        self.assertEqual(len(added_entry), 3)
+
+        # Verify structured metadata content
+        structured_metadata = added_entry[2]
+        self.assertEqual(structured_metadata['type'], 'instance')
+        self.assertEqual(structured_metadata['user'], 'user123')
+        self.assertEqual(structured_metadata['unit'], 'instance')
+        self.assertEqual(structured_metadata['flavor_name'], 'm1.small')
+
+    @patch.object(client.LokiClient, 'push')
+    def test_add_point_filters_empty_metadata_values(
+            self, mock_push, mock_log, mock_requests_arg):
+        """Verify empty values are filtered from structured metadata."""
+        self.client._buffer_size = 10
+        # Point without user or flavor_name
+        point = MockDataPoint(
+            unit="B",
+            qty=100,
+            price=1,
+            groupby={'project_id': 'proj1'}
+        )
+        self.client.add_point(point, "network_bytes", self.begin_dt,
+                              self.end_dt)
+
+        added_entry = self.client._points['proj1'][0]
+        structured_metadata = added_entry[2]
+
+        # Should have type and unit, but not user or flavor_name
+        self.assertEqual(structured_metadata['type'], 'network_bytes')
+        self.assertEqual(structured_metadata['unit'], 'B')
+        self.assertNotIn('user', structured_metadata)
+        self.assertNotIn('flavor_name', structured_metadata)
+
+    def test_base_query_with_structured_metadata_enabled(
+            self, mock_log, mock_requests):
+        """Verify _base_query omits | json when structured metadata enabled."""
+        client_with_metadata = client.LokiClient(
+            self.base_url, self.tenant, self.stream_labels, self.content_type,
+            self.buffer_size, self.shard_days, self.cert, self.verify,
+            self.timeout, use_structured_metadata=True
+        )
+        query = client_with_metadata._base_query()
+        # Should NOT contain | json
+        self.assertNotIn('| json', query)
+        # Should contain stream labels
+        self.assertIn('app="cloudkitty"', query)
+
+    def test_base_query_with_structured_metadata_disabled(
+            self, mock_log, mock_requests):
+        """Verify _base_query includes | json when metadata disabled."""
+        client_without_metadata = client.LokiClient(
+            self.base_url, self.tenant, self.stream_labels, self.content_type,
+            self.buffer_size, self.shard_days, self.cert, self.verify,
+            self.timeout, use_structured_metadata=False
+        )
+        query = client_without_metadata._base_query()
+        # Should contain | json
+        self.assertIn('| json', query)
+
+    @patch.object(client.LokiClient, 'search')
+    def test_retrieve_with_structured_metadata_uses_metadata_filters(
+            self, mock_search, mock_log, mock_requests_arg):
+        """Verify retrieve uses structured metadata syntax when enabled."""
+        client_with_metadata = client.LokiClient(
+            self.base_url, self.tenant, self.stream_labels, self.content_type,
+            self.buffer_size, self.shard_days, self.cert, self.verify,
+            self.timeout, use_structured_metadata=True
+        )
+        mock_search.return_value = {
+            "stats": {"summary": {"totalEntriesReturned": 1}},
+            "result": []
+        }
+
+        # Filter on indexed field (user) and metric type
+        filters = {"user": "user123"}
+        metric_types = "instance"
+        client_with_metadata._retrieve(
+            self.begin_dt, self.end_dt, filters, metric_types, 100
+        )
+
+        # Check the query used structured metadata syntax
+        call_args = mock_search.call_args[0]
+        query = call_args[0]
+        # type and user should be metadata filters (before | json)
+        self.assertIn('type="instance"', query)
+        self.assertIn('user="user123"', query)
+        # Should still have | json for qty/price access
+        self.assertIn('| json', query)
+
+    @patch.object(client.LokiClient, 'search')
+    def test_retrieve_with_structured_metadata_mixed_filters(
+            self, mock_search, mock_log, mock_requests_arg):
+        """Verify indexed and non-indexed filters are handled correctly."""
+        client_with_metadata = client.LokiClient(
+            self.base_url, self.tenant, self.stream_labels, self.content_type,
+            self.buffer_size, self.shard_days, self.cert, self.verify,
+            self.timeout, use_structured_metadata=True
+        )
+        mock_search.return_value = {
+            "stats": {"summary": {"totalEntriesReturned": 1}},
+            "result": []
+        }
+
+        # Filter on indexed (user) and non-indexed (resource) fields
+        filters = {"user": "user123", "resource": "res456"}
+        client_with_metadata._retrieve(
+            self.begin_dt, self.end_dt, filters, None, 100
+        )
+
+        call_args = mock_search.call_args[0]
+        query = call_args[0]
+        # user is indexed - should be metadata filter
+        self.assertIn('user="user123"', query)
+        # resource is not indexed - should have groupby_ prefix after | json
+        self.assertIn('groupby_resource="res456"', query)
