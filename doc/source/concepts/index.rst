@@ -99,7 +99,7 @@ configured in CloudKitty API as services. If they are not configured,
 they will not be rated by rating rules defined with hashmap. Therefore,
 they would be collected, and persisted with value (price) as zero.
 
-..  code-block:: yaml
+.. code-block:: yaml
 
     metrics:
       dynamic_pollster.compute.services.instance.status:

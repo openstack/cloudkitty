@@ -11,7 +11,9 @@ Install from source
 Install the services
 --------------------
 
-Retrieve and install cloudkitty::
+Retrieve and install cloudkitty:
+
+.. code-block:: console
 
     git clone https://opendev.org/openstack/cloudkitty.git
     cd cloudkitty
@@ -25,7 +27,9 @@ following executables:
 * ``cloudkitty-dbsync``: Tool to create and upgrade the database schema
 * ``cloudkitty-storage-init``: Tool to initiate the storage backend
 
-Install sample configuration files::
+Install sample configuration files:
+
+.. code-block:: console
 
     mkdir /etc/cloudkitty
     tox -e genconfig
@@ -33,14 +37,18 @@ Install sample configuration files::
     cp etc/cloudkitty/policy.yaml /etc/cloudkitty
     cp etc/cloudkitty/api_paste.ini /etc/cloudkitty
 
-Create the log directory::
+Create the log directory:
+
+.. code-block:: console
 
     mkdir /var/log/cloudkitty/
 
 Install the client
 ------------------
 
-Retrieve and install cloudkitty client::
+Retrieve and install cloudkitty client:
+
+.. code-block:: console
 
     git clone https://opendev.org/openstack/python-cloudkittyclient.git
     cd python-cloudkittyclient
@@ -49,26 +57,32 @@ Retrieve and install cloudkitty client::
 Install the dashboard module
 ----------------------------
 
-#. Retrieve and install cloudkitty's dashboard::
+#. Retrieve and install cloudkitty's dashboard:
 
-    git clone https://opendev.org/openstack/cloudkitty-dashboard.git
-    cd cloudkitty-dashboard
-    pip install -c https://opendev.org/openstack/requirements/raw/branch/stable/<release>/upper-constraints.txt .
+    .. code-block:: console
 
-#. Find where the python packages are installed::
+        git clone https://opendev.org/openstack/cloudkitty-dashboard.git
+        cd cloudkitty-dashboard
+        pip install -c https://opendev.org/openstack/requirements/raw/branch/stable/<release>/upper-constraints.txt .
 
-    PY_PACKAGES_PATH=`pip --version | cut -d' ' -f4`
+#. Find where the python packages are installed:
+
+    .. code-block:: console
+
+        PY_PACKAGES_PATH=`pip --version | cut -d' ' -f4`
 
 #. Add the enabled file to the horizon settings or installation.
    Depending on your setup, you might need to add it to ``/usr/share`` or
-   directly in the horizon python package::
+   directly in the horizon python package:
 
-    # If horizon is installed by packages:
-    ln -sf $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
-    /usr/share/openstack-dashboard/openstack_dashboard/enabled/
+    .. code-block:: console
 
-    # Directly from sources:
-    ln -sf $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
-    $PY_PACKAGES_PATH/openstack_dashboard/enabled/
+        # If horizon is installed by packages:
+        ln -sf $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
+        /usr/share/openstack-dashboard/openstack_dashboard/enabled/
+
+        # Directly from sources:
+        ln -sf $PY_PACKAGES_PATH/cloudkittydashboard/enabled/_[0-9]*.py \
+        $PY_PACKAGES_PATH/openstack_dashboard/enabled/
 
 #. Restart the web server hosting Horizon.

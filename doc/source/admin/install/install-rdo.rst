@@ -3,11 +3,15 @@ Install from package (RDO For RHEL/CentOS 7)
 
 Packages for RHEL/CentOS 7 are available starting from the Mitaka release.
 
-#. Install the RDO repositories for your release::
+#. Install the RDO repositories for your release:
 
-    yum install centos-release-openstack-RELEASE
-    # RELEASE can be any supported release name like rocky
+    .. code-block:: console
 
-#. Install the packages::
+       yum install centos-release-openstack-RELEASE
+       # RELEASE can be any supported release name like rocky
 
-    yum install openstack-cloudkitty-api openstack-cloudkitty-processor openstack-cloudkitty-ui
+#. Install the packages:
+
+    .. code-block:: console
+
+       yum install openstack-cloudkitty-api openstack-cloudkitty-processor openstack-cloudkitty-ui

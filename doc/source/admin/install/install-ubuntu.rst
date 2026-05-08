@@ -5,10 +5,14 @@ Note that Canonical doesn't maintain CloudKitty packages. These are only
 maintained in Debian, and then imported from Debian Unstable to the
 Ubuntu Universe repository.
 
-#. Upgrade the packages on your host::
+#. Upgrade the packages on your host:
 
-    apt update && apt dist-upgrade
+    .. code-block:: console
 
-#. Install the packages::
+        apt update && apt dist-upgrade
 
-    apt-get install cloudkitty-api cloudkitty-processor cloudkitty-dashboard
+#. Install the packages:
+
+    .. code-block:: console
+
+        apt-get install cloudkitty-api cloudkitty-processor cloudkitty-dashboard
