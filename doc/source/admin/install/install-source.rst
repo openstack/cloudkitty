@@ -1,6 +1,13 @@
 Install from source
 ===================
 
+.. note::
+
+   In the commands below, substitute "<release>" for your version of choice,
+   such as "queens" or "rocky".
+
+   If you use the development version, replace "stable/<release>" with "master".
+
 Install the services
 --------------------
 
@@ -8,7 +15,7 @@ Retrieve and install cloudkitty::
 
     git clone https://opendev.org/openstack/cloudkitty.git
     cd cloudkitty
-    python setup.py install
+    pip install -c https://opendev.org/openstack/requirements/raw/branch/stable/<release>/upper-constraints.txt .
 
 This procedure installs the ``cloudkitty`` python library and the
 following executables:
@@ -37,7 +44,7 @@ Retrieve and install cloudkitty client::
 
     git clone https://opendev.org/openstack/python-cloudkittyclient.git
     cd python-cloudkittyclient
-    python setup.py install
+    pip install -c https://opendev.org/openstack/requirements/raw/branch/stable/<release>/upper-constraints.txt .
 
 Install the dashboard module
 ----------------------------
@@ -46,7 +53,7 @@ Install the dashboard module
 
     git clone https://opendev.org/openstack/cloudkitty-dashboard.git
     cd cloudkitty-dashboard
-    python setup.py install
+    pip install -c https://opendev.org/openstack/requirements/raw/branch/stable/<release>/upper-constraints.txt .
 
 #. Find where the python packages are installed::
 
