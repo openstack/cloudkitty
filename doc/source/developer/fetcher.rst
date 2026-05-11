@@ -26,15 +26,15 @@ A new scope fetcher must be implemented in a new module, in
 ``cloudkitty.fetcher.<name>.py``. Its class must be called ``<Name>Fetcher``.
 
 An entrypoint must be registered for new fetchers. This is done in the
-``setup.cfg`` file, located at the root of the repository:
+``pyproject.toml`` file, located at the root of the repository:
 
-.. code-block:: ini
+.. code-block:: toml
 
-   cloudkitty.fetchers =
-       keystone = cloudkitty.fetcher.keystone:KeystoneFetcher
-       source = cloudkitty.fetcher.source:SourceFetcher
-       # [...]
-       custom = cloudkitty.fetcher.custom:CustomFetcher
+   [project.entry-points."cloudkitty.fetchers"]
+   keystone = "cloudkitty.fetcher.keystone:KeystoneFetcher"
+   source = "cloudkitty.fetcher.source:SourceFetcher"
+   # [...]
+   custom = "cloudkitty.fetcher.custom:CustomFetcher"
 
 Example
 =======
