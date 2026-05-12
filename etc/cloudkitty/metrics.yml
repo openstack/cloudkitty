@@ -29,6 +29,7 @@ metrics:
     extra_args:
       aggregation_method: mean
       resource_type: image
+      force_granularity: 300
 
   volume.size:
     unit: GiB
