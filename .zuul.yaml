@@ -12,8 +12,16 @@
     timeout: 5400
     irrelevant-files: &base_irrelevant_files
       - ^.*\.rst$
+      - ^\.gitignore$
+      - ^\.gitreview$
+      - ^api-ref/.*$
+      - ^contrib/.*$
       - ^doc/.*$
       - ^releasenotes/.*$
+      - ^cloudkitty/hacking/.*$
+      - ^cloudkitty/tests/.*$
+      - ^test-requirements\.txt$
+      - ^tox\.ini$
     vars: &base_vars
       tempest_plugins:
         - cloudkitty-tempest-plugin
@@ -167,18 +175,16 @@
     irrelevant-files:
       - ^.*\.rst$
       - ^.*\.txt$
+      - ^\.gitignore$
+      - ^\.gitreview$
       - ^api-ref/.*$
-      - ^apidocs/.*$
       - ^contrib/.*$
       - ^doc/.*$
       - ^etc/.*$
       - ^releasenotes/.*$
       - ^setup.cfg$
-      - ^tools/.*$
       - ^cloudkitty/hacking/.*$
-      - ^cloudkitty/tests/scenario/.*$
-      - ^cloudkitty/tests/unittests/.*$
-
+      - ^cloudkitty/tests/.*$
 
 - job:
     name: cloudkitty-tempest-full-v2-fetcher-collector-prometheus
