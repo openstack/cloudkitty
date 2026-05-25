@@ -1,9 +1,8 @@
 Install from packages for Ubuntu
 ================================
 
-Note that Canonical doesn't maintain CloudKitty packages. These are only
-maintained in Debian, and then imported from Debian Unstable to the
-Ubuntu Universe repository.
+Packages for Ubuntu are available since CloudKitty 7.0.0 (OpenStack Queens) in
+2018.
 
 #. Upgrade the packages on your host:
 
