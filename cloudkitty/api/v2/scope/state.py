@@ -268,7 +268,7 @@ class ScopeState(base.BaseResource):
                                          scope_key=scope_key, active=active)
 
         storage_scopes = self._storage_state.get_all(
-            identifier=scope_id)
+            identifier=scope_id, active=None)
         update_storage_scope = storage_scopes[0]
 
         return {
