@@ -138,7 +138,7 @@ section:
    database = cloudkitty
    host = influxdb
 
-Once you have configured the SQL and rated data storage backends, initalize
+Once you have configured the SQL and rated data storage backends, initialize
 the storage::
 
    cloudkitty-storage-init
