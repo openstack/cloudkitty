@@ -1076,6 +1076,12 @@ class CloudKittyProcessorTest(tests.TestCase):
         self.addCleanup(get_collector_manager.stop)
         self.get_collector_mock = get_collector_manager.start()
 
+        get_coordinator_mock_patch_manager = mock.patch(
+            "tooz.coordination.get_coordinator")
+        self.addCleanup(get_coordinator_mock_patch_manager.stop)
+        self.get_coordinator_mock_patch = get_coordinator_mock_patch_manager. \
+            start()
+
         self.worker_id = 1
         self.cloudkitty_processor = orchestrator.CloudKittyProcessor(
             self.worker_id)

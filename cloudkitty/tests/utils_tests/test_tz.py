@@ -17,7 +17,6 @@ import unittest
 from unittest import mock
 
 from dateutil import tz
-from oslo_utils import timeutils
 
 from cloudkitty import utils
 from cloudkitty.utils import tz as tzutils
@@ -85,7 +84,9 @@ class TestTZUtils(unittest.TestCase):
         self._test_add_substract_delta(obj, tzone)
 
     def test_get_month_start_no_arg(self):
-        naive_utc_now = timeutils.utcnow()
+        naive_utc_now = datetime.datetime.now().replace(
+            tzinfo=tz.tzlocal(), microsecond=0)
+
         naive_month_start = datetime.datetime(
             naive_utc_now.year, naive_utc_now.month, 1)
         month_start = tzutils.get_month_start()
