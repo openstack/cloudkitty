@@ -152,11 +152,12 @@ class GnocchiFetcher(fetcher.BaseFetcher):
 
                 total_resources_navigated += chunk_len
 
-                scope_ids = [
+                scope_ids = set([
                     resource.get(scope_attribute) for resource in
-                    resources_chunk if resource.get(scope_attribute)]
+                    resources_chunk if resource.get(
+                        scope_attribute) is not None])
 
-                unique_scope_ids.update(set(scope_ids))
+                unique_scope_ids.update(scope_ids)
 
                 LOG.debug("Scopes IDs [%s] loaded. The total number of unique "
                           "scopes IDs loaded so far is [%s]. Next chunk will "
@@ -165,4 +166,9 @@ class GnocchiFetcher(fetcher.BaseFetcher):
                           "resources navigated [%s].", scope_ids,
                           len(scope_ids), scope_attribute, unique_scope_ids,
                           total_resources_navigated)
+
+        # Remove the scope IDs that are empty strings.
+        unique_scope_ids.discard('')
+        LOG.debug("We removed the scopes that are an empty string "
+                  "from the list of scopes to process.")
         return list(unique_scope_ids)
