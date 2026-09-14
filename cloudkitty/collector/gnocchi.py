@@ -456,7 +456,7 @@ class GnocchiCollector(collector.BaseCollector):
             q_filter=q_filter,
         )
 
-        data = GnocchiCollector.filter_unecessary_measurements(
+        data = GnocchiCollector.filter_unnecessary_measurements(
             data, met, metric_name)
 
         resources_info = None
@@ -481,7 +481,7 @@ class GnocchiCollector(collector.BaseCollector):
                         met, d, resources_info)
                 except AssociatedResourceNotFound as e:
                     LOG.warning(
-                        '[%s] An error occured during data collection '
+                        '[%s] An error occurred during data collection '
                         'between %s and %s: %s',
                         project_id, start, end, e
                     )
@@ -493,8 +493,8 @@ class GnocchiCollector(collector.BaseCollector):
         return formated_resources
 
     @staticmethod
-    def filter_unecessary_measurements(data, met, metric_name):
-        """Filter unecessary measurements if not 'use_all_resource_revisions'
+    def filter_unnecessary_measurements(data, met, metric_name):
+        """Filter unnecessary measurements if not 'use_all_resource_revisions'
 
         The option 'use_all_resource_revisions' is useful when using Gnocchi
         with the patch introduced in
