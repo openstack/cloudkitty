@@ -78,7 +78,5 @@ loki = "cloudkitty.storage.v2.loki:LokiStorage"
 [project.entry-points."cloudkitty.storage.hybrid.backends"]
 gnocchi = "cloudkitty.storage.v1.hybrid.backends.gnocchi:GnocchiStorage"
 
-[tool.setuptools]
-packages = [
-    "cloudkitty",
-]
+[tool.setuptools.packages.find]
+include = ["cloudkitty*"]
