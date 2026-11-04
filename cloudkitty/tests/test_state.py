@@ -26,13 +26,13 @@ class DBStateManagerTest(tests.TestCase):
 
     def test_gen_name(self):
         name = self.sm._gen_name('testuser', 'osrtf')
-        self.assertEqual(name, 'testuser_osrtf')
+        self.assertEqual('testuser_osrtf', name)
 
     def test_state_access(self):
         now = timeutils.utcnow()
         self.sm.set_state(now)
         result = self.sm.get_state()
-        self.assertEqual(result, str(now))
+        self.assertEqual(str(now), result)
 
     def test_metadata_access(self):
         metadata = {'foo': 'bar'}
@@ -40,4 +40,20 @@ class DBStateManagerTest(tests.TestCase):
         self.sm.set_state(now)
         self.sm.set_metadata(metadata)
         result = self.sm.get_metadata()
-        self.assertEqual(result, metadata)
+        self.assertEqual(metadata, result)
+
+    def test_metadata_access_select_one(self):
+        sm_alt = state.DBStateManager('testuser_alt', 'osrtf')
+        now = timeutils.utcnow()
+
+        metadata = {'foo': 'bar'}
+        self.sm.set_state(now)
+        self.sm.set_metadata(metadata)
+
+        metadata_alt = {'baz': 'qux'}
+        sm_alt.set_state(now)
+        sm_alt.set_metadata(metadata_alt)
+        sm_alt.set_metadata(metadata_alt)
+
+        self.assertEqual(metadata, self.sm.get_metadata())
+        self.assertEqual(metadata_alt, sm_alt.get_metadata())
