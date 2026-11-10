@@ -43,7 +43,6 @@ __all__ = ['list_opts']
 
 _opts = [
     ('api', list(itertools.chain(
-        cloudkitty.api.app.api_opts,
         cloudkitty.api.v1.api_opts))),
     ('collect', list(itertools.chain(
         cloudkitty.collector.collect_opts))),
