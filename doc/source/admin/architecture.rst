@@ -105,7 +105,7 @@ the `developer documentation`_.
 
 .. _developer documentation: ../developer/collector.html
 .. _collector configuration guide: configuration/collector.html
-.. _Gnocchi: https://gnocchi.xyz/
+.. _Gnocchi: https://github.com/gnocchixyz/gnocchi
 .. _Prometheus: https://prometheus.io/docs/introduction/overview/
 .. _Aetos: https://opendev.org/openstack/aetos
 
