@@ -267,6 +267,7 @@ class LokiClient(object):
                 "Failed to delete dataframes: %d - %s",
                 response.status_code, response.text
             )
+            raise exceptions.DeleteError(response.status_code, response.text)
 
     def delete(self, begin, end, filters):
         query = self._build_query(filters)
