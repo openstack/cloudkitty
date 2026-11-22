@@ -199,15 +199,13 @@ class LokiClient(object):
                                 cert=self._cert, verify=self._verify,
                                 timeout=self.timeout)
 
-        if response.status_code == 200:
-            data = response.json()['data']
-        else:
+        if response.status_code != 200:
             LOG.error(
-                "Failed to query logs or empty result: %d - %s",
+                "Failed to query logs: %d - %s",
                 response.status_code, response.text
             )
-            data = []
-        return data
+            raise exceptions.QueryError(response.status_code, response.text)
+        return response.json()['data']
 
     def push(self):
         """Send messages to Loki in batches."""

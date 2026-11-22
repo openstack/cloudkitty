@@ -49,3 +49,12 @@ class DeleteError(BaseLokiException):
             "Failed to delete dataframes from Loki: {} - {}".format(
                 status_code, response_text)
         )
+
+
+class QueryError(BaseLokiException):
+    def __init__(self, status_code, response_text):
+        self.status_code = status_code
+        super(QueryError, self).__init__(
+            "Failed to query logs from Loki: {} - {}".format(
+                status_code, response_text)
+        )

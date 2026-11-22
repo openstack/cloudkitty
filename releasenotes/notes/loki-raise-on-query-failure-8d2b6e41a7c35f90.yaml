@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    The Loki storage driver now raises an error when Loki returns an error
+    for a query. The API returns a server error instead of reporting the
+    period as having no data.
