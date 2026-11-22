@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Fixed the Loki storage backend deleting the wrong time window when
+    the processor host is not on UTC. The reprocessing delete passed
+    naive datetimes, which were read as local time, so the window was
+    shifted by the host's UTC offset. Naive datetimes are now treated
+    as UTC.

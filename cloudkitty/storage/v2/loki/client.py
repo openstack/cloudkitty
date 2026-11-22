@@ -19,6 +19,7 @@ import requests
 
 from cloudkitty.storage.v2.loki import exceptions
 from cloudkitty.utils import json
+from cloudkitty.utils import tz as tzutils
 
 LOG = log.getLogger(__name__)
 
@@ -250,8 +251,8 @@ class LokiClient(object):
 
         params = {
             "query": query,
-            "start": int(begin.timestamp()),
-            "end": int(end.timestamp()),
+            "start": int(tzutils.local_to_utc(begin).timestamp()),
+            "end": int(tzutils.local_to_utc(end).timestamp()),
         }
 
         response = requests.post(url, params=params, headers=self._headers,

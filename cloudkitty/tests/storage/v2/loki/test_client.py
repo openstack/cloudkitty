@@ -17,6 +17,8 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 import json
+import os
+import time
 import unittest
 from unittest.mock import call
 from unittest.mock import MagicMock
@@ -552,6 +554,31 @@ class TestLokiClient(unittest.TestCase):
             call("Dataframes deleted successfully.")
         ])
         mq.assert_not_called()
+
+    @patch.object(client.LokiClient, '_base_query')
+    def test_delete_by_query_naive_datetime_is_utc(self, mq, ml, mr):
+        env = patch.dict(os.environ, {'TZ': 'Asia/Dubai'})
+        env.start()
+        time.tzset()
+
+        def _restore():
+            env.stop()
+            time.tzset()
+        self.addCleanup(_restore)
+
+        mr.post.return_value = MagicMock(status_code=204)
+        self.client.delete_by_query(
+            'query', datetime(2026, 11, 20, 12, 52),
+            datetime(2026, 11, 20, 12, 53))
+        params = mr.post.call_args.kwargs['params']
+        self.assertEqual(
+            int(datetime(2026, 11, 20, 12, 52,
+                         tzinfo=timezone.utc).timestamp()),
+            params['start'])
+        self.assertEqual(
+            int(datetime(2026, 11, 20, 12, 53,
+                         tzinfo=timezone.utc).timestamp()),
+            params['end'])
 
     @patch.object(client.LokiClient, '_base_query')
     def test_delete_by_query_failure(self, mock_base_query, mock_log,
