@@ -162,7 +162,7 @@
     vars:
       devstack_localrc:
         CLOUDKITTY_STORAGE_BACKEND: loki
-        CLOUDKITTY_LOKI_URL: http://127.0.0.1:3100
+        CLOUDKITTY_LOKI_URL: http://127.0.0.1:3100/loki/api/v1
 
 - job:
     name: cloudkitty-tox-bandit
