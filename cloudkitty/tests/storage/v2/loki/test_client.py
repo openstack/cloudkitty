@@ -221,9 +221,11 @@ class TestLokiClient(unittest.TestCase):
         mock_response.text = "Internal Server Error"
         mock_requests.get.return_value = mock_response
         query = '{app="test"} | json'
-        data = self.client.search(query, self.begin_dt, self.end_dt, 100)
-        self.assertEqual(data, [])
-        expected_msg = ("Failed to query logs or empty result: 500 - "
+        with self.assertRaises(exceptions.QueryError) as ctx:
+            self.client.search(query, self.begin_dt, self.end_dt, 100)
+        self.assertEqual(500, ctx.exception.status_code)
+        self.assertIn("500 - Internal Server Error", str(ctx.exception))
+        expected_msg = ("Failed to query logs: 500 - "
                         "Internal Server Error")
         mock_log.error.assert_called_once()
         self.assertEqual(expected_msg,
