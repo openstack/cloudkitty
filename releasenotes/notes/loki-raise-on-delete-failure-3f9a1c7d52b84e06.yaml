@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    The Loki storage driver now raises an error when Loki rejects a delete
+    request. Reprocessing stops before writing replacement data and retries
+    automatically on a subsequent processor cycle. A failed scope state reset
+    leaves that scope's timestamp unchanged and must be resubmitted.

@@ -562,7 +562,11 @@ class TestLokiClient(unittest.TestCase):
         mock_requests_arg.post.return_value = mock_response
         test_query = '{app="cloudkitty"} | json | ' \
                      'type="compute.instance.exists"'
-        self.client.delete_by_query(test_query, self.begin_dt, self.end_dt)
+        with self.assertRaises(exceptions.DeleteError) as ctx:
+            self.client.delete_by_query(
+                test_query, self.begin_dt, self.end_dt)
+        self.assertEqual(500, ctx.exception.status_code)
+        self.assertIn("500 - Internal Server Error", str(ctx.exception))
         expected_url = f"{self.base_url}/delete"
         expected_params = {
             "query": test_query,

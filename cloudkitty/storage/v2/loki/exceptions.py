@@ -40,3 +40,12 @@ class PushError(BaseLokiException):
             "Failed to push logs to Loki: {} - {}".format(
                 status_code, response_text)
         )
+
+
+class DeleteError(BaseLokiException):
+    def __init__(self, status_code, response_text):
+        self.status_code = status_code
+        super(DeleteError, self).__init__(
+            "Failed to delete dataframes from Loki: {} - {}".format(
+                status_code, response_text)
+        )
