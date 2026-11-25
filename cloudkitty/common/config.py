@@ -18,6 +18,7 @@ import itertools
 from keystoneauth1 import loading as ks_loading
 
 import cloudkitty.api.app
+import cloudkitty.api.v1
 import cloudkitty.collector.aetos
 import cloudkitty.collector.gnocchi
 import cloudkitty.collector.prometheus
@@ -41,7 +42,8 @@ __all__ = ['list_opts']
 
 _opts = [
     ('api', list(itertools.chain(
-        cloudkitty.api.app.api_opts,))),
+        cloudkitty.api.app.api_opts,
+        cloudkitty.api.v1.api_opts))),
     ('collect', list(itertools.chain(
         cloudkitty.collector.collect_opts))),
     ('collector_aetos', list(itertools.chain(
