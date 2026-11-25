@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The ``[api] port`` option has been removed. This option has had no effect
+    since the 6.0.0 release.

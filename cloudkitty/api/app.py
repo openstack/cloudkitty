@@ -41,17 +41,10 @@ auth_opts = [
                      "keystone")),
 ]
 
-api_opts = [
-    cfg.PortOpt('port',
-                default=8889,
-                help='The port for the cloudkitty API server.'),
-]
-
 CONF = cfg.CONF
 CONF.import_opt('version', 'cloudkitty.storage', 'storage')
 
 CONF.register_opts(auth_opts)
-CONF.register_opts(api_opts, group='api')
 
 
 def setup_app():
