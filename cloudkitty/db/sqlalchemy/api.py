@@ -57,7 +57,7 @@ class State(api.State):
             q = utils.model_query(
                 models.StateInfo,
                 session)
-            q.filter(models.StateInfo.name == name)
+            q = q.filter(models.StateInfo.name == name)
             return q.value(models.StateInfo.s_metadata)
 
     def set_metadata(self, name, metadata):
