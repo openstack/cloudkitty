@@ -131,8 +131,7 @@ class SQLAlchemyStorage(storage.BaseStorage):
             q = q.filter(
                 self.frame_model.begin.between(begin, end),
                 self.frame_model.end.between(begin, end))
-            tenants = q.distinct().values(
-                self.frame_model.tenant_id)
+            tenants = q.distinct().with_entities(self.frame_model.tenant_id)
             return [tenant.tenant_id for tenant in tenants]
 
     def get_time_frame(self, begin, end, **filters):

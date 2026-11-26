@@ -153,8 +153,7 @@ class HashMap(api.HashMap):
     def list_services(self):
         with db.session_for_read() as session:
             q = session.query(models.HashMapService)
-            res = q.values(
-                models.HashMapService.service_id)
+            res = q.with_entities(models.HashMapService.service_id)
             return [uuid[0] for uuid in res]
 
     def list_fields(self, service_uuid):
@@ -164,14 +163,13 @@ class HashMap(api.HashMap):
                 models.HashMapField.service)
             q = q.filter(
                 models.HashMapService.service_id == service_uuid)
-            res = q.values(models.HashMapField.field_id)
+            res = q.with_entities(models.HashMapField.field_id)
             return [uuid[0] for uuid in res]
 
     def list_groups(self):
         with db.session_for_read() as session:
             q = session.query(models.HashMapGroup)
-            res = q.values(
-                models.HashMapGroup.group_id)
+            res = q.with_entities(models.HashMapGroup.group_id)
             return [uuid[0] for uuid in res]
 
     def list_mappings(self,
@@ -209,8 +207,7 @@ class HashMap(api.HashMap):
                 q = q.filter(models.HashMapMapping.group_id == None)  # noqa
 
             q = get_filters(q, models.HashMapMapping, **kwargs)
-            res = q.values(
-                models.HashMapMapping.mapping_id)
+            res = q.with_entities(models.HashMapMapping.mapping_id)
             return [uuid[0] for uuid in res]
 
     def list_thresholds(self,
@@ -245,8 +242,7 @@ class HashMap(api.HashMap):
                 q = q.filter(models.HashMapGroup.group_id == group_uuid)
             elif no_group:
                 q = q.filter(models.HashMapThreshold.group_id == None)  # noqa
-            res = q.values(
-                models.HashMapThreshold.threshold_id)
+            res = q.with_entities(models.HashMapThreshold.threshold_id)
             return [uuid[0] for uuid in res]
 
     def create_service(self, name):

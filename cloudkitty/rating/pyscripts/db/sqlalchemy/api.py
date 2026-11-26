@@ -58,8 +58,7 @@ class PyScripts(api.PyScripts):
         with db.session_for_read() as session:
             q = session.query(models.PyScriptsScript)
             q = get_filters(q, models.PyScriptsScript, **kwargs)
-            res = q.values(
-                models.PyScriptsScript.script_id)
+            res = q.with_entities(models.PyScriptsScript.script_id)
             return [uuid[0] for uuid in res]
 
     def create_script(self, name, data,

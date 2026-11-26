@@ -34,7 +34,7 @@ class State(api.State):
                 models.StateInfo,
                 session)
             q = q.filter(models.StateInfo.name == name)
-            return q.value(models.StateInfo.state)
+            return q.with_entities(models.StateInfo.state).scalar()
 
     def set_state(self, name, state):
         with db.session_for_write() as session:
@@ -58,7 +58,7 @@ class State(api.State):
                 models.StateInfo,
                 session)
             q = q.filter(models.StateInfo.name == name)
-            return q.value(models.StateInfo.s_metadata)
+            return q.with_entities(models.StateInfo.s_metadata).scalar()
 
     def set_metadata(self, name, metadata):
         with db.session_for_write() as session:
@@ -85,7 +85,7 @@ class ModuleInfo(api.ModuleInfo):
                 models.ModuleStateInfo,
                 session)
             q = q.filter(models.ModuleStateInfo.name == name)
-            res = q.value(models.ModuleStateInfo.priority)
+            res = q.with_entities(models.ModuleStateInfo.priority).scalar()
             if res:
                 return int(res)
             else:
@@ -115,7 +115,7 @@ class ModuleInfo(api.ModuleInfo):
                     models.ModuleStateInfo,
                     session)
                 q = q.filter(models.ModuleStateInfo.name == name)
-                res = q.value(models.ModuleStateInfo.state)
+                res = q.with_entities(models.ModuleStateInfo.state).scalar()
                 return bool(res)
             except sqlalchemy.orm.exc.NoResultFound:
                 return None
@@ -177,8 +177,8 @@ class ServiceToCollectorMapping(object):
             if collector:
                 q = q.filter(
                     models.ServiceToCollectorMapping.collector == collector)
-            res = q.distinct().values(
-                models.ServiceToCollectorMapping.service)
+            res = q.distinct().with_entities(
+                models.ServiceToCollectorMapping.service).all()
             return res
 
     def list_mappings(self, collector=None):
