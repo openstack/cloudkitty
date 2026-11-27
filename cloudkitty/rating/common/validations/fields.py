@@ -16,8 +16,23 @@ import pecan
 
 from oslo_log import log as logging
 
+from cloudkitty.utils import tz as tzutils
+
 
 LOG = logging.getLogger(__name__)
+
+
+def _normalize_dates(resource):
+    """Convert timezone-aware start/end to naive server-local time.
+
+    Rating rule dates are stored and compared as naive datetimes in the
+    server's local time. Naive values (and None) are left unchanged.
+    """
+    for attr in ('start', 'end'):
+        value = getattr(resource, attr)
+        if value is not None and value.tzinfo is not None:
+            setattr(resource, attr,
+                    tzutils.utc_to_local(value).replace(tzinfo=None))
 
 
 def _resource_changed(current_resource, resource, ignore_attribute_check=None):
@@ -37,6 +52,7 @@ def _resource_changed(current_resource, resource, ignore_attribute_check=None):
 
 
 def validate_update_allowing_only_end_date(current_resource, resource):
+    _normalize_dates(resource)
     now = datetime.datetime.now()
     if current_resource.start < now:
         if current_resource.end is None:
@@ -70,6 +86,7 @@ def validate_update_allowing_only_end_date(current_resource, resource):
 
 
 def validate_resource(resource, force=False):
+    _normalize_dates(resource)
     start = resource.start
     end = resource.end
     now = datetime.datetime.now()

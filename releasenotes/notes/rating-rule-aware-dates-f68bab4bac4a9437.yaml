@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Rating rule (hashmap mapping and pyscripts script) ``start`` and ``end``
+    dates with a timezone, such as ``2026-11-21T00:00:00Z``, no longer cause
+    a 500 error. They are converted to the CloudKitty server's local time,
+    which is how rule dates are stored and compared.
